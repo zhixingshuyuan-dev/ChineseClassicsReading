@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>芜城赋 - 交互式阅读</title>
+    <style>
+        :root {
+            --bg-color: #4A5D23;
+            --text-color: #F5F5DC;
+            --highlight-color: #FFD700;
+            --highlight-text: #333;
+            --btn-color: #8B4513;
+            --translate-btn: #556B2F;
+            --popup-bg: #333;
+            --popup-light: #444;
+            --popup-dark: #222;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: "SimSun", "宋体", serif;
+            line-height: 1.8;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1, h3 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .poem-container {
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .poem-line {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            transition: background-color 0.3s;
+        }
+        
+        .poem-text {
+            display: inline;
+            line-height: 2;
+        }
+        
+        .char {
+            position: relative;
+            cursor: pointer;
+            margin: 0 1px;
+        }
+        
+        .char:hover::after {
+            content: attr(data-pinyin);
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .btn-group {
+            display: flex;
+            margin-left: 10px;
+        }
+        
+        .btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            margin-left: 5px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .read-btn {
+            background: var(--btn-color);
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+        }
+        
+        .translate-btn {
+            background: var(--translate-btn);
+            color: white;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+        
+        .sentence-btn {
+            background: #6B8E23;
+            color: white;
+            padding: 2px 8px;
+            font-size: 12px;
+        }
+        
+        .translations {
+            display: none;
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .translation-tab {
+            background: var(--popup-light);
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .translation-tab.active {
+            background: var(--highlight-color);
+            color: var(--highlight-text);
+        }
+        
+        .translation-content {
+            background: var(--popup-bg);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .full-read-btn {
+            display: block;
+            background: var(--btn-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px auto;
+            font-size: 16px;
+        }
+        
+        .highlight {
+            background-color: var(--highlight-color);
+            color: var(--highlight-text);
+            padding: 0 3px;
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--popup-bg);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            z-index: 100;
+            max-width: 300px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        
+        .char-popup .popup-content {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .char-meaning {
+            background: var(--popup-dark);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .char-pinyin {
+            background: var(--popup-light);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .sentence-popup {
+            max-width: 500px;
+        }
+        
+        .sentence-popup .popup-content {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>芜城赋</h1>
+    <h3>鲍照〔南北朝〕</h3>
+    
+    <button class="full-read-btn">全文朗读</button>
+    
+    <div class="poem-container" id="poem-container">
+        <!-- 诗文内容将通过JavaScript动态生成 -->
+    </div>
+    
+    <!-- 单字弹窗 -->
+    <div id="char-popup" class="popup char-popup">
+        <span class="popup-close">×</span>
+        <div class="popup-header" style="font-size:24px;text-align:center;"></div>
+        <div class="popup-content">
+            <div class="char-meaning"></div>
+            <div class="char-pinyin"></div>
+        </div>
+    </div>
+    
+    <!-- 整句弹窗 -->
+    <div id="sentence-popup" class="popup sentence-popup">
+        <span class="popup-close">×</span>
+        <div class="popup-header" style="font-size:20px;margin-bottom:10px;"></div>
+        <div class="popup-content"></div>
+    </div>
+
+    <script>
+        // 诗文数据 - 已修复所有特殊字符问题
+        const poemData = [
+            { text: "沵迆平原，", pinyin: "mǐ yǐ píng yuán," },
+            { text: "南驰苍梧涨海，北走紫塞雁门。", pinyin: "nán chí cāng wú zhǎng hǎi, běi zǒu zǐ sài yàn mén." },
+            { text: "柂以漕渠，轴以昆岗。", pinyin: "yí yǐ cáo qú, zhóu yǐ kūn gǎng." },
+            { text: "重关复江之隩，四会五达之庄。", pinyin: "chóng guān fù jiāng zhī ào, sì huì wǔ dá zhī zhuāng." },
+            { text: "当昔全盛之时，", pinyin: "dāng xī quán shèng zhī shí," },
+            { text: "车挂轊，人驾肩。", pinyin: "chē guà wèi, rén jià jiān." },
+            { text: "廛闬扑地，歌吹沸天。", pinyin: "chán hàn pū dì, gē chuī fèi tiān." },
+            { text: "孳货盐田，铲利铜山，才力雄富，士马精妍。", pinyin: "zī huò yán tián, chǎn lì tóng shān, cái lì xióng fù, shì mǎ jīng yán." },
+            { text: "故能", pinyin: "gù néng" },
+            { text: "侈秦法，佚周令，划崇墉，刳濬洫，", pinyin: "chǐ qín fǎ, yì zhōu lìng, huà chóng yōng, kū jùn xù," },
+            { text: "图修世以休命。", pinyin: "tú xiū shì yǐ xiū mìng." },
+            { text: "是以", pinyin: "shì yǐ" },
+            { text: "板筑雉堞之殷，井干烽橹之勤，", pinyin: "bǎn zhù zhì dié zhī yīn, jǐng gàn fēng lǔ zhī qín," },
+            { text: "格高五岳，袤广三坟，崪若断岸，矗似长云。", pinyin: "gé gāo wǔ yuè, mào guǎng sān fén, zú ruò duàn àn, chù sì cháng yún." },
+            { text: "制磁石以御冲，糊赪壤以飞文。", pinyin: "zhì cí shí yǐ yù chōng, hú chēng rǎng yǐ fēi wén." },
+            { text: "观基扃之固护，将万祀而一君。", pinyin: "guān jī jiōng zhī gù hù, jiāng wàn sì ér yī jūn." },
+            { text: "出入三代，五百余载，竟瓜剖而豆分。", pinyin: "chū rù sān dài, wǔ bǎi yú zǎi, jìng guā pōu ér dòu fēn." },
+            { text: "泽葵依井，荒葛罥涂，坛罗虺蜮，阶斗麕鼯。", pinyin: "zé kuí yī jǐng, huāng gé juàn tú, tán luó huǐ yù, jiē dòu jūn wú." },
+            { text: "木魅山鬼，野鼠城狐，风嗥雨啸，昏见晨趋。", pinyin: "mù mèi shān guǐ, yě shǔ chéng hú, fēng háo yǔ xiào, hūn jiàn chén qū." },
+            { text: "饥鹰厉吻，寒鸱吓雏，伏暴藏虎，乳血飡肤。", pinyin: "jī yīng lì wěn, hán chī hè chú, fú bào cáng hǔ, rǔ xuè cān fū." },
+            { text: "崩榛塞路，峥嵘古馗。白杨早落，寒草前衰。", pinyin: "bēng zhēn sāi lù, zhēng róng gǔ kuí. bái yáng zǎo luò, hán cǎo qián shuāi." },
+            { text: "稜稜霜气，蔌蔌风威。孤篷自振，惊沙坐飞。", pinyin: "léng léng shuāng qì, sù sù fēng wēi. gū péng zì zhèn, jīng shā zuò fēi." },
+            { text: "灌莽杳而无际，丛薄纷其相依。", pinyin: "guàn mǎng yǎo ér wú jì, cóng bó fēn qí xiāng yī." },
+            { text: "通池既已夷，峻隅又以颓。", pinyin: "tōng chí jì yǐ yí, jùn yú yòu yǐ tuí." },
+            { text: "直视千里外，唯见起黄埃。", pinyin: "zhí shì qiān lǐ wài, wéi jiàn qǐ huáng āi." },
+            { text: "凝思寂听，心伤已摧。", pinyin: "níng sī jì tīng, xīn shāng yǐ cuī." },
+            { text: "若夫", pinyin: "ruò fú" },
+            { text: "藻扃黼帐，歌堂舞阁之基；", pinyin: "zǎo jiōng fǔ zhàng, gē táng wǔ gé zhī jī;" },
+            { text: "璇渊碧树，弋林钓渚之馆；", pinyin: "xuán yuān bì shù, yì lín diào zhǔ zhī guǎn;" },
+            { text: "吴蔡齐秦之声，鱼龙爵马之玩；", pinyin: "wú cài qí qín zhī shēng, yú lóng jué mǎ zhī wán;" },
+            { text: "皆薰歇烬灭，光沉响绝。", pinyin: "jiē xūn xiē jìn miè, guāng chén xiǎng jué." },
+            { text: "东都妙姬，南国佳人，蕙心纨质，玉貌绛唇，", pinyin: "dōng dū miào jī, nán guó jiā rén, huì xīn wán zhì, yù mào jiàng chún," },
+            { text: "莫不埋魂幽石，委骨穷尘。", pinyin: "mò bù mái hún yōu shí, wěi gǔ qióng chén." },
+            { text: "岂忆同辇之愉乐，离宫之苦辛哉？", pinyin: "qǐ yì tóng niǎn zhī yú lè, lí gōng zhī kǔ xīn zāi?" },
+            { text: "天道如何，吞恨者多。抽琴命操，为芜城之歌。", pinyin: "tiān dào rú hé, tūn hèn zhě duō. chōu qín mìng cāo, wéi wú chéng zhī gē." },
+            { text: "歌曰：\"边风急兮城上寒，井径灭兮丘陇残。千龄兮万代，共尽兮何言。\"", pinyin: "gē yuē: \"biān fēng jí xī chéng shàng hán, jǐng jìng miè xī qiū lǒng cán. qiān líng xī wàn dài, gòng jìn xī hé yán.\"" }
+        ];
+
+        // 汉字释义数据
+       const charMeanings = {
+    /* 第一段 */
+    "沵": { 
+        pinyin: "mǐ", 
+        zh: "水势浩大", 
+        en: "vast water flow" 
+    },
+    "迆": { 
+        pinyin: "yǐ", 
+        zh: "曲折连绵", 
+        en: "winding and continuous" 
+    },
+    "柂": { 
+        pinyin: "yí", 
+        zh: "船舵；引导", 
+        en: "rudder; to guide" 
+    },
+    "漕": { 
+        pinyin: "cáo", 
+        zh: "水路运输", 
+        en: "water transport" 
+    },
+    "隩": { 
+        pinyin: "ào", 
+        zh: "水岸深曲处", 
+        en: "deep bend of river" 
+    },
+
+    /* 第二段 */
+    "侈": { 
+        pinyin: "chǐ", 
+        zh: "奢侈；夸大", 
+        en: "extravagant; exaggerate" 
+    },
+    "佚": { 
+        pinyin: "yì", 
+        zh: "散失；安逸", 
+        en: "lost; leisurely" 
+    },
+    "刳": { 
+        pinyin: "kū", 
+        zh: "剖开挖空", 
+        en: "cut open and hollow out" 
+    },
+    "濬": { 
+        pinyin: "jùn", 
+        zh: "深；疏通", 
+        en: "deep; dredge" 
+    },
+    "雉": { 
+        pinyin: "zhì", 
+        zh: "城墙垛口", 
+        en: "crenellation" 
+    },
+
+    /* 第三段 */
+    "虺": { 
+        pinyin: "huǐ", 
+        zh: "毒蛇", 
+        en: "venomous snake" 
+    },
+    "蜮": { 
+        pinyin: "yù", 
+        zh: "传说中害人怪物", 
+        en: "mythical harmful creature" 
+    },
+    "麕": { 
+        pinyin: "jūn", 
+        zh: "獐子", 
+        en: "roe deer" 
+    },
+    "鼯": { 
+        pinyin: "wú", 
+        zh: "飞鼠", 
+        en: "flying squirrel" 
+    },
+    "嗥": { 
+        pinyin: "háo", 
+        zh: "野兽吼叫", 
+        en: "howl of beasts" 
+    },
+
+    /* 第四段 */
+    "榛": { 
+        pinyin: "zhēn", 
+        zh: "榛树；丛木", 
+        en: "hazel tree; thicket" 
+    },
+    "馗": { 
+        pinyin: "kuí", 
+        zh: "四通八达的道路", 
+        en: "thoroughfare" 
+    },
+    "杳": { 
+        pinyin: "yǎo", 
+        zh: "遥远无踪", 
+        en: "distant and silent" 
+    },
+    "夷": { 
+        pinyin: "yí", 
+        zh: "铲平；平坦", 
+        en: "level; flat" 
+    },
+    "璇": { 
+        pinyin: "xuán", 
+        zh: "美玉", 
+        en: "fine jade" 
+    },
+
+    /* 第五段 */
+    "黼": { 
+        pinyin: "fǔ", 
+        zh: "黑白相间花纹", 
+        en: "black-white pattern" 
+    },
+    "纨": { 
+        pinyin: "wán", 
+        zh: "细绢", 
+        en: "fine silk" 
+    },
+    "绛": { 
+        pinyin: "jiàng", 
+        zh: "深红色", 
+        en: "deep red" 
+    },
+    "辇": { 
+        pinyin: "niǎn", 
+        zh: "帝王车驾", 
+        en: "imperial carriage" 
+    },
+    "陇": { 
+        pinyin: "lǒng", 
+        zh: "山岗；田埂", 
+        en: "hillock; ridge" 
+    },
+
+    /* 常见字补充释义 */
+    "驰": { 
+        pinyin: "chí", 
+        zh: "疾行；传播", 
+        en: "gallop; spread" 
+    },
+    "涨": { 
+        pinyin: "zhǎng", 
+        zh: "水位上升", 
+        en: "water level rise" 
+    },
+    "塞": { 
+        pinyin: "sài", 
+        zh: "边界要塞", 
+        en: "frontier fortress" 
+    },
+    "轴": { 
+        pinyin: "zhóu", 
+        zh: "车轴；中心", 
+        en: "axle; center" 
+    },
+    "沸": { 
+        pinyin: "fèi", 
+        zh: "液体沸腾；喧闹", 
+        en: "boil; noisy" 
+    }
+};
+
+        // 翻译数据
+     const translations = {
+    /* Title */
+    "芜城赋": {
+        en: "Rhapsody on a Withered City",
+        fr: "Rhapsodie de la Ville Désolée",
+        de: "Rhapsodie über eine Verödete Stadt",
+        es: "Rapsodia de la Ciudad Arruinada",
+        ja: "廃都の賦",
+        ko: "황폐한 도시의 부"
+    },
+
+    /* 第一段 */
+    "沵迆平原，": {
+        en: "The vast and undulating plain,",
+        fr: "La vaste plaine ondulante,",
+        de: "Die weite, wellige Ebene,",
+        es: "La vasta y ondulante llanura,",
+        ja: "広大で起伏に富んだ平原、",
+        ko: "넓고 물결치는 평원,"
+    },
+    "南驰苍梧涨海，北走紫塞雁门。": {
+        en: "Stretching south to the Cangwu Mountains and swelling seas, running north to the Purple Frontier and Wild Goose Gate.",
+        fr: "S'étendant au sud vers les montagnes Cangwu et les mers gonflées, courant au nord vers la Frontière Pourpre et la Porte des Oies Sauvages.",
+        de: "Sich nach Süden zu den Cangwu-Bergen und schwellenden Meeren erstreckend, nach Norden zur Purpurgrenze und Wildgans-Pforte verlaufend.",
+        es: "Extendiéndose al sur hacia las montañas Cangwu y los mares crecientes, corriendo al norte hacia la Frontera Púrpura y la Puerta del Ganso Salvaje.",
+        ja: "南は蒼梧の山と漲る海に駆け、北は紫塞と雁門へと走る。",
+        ko: "남쪽으로 창우 산과 넘치는 바다까지 달리고, 북쪽으로 자색 변방과 안문까지 이어진다."
+    },
+    "柂以漕渠，轴以昆岗。": {
+        en: "Pivoted by transport canals, axised by Kun Hill.",
+        fr: "Pivoté par des canaux de transport, axé par la colline Kun.",
+        de: "Drehend um Transportkanäle, achsiert vom Kun-Hügel.",
+        es: "Girando en canales de transporte, eje en la colina Kun.",
+        ja: "漕渠を舵とし、昆崗を軸とする。",
+        ko: "운하로 방향을 틀고, 곤강을 중심축으로 삼는다."
+    },
+
+    /* 第二段 */
+    "重关复江之隩，四会五达之庄。": {
+        en: "A secluded place with layered passes and winding rivers, a village where four routes converge and five paths meet.",
+        fr: "Un lieu isolé avec des passes superposées et des rivières sinueuses, un village où quatre routes convergent et cinq chemins se rencontrent.",
+        de: "Ein abgeschiedener Ort mit geschichteten Pässen und windenden Flüssen, ein Dorf, wo vier Routen konvergieren und fünf Pfade sich treffen.",
+        es: "Un lugar apartado con pasos superpuestos y ríos serpenteantes, una aldea donde convergen cuatro rutas y se encuentran cinco caminos.",
+        ja: "重なる関所と複雑な川の奥地、四方に通じ五方に達する村。",
+        ko: "중첩된 관문과 복잡한 강이 있는 오지, 사방으로 통하는 마을."
+    },
+    "当昔全盛之时，": {
+        en: "In its heyday of old,",
+        fr: "En son âge d'or d'autrefois,",
+        de: "In seiner Blütezeit von einst,",
+        es: "En su apogeo de antaño,",
+        ja: "昔、全盛の時には、",
+        ko: "옛날 전성기 때에는,"
+    },
+    "车挂轊，人驾肩。": {
+        en: "Chariots bumped wheel-hubs, people rode shoulder-to-shoulder.",
+        fr: "Les chars se heurtaient aux moyeux, les gens chevauchaient épaule contre épaule.",
+        de: "Streitwagen stießen an Radnaben, Menschen ritten Schulter an Schulter.",
+        es: "Los carros chocaban en los cubos, la gente cabalgaba hombro con hombro.",
+        ja: "車は轊（ほぞ）に掛かり、人は肩に駕す。",
+        ko: "수레는 축에 걸리고, 사람들은 어깨를 탔다."
+    },
+
+    /* 第三段 */
+    "廛闬扑地，歌吹沸天。": {
+        en: "Shops and dwellings covered the ground, songs and pipes boiled to the sky.",
+        fr: "Boutiques et habitations couvraient le sol, chants et pipeaux bouillonnaient vers le ciel.",
+        de: "Läden und Wohnungen bedeckten den Boden, Lieder und Flöten brodelten zum Himmel.",
+        es: "Tiendas y viviendas cubrían el suelo, canciones y flautas bullían hacia el cielo.",
+        ja: "廛闬（店舗と住居）は地にひしめき、歌吹（歌声と笛）は天に沸く。",
+        ko: "가게와 주택이 땅을 덮고, 노래와 피리 소리가 하늘을 뒤흔든다."
+    },
+    "孳货盐田，铲利铜山，才力雄富，士马精妍。": {
+        en: "Goods multiplied in salt fields, profits dug from copper mountains, talent and strength robust, soldiers and steeds exquisite.",
+        fr: "Les marchandises se multipliaient dans les champs de sel, les profits étaient extraits des montagnes de cuivre, le talent et la force robustes, les soldats et les étalons exquis.",
+        de: "Güter vermehrten sich in Salzfeldern, Profite wurden aus Kupferbergen gegraben, Talent und Kraft robust, Soldaten und Pferde exquisit.",
+        es: "Bienes se multiplicaban en los campos de sal, ganancias excavadas de montañas de cobre, talento y fuerza robustos, soldados y corceles exquisitos.",
+        ja: "貨財は塩田で増え、利益は銅山から掘り出され、才力は雄大で、兵馬は精緻で美しい。",
+        ko: "소금밭에서 재화가 번성하고, 구리 산에서 이익을 캐며, 재능과 힘이 풍부하고, 병사와 말이 정교하고 아름답다."
+    },
+
+    /* 第四段 */
+    "故能侈秦法，佚周令，划崇墉，刳濬洫，图修世以休命。": {
+        en: "Thus it could surpass Qin's laws, outdo Zhou's decrees, build towering walls, carve deep moats, planning enduring eras to perfect destiny.",
+        fr: "Ainsi pouvait-elle surpasser les lois de Qin, surpasser les décrets de Zhou, construire des murs imposants, creuser des douves profondes, planifiant des ères durables pour parfaire le destin.",
+        de: "So konnte sie Qins Gesetze übertreffen, Zhous Verordnungen übertreffen, hohe Mauern bauen, tiefe Gräben schnitzen, andauernde Ären planend, um das Schicksal zu vollenden.",
+        es: "Así podía superar las leyes de Qin, superar los decretos de Zhou, construir altos muros, tallar fosos profundos, planeando eras duraderas para perfeccionar el destino.",
+        ja: "故に秦の法を超え、周の令に勝り、高き城壁を築き、深き堀を穿ち、永き世を図りて命を休めんとす。",
+        ko: "그래서 진나라 법도를 넘어서고, 주나라 명령을 능가하며, 높은 성벽을 세우고, 깊은 해자를 파서, 오랜 세상을 도모하여 운명을 아름답게 하려 했다."
+    },
+
+    /* 第五段 */
+    "是以板筑雉堞之殷，井干烽橹之勤，": {
+        en: "Therefore the earnestness of rammed-earth battlements, the diligence of watchtowers and beacon towers,",
+        fr: "D'où l'ardeur des créneaux en terre damée, la diligence des tours de guet et des tours de feu,",
+        de: "Daher der Eifer der gestampften Erd-Brustwehren, der Fleiß der Wachtürme und Leuchttürme,",
+        es: "Por lo tanto, el fervor de las almenas de tierra apisonada, la diligencia de las torres de vigilancia y faros,",
+        ja: "ここにおいて版築（土を突き固めた城壁）と雉堞（城の凹凸）の殷（盛ん）さ、井幹（やぐら）と烽橹（のろし台）の勤（勤勉）さ、",
+        ko: "이에 다진 흙으로 쌓은 성벽의 부지런함, 망루와 봉수대의 근면함,"
+    },
+    "格高五岳，袤广三坟，崪若断岸，矗似长云。": {
+        en: "Loftier than the Five Peaks, vaster than the Three Mounds, jagged like a cliff, towering like long clouds.",
+        fr: "Plus altiers que les Cinq Pics, plus vastes que les Trois Tertres, déchiquetés comme une falaise, s'élevant comme de longs nuages.",
+        de: "Erhabener als die Fünf Gipfel, weiter als die Drei Hügel, zerklüftet wie eine Klippe, aufragend wie lange Wolken.",
+        es: "Más altos que los Cinco Picos, más vastos que los Tres Montículos, escarpados como un acantilado, erguidos como largas nubes.",
+        ja: "その格（風格）は五岳より高く、袤（広がり）は三墳より広く、崪（そばだ）つこと断岸の如く、矗（たつ）こと長雲の似たり。",
+        ko: "그 위엄은 오악보다 높고, 그 넓이는 삼분보다 광대하며, 우� 솟은 모습은 절벽 같고, 치솟은 모습은 긴 구름과 같다."
+    },
+
+    /* 第六段 */
+    "制磁石以御冲，糊赪壤以飞文。": {
+        en: "They installed lodestones to repel charges, pasted red clay to fly patterns.",
+        fr: "Ils installèrent des pierres d'aimant pour repousser les charges, collèrent de l'argile rouge pour faire voler des motifs.",
+        de: "Sie installierten Lodesteine, um Angriffe abzuwehren, klebten roten Ton, um Muster fliegen zu lassen.",
+        es: "Instalaron piedras imán para repeler cargas, pegaron arcilla roja para hacer volar patrones.",
+        ja: "磁石を制して衝撃を防ぎ、赪（あか）き土を糊して文様を飛ばす。",
+        ko: "자석을 설치해 충격을 막고, 붉은 흙을 발라 문양을 날렸다."
+    },
+    "观基扃之固护，将万祀而一君。": {
+        en: "Observing the firm protection of its foundations, it seemed one lord would last ten thousand sacrifices.",
+        fr: "Observant la protection ferme de ses fondations, il semblait qu'un seul seigneur durerait dix mille sacrifices.",
+        de: "Die feste Schutz der Fundamente betrachtend, schien es, als würde ein Herr zehntausend Opfer überdauern.",
+        es: "Observando la firme protección de sus cimientos, parecía que un señor duraría diez mil sacrificios.",
+        ja: "基扃（城の基礎）の固護（堅固な保護）を見れば、万祀（万年）に一君（一人の君主）たらんとす。",
+        ko: "성의 기초가 견고하게 보호되는 것을 보면, 만 년을 한 군주가 통치할 것 같았다."
+    },
+
+    /* 第七段 */
+    "出入三代，五百余载，竟瓜剖而豆分。": {
+        en: "Passing through three dynasties, over five hundred years, it finally split like melons, divided like beans.",
+        fr: "Traversant trois dynasties, plus de cinq cents ans, il finit par se fendre comme des melons, se diviser comme des haricots.",
+        de: "Drei Dynastien durchlaufend, über fünfhundert Jahre, teilte es sich schließlich wie Melonen, spaltete sich wie Bohnen.",
+        es: "Pasando por tres dinastías, más de quinientos años, finalmente se partió como melones, se dividió como frijoles.",
+        ja: "三代（三つの王朝）を出入りし、五百余年の後、ついに瓜が割れ、豆が分かれるように分裂した。",
+        ko: "삼대를 거치고 오백여 년이 지나자, 결국 오이 쪼개지듯 콩 나누듯 분열되었다."
+    },
+
+    /* 第八段 */
+    "泽葵依井，荒葛罥涂。": {
+        en: "Marsh mallows cling to wells, wild vines entangle paths.",
+        fr: "Les mauves des marais s'accrochent aux puits, les vignes sauvages enchevêtrent les sentiers.",
+        de: "Sumpfmalven klammern sich an Brunnen, wilde Ranken verwickeln Pfade.",
+        es: "Malvaviscos de pantano se aferran a pozos, enredaderas silvestres enredan senderos.",
+        ja: "沢葵（水辺の植物）は井戸に寄り添い、荒葛（野生の葛）は道にからまる。",
+        ko: "늪의 아욱이 우물에 기대고, 들덩굴이 길에 얽혔다."
+    },
+    "坛罗虺蜮，阶斗麕鼯。": {
+        en: "Altars swarm with vipers and demons, steps host battles between deer and flying squirrels.",
+        fr: "Les autels grouillent de vipères et de démons, les marches accueillent des combats entre cerfs et écureuils volants.",
+        de: "Altäre wimmeln von Vipern und Dämonen, Stufen beherbergen Kämpfe zwischen Hirschen und Flughörnchen.",
+        es: "Los altares pululan con víboras y demonios, los escalones albergan batallas entre ciervos y ardillas voladoras.",
+        ja: "壇（祭壇）には虺（まむし）と蜮（わに）が羅（なら）び、階（階段）では麕（きじ）と鼯（むささび）が闘う。",
+        ko: "제단에는 독사와 악령이 늘어서고, 계단에서는 사슴과 날다람쥐가 싸운다."
+    },
+
+    /* 第九段 */
+    "木魅山鬼，野鼠城狐。": {
+        en: "Tree spirits and mountain ghosts, field mice and city foxes.",
+        fr: "Esprits des arbres et fantômes des montagnes, souris des champs et renards des villes.",
+        de: "Baumgeister und Berggespenster, Feldmäuse und Stadtfüchse.",
+        es: "Espíritus de árboles y fantasmas de montañas, ratones de campo y zorros de ciudad.",
+        ja: "木魅（木の精）と山鬼（山の鬼）、野鼠（野ネズミ）と城狐（城の狐）。",
+        ko: "나무 요괴와 산 귀신, 들쥐와 성 안의 여우."
+    },
+    "风嗥雨啸，昏见晨趋。": {
+        en: "Howling in wind, shrieking in rain, appearing at dusk, scurrying at dawn.",
+        fr: "Hurlant dans le vent, criant dans la pluie, apparaissant au crépuscule, se précipitant à l'aube.",
+        de: "Heulend im Wind, kreischend im Regen, erscheinend in der Dämmerung, huschend im Morgengrauen.",
+        es: "Aullando en el viento, chillando en la lluvia, apareciendo al anochecer, escabulléndose al amanecer.",
+        ja: "風に吠え雨に嘯（うそぶ）き、昏（たそがれ）に現れ朝に走る。",
+        ko: "바람에 울부짖고 비에 소리치며, 해질녘에 나타나 새벽에 달린다."
+    },
+
+    /* 第十段 */
+    "饥鹰厉吻，寒鸱吓雏。": {
+        en: "Hungry eagles whet their beaks, cold owls terrify chicks.",
+        fr: "Les aigles affamés aiguisent leurs becs, les hiboux froids terrifient les poussins.",
+        de: "Hungrige Adler wetzen ihre Schnäbel, kalte Eulen erschrecken Küken.",
+        es: "Águilas hambrientas afilan sus picos, búhos fríos aterrorizan polluelos.",
+        ja: "飢えた鷹は嘴を研ぎ、寒い梟は雛（ひな）を嚇す。",
+        ko: "굶주린 독수리는 부리를 갈고, 추운 올빼미는 새끼를 위협한다."
+    },
+    "伏暴藏虎，乳血飡肤。": {
+        en: "Lurking leopards, hiding tigers, suckling blood and gnawing flesh.",
+        fr: "Léopards tapis, tigres cachés, suçant le sang et rongeant la chair.",
+        de: "Lauernde Leoparden, versteckte Tiger, Blut saugend und Fleisch nagen.",
+        es: "Leopardos al acecho, tigres escondidos, chupando sangre y royendo carne.",
+        ja: "伏す暴（ひょう）と蔵（かく）れる虎、乳（ち）する血と飡（くら）う膚（はだ）。",
+        ko: "엎드린 표범과 숨은 호랑이, 피를 빨고 살점을 씹는다."
+    },
+
+    /* 第十一段 */
+    "崩榛塞路，峥嵘古馗。": {
+        en: "Collapsed brambles block roads, towering ancient highways.",
+        fr: "Ronces effondrées bloquent les routes, anciennes autoroutes imposantes.",
+        de: "Zusammengebrochenes Brombeergestrüpp blockiert Straßen, aufragende uralte Autobahnen.",
+        es: "Zarzas colapsadas bloquean caminos, antiguas carreteras imponentes.",
+        ja: "崩れた榛（いばら）は道を塞ぎ、峥嵘（そび）える古馗（古道）。",
+        ko: "무너진 가시덤불이 길을 막고, 우뚝 솟은 옛길."
+    },
+    "白杨早落，寒草前衰。": {
+        en: "White poplars shed early, cold grasses wither beforehand.",
+        fr: "Les peupliers blancs perdent tôt leurs feuilles, les herbes froides se fanent à l'avance.",
+        de: "Weiße Pappeln werfen früh ab, kalte Gräser welken vorher.",
+        es: "Los álamos blancos se desprenden temprano, las hierbas frías se marchitan de antemano.",
+        ja: "白楊（はくよう）は早く落葉し、寒草（かんそう）は前もって衰える。",
+        ko: "백양나무는 일찍 잎을 떨어뜨리고, 찬 풀은 미리 시든다."
+    },
+
+    /* 第十二段 */
+    "稜稜霜气，蔌蔌风威。": {
+        en: "Sharp, sharp the frost's aura, rustling, rustling the wind's might.",
+        fr: "Tranchant, tranchant l'aura du givre, bruissant, bruissant la puissance du vent.",
+        de: "Scharf, scharf der Frosthauch, raschelnd, raschelnd die Windmacht.",
+        es: "Cortante, cortante el aura de la escarcha, susurrante, susurrante el poder del viento.",
+        ja: "稜稜（りょうりょう）たる霜の気、蔌蔌（しゅくしゅく）たる風の威。",
+        ko: "뾰족뾰족한 서리의 기운, 바스락바스락한 바람의 위세."
+    },
+    "孤篷自振，惊沙坐飞。": {
+        en: "Lone sails shake themselves, startled sands suddenly fly.",
+        fr: "Les voiles solitaires se secouent, les sables effrayés s'envolent soudain.",
+        de: "Einsame Segel schütteln sich selbst, erschreckte Sande fliegen plötzlich.",
+        es: "Velas solitarias se sacuden, arenas asustadas de repente vuelan.",
+        ja: "孤篷（こほう）は自ら振るい、驚いた砂は坐（たちま）ち飛ぶ。",
+        ko: "외로운 돛이 스스로 흔들리고, 놀란 모래가 갑자기 날린다."
+    },
+
+    /* 第十三段 */
+    "灌莽杳而无际，丛薄纷其相依。": {
+        en: "Thicket wilderness stretches boundless, clustered undergrowth tangled together.",
+        fr: "La brousse sauvage s'étend sans limite, les sous-bois groupés s'enchevêtrent.",
+        de: "Dickichtwildnis erstreckt sich grenzenlos, gebüscheltes Unterholz verwickelt zusammen.",
+        es: "La espesura salvaje se extiende sin límites, la maleza agrupada se enreda.",
+        ja: "灌莽（茂み）は杳（よう）として際限なく、叢薄（そうはく）は紛（まぎ）れて互いに依る。",
+        ko: "덤불은 아득히 끝이 없고, 수풀은 뒤엉켜 서로 의지한다."
+    },
+    "通池既已夷，峻隅又以颓。": {
+        en: "Once-passable moats are now leveled, once-steep corners have crumbled.",
+        fr: "Les douves autrefois praticables sont maintenant nivelées, les coins autrefois escarpés se sont effondrés.",
+        de: "Einst passierbare Gräben sind nun eingeebnet, einst steile Ecken sind zerbröckelt.",
+        es: "Los fosos alguna vez transitables ahora están nivelados, las esquinas alguna vez empinadas se han desmoronado.",
+        ja: "通池（通じた堀）は既に平らげられ、峻隅（険しい角）はまた崩れた。",
+        ko: "통했던 해자는 이미 평평해지고, 가파른 모퉁이는 또 무너졌다."
+    },
+
+    /* 第十四段 */
+    "直视千里外，唯见起黄埃。": {
+        en: "Gazing straight for a thousand miles, one sees only rising yellow dust.",
+        fr: "Regardant droit pendant mille miles, on ne voit que de la poussière jaune qui s'élève.",
+        de: "Geradeaus blickend für tausend Meilen, sieht man nur aufsteigenden gelben Staub.",
+        es: "Mirando directamente por mil millas, solo se ve polvo amarillo elevándose.",
+        ja: "直視すること千里の外、ただ黄埃（こうあい）の立ち上るを見る。",
+        ko: "똑바로 천 리를 바라보아도, 오직 황토 먼지가 일어나는 것만 보인다."
+    },
+    "凝思寂听，心伤已摧。": {
+        en: "Concentrating thoughts in silent listening, the heart's wounds already shatter.",
+        fr: "Concentrant les pensées en écoutant silencieusement, les blessures du cœur se brisent déjà.",
+        de: "Gedanken konzentrierend in stillem Hören, zersplittern die Wunden des Herzens bereits.",
+        es: "Concentrando pensamientos en escucha silenciosa, las heridas del corazón ya se rompen.",
+        ja: "凝思（ぎょうし）して寂（せき）として聴けば、心の傷は既に摧（くだ）ける。",
+        ko: "생각을 집중해 고요히 들으면, 마음의 상처는 이미 부서진다."
+    },
+
+    /* 第十五段 */
+    "若夫藻扃黼帐，歌堂舞阁之基；": {
+        en: "As for those carved doors and embroidered curtains, foundations of singing halls and dancing towers;",
+        fr: "Quant aux portes sculptées et rideaux brodés, fondations des salles de chant et tours de danse ;",
+        de: "Was die geschnitzten Türen und bestickten Vorhänge betrifft, Fundamente von Singhallen und Tanztürmen;",
+        es: "En cuanto a las puertas talladas y cortinas bordadas, cimientos de salas de canto y torres de baile;",
+        ja: "若し夫（もしそれ）藻扃（彫刻の門）と黼帳（刺繡の帳）と、歌堂舞閣の基（もと）は；",
+        ko: "무릇 조각한 문과 수놓은 장막, 노래당과 무도각의 터는;"
+    },
+    "璇渊碧树，弋林钓渚之馆；": {
+        en: "Jade pools and azure trees, pavilions of arrow forests and fishing isles;",
+        fr: "Pools de jade et arbres azur, pavillons de forêts de flèches et îles de pêche ;",
+        de: "Jadeteiche und azurblaue Bäume, Pavillons von Pfeilwäldern und Angelinseln;",
+        es: "Piscinas de jade y árboles azules, pabellones de bosques de flechas e islas de pesca ;",
+        ja: "璇淵（玉の淵）と碧樹（青緑の樹）と、弋林（矢の林）釣渚（釣りの洲）の館；",
+        ko: "옥 같은 연못과 푸른 나무, 활 쏘는 숲과 낚시하는 섬의 관;"
+    },
+
+    /* 第十六段 */
+    "吴蔡齐秦之声，鱼龙爵马之玩；": {
+        en: "The music of Wu, Cai, Qi and Qin, the entertainments of fish-dragons and noble steeds;",
+        fr: "La musique de Wu, Cai, Qi et Qin, les divertissements de poissons-dragons et nobles coursiers ;",
+        de: "Die Musik von Wu, Cai, Qi und Qin, die Unterhaltungen von Fisch-Drachen und edlen Rössern;",
+        es: "La música de Wu, Cai, Qi y Qin, los entretenimientos de peces-dragones y corceles nobles ;",
+        ja: "呉・蔡・斉・秦の声（音楽）、魚龍爵馬（魚や龍の形をした遊具や貴族の馬）の玩（もてあそび）；",
+        ko: "오, 채, 제, 진의 음악, 물고기 용과 귀족 말의 놀이;"
+    },
+    "皆薰歇烬灭，光沉响绝。": {
+        en: "All have vanished like extinguished incense, light sunk and echoes ceased.",
+        fr: "Tout a disparu comme de l'encens éteint, la lumière enfoncée et les échos cessés.",
+        de: "Alles ist verschwunden wie gelöschter Weihrauch, Licht versunken und Echos verstummt.",
+        es: "Todo ha desaparecido como incienso apagado, luz hundida y ecos cesados.",
+        ja: "皆、薰（かおり）は歇（や）み烬（灰）は滅び、光は沈み響きは絶える。",
+        ko: "모두 향은 꺼지고 재는 사라지며, 빛은 가라앉고 메아리는 끊어졌다."
+    },
+
+    /* 第十七段 */
+    "东都妙姬，南国佳人，蕙心纨质，玉貌绛唇，莫不埋魂幽石，委骨穷尘。": {
+        en: "The lovely ladies of Eastern Capital, beauties of Southern Land, with orchid hearts and silk purity, jade faces and crimson lips—none but buried souls under dark stones, abandoned bones in barren dust.",
+        fr: "Les belles dames de la Capitale de l'Est, beautés du Pays du Sud, avec des cœurs d'orchidée et une pureté de soie, des visages de jade et des lèvres cramoisies—aucune sinon des âmes enterrées sous des pierres sombres, des os abandonnés dans une poussière stérile.",
+        de: "Die lieblichen Damen der Östlichen Hauptstadt, Schönheiten des Südlichen Landes, mit Orchideenherzen und Seelenreinheit, Jadengesichtern und purpurnen Lippen—keine außer begrabenen Seelen unter dunklen Steinen, verlassenen Knochen in ödem Staub.",
+        es: "Las encantadoras damas de la Capital del Este, bellezas de la Tierra del Sur, con corazones de orquídea y pureza de seda, caras de jade y labios carmesí—ninguna sino almas enterradas bajo piedras oscuras, huesos abandonados en polvo estéril.",
+        ja: "東都（洛陽）の妙姫、南国の佳人、蕙心（けいしん：蘭のような心）と纨質（じゅんしつ：絹のような質）と、玉貌（ぎょくぼう）と绛唇（こうしん：紅の唇）と、ことごとく幽石（ゆうせき）に魂を埋め、窮塵（きゅうじん）に骨を委（ゆだ）ぬ。",
+        ko: "동도의 아름다운 귀부인, 남국의 미인, 난초 같은 마음과 비단 같은 질감, 옥 같은 얼굴과 진홍 입술—모두 어두운 돌 아래 영혼이 묻히고, 메마른 먼지에 뼈가 버려졌다."
+    },
+
+    /* 第十八段 */
+    "岂忆同辇之愉乐，离宫之苦辛哉？": {
+        en: "How could they recall the joy of sharing palanquins, the bitterness of leaving palaces?",
+        fr: "Comment pourraient-elles se souvenir de la joie de partager des palanquins, de l'amertume de quitter des palais ?",
+        de: "Wie könnten sie sich an die Freude erinnern, Sänften zu teilen, die Bitterkeit, Paläste zu verlassen?",
+        es: "¿Cómo podrían recordar la alegría de compartir palanquines, la amargura de dejar palacios?",
+        ja: "どうして同輦（どうれん：同じ輿）の愉楽（ゆらく）や、離宮（りきゅう）の苦辛（くしん）を憶（おも）い出せようか？",
+        ko: "어찌 같은 가마 나눈 즐거움, 궁궐 떠난 고생을 기억하겠는가?"
+    },
+    "天道如何，吞恨者多。": {
+        en: "How is Heaven's Way? Those who swallow regrets are many.",
+        fr: "Comment est la Voie du Ciel ? Ceux qui avalent des regrets sont nombreux.",
+        de: "Wie ist des Himmels Weg? Die, die Bedauern schlucken, sind viele.",
+        es: "¿Cómo es el Camino del Cielo? Aquellos que tragan arrepentimientos son muchos.",
+        ja: "天道（てんどう）はいかん、恨みを吞（の）む者多し。",
+        ko: "천도는 어떠한가? 한을 삼키는 자가 많다."
+    },
+
+    /* 第十九段 */
+    "抽琴命操，为芜城之歌。": {
+        en: "Drawing forth a zither to play a tune, I compose the Song of the Withered City.",
+        fr: "Tirant un cithare pour jouer un air, je compose la Chanson de la Ville Désolée.",
+        de: "Eine Zither hervorziehend, um eine Melodie zu spielen, verfasse ich das Lied der Verödeten Stadt.",
+        es: "Sacando una cítara para tocar una melodía, compongo la Canción de la Ciudad Arruinada.",
+        ja: "琴を抽（ひ）き出して操（そう）を命じ、蕪城（ふじょう）の歌となす。",
+        ko: "거문고를 꺼내 노래를 지어, 황폐한 도시의 노래를 부른다."
+    },
+    "歌曰：“边风急兮城上寒，井径灭兮丘陇残。": {
+        en: "The song goes: 'Frontier winds fierce—on walls cold; Well paths gone—mound ridges broken.",
+        fr: "La chanson dit : 'Vents de frontière féroces—sur les murs froids ; Chemins de puits disparus—crêtes de monticules brisées.",
+        de: "Das Lied lautet: 'Grenzwinde heftig—auf Mauern kalt; Brunnenpfade fort—Hügelkämme gebrochen.",
+        es: "La canción dice: 'Vientos fronterizos fieros—en muros fríos; Senderos de pozos idos—crestas de montículos rotas.",
+        ja: "歌に曰く、「辺境の風急（せきゅう）にして城上（じょうじょう）寒し、井径（せいけい）滅びて丘隴（きゅうろう）残（のこ）る。",
+        ko: "노래하길: '변방 바람 사나워 성 위에 차갑고, 우물 길 사라져 언덕 마루만 남았네."
+    },
+    "千龄兮万代，共尽兮何言。”": {
+        en: "A thousand ages, ten thousand eras—all end together, what words suffice?'",
+        fr: "Mille âges, dix mille ères—tous finissent ensemble, quels mots suffisent ?'",
+        de: "Tausend Zeitalter, zehntausend Ären—alle enden zusammen, welche Worte genügen?'",
+        es: "Mil edades, diez mil eras—todas terminan juntas, ¿qué palabras bastan?'",
+        ja: "千齢（せんれい）にして万代（ばんだい）、共に尽きて何を言わん」。",
+        ko: "천 년이니 만 대니, 함께 다하면 무슨 말이 필요하리.'"
+    }
+
+};
+
+        // 初始化诗文显示
+        function initPoem() {
+            const container = document.getElementById('poem-container');
+            container.innerHTML = '';
+            
+            poemData.forEach((line, index) => {
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'poem-line';
+                lineDiv.dataset.lineIndex = index;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'poem-text';
+                
+                // 处理每个字符
+                for (let i = 0; i < line.text.length; i++) {
+                    const char = line.text[i];
+                    const charSpan = document.createElement('span');
+                    charSpan.className = 'char';
+                    charSpan.textContent = char;
+                    
+                    // 添加拼音数据
+                    if (line.pinyin[i] && line.pinyin[i] !== ' ' && line.pinyin[i] !== ',') {
+                        charSpan.dataset.pinyin = line.pinyin[i];
+                    }
+                    
+                    // 点击汉字显示释义
+                    charSpan.addEventListener('click', () => showCharPopup(char));
+                    
+                    textSpan.appendChild(charSpan);
+                }
+                
+                lineDiv.appendChild(textSpan);
+                
+                // 添加按钮组
+                const btnGroup = document.createElement('div');
+                btnGroup.className = 'btn-group';
+                
+                // 朗读按钮
+                const readBtn = document.createElement('button');
+                readBtn.className = 'btn read-btn';
+                readBtn.innerHTML = '▶';
+                readBtn.addEventListener('click', () => toggleLineReading(lineDiv, line.text));
+                btnGroup.appendChild(readBtn);
+                
+                // 整句按钮
+                const sentenceBtn = document.createElement('button');
+                sentenceBtn.className = 'btn sentence-btn';
+                sentenceBtn.innerHTML = '句';
+                sentenceBtn.addEventListener('click', () => showSentencePopup(line.text, line.pinyin));
+                btnGroup.appendChild(sentenceBtn);
+                
+                // 翻译按钮（如果有翻译）
+                if (translations[line.text]) {
+                    const translateBtn = document.createElement('button');
+                    translateBtn.className = 'btn translate-btn';
+                    translateBtn.innerHTML = '译';
+                    translateBtn.addEventListener('click', () => toggleTranslation(lineDiv, line.text));
+                    btnGroup.appendChild(translateBtn);
+                }
+                
+                lineDiv.appendChild(btnGroup);
+                container.appendChild(lineDiv);
+            });
+        }
+
+        // 显示单字弹窗
+        function showCharPopup(char) {
+            const popup = document.getElementById('char-popup');
+            const header = popup.querySelector('.popup-header');
+            const meaningDiv = popup.querySelector('.char-meaning');
+            const pinyinDiv = popup.querySelector('.char-pinyin');
+            
+            header.textContent = char;
+            
+            if (charMeanings[char]) {
+                meaningDiv.innerHTML = `<strong>English:</strong> ${charMeanings[char].en}`;
+                pinyinDiv.innerHTML = `<strong>拼音:</strong> ${charMeanings[char].pinyin}`;
+            } else {
+                meaningDiv.innerHTML = "No definition available";
+                pinyinDiv.innerHTML = "No pinyin available";
+            }
+            
+            popup.style.display = 'block';
+        }
+
+        // 显示整句弹窗
+        function showSentencePopup(sentence, pinyin) {
+            const popup = document.getElementById('sentence-popup');
+            const header = popup.querySelector('.popup-header');
+            const content = popup.querySelector('.popup-content');
+            
+            header.textContent = sentence;
+            content.innerHTML = `
+                <p><strong>原文:</strong> ${sentence}</p>
+                <p><strong>拼音:</strong> ${pinyin || '暂无'}</p>
+            `;
+            
+            popup.style.display = 'block';
+        }
+
+        // 切换行朗读状态
+        function toggleLineReading(lineDiv, text) {
+            const readBtn = lineDiv.querySelector('.read-btn');
+            
+            if (readBtn.dataset.playing === 'true') {
+                window.speechSynthesis.cancel();
+                readBtn.dataset.playing = 'false';
+                readBtn.innerHTML = '▶';
+                lineDiv.classList.remove('highlight');
+            } else {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                
+                utterance.onstart = () => {
+                    readBtn.dataset.playing = 'true';
+                    readBtn.innerHTML = '■';
+                    lineDiv.classList.add('highlight');
+                };
+                
+                utterance.onend = () => {
+                    readBtn.dataset.playing = 'false';
+                    readBtn.innerHTML = '▶';
+                    lineDiv.classList.remove('highlight');
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 切换翻译显示
+        function toggleTranslation(lineDiv, sentence) {
+            let translationDiv = lineDiv.querySelector('.translations');
+            
+            if (translationDiv) {
+                translationDiv.style.display = translationDiv.style.display === 'none' ? 'block' : 'none';
+            } else {
+                translationDiv = document.createElement('div');
+                translationDiv.className = 'translations';
+                
+                // 创建翻译标签
+                const tabsDiv = document.createElement('div');
+                tabsDiv.className = 'translation-tabs';
+                
+                // 创建翻译内容区
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'translation-content';
+                
+                const transData = translations[sentence];
+                let firstLang = '';
+                
+                // 添加翻译标签按钮
+                for (const [lang] of Object.entries(transData)) {
+                    if (!firstLang) firstLang = lang;
+                    
+                    const tabBtn = document.createElement('button');
+                    tabBtn.className = 'translation-tab';
+                    tabBtn.textContent = lang.toUpperCase();
+                    tabBtn.dataset.lang = lang;
+                    tabBtn.addEventListener('click', () => switchTranslationTab(contentDiv, transData, lang));
+                    
+                    tabsDiv.appendChild(tabBtn);
+                }
+                
+                // 默认显示第一个翻译
+                if (firstLang) {
+                    tabsDiv.querySelector(`[data-lang="${firstLang}"]`).classList.add('active');
+                    contentDiv.textContent = transData[firstLang];
+                }
+                
+                translationDiv.appendChild(tabsDiv);
+                translationDiv.appendChild(contentDiv);
+                lineDiv.appendChild(translationDiv);
+            }
+        }
+
+        // 切换翻译标签
+        function switchTranslationTab(contentDiv, transData, lang) {
+            // 更新活跃标签
+            const tabs = contentDiv.parentElement.querySelectorAll('.translation-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contentDiv.parentElement.querySelector(`[data-lang="${lang}"]`).classList.add('active');
+            
+            // 更新内容
+            contentDiv.textContent = transData[lang];
+        }
+
+        // 全文朗读
+        function readFullPoem() {
+            // 停止当前所有语音
+            window.speechSynthesis.cancel();
+            
+            // 获取所有行元素
+            const lines = Array.from(document.querySelectorAll('.poem-line'));
+            const fullText = poemData.map(line => line.text).join(' ');
+            
+            // 创建语音对象
+            const utterance = new SpeechSynthesisUtterance(fullText);
+            utterance.lang = 'zh-CN';
+            
+            // 当前朗读到的字符位置
+            let charCount = 0;
+            
+            // 高亮当前朗读的行
+            utterance.onboundary = (event) => {
+                if (event.name === 'word') {
+                    charCount = event.charIndex;
+                    
+                    // 找出当前朗读的是哪一行
+                    let currentLineIndex = 0;
+                    let accumulatedLength = 0;
+                    
+                    for (let i = 0; i < poemData.length; i++) {
+                        accumulatedLength += poemData[i].text.length;
+                        if (charCount < accumulatedLength) {
+                            currentLineIndex = i;
+                            break;
+                        }
+                    }
+                    
+                    // 移除之前的高亮
+                    lines.forEach(line => line.classList.remove('highlight'));
+                    
+                    // 添加新高亮
+                    if (lines[currentLineIndex]) {
+                        lines[currentLineIndex].classList.add('highlight');
+                        
+                        // 滚动到可视区域
+                        lines[currentLineIndex].scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                }
+            };
+            
+            utterance.onend = () => {
+                // 朗读结束时移除所有高亮
+                lines.forEach(line => line.classList.remove('highlight'));
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // 关闭弹窗
+        function closePopups() {
+            document.querySelectorAll('.popup').forEach(popup => {
+                popup.style.display = 'none';
+            });
+        }
+
+        // 事件监听
+        document.querySelector('.full-read-btn').addEventListener('click', readFullPoem);
+        document.querySelectorAll('.popup-close').forEach(btn => {
+            btn.addEventListener('click', closePopups);
+        });
+        
+        // 点击弹窗外部关闭
+        window.addEventListener('click', (event) => {
+            if (event.target.classList.contains('popup')) {
+                closePopups();
+            }
+        });
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', initPoem);
+    </script>
+</body>
+</html>
