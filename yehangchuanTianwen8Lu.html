@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>《天文部·露卷》多语阅读辅助</title>
+  <style>
+    body {
+      font-family: 'Noto Serif TC', serif;
+      line-height: 1.8;
+      padding: 20px;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    .section {
+      margin-bottom: 50px;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .text {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .char-wrap {
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+      margin: 0 1px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .char-wrap:hover {
+      background-color: #2a2a2a;
+    }
+    .popup {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2b2b2b;
+      border: 1px solid #555;
+      padding: 5px 8px;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 10;
+      color: #f0f0f0;
+    }
+    .char-wrap:hover .popup {
+      display: block;
+    }
+    .button-bar {
+      margin-top: 12px;
+    }
+    button {
+      margin: 4px 6px 0 0;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background-color: #333;
+      color: #f0f0f0;
+      cursor: pointer;
+    }
+    .translation {
+      margin-top: 12px;
+      font-size: 16px;
+      color: #d0d0d0;
+      white-space: pre-wrap;
+      background-color: #222;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+  </style>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script>
+const data = [
+  `露\n【露一名天乳，一名天酒】霧冰`,
+  `花露\n楊太真每宿酒初消，多苦肺熱。淩晨，至後苑，傍花口吸、花露以潤肺。`,
+  `仙人掌露\n漢武帝建柏梁臺，高五十丈，以銅柱置仙人掌，擎玉盤，以承雲表之露，和玉屑服之，以求仙也。`,
+  `露\n夜氣著物為露。《玉篇》曰：「天之津液，下所潤萬物也。」`,
+  `霧\n地氣上，天不應也。《元命苞》曰：「陰陽亂為霧，氣蒙冒覆地之物。」`,
+  `冰\n冬水所結天寒地凍，則水凝結而堅也。`,
+  `甘露\n梁詔，貴縣人，以孝名，有甘露著松樹上。後為廣東提刑幹官。蘇軾詢知狀，為署其齋曰「甘露」，林曰「瑞松」，其讀書處曰「薰風」。`,
+  `作十裏霧\n神農氏世衰，諸侯相侵伐，炎帝榆罔，弗能征。軒轅修德治兵，以征不享。與蚩尤戰於涿鹿，蚩尤作霧十裏，以迷軒轅，乃以指南車擒殺之。`,
+  `伐冰之家\n卿大夫以上喪祭，用冰者也。`,
+  `冰人冰泮\n晉令狐策夢立冰上，與冰下人語。索占之，曰：「為陽語陰，媒介事也。當為人作媒，冰泮成婚。」後太守田豹，為子求張嘉貞女，使策為媒，果於仲春成婚。故今稱媒人亦曰「冰人」。《詩經》曰：「迨其冰泮。」`,
+  `冰生於水\n《荀子》：「冰生於水而寒於水。」比後進之過於先生也。`,
+  `冰山\n唐楊國忠為右相，或勸陜郡進士張彖謁國忠，曰：「見之，富貴立可圖。」彖曰：「君輩倚楊右相若泰山，吾以為冰山耳。若皎日既出，君輩得無失所恃乎？」遂隱居嵩山。`,
+  `冰柱\n明正德十年，文安縣一日河水忽僵立，風色甚寒，凍結為柱，高圍俱五丈，中空而旁穴。數日，流賊過縣，鄉民走入穴中避之，賴以保全者，何啻百萬！`
+]
+
+const dictionary = {
+  "露": { pinyin: "lù", en: "dew" },
+  "一": { pinyin: "yī", en: "one" },
+  "名": { pinyin: "míng", en: "name; called" },
+  "天": { pinyin: "tiān", en: "heaven; sky" },
+  "乳": { pinyin: "rǔ", en: "milk; breast" },
+  "酒": { pinyin: "jiǔ", en: "alcohol; wine" },
+  "霧": { pinyin: "wù", en: "fog; mist" },
+  "冰": { pinyin: "bīng", en: "ice" },
+  
+  "花": { pinyin: "huā", en: "flower" },
+  "楊": { pinyin: "yáng", en: "poplar; surname" },
+  "太": { pinyin: "tài", en: "great; extreme" },
+  "真": { pinyin: "zhēn", en: "true; real" },
+  "每": { pinyin: "měi", en: "each; every" },
+  "宿": { pinyin: "sù", en: "to stay overnight" },
+  "初": { pinyin: "chū", en: "beginning; first" },
+  "消": { pinyin: "xiāo", en: "to disappear; to digest" },
+  "多": { pinyin: "duō", en: "many; much" },
+  "苦": { pinyin: "kǔ", en: "bitter; suffering" },
+  "肺": { pinyin: "fèi", en: "lungs" },
+  "熱": { pinyin: "rè", en: "hot; heat" },
+  "淩": { pinyin: "líng", en: "to approach" },
+  "晨": { pinyin: "chén", en: "morning" },
+  "至": { pinyin: "zhì", en: "to arrive" },
+  "後": { pinyin: "hòu", en: "after; behind" },
+  "苑": { pinyin: "yuàn", en: "garden; park" },
+  "傍": { pinyin: "bàng", en: "near; beside" },
+  "口": { pinyin: "kǒu", en: "mouth" },
+  "吸": { pinyin: "xī", en: "to inhale; to absorb" },
+  "潤": { pinyin: "rùn", en: "to moisten" },
+  
+  "仙": { pinyin: "xiān", en: "immortal" },
+  "人": { pinyin: "rén", en: "person" },
+  "掌": { pinyin: "zhǎng", en: "palm; to control" },
+  "漢": { pinyin: "hàn", en: "Han dynasty" },
+  "武": { pinyin: "wǔ", en: "military; martial" },
+  "帝": { pinyin: "dì", en: "emperor" },
+  "建": { pinyin: "jiàn", en: "to build" },
+  "柏": { pinyin: "bǎi", en: "cypress" },
+  "梁": { pinyin: "liáng", en: "beam; bridge" },
+  "臺": { pinyin: "tái", en: "tower; platform" },
+  "高": { pinyin: "gāo", en: "high; tall" },
+  "五": { pinyin: "wǔ", en: "five" },
+  "十": { pinyin: "shí", en: "ten" },
+  "丈": { pinyin: "zhàng", en: "zhang (3.3 meters)" },
+  "以": { pinyin: "yǐ", en: "with; by means of" },
+  "銅": { pinyin: "tóng", en: "copper" },
+  "柱": { pinyin: "zhù", en: "pillar; column" },
+  "置": { pinyin: "zhì", en: "to place" },
+  "擎": { pinyin: "qíng", en: "to lift up" },
+  "玉": { pinyin: "yù", en: "jade" },
+  "盤": { pinyin: "pán", en: "plate; tray" },
+  "承": { pinyin: "chéng", en: "to receive; to hold" },
+  "雲": { pinyin: "yún", en: "cloud" },
+  "表": { pinyin: "biǎo", en: "surface; to express" },
+  "和": { pinyin: "hé", en: "and; to mix" },
+  "屑": { pinyin: "xiè", en: "fragments; crumbs" },
+  "服": { pinyin: "fú", en: "to take (medicine)" },
+  "之": { pinyin: "zhī", en: "it; him; her" },
+  "求": { pinyin: "qiú", en: "to seek" },
+  
+  "夜": { pinyin: "yè", en: "night" },
+  "氣": { pinyin: "qì", en: "energy; air" },
+  "著": { pinyin: "zhuó", en: "to attach" },
+  "物": { pinyin: "wù", en: "thing; object" },
+  "為": { pinyin: "wéi", en: "to be; to become" },
+  "玉": { pinyin: "yù", en: "jade" },
+  "篇": { pinyin: "piān", en: "chapter; piece" },
+  "曰": { pinyin: "yuē", en: "to say" },
+  "津": { pinyin: "jīn", en: "ferry; saliva" },
+  "液": { pinyin: "yè", en: "liquid" },
+  "下": { pinyin: "xià", en: "below; down" },
+  "所": { pinyin: "suǒ", en: "place; that which" },
+  "潤": { pinyin: "rùn", en: "to moisten" },
+  "萬": { pinyin: "wàn", en: "ten thousand" },
+  
+  "地": { pinyin: "dì", en: "earth; ground" },
+  "上": { pinyin: "shàng", en: "up; above" },
+  "不": { pinyin: "bù", en: "not" },
+  "應": { pinyin: "yìng", en: "to respond" },
+  "元": { pinyin: "yuán", en: "origin; first" },
+  "命": { pinyin: "mìng", en: "life; destiny" },
+  "苞": { pinyin: "bāo", en: "bud; bract" },
+  "陰": { pinyin: "yīn", en: "yin; shade" },
+  "陽": { pinyin: "yáng", en: "yang; sun" },
+  "亂": { pinyin: "luàn", en: "chaos; disorder" },
+  "蒙": { pinyin: "méng", en: "to cover" },
+  "冒": { pinyin: "mào", en: "to risk; to emit" },
+  "覆": { pinyin: "fù", en: "to cover; to overturn" },
+  
+  "冬": { pinyin: "dōng", en: "winter" },
+  "水": { pinyin: "shuǐ", en: "water" },
+  "結": { pinyin: "jié", en: "to knot; to congeal" },
+  "寒": { pinyin: "hán", en: "cold" },
+  "凍": { pinyin: "dòng", en: "to freeze" },
+  "則": { pinyin: "zé", en: "then; rule" },
+  "凝": { pinyin: "níng", en: "to congeal" },
+  "堅": { pinyin: "jiān", en: "hard; solid" },
+  
+  "甘": { pinyin: "gān", en: "sweet" },
+  "梁": { pinyin: "liáng", en: "beam; bridge" },
+  "詔": { pinyin: "shì", en: "posthumous name" },
+  "貴": { pinyin: "guì", en: "valuable; noble" },
+  "縣": { pinyin: "xiàn", en: "county" },
+  "孝": { pinyin: "xiào", en: "filial piety" },
+  "松": { pinyin: "sōng", en: "pine tree" },
+  "樹": { pinyin: "shù", en: "tree" },
+  "廣": { pinyin: "guǎng", en: "wide; extensive" },
+  "東": { pinyin: "dōng", en: "east" },
+  "提": { pinyin: "tí", en: "to lift" },
+  "刑": { pinyin: "xíng", en: "punishment" },
+  "幹": { pinyin: "gàn", en: "trunk; main part" },
+  "官": { pinyin: "guān", en: "official" },
+  "蘇": { pinyin: "sū", en: "to revive; surname" },
+  "軾": { pinyin: "shì", en: "crossbar of carriage" },
+  "詢": { pinyin: "xún", en: "to inquire" },
+  "知": { pinyin: "zhī", en: "to know" },
+  "狀": { pinyin: "zhuàng", en: "condition; document" },
+  "署": { pinyin: "shǔ", en: "to sign; office" },
+  "齋": { pinyin: "zhāi", en: "study; vegetarian" },
+  "瑞": { pinyin: "ruì", en: "auspicious" },
+  "林": { pinyin: "lín", en: "forest" },
+  "讀": { pinyin: "dú", en: "to read" },
+  "書": { pinyin: "shū", en: "book" },
+  "處": { pinyin: "chù", en: "place" },
+  "薰": { pinyin: "xūn", en: "fragrant" },
+  "風": { pinyin: "fēng", en: "wind" },
+  
+  "作": { pinyin: "zuò", en: "to make; to do" },
+  "裏": { pinyin: "lǐ", en: "inside; Chinese mile" },
+  "神": { pinyin: "shén", en: "god; spirit" },
+  "農": { pinyin: "nóng", en: "agriculture" },
+  "氏": { pinyin: "shì", en: "clan; family name" },
+  "世": { pinyin: "shì", en: "generation; world" },
+  "衰": { pinyin: "shuāi", en: "to decline" },
+  "諸": { pinyin: "zhū", en: "all; various" },
+  "侯": { pinyin: "hóu", en: "marquis" },
+  "相": { pinyin: "xiāng", en: "mutually; each other" },
+  "侵": { pinyin: "qīn", en: "to invade" },
+  "伐": { pinyin: "fá", en: "to attack; to fell" },
+  "炎": { pinyin: "yán", en: "flame; inflammation" },
+  "榆": { pinyin: "yú", en: "elm" },
+  "罔": { pinyin: "wǎng", en: "net; to deceive" },
+  "弗": { pinyin: "fú", en: "not" },
+  "能": { pinyin: "néng", en: "can; ability" },
+  "征": { pinyin: "zhēng", en: "to go on expedition" },
+  "軒": { pinyin: "xuān", en: "high; tall" },
+  "轅": { pinyin: "yuán", en: "shaft of cart" },
+  "修": { pinyin: "xiū", en: "to cultivate; to repair" },
+  "德": { pinyin: "dé", en: "virtue" },
+  "治": { pinyin: "zhì", en: "to govern; to cure" },
+  "兵": { pinyin: "bīng", en: "soldier; weapon" },
+  "享": { pinyin: "xiǎng", en: "to enjoy" },
+  "蚩": { pinyin: "chī", en: "ignorant; cruel" },
+  "尤": { pinyin: "yóu", en: "especially; outstanding" },
+  "戰": { pinyin: "zhàn", en: "to fight; war" },
+  "涿": { pinyin: "zhuō", en: "name of place" },
+  "鹿": { pinyin: "lù", en: "deer" },
+  "迷": { pinyin: "mí", en: "to confuse; lost" },
+  "乃": { pinyin: "nǎi", en: "then; thereupon" },
+  "指": { pinyin: "zhǐ", en: "to point" },
+  "南": { pinyin: "nán", en: "south" },
+  "車": { pinyin: "chē", en: "vehicle" },
+  "擒": { pinyin: "qín", en: "to capture" },
+  "殺": { pinyin: "shā", en: "to kill" },
+  
+  "伐": { pinyin: "fá", en: "to fell; to attack" },
+  "家": { pinyin: "jiā", en: "family; home" },
+  "卿": { pinyin: "qīng", en: "high official" },
+  "大": { pinyin: "dà", en: "big; great" },
+  "夫": { pinyin: "fū", en: "man; husband" },
+  "喪": { pinyin: "sāng", en: "mourning" },
+  "祭": { pinyin: "jì", en: "to sacrifice" },
+  "用": { pinyin: "yòng", en: "to use" },
+  
+  "人": { pinyin: "rén", en: "person" },
+  "泮": { pinyin: "pàn", en: "to melt; school" },
+  "晉": { pinyin: "jìn", en: "Jin dynasty" },
+  "令": { pinyin: "lìng", en: "command" },
+  "狐": { pinyin: "hú", en: "fox" },
+  "策": { pinyin: "cè", en: "plan; whip" },
+  "夢": { pinyin: "mèng", en: "dream" },
+  "立": { pinyin: "lì", en: "to stand" },
+  "上": { pinyin: "shàng", en: "on; above" },
+  "與": { pinyin: "yǔ", en: "and; with" },
+  "下": { pinyin: "xià", en: "below; under" },
+  "語": { pinyin: "yǔ", en: "language; to speak" },
+  "索": { pinyin: "suǒ", en: "rope; to search" },
+  "占": { pinyin: "zhān", en: "to divine" },
+  "媒": { pinyin: "méi", en: "matchmaker" },
+  "介": { pinyin: "jiè", en: "to introduce" },
+  "事": { pinyin: "shì", en: "matter; affair" },
+  "當": { pinyin: "dāng", en: "should; at that time" },
+  "太": { pinyin: "tài", en: "great; extreme" },
+  "守": { pinyin: "shǒu", en: "to guard" },
+  "田": { pinyin: "tián", en: "field" },
+  "豹": { pinyin: "bào", en: "leopard" },
+  "子": { pinyin: "zǐ", en: "son; child" },
+  "張": { pinyin: "zhāng", en: "to open; surname" },
+  "嘉": { pinyin: "jiā", en: "good; excellent" },
+  "貞": { pinyin: "zhēn", en: "virtuous; chaste" },
+  "女": { pinyin: "nǚ", en: "woman; daughter" },
+  "使": { pinyin: "shǐ", en: "to make; to send" },
+  "為": { pinyin: "wèi", en: "for; on behalf of" },
+  "果": { pinyin: "guǒ", en: "fruit; result" },
+  "於": { pinyin: "yú", en: "at; in" },
+  "仲": { pinyin: "zhòng", en: "middle; second" },
+  "春": { pinyin: "chūn", en: "spring" },
+  "成": { pinyin: "chéng", en: "to complete" },
+  "婚": { pinyin: "hūn", en: "marriage" },
+  "故": { pinyin: "gù", en: "therefore; reason" },
+  "今": { pinyin: "jīn", en: "now; present" },
+  "稱": { pinyin: "chēng", en: "to call; name" },
+  "亦": { pinyin: "yì", en: "also" },
+  "詩": { pinyin: "shī", en: "poetry" },
+  "經": { pinyin: "jīng", en: "classic; scripture" },
+  "迨": { pinyin: "dài", en: "until; by the time" },
+  "其": { pinyin: "qí", en: "his; her; its" },
+  
+  "生": { pinyin: "shēng", en: "to be born; life" },
+  "於": { pinyin: "yú", en: "at; in; from" },
+  "荀": { pinyin: "xún", en: "surname; Xunzi" },
+  "子": { pinyin: "zǐ", en: "master; child" },
+  "而": { pinyin: "ér", en: "and; but" },
+  "寒": { pinyin: "hán", en: "cold" },
+  "比": { pinyin: "bǐ", en: "to compare" },
+  "後": { pinyin: "hòu", en: "after; behind" },
+  "進": { pinyin: "jìn", en: "to advance" },
+  "過": { pinyin: "guò", en: "to pass; exceed" },
+  "先": { pinyin: "xiān", en: "first; prior" },
+  
+  "山": { pinyin: "shān", en: "mountain" },
+  "唐": { pinyin: "táng", en: "Tang dynasty" },
+  "楊": { pinyin: "yáng", en: "poplar; surname" },
+  "國": { pinyin: "guó", en: "country" },
+  "忠": { pinyin: "zhōng", en: "loyal" },
+  "為": { pinyin: "wéi", en: "to be; to act as" },
+  "右": { pinyin: "yòu", en: "right" },
+  "相": { pinyin: "xiàng", en: "chancellor; minister" },
+  "或": { pinyin: "huò", en: "someone; perhaps" },
+  "勸": { pinyin: "quàn", en: "to advise" },
+  "陜": { pinyin: "shǎn", en: "Shanxi (abbrev.)" },
+  "郡": { pinyin: "jùn", en: "commandery" },
+  "進": { pinyin: "jìn", en: "to advance" },
+  "士": { pinyin: "shì", en: "scholar; warrior" },
+  "張": { pinyin: "zhāng", en: "surname" },
+  "彖": { pinyin: "tuàn", en: "to judge" },
+  "謁": { pinyin: "yè", en: "to visit (superior)" },
+  "富": { pinyin: "fù", en: "wealthy" },
+  "貴": { pinyin: "guì", en: "valuable; noble" },
+  "立": { pinyin: "lì", en: "to stand; immediately" },
+  "可": { pinyin: "kě", en: "can; may" },
+  "圖": { pinyin: "tú", en: "picture; to plan" },
+  "君": { pinyin: "jūn", en: "lord; gentleman" },
+  "輩": { pinyin: "bèi", en: "generation; group" },
+  "倚": { pinyin: "yǐ", en: "to lean on" },
+  "若": { pinyin: "ruò", en: "like; as if" },
+  "泰": { pinyin: "tài", en: "great; peaceful" },
+  "吾": { pinyin: "wú", en: "I; me" },
+  "以": { pinyin: "yǐ", en: "with; by means of" },
+  "為": { pinyin: "wéi", en: "to be; to act as" },
+  "耳": { pinyin: "ěr", en: "ear; (final particle)" },
+  "若": { pinyin: "ruò", en: "if" },
+  "皎": { pinyin: "jiǎo", en: "bright; clear" },
+  "既": { pinyin: "jì", en: "already; since" },
+  "出": { pinyin: "chū", en: "to go out" },
+  "得": { pinyin: "dé", en: "to obtain" },
+  "無": { pinyin: "wú", en: "without" },
+  "失": { pinyin: "shī", en: "to lose" },
+  "恃": { pinyin: "shì", en: "to rely on" },
+  "乎": { pinyin: "hū", en: "(question particle)" },
+  "遂": { pinyin: "suì", en: "thereupon" },
+  "隱": { pinyin: "yǐn", en: "to hide" },
+  "居": { pinyin: "jū", en: "to reside" },
+  "嵩": { pinyin: "sōng", en: "high; Mt. Song" },
+  
+  "柱": { pinyin: "zhù", en: "pillar; column" },
+  "明": { pinyin: "míng", en: "bright; Ming dynasty" },
+  "正": { pinyin: "zhèng", en: "correct; upright" },
+  "德": { pinyin: "dé", en: "virtue" },
+  "年": { pinyin: "nián", en: "year" },
+  "文": { pinyin: "wén", en: "writing; culture" },
+  "安": { pinyin: "ān", en: "peace; safe" },
+  "縣": { pinyin: "xiàn", en: "county" },
+  "河": { pinyin: "hé", en: "river" },
+  "忽": { pinyin: "hū", en: "suddenly" },
+  "僵": { pinyin: "jiāng", en: "stiff; rigid" },
+  "風": { pinyin: "fēng", en: "wind" },
+  "色": { pinyin: "sè", en: "color" },
+  "凍": { pinyin: "dòng", en: "to freeze" },
+  "圍": { pinyin: "wéi", en: "to surround; girth" },
+  "俱": { pinyin: "jù", en: "all; together" },
+  "中": { pinyin: "zhōng", en: "middle; center" },
+  "空": { pinyin: "kōng", en: "empty; sky" },
+  "旁": { pinyin: "páng", en: "side" },
+  "穴": { pinyin: "xué", en: "cave; hole" },
+  "數": { pinyin: "shù", en: "number" },
+  "日": { pinyin: "rì", en: "day" },
+  "流": { pinyin: "liú", en: "to flow" },
+  "賊": { pinyin: "zéi", en: "thief; rebel" },
+  "過": { pinyin: "guò", en: "to pass" },
+  "鄉": { pinyin: "xiāng", en: "countryside" },
+  "民": { pinyin: "mín", en: "people" },
+  "走": { pinyin: "zǒu", en: "to walk" },
+  "入": { pinyin: "rù", en: "to enter" },
+  "避": { pinyin: "bì", en: "to avoid" },
+  "賴": { pinyin: "lài", en: "to rely on" },
+  "保": { pinyin: "bǎo", en: "to protect" },
+  "全": { pinyin: "quán", en: "complete; whole" },
+  "者": { pinyin: "zhě", en: "person; one who" },
+  "何": { pinyin: "hé", en: "what; how" },
+  "啻": { pinyin: "chì", en: "only; merely" },
+  "百": { pinyin: "bǎi", en: "hundred" },
+  "萬": { pinyin: "wàn", en: "ten thousand" }
+}
+
+const langs = ['en', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'vi', 'ru', 'el', 'la', 'th', 'ms', 'ar']
+
+function renderChar(c) {
+  if (!dictionary[c]) return `<span class="char-wrap">${c}</span>`
+  const { pinyin, en } = dictionary[c]
+  return `
+    <span class="char-wrap">
+      ${c}
+      <span class="popup">${pinyin}<br>${en}</span>
+    </span>`
+}
+
+const content = document.getElementById('content')
+
+data.forEach((paragraph, i) => {
+  const div = document.createElement('div')
+  div.className = 'section'
+
+  const raw = document.createElement('div')
+  raw.className = 'text'
+  raw.innerText = paragraph
+
+  const btnRead = document.createElement('button')
+  btnRead.textContent = '朗讀'
+  btnRead.onclick = () => {
+    if (btnRead.dataset.playing === 'true') {
+      speechSynthesis.cancel()
+      btnRead.dataset.playing = 'false'
+    } else {
+      const utter = new SpeechSynthesisUtterance(paragraph)
+      utter.lang = 'zh-CN'
+      speechSynthesis.speak(utter)
+      btnRead.dataset.playing = 'true'
+      utter.onend = () => btnRead.dataset.playing = 'false'
+    }
+  }
+
+  const annotated = document.createElement('div')
+  annotated.className = 'text'
+  annotated.innerHTML = [...paragraph].map(renderChar).join('')
+
+  const bar = document.createElement('div')
+  bar.className = 'button-bar'
+
+  langs.forEach(lang => {
+    const b = document.createElement('button')
+    b.textContent = lang
+    b.onclick = async () => {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=${lang}&dt=t&q=${encodeURIComponent(paragraph)}`)
+      const json = await res.json()
+      const translated = json[0].map(d => d[0]).join('')
+      div.querySelector('.translation').textContent = `${lang}:\n${translated}`
+    }
+    bar.appendChild(b)
+  })
+
+  const trans = document.createElement('div')
+  trans.className = 'translation'
+
+  div.append(raw, btnRead, annotated, bar, trans)
+  content.appendChild(div)
+})
+</script>
+
+</body>
+</html>

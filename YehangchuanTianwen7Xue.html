@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>《天文部·雪卷》多语阅读辅助</title>
+  <style>
+    body {
+      font-family: 'Noto Serif TC', serif;
+      line-height: 1.8;
+      padding: 20px;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    .section {
+      margin-bottom: 50px;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .text {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .char-wrap {
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+      margin: 0 1px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .char-wrap:hover {
+      background-color: #2a2a2a;
+    }
+    .popup {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2b2b2b;
+      border: 1px solid #555;
+      padding: 5px 8px;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 10;
+      color: #f0f0f0;
+    }
+    .char-wrap:hover .popup {
+      display: block;
+    }
+    .button-bar {
+      margin-top: 12px;
+    }
+    button {
+      margin: 4px 6px 0 0;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background-color: #333;
+      color: #f0f0f0;
+      cursor: pointer;
+    }
+    .translation {
+      margin-top: 12px;
+      font-size: 16px;
+      color: #d0d0d0;
+      white-space: pre-wrap;
+      background-color: #222;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+    .loading {
+      color: #aaa;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script>
+// 雪卷文本数据
+const data = [
+  `雪神名滕六。霜神名青女。`,
+  `滕六降雪：唐蕭誌忠為晉州刺史，欲出獵，有樵者見群獸，哀請於九冥使者（山神）。使者曰：「若令滕六降雪，巽二起風，則使君不出矣。」天未明，風雪大作，蕭果不出。《韓詩外傳》：「凡草木花多五出，雪花獨六出」。陰極之數，立春則五出矣。雪花曰。`,
+  `柳絮因風：晉謝太傅大雪家宴，子女侍坐。公曰：「白雪紛紛何所似？」兄子朗曰：「撒鹽空中差可擬。」兄女道韞曰：「不若柳絮因風起。」公大稱賞。`,
+  `雪水烹茶：宋陶穀得黨家姬，遇雪，取雪水烹茶，請姬曰：「黨家亦知此味否？」姬曰：「彼武夫安有此？但知於錦帳中飲羊羔酒耳。」公為一笑。`,
+  `欲仙去：越人王冕，當天大雪，赤腳登爐峰，四顧大呼曰：「天地皆白玉合成，使人心膽澄澈，便欲仙去！」`,
+  `剡溪雪：王子猷居山陰，於雪夜棹小舟往剡溪訪戴安道，未到門而返。仆問之，答曰：「乘興而來，興盡而返，何必見戴？」`,
+  `臥雪：袁安遇大雪，閉門僵臥。洛陽令行部，見民家皆除雪出。至安門，無行跡。疑安已死，急令人除雪入戶，見安僵臥。問安何以不出。安曰：「大雪人皆餓，不宜幹人。」令賢之，舉為孝廉。`,
+  `嚼梅咽雪：鐵腳道人，嘗愛赤腳走雪中，興發則朗誦《南華·秋水篇》，嚼梅花滿口，和雪咽之，曰：「吾欲寒香沁入心骨。」`,
+  `神仙中人：晉王恭嘗披鶴氅涉雪而行，孟旭見之，曰：「此真神仙中人也。」`,
+  `大雪踐約：環州蕃部奴訛者，素倔強，未嘗出謁郡守。聞種世衡至，出迎。世衡約明日造其帳。是夕大雪，深三尺。左右曰：「地險不可往！」世衡曰：「吾方結諸羌以信，詎可失期？」遂緣險而入。奴訛訝曰：「公乃不疑我耶！」率部落羅拜聽命。`,
+  `雪夜入蔡州：李□乘雪夜入蔡州，攪亂鵝鴨池，及軍聲達於吳元濟臥榻，倉卒驚起，圍而擒之。`,
+  `踏雪尋梅：孟浩然情懷曠達，常冒雷雪騎驢尋梅，曰：「吾詩思在灞橋風雪中，驢背上。」`,
+  `雪：《大戴經》云：天地積陰寒則為雪。《汜勝之書》：雪為五谷之精。又云「冬雪兆豐年」。故冬雪為瑞雪。詩有「宜瑞不宜多」之句。`,
+  `齧雪咽毡：蘇武持節使匈奴。幽武大窖中，齧雪咽毡，數日不死，匈奴神之。`,
+  `映雪讀書：孫康家貧，好學，嘗於冬夜映雪讀書。`,
+  `雪夜幸普家：宋太祖數微行過功臣家。一日大雪，伺夜，普意太祖不出。久之，聞叩門聲，普亟出，太祖立風雪中。`,
+  `霜：露之所結也。《大戴禮》雲：霜露陰陽之氣，陰氣盛則凝而為霜。《易》曰：「履霜堅冰至。」《詩》：「岐節貫秋霜。」`,
+  `五月降霜：《白帖》：鄒衍事燕惠王，盡忠。左右譖之，王系之獄。衍仰天而哭，五月為之降霜。`
+]
+
+// 字典数据
+const dictionary = {
+  "雪": { pinyin: "xuě", en: "snow" },
+  "神": { pinyin: "shén", en: "god; deity" },
+  "名": { pinyin: "míng", en: "name" },
+  "滕": { pinyin: "Téng", en: "surname Teng" },
+  "六": { pinyin: "liù", en: "six" },
+  "霜": { pinyin: "shuāng", en: "frost" },
+  "青": { pinyin: "qīng", en: "blue; green" },
+  "女": { pinyin: "nǚ", en: "female; woman" },
+  
+  "降": { pinyin: "jiàng", en: "to descend; fall" },
+  "唐": { pinyin: "Táng", en: "Tang dynasty" },
+  "蕭": { pinyin: "Xiāo", en: "surname Xiao" },
+  "誌": { pinyin: "zhì", en: "record; annals" },
+  "忠": { pinyin: "zhōng", en: "loyalty" },
+  "為": { pinyin: "wéi", en: "to be; act as" },
+  "晉": { pinyin: "Jìn", en: "Jin state/dynasty" },
+  "州": { pinyin: "zhōu", en: "prefecture" },
+  "刺": { pinyin: "cì", en: "thorn; stab" },
+  "史": { pinyin: "shǐ", en: "history; official" },
+  "欲": { pinyin: "yù", en: "to want" },
+  "出": { pinyin: "chū", en: "to go out" },
+  "獵": { pinyin: "liè", en: "hunting" },
+  "有": { pinyin: "yǒu", en: "to have" },
+  "樵": { pinyin: "qiáo", en: "firewood; woodcutter" },
+  "者": { pinyin: "zhě", en: "person who..." },
+  "見": { pinyin: "jiàn", en: "to see" },
+  "群": { pinyin: "qún", en: "group; herd" },
+  "獸": { pinyin: "shòu", en: "beast; animal" },
+  "哀": { pinyin: "āi", en: "sorrow; pity" },
+  "請": { pinyin: "qǐng", en: "to request" },
+  "於": { pinyin: "yú", en: "at; to" },
+  "九": { pinyin: "jiǔ", en: "nine" },
+  "冥": { pinyin: "míng", en: "dark; underworld" },
+  "使": { pinyin: "shǐ", en: "to make; envoy" },
+  "山": { pinyin: "shān", en: "mountain" },
+  "曰": { pinyin: "yuē", en: "to say" },
+  "若": { pinyin: "ruò", en: "if; like" },
+  "令": { pinyin: "lìng", en: "to order; command" },
+  "巽": { pinyin: "xùn", en: "southeast wind" },
+  "二": { pinyin: "èr", en: "two" },
+  "起": { pinyin: "qǐ", en: "to rise" },
+  "風": { pinyin: "fēng", en: "wind" },
+  "則": { pinyin: "zé", en: "then; rule" },
+  "使": { pinyin: "shǐ", en: "to make" },
+  "君": { pinyin: "jūn", en: "lord; gentleman" },
+  "不": { pinyin: "bù", en: "not" },
+  "矣": { pinyin: "yǐ", en: "(final particle)" },
+  "天": { pinyin: "tiān", en: "heaven; sky" },
+  "未": { pinyin: "wèi", en: "not yet" },
+  "明": { pinyin: "míng", en: "bright; clear" },
+  "大": { pinyin: "dà", en: "big" },
+  "作": { pinyin: "zuò", en: "to do; make" },
+  "果": { pinyin: "guǒ", en: "fruit; indeed" },
+  "韓": { pinyin: "Hán", en: "Han state/surname" },
+  "詩": { pinyin: "shī", en: "poetry" },
+  "外": { pinyin: "wài", en: "outside" },
+  "傳": { pinyin: "zhuàn", en: "biography" },
+  "凡": { pinyin: "fán", en: "ordinary; all" },
+  "草": { pinyin: "cǎo", en: "grass" },
+  "木": { pinyin: "mù", en: "tree" },
+  "花": { pinyin: "huā", en: "flower" },
+  "多": { pinyin: "duō", en: "many" },
+  "五": { pinyin: "wǔ", en: "five" },
+  "出": { pinyin: "chū", en: "to come out" },
+  "獨": { pinyin: "dú", en: "alone; unique" },
+  "陰": { pinyin: "yīn", en: "yin; shade" },
+  "極": { pinyin: "jí", en: "extreme" },
+  "之": { pinyin: "zhī", en: "of; (possessive)" },
+  "數": { pinyin: "shù", en: "number" },
+  "立": { pinyin: "lì", en: "to stand" },
+  "春": { pinyin: "chūn", en: "spring" },
+  
+  // 更多字典条目...
+}
+
+// 支持的语言及其显示名称
+const langs = [
+  {code: 'en', name: 'English'},
+  {code: 'fr', name: 'Français'},
+  {code: 'de', name: 'Deutsch'},
+  {code: 'es', name: 'Español'},
+  {code: 'it', name: 'Italiano'},
+  {code: 'ja', name: '日本語'},
+  {code: 'ko', name: '한국어'},
+  {code: 'ru', name: 'Русский'},
+  {code: 'ar', name: 'العربية'}
+]
+
+// 内置翻译函数 - 模拟大模型翻译能力
+async function translateText(text, targetLang) {
+  // 这里应该是调用大模型API的地方
+  // 由于实际API调用需要后端支持，这里用模拟数据演示
+  
+  // 模拟不同语言的翻译结果
+  const mockTranslations = {
+    en: {
+      "雪神名滕六。霜神名青女。": "The snow god is named Teng Liu. The frost goddess is named Qing Nü.",
+      "滕六降雪": "Teng Liu Brings Snow",
+      "柳絮因風": "Willow Catkins in the Wind",
+      "雪水烹茶": "Brewing Tea with Snow Water"
+    },
+    fr: {
+      "雪神名滕六。霜神名青女。": "Le dieu de la neige s'appelle Teng Liu. La déesse du givre s'appelle Qing Nü.",
+      "滕六降雪": "Teng Liu Apporte la Neige",
+      "柳絮因風": "Chatons de Saule dans le Vent",
+      "雪水烹茶": "Infuser du Thé avec de l'Eau de Neige"
+    },
+    // 其他语言的模拟翻译...
+  };
+
+  // 返回模拟翻译或提示信息
+  return mockTranslations[targetLang]?.[text] || 
+         `[${targetLang} translation not available in demo. Actual implementation would use AI model.]`;
+}
+
+// 渲染单个字符
+function renderChar(c) {
+  if (!dictionary[c]) return `<span class="char-wrap">${c}</span>`
+  const { pinyin, en } = dictionary[c]
+  return `
+    <span class="char-wrap">
+      ${c}
+      <span class="popup">${pinyin}<br>${en}</span>
+    </span>`
+}
+
+const content = document.getElementById('content')
+
+// 渲染每个段落
+data.forEach((paragraph, i) => {
+  const div = document.createElement('div')
+  div.className = 'section'
+
+  const raw = document.createElement('div')
+  raw.className = 'text'
+  raw.innerText = paragraph
+
+  const btnRead = document.createElement('button')
+  btnRead.textContent = '朗讀'
+  btnRead.onclick = () => {
+    if (btnRead.dataset.playing === 'true') {
+      speechSynthesis.cancel()
+      btnRead.dataset.playing = 'false'
+    } else {
+      const utter = new SpeechSynthesisUtterance(paragraph)
+      utter.lang = 'zh-CN'
+      speechSynthesis.speak(utter)
+      btnRead.dataset.playing = 'true'
+      utter.onend = () => btnRead.dataset.playing = 'false'
+    }
+  }
+
+  const annotated = document.createElement('div')
+  annotated.className = 'text'
+  annotated.innerHTML = [...paragraph].map(renderChar).join('')
+
+  const bar = document.createElement('div')
+  bar.className = 'button-bar'
+
+  langs.forEach(lang => {
+    const b = document.createElement('button')
+    b.textContent = lang.name
+    b.onclick = async () => {
+      const translationDiv = div.querySelector('.translation')
+      translationDiv.textContent = "翻译中..."
+      translationDiv.classList.add('loading')
+      
+      try {
+        const translated = await translateText(paragraph, lang.code)
+        translationDiv.textContent = `${lang.name}:\n${translated}`
+      } catch (error) {
+        translationDiv.textContent = `翻译失败: ${error.message}`
+      } finally {
+        translationDiv.classList.remove('loading')
+      }
+    }
+    bar.appendChild(b)
+  })
+
+  const trans = document.createElement('div')
+  trans.className = 'translation'
+
+  div.append(raw, btnRead, annotated, bar, trans)
+  content.appendChild(div)
+})
+</script>
+
+</body>
+</html>
