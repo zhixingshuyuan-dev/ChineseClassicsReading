@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《兩都賦》交互式閱讀系統</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋體", serif;
+            line-height: 2.5;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #3a3226;
+            color: #e0d5c8;
+        }
+        
+        h1 {
+            color: #d4b483;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #5d4b36;
+            padding-bottom: 10px;
+        }
+        
+        .main-text {
+            font-size: 24px;
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .char:hover {
+            color: #d4a373;
+            text-shadow: 0 0 3px rgba(212, 163, 115, 0.5);
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4a4235;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+        }
+        
+        .popup-content {
+            font-size: 16px;
+        }
+        
+        .popup-char {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #d4b483;
+        }
+        
+        .popup-pinyin, .popup-meaning {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px dashed #5d4b36;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #a89984;
+        }
+        
+        .paragraph {
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            margin-right: 6px;
+            border: none;
+            border-radius: 50%;
+            background: #5d4b36;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: #e0d5c8;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #7c6a53;
+            transform: scale(1.1);
+        }
+        
+        .annotation {
+            font-size: 18px;
+            background: #4a4235;
+            padding: 12px 15px;
+            border-left: 3px solid #a89984;
+            margin: 12px 0;
+            display: none;
+            color: #d4b483;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .toggle-annotation {
+            background: #5d4b36;
+            border: none;
+            color: #e0d5c8;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-annotation:hover {
+            background: #7c6a53;
+        }
+        
+        .translation-panel {
+            display: none;
+            background: #4a4235;
+            border: 1px solid #5d4b36;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+        }
+        
+        .lang-btn {
+            background: #3a3226;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+            padding: 3px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn:hover {
+            background: #5d4b36;
+        }
+        
+        .lang-btn.active {
+            background: #a89984;
+            color: #3a3226;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #5d4b36;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .translation-content div {
+            display: none;
+            padding: 6px 0;
+        }
+        
+        .translation-content div.show {
+            display: block;
+        }
+        
+        .punctuation {
+            color: #a89984;
+        }
+        
+        .sentence {
+            display: inline;
+            position: relative;
+        }
+        
+        .sentence.active {
+            background-color: rgba(212, 180, 131, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>西都賦</h1>
+    
+    <div class="main-text">
+        <!-- 第十四段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="jí" data-meaning="gather">集</span>
+                <span class="char" data-pinyin="hū" data-meaning="at">乎</span>
+                <span class="char" data-pinyin="yù" data-meaning="Yu">豫</span>
+                <span class="char" data-pinyin="zhāng" data-meaning="Zhang">章</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="yǔ" data-meaning="hall">宇</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="lín" data-meaning="face">臨</span>
+                <span class="char" data-pinyin="hū" data-meaning="at">乎</span>
+                <span class="char" data-pinyin="kūn" data-meaning="Kun">昆</span>
+                <span class="char" data-pinyin="míng" data-meaning="Ming">明</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="chí" data-meaning="pool">池</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zuǒ" data-meaning="left">左</span>
+                <span class="char" data-pinyin="qiān" data-meaning="lead">牽</span>
+                <span class="char" data-pinyin="niú" data-meaning="cow">牛</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="yòu" data-meaning="right">右</span>
+                <span class="char" data-pinyin="zhī" data-meaning="weave">織</span>
+                <span class="char" data-pinyin="nǚ" data-meaning="woman">女</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="sì" data-meaning="like">似</span>
+                <span class="char" data-pinyin="yún" data-meaning="cloud">雲</span>
+                <span class="char" data-pinyin="hàn" data-meaning="Han">漢</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="wú" data-meaning="no">無</span>
+                <span class="char" data-pinyin="yá" data-meaning="boundary">涯</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="mào" data-meaning="luxuriant">茂</span>
+                <span class="char" data-pinyin="shù" data-meaning="tree">樹</span>
+                <span class="char" data-pinyin="yīn" data-meaning="shade">蔭</span>
+                <span class="char" data-pinyin="wèi" data-meaning="flourishing">蔚</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="fāng" data-meaning="fragrant">芳</span>
+                <span class="char" data-pinyin="cǎo" data-meaning="grass">草</span>
+                <span class="char" data-pinyin="bèi" data-meaning="cover">被</span>
+                <span class="char" data-pinyin="dī" data-meaning="embankment">隄</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="lán" data-meaning="orchid">蘭</span>
+                <span class="char" data-pinyin="chǎi" data-meaning="angelica">茝</span>
+                <span class="char" data-pinyin="fā" data-meaning="bloom">發</span>
+                <span class="char" data-pinyin="sè" data-meaning="color">色</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yè" data-meaning="bright">曄</span>
+                <span class="char" data-pinyin="yè" data-meaning="bright">曄</span>
+                <span class="char" data-pinyin="yī" data-meaning="graceful">猗</span>
+                <span class="char" data-pinyin="yī" data-meaning="graceful">猗</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="ruò" data-meaning="like">若</span>
+                <span class="char" data-pinyin="chī" data-meaning="spread">摛</span>
+                <span class="char" data-pinyin="jǐn" data-meaning="brocade">錦</span>
+                <span class="char" data-pinyin="bù" data-meaning="spread">布</span>
+                <span class="char" data-pinyin="xiù" data-meaning="embroidery">繡</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zhú" data-meaning="shine">爥</span>
+                <span class="char" data-pinyin="yào" data-meaning="shine">燿</span>
+                <span class="char" data-pinyin="hū" data-meaning="at">乎</span>
+                <span class="char" data-pinyin="qí" data-meaning="its">其</span>
+                <span class="char" data-pinyin="bēi" data-meaning="slope">陂</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>（天子）聚集在豫章观的屋檐下，俯瞰昆明池的风光。</p>
+                        <p>左侧是牵牛星，右侧是织女星，仿佛天河般浩瀚无垠。</p>
+                        <p>茂密的树木投下浓荫，芬芳的绿草覆盖堤岸。</p>
+                        <p>兰草与白芷绽放光彩，鲜艳而柔美。</p>
+                        <p>如同铺展的锦绣，在池畔熠熠生辉。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Gathered at the Yu Zhang Hall, facing the Kunming Pool.</p>
+                        <p>With the Cowherd on the left and the Weaver Girl on the right, resembling the boundless Milky Way.</p>
+                        <p>Luxuriant trees cast dense shade, fragrant grasses cover the embankments.</p>
+                        <p>Orchids and angelicas bloom in colors, brilliantly and gracefully.</p>
+                        <p>Like spreading brocade and embroidery, shining brightly on its slopes.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Versammelt in der Yu Zhang Halle, gegenüber dem Kunming Teich.</p>
+                        <p>Mit dem Kuhhirten links und der Weberin rechts, ähnlich der grenzenlosen Milchstraße.</p>
+                        <p>Üppige Bäume werfen dichten Schatten, duftende Gräser bedecken die Deiche.</p>
+                        <p>Orchideen und Engelwurz blühen in Farben, strahlend und anmutig.</p>
+                        <p>Wie ausgebreitete Brokat und Stickerei, hell leuchtend an seinen Hängen.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Rassemblés dans la salle Yu Zhang, face au bassin Kunming.</p>
+                        <p>Avec le Bouvier à gauche et la Tisserande à droite, ressemblant à la Voie lactée sans limites.</p>
+                        <p>Des arbres luxuriants jettent une ombre dense, des herbes parfumées couvrent les digues.</p>
+                        <p>Les orchidées et les angéliques fleurissent en couleurs, brillamment et gracieusement.</p>
+                        <p>Comme du brocart et de la broderie étalés, brillant vivement sur ses pentes.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Собравшись в зале Юй Чжан, лицом к бассейну Куньмин.</p>
+                        <p>С Волопасом слева и Ткачихой справа, напоминая безграничный Млечный Путь.</p>
+                        <p>Пышные деревья отбрасывают густую тень, ароматные травы покрывают насыпи.</p>
+                        <p>Орхидеи и дягиль цветут в цветах, ярко и изящно.</p>
+                        <p>Как разложенный парча и вышивка, ярко сияющие на его склонах.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Reunidos en el salón Yu Zhang, frente a la piscina Kunming.</p>
+                        <p>Con el Boyero a la izquierda y la Tejedora a la derecha, parecido a la Vía Láctea sin límites.</p>
+                        <p>Árboles frondosos proyectan sombra densa, hierbas fragantes cubren los diques.</p>
+                        <p>Orquídeas y angélicas florecen en colores, brillantes y graciosas.</p>
+                        <p>Como brocado y bordados extendidos, brillando intensamente en sus laderas.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Riuniti nella sala Yu Zhang, di fronte alla piscina Kunming.</p>
+                        <p>Con il Bovaro a sinistra e la Tessitrice a destra, simili alla Via Lattea senza confini.</p>
+                        <p>Alberi lussureggianti proiettano ombre dense, erbe profumate coprono gli argini.</p>
+                        <p>Orchidee e angeliche fioriscono in colori, brillanti e graziose.</p>
+                        <p>Come broccato e ricami stesi, splendenti luminosamente sui suoi pendii.</p>
+                    </div>
+                    <div lang="el">
+                        <p>Συγκεντρώθηκαν στο Yu Zhang Hall, αντιμέτωποι με την πισίνα Kunming.</p>
+                        <p>Με τον Βοσκό στα αριστερά και την Υφάντρα στα δεξιά, που μοιάζει με τον απέραντο Γαλαξία.</p>
+                        <p>Πλούσια δέντρα ρίχνουν πυκνή σκιά, αρωματικά χόρτα καλύπτουν τα ανάχωματα.</p>
+                        <p>Ορχιδέες και αγγελικές ανθίζουν σε χρώματα, λαμπρά και κομψά.</p>
+                        <p>Σαν απλωμένο μπροκάρ και κέντημα, λάμπει φωτεινά στις πλαγιές του.</p>
+                    </div>
+                    <div lang="tr">
+                        <p>Yu Zhang Salonu'nda toplandı, Kunming Havuzu'na baktı.</p>
+                        <p>Solda Çoban ve sağda Dokumacı Kız ile, sınırsız Samanyolu'na benziyor.</p>
+                        <p>Gür ağaçlar yoğun gölge düşürür, kokulu otlar setleri kaplar.</p>
+                        <p>Orkideler ve melekotu renk renk açar, parlak ve zarif.</p>
+                        <p>Serilmiş brokar ve nakış gibi, yamaçlarında parlak bir şekilde parlıyor.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《三輔黃圖》曰：上林有豫章觀。《漢書》曰：武帝發讁吏穿昆明池。《漢宮闕疏》曰：昆明池有二石人，牽牛、織女象。《毛詩》曰：倬彼雲漢。《蒼頡篇》曰：蔚，草木盛貌。《說文》曰：隄，塘也，都奚切。《爾雅》曰：芹茝，蘼蕪。郭璞曰：香草也。茝，齒改切。《漢書》曰：華曄曄，固靈根。《說文》曰：曄，草木白華貌。《毛詩》曰：瞻彼淇澳，綠竹猗猗。毛萇曰：猗猗，美貌。《說文》曰：摛，舒也，勑離切。楊雄《蜀都賦》曰：麗靡摛爥，若揮錦布繡。
+            </div>
+        </div>
+
+        <!-- 第十五段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="niǎo" data-meaning="bird">鳥</span>
+                <span class="char" data-pinyin="zé" data-meaning="then">則</span>
+                <span class="char" data-pinyin="xuán" data-meaning="black">玄</span>
+                <span class="char" data-pinyin="hè" data-meaning="crane">鶴</span>
+                <span class="char" data-pinyin="bái" data-meaning="white">白</span>
+                <span class="char" data-pinyin="lù" data-meaning="egret">鷺</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="huáng" data-meaning="yellow">黃</span>
+                <span class="char" data-pinyin="hú" data-meaning="swan">鵠</span>
+                <span class="char" data-pinyin="jiāo" data-meaning="a kind of waterfowl">鵁</span>
+                <span class="char" data-pinyin="guàn" data-meaning="stork">鸛</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="cāng" data-meaning="a kind of bird">鶬</span>
+                <span class="char" data-pinyin="gē" data-meaning="a kind of bird">鴰</span>
+                <span class="char" data-pinyin="bǎo" data-meaning="bustard">鴇</span>
+                <span class="char" data-pinyin="yì" data-meaning="a kind of waterfowl">鶂</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="fú" data-meaning="wild duck">鳧</span>
+                <span class="char" data-pinyin="yī" data-meaning="a kind of waterfowl">鷖</span>
+                <span class="char" data-pinyin="hóng" data-meaning="wild goose">鴻</span>
+                <span class="char" data-pinyin="yàn" data-meaning="wild goose">鴈</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zhāo" data-meaning="morning">朝</span>
+                <span class="char" data-pinyin="fā" data-meaning="depart">發</span>
+                <span class="char" data-pinyin="hé" data-meaning="river">河</span>
+                <span class="char" data-pinyin="hǎi" data-meaning="sea">海</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="xī" data-meaning="evening">夕</span>
+                <span class="char" data-pinyin="sù" data-meaning="stay overnight">宿</span>
+                <span class="char" data-pinyin="jiāng" data-meaning="river">江</span>
+                <span class="char" data-pinyin="hàn" data-meaning="Han River">漢</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="chén" data-meaning="sink">沈</span>
+                <span class="char" data-pinyin="fú" data-meaning="float">浮</span>
+                <span class="char" data-pinyin="wǎng" data-meaning="go">往</span>
+                <span class="char" data-pinyin="lái" data-meaning="come">來</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yún" data-meaning="cloud">雲</span>
+                <span class="char" data-pinyin="jí" data-meaning="gather">集</span>
+                <span class="char" data-pinyin="wù" data-meaning="fog">霧</span>
+                <span class="char" data-pinyin="sàn" data-meaning="disperse">散</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>飞鸟中有黑鹤、白鹭，黄鹄与鹳鸟；</p>
+                        <p>还有鶬鴰、鴇鶂，野鸭、鸥鸟与大雁。</p>
+                        <p>清晨从河海启程，日暮栖息于长江汉水之滨。</p>
+                        <p>时沉时浮，往来穿梭，如云聚雾散般自由。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Birds include black cranes and white egrets, yellow swans and water storks.</p>
+                        <p>Various waterfowls like cang geese and bustards, wild ducks and wild geese.</p>
+                        <p>Departing from rivers and seas in the morning, resting by the Yangtze and Han rivers at night.</p>
+                        <p>Sinking and floating, coming and going, gathering like clouds and dispersing like mist.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Vögel umfassen schwarze Kraniche und weiße Reiher, gelbe Schwäne und Wasserschnepfen.</p>
+                        <p>Verschiedene Wasservögel wie Cang-Gänse und Trappen, Wildenten und Wildgänse.</p>
+                        <p>Am Morgen von Flüssen und Meeren aufbrechend, am Abend am Yangtze und Han-Flüssen rastend.</p>
+                        <p>Sinkend und schwebend, kommend und gehend, sich wie Wolken sammelnd und sich wie Nebel zerstreuend.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Les oiseaux comprennent des grues noires et des aigrettes blanches, des cygnes jaunes et des cigognes d'eau.</p>
+                        <p>Divers oiseaux aquatiques comme les oies cang et les outardes, les canards sauvages et les oies sauvages.</p>
+                        <p>Partant des rivières et des mers le matin, se reposant près du Yangtsé et des rivières Han la nuit.</p>
+                        <p>Coulant et flottant, allant et venant, se rassemblant comme des nuages et se dispersant comme de la brume.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Птицы включают черных журавлей и белых цапель, желтых лебедей и водяных аистов.</p>
+                        <p>Различные водоплавающие птицы, такие как цан гуси и дрофы, дикие утки и дикие гуси.</p>
+                        <p>Утром отправляются с рек и морей, ночью отдыхают у Янцзы и рек Хань.</p>
+                        <p>Тонут и плавают, приходят и уходят, собираются как облака и рассеиваются как туман.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Las aves incluyen grullas negras y garzas blancas, cisnes amarillos y cigüeñas de agua.</p>
+                        <p>Varias aves acuáticas como gansos cang y avutardas, patos salvajes y gansos salvajes.</p>
+                        <p>Saliendo de ríos y mares por la mañana, descansando cerca del Yangtsé y los ríos Han por la noche.</p>
+                        <p>Hundiendo y flotando, yendo y viniendo, reuniéndose como nubes y dispersándose como niebla.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Gli uccelli includono gru nere e aironi bianchi, cigni gialli e cicogne d'acqua.</p>
+                        <p>Varie uccelli acquatici come oche cang e otarde, anatre selvatiche e oche selvatiche.</p>
+                        <p>Partenza da fiumi e mari al mattino, riposo vicino allo Yangtze e ai fiumi Han di notte.</p>
+                        <p>Affondando e galleggiando, andando e venendo, radunandosi come nuvole e disperdendosi come nebbia.</p>
+                    </div>
+                    <div lang="el">
+                        <p>Τα πουλιά περιλαμβάνουν μαύρους γερανούς και λευκές ερωδιούς, κίτρινους κύκνους και νεροπελαργούς.</p>
+                        <p>Διάφορα υδρόβια πτηνά όπως cang χήνες και ωτίδες, αγριόπαπιες και αγριόχηνες.</p>
+                        <p>Αναχωρώντας από ποτάμια και θάλασσες το πρωί, ξεκουράζοντας κοντά στον Γιανγκτσέ και στους ποταμούς Han τη νύχτα.</p>
+                        <p>Βυθίζοντας και επιπλέοντας, πηγαίνοντας και έρχοντας, συγκεντρώνοντας σαν σύννεφα και διασκορπίζοντας σαν ομίχλη.</p>
+                    </div>
+                    <div lang="tr">
+                        <p>Kuşlar arasında siyah turnalar ve beyaz balıkçıllar, sarı kuğular ve su leylekleri bulunur.</p>
+                        <p>Çeşitli su kuşları cang kazları ve toy kuşları, yaban ördekleri ve yaban kazları gibi.</p>
+                        <p>Sabahları nehirlerden ve denizlerden ayrılıyor, geceleri Yangtze ve Han nehirlerinde dinleniyor.</p>
+                        <p>Batarak ve yüzerken, gelip giderek, bulutlar gibi toplanıp sis gibi dağılıyor.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《上林賦》曰：轥玄鶴。《爾雅》曰：鷺，舂鋤。郭璞曰：白鷺也。《說文》曰：鵠，黃鵠也。《爾雅》曰：鴢，頭鵁。郭璞曰：似鳧。鴢，鳥絞切。鵁，呼交切。毛萇《詩傳》曰：鸛，水鳥也。《爾雅》曰：鶬，麋鴰也。鴰，音括。郭璞曰：卽鶬鴰也。郭璞《上林賦注》曰：鴇，似鴈，無後指。鴇，音保。杜預《左氏傳注》曰：鶂，水鳥也，五激切。《爾雅》曰：舒鳧，鶩。毛萇《詩傳》曰：鳧，水鳥。鄭玄詩箋曰：鷖，鳧屬也。毛萇《詩傳》曰：大曰鴻，小曰鴈。《《孝經》鉤命決》曰：雲委霧散。
+            </div>
+        </div>
+
+        <!-- 第十六段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="yú" data-meaning="then">於</span>
+                <span class="char" data-pinyin="shì" data-meaning="is">是</span>
+                <span class="char" data-pinyin="hòu" data-meaning="rear">後</span>
+                <span class="char" data-pinyin="gōng" data-meaning="palace">宮</span>
+                <span class="char" data-pinyin="chéng" data-meaning="ride">乘</span>
+                <span class="char" data-pinyin="zhàn" data-meaning="a kind of carriage">輚</span>
+                <span class="char" data-pinyin="lù" data-meaning="carriage">輅</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="dēng" data-meaning="ascend">登</span>
+                <span class="char" data-pinyin="lóng" data-meaning="dragon">龍</span>
+                <span class="char" data-pinyin="zhōu" data-meaning="boat">舟</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zhāng" data-meaning="display">張</span>
+                <span class="char" data-pinyin="fèng" data-meaning="phoenix">鳳</span>
+                <span class="char" data-pinyin="gài" data-meaning="canopy">蓋</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jiàn" data-meaning="erect">建</span>
+                <span class="char" data-pinyin="huá" data-meaning="splendid">華</span>
+                <span class="char" data-pinyin="qí" data-meaning="flag">旗</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="qū" data-meaning="lift">袪</span>
+                <span class="char" data-pinyin="fǔ" data-meaning="embroidered">黼</span>
+                <span class="char" data-pinyin="wéi" data-meaning="curtain">帷</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jìng" data-meaning="mirror">鏡</span>
+                <span class="char" data-pinyin="qīng" data-meaning="clear">清</span>
+                <span class="char" data-pinyin="liú" data-meaning="stream">流</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="mí" data-meaning="follow">靡</span>
+                <span class="char" data-pinyin="wēi" data-meaning="gentle">微</span>
+                <span class="char" data-pinyin="fēng" data-meaning="wind">風</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="dàn" data-meaning="calm">澹</span>
+                <span class="char" data-pinyin="dàn" data-meaning="calm">淡</span>
+                <span class="char" data-pinyin="fú" data-meaning="float">浮</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>于是后宫妃嫔乘坐华车，登上龙舟。</p>
+                        <p>撑起凤凰伞盖，竖起彩绣旗帜。</p>
+                        <p>掀起绣花帷帐，清澈的水面如镜映照。</p>
+                        <p>微风轻拂，舟船悠然漂荡。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Then the imperial harem rode in carriages and ascended dragon boats.</p>
+                        <p>Displaying phoenix canopies, erecting splendid flags.</p>
+                        <p>Lifting embroidered curtains, mirroring the clear streams.</p>
+                        <p>Following the gentle breeze, calmly floating.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Dann ritt der kaiserliche Harem in Kutschen und bestieg Drachenboote.</p>
+                        <p>Phönix-Baldachine zeigend, prächtige Flaggen errichtend.</p>
+                        <p>Bestickte Vorhänge hebend, klare Ströme spiegelnd.</p>
+                        <p>Dem sanften Wind folgend, ruhig treibend.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Puis le harem impérial monta dans des carrosses et embarqua sur des bateaux-dragons.</p>
+                        <p>Exposant des dais phénix, érigeant des drapeaux splendides.</p>
+                        <p>Soulevant des rideaux brodés, reflétant les ruisseaux clairs.</p>
+                        <p>Suivant la brise douce, flottant calmement.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Затем императорский гарем ехал в экипажах и поднимался на драконьи лодки.</p>
+                        <p>Демонстрируя балдахины феникса, воздвигая великолепные флаги.</p>
+                        <p>Поднимая вышитые занавески, отражая чистые ручьи.</p>
+                        <p>Следуя за легким ветерком, спокойно плавая.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Luego el harén imperial viajó en carruajes y subió a barcos dragón.</p>
+                        <p>Mostrando doseles de fénix, erigiendo banderas espléndidas.</p>
+                        <p>Levantando cortinas bordadas, reflejando arroyos claros.</p>
+                        <p>Siguiendo la brisa suave, flotando con calma.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Poi l'harem imperiale salì su carrozze e salì su barche drago.</p>
+                        <p>Mostrando baldacchini fenice, erigendo bandiere splendide.</p>
+                        <p>Sollevando tende ricamate, specchiando ruscelli limpidi.</p>
+                        <p>Seguendo la brezza gentile, galleggiando con calma.</p>
+                    </div>
+                    <div lang="el">
+                        <p>Στη συνέχεια, το αυτοκρατορικό χαρέμι οδήγησε σε άμαξες και ανέβηκε σε βάρκες δράκου.</p>
+                        <p>Εμφανίζοντας κουβούκλια φοίνικα, στήνοντας υπέροχες σημαίες.</p>
+                        <p>Σηκώνοντας κεντημένες κουρτίνες, καθρεφτίζοντας καθαρά ρυάκια.</p>
+                        <p>Ακολουθώντας το απαλό αεράκι, επιπλέοντας ήρεμα.</p>
+                    </div>
+                    <div lang="tr">
+                        <p>Sonra imparatorluk haremi arabalara bindi ve ejderha teknelerine çıktı.</p>
+                        <p>Anka kuşu gölgeliklerini sergiliyor, muhteşem bayraklar dikiyor.</p>
+                        <p>Nakışlı perdeleri kaldırıyor, berrak dereleri yansıtıyor.</p>
+                        <p>Hafif esintiyi takip ederek, sakin sakin yüzüyor.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《埤蒼》曰：輚，臥車也，士眼切。《淮南子》曰：龍舟鷁首，浮吹以虞。桓子《新論》曰：乘車，玉爪華芝及鳳皇三蓋之屬。《上林賦》曰：乘法駕，建華旗。高誘《淮南子注》曰：袪，舉也。劉歆《甘泉賦》曰：章黼黻之文帷。澹淡，蓋隨風之貌也。澹，達濫切。淡，徒敢切。
+            </div>
+        </div>
+
+        <!-- 第十七段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="zhào" data-meaning="oar">櫂</span>
+                <span class="char" data-pinyin="nǚ" data-meaning="woman">女</span>
+                <span class="char" data-pinyin="ōu" data-meaning="sing">謳</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="gǔ" data-meaning="drum">鼓</span>
+                <span class="char" data-pinyin="chuī" data-meaning="blow">吹</span>
+                <span class="char" data-pinyin="zhèn" data-meaning="shake">震</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shēng" data-meaning="sound">聲</span>
+                <span class="char" data-pinyin="jī" data-meaning="intense">激</span>
+                <span class="char" data-pinyin="yuè" data-meaning="loud">越</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="hōng" data-meaning="resound">謍</span>
+                <span class="char" data-pinyin="lì" data-meaning="reach">厲</span>
+                <span class="char" data-pinyin="tiān" data-meaning="sky">天</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="niǎo" data-meaning="bird">鳥</span>
+                <span class="char" data-pinyin="qún" data-meaning="flock">羣</span>
+                <span class="char" data-pinyin="xiáng" data-meaning="fly">翔</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yú" data-meaning="fish">魚</span>
+                <span class="char" data-pinyin="kuī" data-meaning="peek">窺</span>
+                <span class="char" data-pinyin="yuān" data-meaning="deep pool">淵</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>划船的女子歌唱，鼓乐声震天动地。</p>
+                        <p>乐声高亢激昂，响彻云霄。</p>
+                        <p>鸟群翱翔天际，鱼儿潜游深潭。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Rowing women sing, drums and pipes shake.</p>
+                        <p>Sounds intense and loud, resonating to the sky.</p>
+                        <p>Birds flock and fly, fish peek into deep pools.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Rudernde Frauen singen, Trommeln und Pfeifen erschüttern.</p>
+                        <p>Klänge intensiv und laut, bis zum Himmel widerhallend.</p>
+                        <p>Vögel scharen sich und fliegen, Fische blicken in tiefe Teiche.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Les femmes qui rament chantent, les tambours et les pipes secouent.</p>
+                        <p>Des sons intenses et forts, résonnant jusqu'au ciel.</p>
+                        <p>Les oiseaux volent en groupe, les poissons regardent dans les bassins profonds.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Гребущие женщины поют, барабаны и трубы сотрясают.</p>
+                        <p>Звуки интенсивные и громкие, резонирующие до неба.</p>
+                        <p>Птицы стаями летают, рыбы заглядывают в глубокие бассейны.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Mujeres remando cantan, tambores y flautas sacuden.</p>
+                        <p>Sonidos intensos y fuertes, resonando hasta el cielo.</p>
+                        <p>Pájaros vuelan en bandadas, peces miran en pozos profundos.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Donne che remano cantano, tamburi e pipe scuotono.</p>
+                        <p>Suoni intensi e forti, risuonanti fino al cielo.</p>
+                        <p>Uccelli volano in stormi, pesci guardano in pozze profonde.</p>
+                    </div>
+                    <div lang="el">
+                        <p>Γυναίκες που κωπηλατούν τραγουδούν, τύμπανα και σωλήνες κλονίζουν.</p>
+                        <p>Ήχοι έντονοι και δυνατοί, αντηχούν μέχρι τον ουρανό.</p>
+                        <p>Πουλιά πετούν σε σμήνη, ψάρια κοιτούν σε βαθιές λίμνες.</p>
+                    </div>
+                    <div lang="tr">
+                        <p>Kürek çeken kadınlar şarkı söylüyor, davullar ve borular sarsılıyor.</p>
+                        <p>Sesler yoğun ve yüksek, gökyüzüne yankılanıyor.</p>
+                        <p>Kuşlar sürüler halinde uçuyor, balıklar derin havuzlara bakıyor.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《方言》曰：楫謂之櫂，直教切。《說文》曰：謳，齊歌也，於侯切。漢武帝《秋風辭》曰：簫鼓鳴兮發櫂歌。《爾雅》曰：越，揚也。聲類曰：謍，音大也，呼宏切。《韓詩》曰：翰飛厲天。薛君曰：厲，附也。《說文》曰：翔，回飛也。《方言》曰：窺，視也，缺規切。
+            </div>
+        </div>
+    </div>
+    
+    <!-- 弹出窗口 -->
+    <div class="popup" id="charPopup">
+        <span class="popup-close" onclick="closePopup()">×</span>
+        <div class="popup-content">
+            <div class="popup-char"></div>
+            <div class="popup-pinyin"></div>
+            <div class="popup-meaning"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 单字点击事件
+        document.querySelectorAll('.char').forEach(char => {
+            char.addEventListener('click', function() {
+                const popup = document.getElementById('charPopup');
+                popup.querySelector('.popup-char').textContent = this.textContent;
+                popup.querySelector('.popup-pinyin').textContent = `拼音: ${this.dataset.pinyin}`;
+                popup.querySelector('.popup-meaning').textContent = `释义: ${this.dataset.meaning}`;
+                popup.style.display = 'block';
+            });
+        });
+        
+        // 关闭弹出窗口
+        function closePopup() {
+            document.getElementById('charPopup').style.display = 'none';
+        }
+        
+        // 段落朗读功能
+        let currentParagraphUtterances = [];
+        let currentReadingParagraph = null;
+        
+        function speakParagraph(btn) {
+            const paragraph = btn.closest('.paragraph');
+            
+            // 如果正在朗读当前段落，停止
+            if (currentReadingParagraph === paragraph && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                btn.textContent = '🔊';
+                currentReadingParagraph = null;
+                return;
+            }
+            
+            // 如果正在朗读其他段落，先停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                document.querySelectorAll('.control-btn').forEach(b => {
+                    if (b.textContent === '⏹') b.textContent = '🔊';
+                });
+            }
+            
+            // 开始朗读新段落
+            currentReadingParagraph = paragraph;
+            btn.textContent = '⏹';
+            
+            const sentences = paragraph.querySelectorAll('.sentence');
+            currentParagraphUtterances = [];
+            
+            // 准备所有句子语音
+            sentences.forEach((sentence, index) => {
+                let sentenceText = '';
+                sentence.querySelectorAll('.char').forEach(char => {
+                    if (!char.classList.contains('punctuation') || 
+                        ['，', '。', '！', '？', '：', '；'].includes(char.textContent)) {
+                        sentenceText += char.textContent;
+                    }
+                });
+                
+                const utterance = new SpeechSynthesisUtterance(sentenceText);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.8;
+                
+                utterance.onstart = function() {
+                    resetAllSentenceHighlights();
+                    sentence.classList.add('active');
+                    
+                    // 滚动到当前句子
+                    sentence.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+                
+                utterance.onend = function() {
+                    if (index === sentences.length - 1) {
+                        btn.textContent = '🔊';
+                        currentReadingParagraph = null;
+                    }
+                };
+                
+                currentParagraphUtterances.push(utterance);
+            });
+            
+            // 按顺序朗读所有句子
+            currentParagraphUtterances.forEach((utterance, index) => {
+                // 设置延迟，使句子之间有自然停顿
+                if (index > 0) {
+                    const prevDuration = currentParagraphUtterances[index-1].text.length * 100; // 估算前一句持续时间
+                    utterance.startTime = Date.now() + prevDuration + 300; // 300ms额外停顿
+                }
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+        
+        function resetAllSentenceHighlights() {
+            document.querySelectorAll('.sentence').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+        
+        // 显示/隐藏注释面板
+        function toggleAnnotationPanel(btn) {
+            const annotation = btn.nextElementSibling;
+            if (annotation.style.display === 'block') {
+                annotation.style.display = 'none';
+                btn.textContent = '顯示註釋';
+            } else {
+                annotation.style.display = 'block';
+                btn.textContent = '隱藏註釋';
+            }
+        }
+        
+        // 显示/隐藏翻译面板
+        function toggleTranslationPanel(btn) {
+            const panel = btn.closest('.paragraph').querySelector('.translation-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+            }
+        }
+        
+        // 切换翻译语言
+        function showTranslation(btn, lang) {
+            const panel = btn.closest('.translation-panel').querySelector('.translation-content');
+            panel.querySelectorAll('div').forEach(div => {
+                div.classList.remove('show');
+            });
+            panel.querySelector(`div[lang="${lang}"]`).classList.add('show');
+            
+            // 更新按钮状态
+            btn.closest('.translation-panel').querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+        
+        // 点击空白处关闭弹出窗口
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('charPopup')) {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>

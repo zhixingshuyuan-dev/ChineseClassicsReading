@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《兩都賦》交互式閱讀系統</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋體", serif;
+            line-height: 2.5;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #3a3226;
+            color: #e0d5c8;
+        }
+        
+        h1 {
+            color: #d4b483;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #5d4b36;
+            padding-bottom: 10px;
+        }
+        
+        .main-text {
+            font-size: 24px;
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .char:hover {
+            color: #d4a373;
+            text-shadow: 0 0 3px rgba(212, 163, 115, 0.5);
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4a4235;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+        }
+        
+        .popup-content {
+            font-size: 16px;
+        }
+        
+        .popup-char {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #d4b483;
+        }
+        
+        .popup-pinyin, .popup-meaning {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px dashed #5d4b36;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #a89984;
+        }
+        
+        .paragraph {
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            margin-right: 6px;
+            border: none;
+            border-radius: 50%;
+            background: #5d4b36;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: #e0d5c8;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #7c6a53;
+            transform: scale(1.1);
+        }
+        
+        .annotation {
+            font-size: 18px;
+            background: #4a4235;
+            padding: 12px 15px;
+            border-left: 3px solid #a89984;
+            margin: 12px 0;
+            display: none;
+            color: #d4b483;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .toggle-annotation {
+            background: #5d4b36;
+            border: none;
+            color: #e0d5c8;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-annotation:hover {
+            background: #7c6a53;
+        }
+        
+        .translation-panel {
+            display: none;
+            background: #4a4235;
+            border: 1px solid #5d4b36;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+        }
+        
+        .lang-btn {
+            background: #3a3226;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+            padding: 3px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn:hover {
+            background: #5d4b36;
+        }
+        
+        .lang-btn.active {
+            background: #a89984;
+            color: #3a3226;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #5d4b36;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .translation-content div {
+            display: none;
+            padding: 6px 0;
+        }
+        
+        .translation-content div.show {
+            display: block;
+        }
+        
+        .punctuation {
+            color: #a89984;
+        }
+        
+        .sentence {
+            display: inline;
+            position: relative;
+        }
+        
+        .sentence.active {
+            background-color: rgba(212, 180, 131, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>西都賦</h1>
+    
+    <div class="main-text">
+        <!-- 第一段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="xià" data-meaning="below">下</span>
+                <span class="char" data-pinyin="yǒu" data-meaning="have">有</span>
+                <span class="char" data-pinyin="zhèng" data-meaning="Zheng">鄭</span>
+                <span class="char" data-pinyin="bái" data-meaning="Bai">白</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="wò" data-meaning="fertile">沃</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yī" data-meaning="clothing">衣</span>
+                <span class="char" data-pinyin="shí" data-meaning="food">食</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="yuán" data-meaning="source">源</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="tí" data-meaning="enclosed">提</span>
+                <span class="char" data-pinyin="fēng" data-meaning="territory">封</span>
+                <span class="char" data-pinyin="wǔ" data-meaning="five">五</span>
+                <span class="char" data-pinyin="wàn" data-meaning="ten thousand">萬</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jiāng" data-meaning="fields">疆</span>
+                <span class="char" data-pinyin="yì" data-meaning="boundaries">埸</span>
+                <span class="char" data-pinyin="qǐ" data-meaning="neatly">綺</span>
+                <span class="char" data-pinyin="fēn" data-meaning="divided">分</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="gōu" data-meaning="ditches">溝</span>
+                <span class="char" data-pinyin="chéng" data-meaning="ridges">塍</span>
+                <span class="char" data-pinyin="kè" data-meaning="carved">刻</span>
+                <span class="char" data-pinyin="lòu" data-meaning="engravings">鏤</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yuán" data-meaning="plains">原</span>
+                <span class="char" data-pinyin="xí" data-meaning="lowlands">隰</span>
+                <span class="char" data-pinyin="lóng" data-meaning="dragon">龍</span>
+                <span class="char" data-pinyin="lín" data-meaning="scales">鱗</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jué" data-meaning="opening">決</span>
+                <span class="char" data-pinyin="qú" data-meaning="canals">渠</span>
+                <span class="char" data-pinyin="jiàng" data-meaning="brings">降</span>
+                <span class="char" data-pinyin="yǔ" data-meaning="rain">雨</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="hè" data-meaning="carrying">荷</span>
+                <span class="char" data-pinyin="chā" data-meaning="hoes">插</span>
+                <span class="char" data-pinyin="chéng" data-meaning="forms">成</span>
+                <span class="char" data-pinyin="yún" data-meaning="clouds">雲</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="wǔ" data-meaning="five">五</span>
+                <span class="char" data-pinyin="gǔ" data-meaning="grains">穀</span>
+                <span class="char" data-pinyin="chuí" data-meaning="hang">垂</span>
+                <span class="char" data-pinyin="yǐng" data-meaning="heavy ears">穎</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="sāng" data-meaning="mulberry">桑</span>
+                <span class="char" data-pinyin="má" data-meaning="hemp">麻</span>
+                <span class="char" data-pinyin="pū" data-meaning="spread">鋪</span>
+                <span class="char" data-pinyin="fēn" data-meaning="luxuriantly">棻</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>下有郑白之沃土，衣食之源泉。封地五万，田界绮丽分明。沟渠田埂如刻镂，平原低地似龙鳞。开渠如降雨，荷锄似成云。五谷垂穗，桑麻繁茂。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Below are the fertile lands of Zheng and Bai, the source of clothing and food. The enclosed territory extends for fifty thousand, with fields neatly divided by boundaries. The ditches and ridges are carved like engravings; the plains and lowlands resemble dragon scales. Opening the canals brings rain; carrying hoes forms clouds. The five grains hang with heavy ears; mulberry and hemp spread luxuriantly.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Unten liegen die fruchtbaren Ländereien von Zheng und Bai, die Quelle für Kleidung und Nahrung. Das eingegrenzte Territorium erstreckt sich über fünfzigtausend, mit Feldern, die ordentlich durch Grenzen unterteilt sind. Die Gräben und Kämme sind wie Gravuren geschnitzt; die Ebenen und Niederungen ähneln Drachenschuppen. Das Öffnen der Kanäle bringt Regen; das Tragen von Hacken bildet Wolken. Die fünf Körner hängen mit schweren Ähren; Maulbeeren und Hanf breiten sich üppig aus.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Ci-dessous se trouvent les terres fertiles de Zheng et Bai, la source des vêtements et de la nourriture. Le territoire clos s'étend sur cinquante mille, avec des champs soigneusement divisés par des limites. Les fossés et les crêtes sont sculptés comme des gravures; les plaines et les basses terres ressemblent à des écailles de dragon. L'ouverture des canaux apporte la pluie; porter des houes forme des nuages. Les cinq céréales pendent avec des épis lourds; le mûrier et le chanvre s'étalent luxuriants.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Ниже находятся плодородные земли Чжэн и Бай, источник одежды и пищи. Огороженная территория простирается на пятьдесят тысяч, с полями, аккуратно разделенными границами. Канавы и гребни вырезаны, как гравировки; равнины и низменности напоминают драконью чешую. Открытие каналов приносит дождь; ношение мотыг образует облака. Пять злаков свисают тяжелыми колосьями; шелковица и конопля раскинулись пышно.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Abajo están las tierras fértiles de Zheng y Bai, la fuente de ropa y comida. El territorio cercado se extiende por cincuenta mil, con campos divididos ordenadamente por límites. Las zanjas y crestas están talladas como grabados; las llanuras y tierras bajas se asemejan a escamas de dragón. Abrir los canales trae lluvia; llevar azadas forma nubes. Los cinco granos cuelgan con espigas pesadas; la morera y el cáñamo se extienden exuberantes.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Sotto ci sono le fertili terre di Zheng e Bai, la fonte di vestiario e cibo. Il territorio recintato si estende per cinquantamila, con campi ordinatamente divisi da confini. Fossati e creste sono scolpiti come incisioni; pianure e terre basse assomigliano a scaglie di drago. Aprire i canali porta la pioggia; portare zappe forma nuvole. I cinque cereali pendono con spighe pesanti; gelso e canapa si diffondono rigogliosi.</p>
+                    </div>
+                    <div lang="el">
+                        <p>Κάτω βρίσκονται οι εύφορες εκτάσεις των Zheng και Bai, η πηγή ρούχων και τροφής. Η περιφραγμένη επικράτεια εκτείνεται για πενήντα χιλιάδες, με χωράφια τακτοποιημένα χωρισμένα με όρια. Τα χαντάκια και οι ράχες είναι σκαλισμένα σαν χαρακτικά· οι πεδιάδες και οι χαμηλές εκτάσεις μοιάζουν με λέπια δράκου. Το άνοιγμα των καναλιών φέρνει βροχή· η μεταφορά τσάπων σχηματίζει σύννεφα. Οι πέντε σπόροι κρέμονται με βαριά στάχυα· η μουριά και το κάνναβη απλώνονται πλούσια.</p>
+                    </div>
+                    <div lang="tr">
+                        <p>Aşağıda Zheng ve Bai'nin verimli toprakları, giysi ve yiyecek kaynağı var. Çevrili bölge elli bin kadar uzanıyor, sınırlarla düzgün bir şekilde bölünmüş tarlalarla. Hendekler ve sırtlar oymalar gibi oyulmuş; ovalar ve alçak araziler ejderha pullarını andırıyor. Kanalların açılması yağmur getiriyor; çapaları taşımak bulutları oluşturuyor. Beş tahıl ağır başaklarla sarkıyor; dut ve kenevir bolca yayılıyor.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《史記》曰：韓聞秦之好興事，欲罷，無令東伐。迺使水工鄭國間說秦，令鑿涇水，自中山西抵瓠口爲渠，並北山東注洛，溉舄鹵之地四萬餘頃。收皆畝稅一鍾。命曰鄭國渠。又曰：趙中大夫白公，復奏穿渠引涇水，首起谷口，尾入櫟陽，注渭，溉田四千餘頃，因曰白渠。人得其饒，歌之曰：田於何所？池陽谷口。鄭國在前，白渠起後。舉插爲雲，決渠爲雨。涇水一石，其泥數斗。且溉且糞，長我禾黍。衣食京師，億萬之口。天子畿方千里，提封百萬井。臣瓚案：舊說云，提，撮凡也。言大舉頃畝也。韋昭曰：積土爲封限也。《毛詩》曰：疆埸有瓜。《周禮》曰：十夫有溝。鄭玄曰：遂，廣深各二尺，溝倍之。《說文》曰：塍，稻田之畦也，音繩。《爾雅》曰：高平曰原，下濕曰隰。《周禮》曰：以五穀養病。《漢書音義》，韋昭曰：黍、稷、菽、麥、稻也。《毛詩》曰：實穎實栗。毛萇曰：穎，垂穎也。《小雅》曰：禾穗謂之穎。《爾雅》曰：鋪，布也，普胡切。王逸《楚辭注》曰：紛，盛貌也。棻與紛，古字通。
+            </div>
+        </div>
+
+        <!-- 第二段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="dōng" data-meaning="eastern">東</span>
+                <span class="char" data-pinyin="jiāo" data-meaning="suburbs">郊</span>
+                <span class="char" data-pinyin="zé" data-meaning="then">則</span>
+                <span class="char" data-pinyin="yǒu" data-meaning="have">有</span>
+                <span class="char" data-pinyin="tōng" data-meaning="navigable">通</span>
+                <span class="char" data-pinyin="gōu" data-meaning="canals">溝</span>
+                <span class="char" data-pinyin="dà" data-meaning="large">大</span>
+                <span class="char" data-pinyin="cáo" data-meaning="waterways">漕</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="kuì" data-meaning="break">潰</span>
+                <span class="char" data-pinyin="wèi" data-meaning="Wei River">渭</span>
+                <span class="char" data-pinyin="dòng" data-meaning="connect">洞</span>
+                <span class="char" data-pinyin="hé" data-meaning="Yellow River">河</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="fàn" data-meaning="sailing">汎</span>
+                <span class="char" data-pinyin="zhōu" data-meaning="boats">舟</span>
+                <span class="char" data-pinyin="shān" data-meaning="mountains">山</span>
+                <span class="char" data-pinyin="dōng" data-meaning="east">東</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="kòng" data-meaning="controlling">控</span>
+                <span class="char" data-pinyin="yǐn" data-meaning="leading">引</span>
+                <span class="char" data-pinyin="huái" data-meaning="Huai River">淮</span>
+                <span class="char" data-pinyin="hú" data-meaning="lakes">湖</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yǔ" data-meaning="with">與</span>
+                <span class="char" data-pinyin="hǎi" data-meaning="sea">海</span>
+                <span class="char" data-pinyin="tōng" data-meaning="communicate">通</span>
+                <span class="char" data-pinyin="bō" data-meaning="waves">波</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>东郊则有通沟大漕，冲破渭水贯通黄河。泛舟山东，控引淮河湖泊，与海通波。</p>
+                    </div>
+                    <div lang="en">
+                        <p>In the eastern suburbs there are great canals and waterways that break through the Wei River and connect with the Yellow River. Sailing boats to the east of the mountains, controlling the Huai River and lakes, their waves communicate with the sea.</p>
+                    </div>
+                    <div lang="de">
+                        <p>In den östlichen Vororten gibt es große Kanäle und Wasserstraßen, die den Wei-Fluss durchbrechen und mit dem Gelben Fluss verbinden. Segelboote östlich der Berge, die den Huai-Fluss und Seen kontrollieren, ihre Wellen kommunizieren mit dem Meer.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Dans les banlieues orientales, il y a de grands canaux et voies navigables qui traversent la rivière Wei et se connectent avec le fleuve Jaune. Naviguer en bateau à l'est des montagnes, contrôler la rivière Huai et les lacs, leurs vagues communiquent avec la mer.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>В восточных пригородах есть большие каналы и водные пути, которые прорываются через реку Вэй и соединяются с рекой Хуанхэ. Плавание на лодках к востоку от гор, контроль над рекой Хуай и озерами, их волны сообщаются с морем.</p>
+                    </div>
+                    <div lang="es">
+                        <p>En los suburbios orientales hay grandes canales y vías fluviales que atraviesan el río Wei y se conectan con el río Amarillo. Navegar en bote al este de las montañas, controlar el río Huai y los lagos, sus olas se comunican con el mar.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Nelle periferie orientali ci sono grandi canali e vie navigabili che attraversano il fiume Wei e si collegano con il fiume Giallo. Navigare in barca a est delle montagne, controllare il fiume Huai e i laghi, le loro onde comunicano con il mare.</p>
+                    </div>
+                    <div lang="el">
+                        <p>Στις ανατολικές προαστίες υπάρχουν μεγάλα κανάλια και υδάτινες οδοί που διασπώνται μέσω του ποταμού Wei και συνδέονται με τον Κίτρινο Ποταμό. Ιστιοπλοΐα ανατολικά των βουνών, έλεγχος του ποταμού Huai και των λιμνών, τα κύματά τους επικοινωνούν με τη θάλασσα.</p>
+                    </div>
+                    <div lang="tr">
+                        <p>Doğu banliyölerde, Wei Nehri'ni kıran ve Sarı Nehir ile bağlantı kuran büyük kanallar ve su yolları var. Dağların doğusunda tekne gezintisi, Huai Nehri ve gölleri kontrol etmek, dalgaları denizle iletişim kuruyor.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                言通溝大漕，旣達河渭，又可以汎舟山東，控引淮、湖之流，而與海通其波瀾。《漢書·武紀》曰：穿漕渠道渭。如淳曰：水轉曰漕。《蒼頡篇》曰：潰、旁決也，胡對切。《說文》曰：洞，疾流也。《國語》曰：秦汎舟於河，歸糴於晉。《史記》曰：滎陽下引河東南爲鴻溝，以與淮、泗會也。
+            </div>
+        </div>
+
+        <!-- 第三段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="xī" data-meaning="western">西</span>
+                <span class="char" data-pinyin="jiāo" data-meaning="suburbs">郊</span>
+                <span class="char" data-pinyin="zé" data-meaning="then">則</span>
+                <span class="char" data-pinyin="yǒu" data-meaning="have">有</span>
+                <span class="char" data-pinyin="shàng" data-meaning="imperial">上</span>
+                <span class="char" data-pinyin="yòu" data-meaning="hunting">囿</span>
+                <span class="char" data-pinyin="jìn" data-meaning="forbidden">禁</span>
+                <span class="char" data-pinyin="yuàn" data-meaning="garden">苑</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="lín" data-meaning="forests">林</span>
+                <span class="char" data-pinyin="lù" data-meaning="foothills">麓</span>
+                <span class="char" data-pinyin="sǒu" data-meaning="marshes">藪</span>
+                <span class="char" data-pinyin="zé" data-meaning="lakes">澤</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="bēi" data-meaning="connected">陂</span>
+                <span class="char" data-pinyin="chí" data-meaning="to">池</span>
+                <span class="char" data-pinyin="lián" data-meaning="Shu">連</span>
+                <span class="char" data-pinyin="hū" data-meaning="and">乎</span>
+                <span class="char" data-pinyin="shǔ" data-meaning="Han">蜀</span>
+                <span class="char" data-pinyin="hàn" data-meaning="Han">漢</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="liáo" data-meaning="encircled">繚</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="by">以</span>
+                <span class="char" data-pinyin="zhōu" data-meaning="a">周</span>
+                <span class="char" data-pinyin="qiáng" data-meaning="perimeter wall">墻</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="sì" data-meaning="four">四</span>
+                <span class="char" data-pinyin="bǎi" data-meaning="hundred">百</span>
+                <span class="char" data-pinyin="yú" data-meaning="over">餘</span>
+                <span class="char" data-pinyin="lǐ" data-meaning="li">里</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="lí" data-meaning="detached">離</span>
+                <span class="char" data-pinyin="gōng" data-meaning="palaces">宮</span>
+                <span class="char" data-pinyin="bié" data-meaning="lodges">別</span>
+                <span class="char" data-pinyin="guǎn" data-meaning="lodges">館</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="sān" data-meaning="three">三</span>
+                <span class="char" data-pinyin="shí" data-meaning="ten">十</span>
+                <span class="char" data-pinyin="liù" data-meaning="six">六</span>
+                <span class="char" data-pinyin="suǒ" data-meaning="places">所</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shén" data-meaning="divine">神</span>
+                <span class="char" data-pinyin="chí" data-meaning="pools">池</span>
+                <span class="char" data-pinyin="líng" data-meaning="sacred">靈</span>
+                <span class="char" data-pinyin="zhǎo" data-meaning="ponds">沼</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="wǎng" data-meaning="found">往</span>
+                <span class="char" data-pinyin="wǎng" data-meaning="everywhere">往</span>
+                <span class="char" data-pinyin="ér" data-meaning="are">而</span>
+                <span class="char" data-pinyin="zài" data-meaning="found">在</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>西郊则有上林禁苑，山林沼泽，池塘连蜀汉。周墙环绕，四百余里。离宫别馆三十六所。神池灵沼，处处可见。</p>
+                    </div>
+                    <div lang="en">
+                        <p>In the western suburbs there is the imperial hunting park and forbidden garden, with forests, foothills, marshes, and lakes connected to Shu and Han. Encircled by a perimeter wall extending over four hundred li, there are thirty-six detached palaces and lodges. Divine pools and sacred ponds are found everywhere.</p>
+                    </div>
+                    <div lang="de">
+                        <p>In den westlichen Vororten gibt es den kaiserlichen Jagdpark und den verbotenen Garten, mit Wäldern, Ausläufern, Sümpfen und Seen, die mit Shu und Han verbunden sind. Von einer Umfassungsmauer umgeben, die sich über vierhundert Li erstreckt, gibt es sechsunddreißig abgelegene Paläste und Lodgen. Göttliche Teiche und heilige Teiche sind überall zu finden.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Dans les banlieues occidentales, il y a le parc de chasse impérial et le jardin interdit, avec des forêts, des contreforts, des marais et des lacs connectés à Shu et Han. Encerclé par un mur périphérique s'étendant sur plus de quatre cents li, il y a trente-six palais et lodges détachés. Des bassins divins et des étangs sacrés se trouvent partout.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>В западных пригородах находится императорский охотничий парк и запретный сад, с лесами, предгорьями, болотами и озерами, соединенными с Шу и Хань. Окруженный периметральной стеной, простирающейся на более чем четыреста ли, есть тридцать шесть отдельных дворцов и домиков. Божественные бассейны и священные пруды встречаются повсюду.</p>
+                    </div>
+                    <div lang="es">
+                        <p>En los suburbios occidentales está el parque de caza imperial y el jardín prohibido, con bosques, estribaciones, pantanos y lagos conectados a Shu y Han. Rodeado por un muro perimetral que se extiende más de cuatrocientos li, hay treinta y seis palacios y alojamientos separados. Se encuentran por todas partes piscinas divinas y estanques sagrados.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Nelle periferie occidentali c'è il parco di caccia imperiale e il giardino proibito, con foreste, contrafforti, paludi e laghi collegati a Shu e Han. Circondato da un muro perimetrale che si estende per oltre quattrocento li, ci sono trentasei palazzi e lodge distaccati. Pool divini e stagni sacri si trovano ovunque.</p>
+                    </div>
+                    <div lang="el">
+                        <p>Στα δυτικά προάστια υπάρχει το αυτοκρατορικό κυνήγι πάρκο και το απαγορευμένο κήπο, με δάση, πρόποδες, έλη και λίμνες συνδεδεμένες με Shu και Han. Περιβάλλεται από ένα περιμετρικό τείχος που εκτείνεται σε περισσότερα από τετρακόσια li, υπάρχουν τριάντα έξι απομονωμένα παλάτια και καταλύματα. Θεϊκές πισίνες και ιεροί λίμνοι βρίσκονται παντού.</p>
+                    </div>
+                    <div lang="tr">
+                        <p>Batı banliyölerde, Shu ve Han'a bağlı ormanlar, etekler, bataklıklar ve göllerle birlikte imparatorluk av parkı ve yasak bahçe var. Dört yüz li'den fazla uzanan bir çevre duvarıyla çevrili, otuz altı ayrı saray ve konak var. İlahi havuzlar ve kutsal göletler her yerde bulunur.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                上囿禁苑，卽林苑也。《羽獵賦》曰：開禁苑。《穀梁傳》曰：林屬於山爲麓。鄭玄《周禮注》曰：澤無水曰藪。《漢書》有蜀都漢中郡。繚，猶繞也。《三輔故事》曰：上林連緜，四百餘里。繚，力鳥切。離、別，非一所也。《上林賦》曰：離宮別館，彌山跨谷。《三秦記》曰：昆明池中有神池，通白鹿原。《毛詩》曰：王在靈沼。
+            </div>
+        </div>
+
+        <!-- 第四段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="qí" data-meaning="within">其</span>
+                <span class="char" data-pinyin="zhōng" data-meaning="it">中</span>
+                <span class="char" data-pinyin="nǎi" data-meaning="there">乃</span>
+                <span class="char" data-pinyin="yǒu" data-meaning="are">有</span>
+                <span class="char" data-pinyin="jiǔ" data-meaning="nine">九</span>
+                <span class="char" data-pinyin="zhēn" data-meaning="Jiuzhen">真</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="lín" data-meaning="unicorns">麟</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="dà" data-meaning="great">大</span>
+                <span class="char" data-pinyin="yuān" data-meaning="Dayuan">宛</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="mǎ" data-meaning="horses">馬</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="huáng" data-meaning="yellow">黃</span>
+                <span class="char" data-pinyin="zhī" data-meaning="Huangzhi">支</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="xī" data-meaning="rhinoceroses">犀</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="tiáo" data-meaning="strip">條</span>
+                <span class="char" data-pinyin="zhī" data-meaning="Tiaozhi">支</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="niǎo" data-meaning="birds">鳥</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yú" data-meaning="crossing">踰</span>
+                <span class="char" data-pinyin="kūn" data-meaning="Kunlun">崑</span>
+                <span class="char" data-pinyin="lún" data-meaning="Mountains">崙</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yuè" data-meaning="traversing">越</span>
+                <span class="char" data-pinyin="jù" data-meaning="vast">巨</span>
+                <span class="char" data-pinyin="hǎi" data-meaning="seas">海</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shū" data-meaning="distant">殊</span>
+                <span class="char" data-pinyin="fāng" data-meaning="lands">方</span>
+                <span class="char" data-pinyin="yì" data-meaning="strange">異</span>
+                <span class="char" data-pinyin="lèi" data-meaning="creatures">類</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zhì" data-meaning="coming">至</span>
+                <span class="char" data-pinyin="yú" data-meaning="from">於</span>
+                <span class="char" data-pinyin="sān" data-meaning="three">三</span>
+                <span class="char" data-pinyin="wàn" data-meaning="ten thousand">萬</span>
+                <span class="char" data-pinyin="lǐ" data-meaning="li">里</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>其中则有九真之麒麟，大宛之骏马。黄支之犀牛，条支之异鸟。跨越昆仑，横渡巨海。来自殊方异类，远至三万里。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Within it there are unicorns from Jiuzhen, horses from Dayuan, rhinoceroses from Huangzhi, and birds from Tiaozhi, crossing the Kunlun Mountains and traversing the vast seas, from distant lands and strange creatures, coming from as far as thirty thousand li.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Darinnen gibt es Einhörner aus Jiuzhen, Pferde aus Dayuan, Nashörner aus Huangzhi und Vögel aus Tiaozhi, die die Kunlun-Berge überqueren und die weiten Meere durchqueren, aus fernen Ländern und seltsamen Kreaturen, die aus bis zu dreißigtausend Li Entfernung kommen.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>À l'intérieur, il y a des licornes de Jiuzhen, des chevaux de Dayuan, des rhinocéros de Huangzhi et des oiseaux de Tiaozhi, traversant les montagnes Kunlun et traversant les vastes mers, des terres lointaines et des créatures étranges, venant de jusqu'à trente mille li.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Внутри него есть единороги из Цзючжэнь, лошади из Даюань, носороги из Хуанчжи и птицы из Тяочжи, пересекающие горы Куньлунь и пересекающие обширные моря, из далеких земель и странных существ, приходящих с расстояния до тридцати тысяч ли.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Dentro hay unicornios de Jiuzhen, caballos de Dayuan, rinocerontes de Huangzhi y pájaros de Tiaozhi, cruzando las montañas Kunlun y atravesando los vastos mares, de tierras lejanas y criaturas extrañas, viniendo desde hasta treinta mil li.</p>
+                    </div>
+                    <div lang="it">
+                        <p>All'interno ci sono unicorni da Jiuzhen, cavalli da Dayuan, rinoceronti da Huangzhi e uccelli da Tiaozhi, attraversando le montagne Kunlun e attraversando i vasti mari, da terre lontane e creature strane, provenienti da fino a trentamila li.</p>
+                    </div>
+                    <div lang="el">
+                        <p>Μέσα σε αυτό υπάρχουν μονόκεροι από το Jiuzhen, άλογα από το Dayuan, ρινόκεροι από το Huangzhi και πουλιά από το Tiaozhi, διασχίζοντας τα βουνά Kunlun και διασχίζοντας τις απέραντες θάλασσες, από μακρινές χώρες και περίεργα πλάσματα, που έρχονται από απόσταση έως και τριάντα χιλιάδες li.</p>
+                    </div>
+                    <div lang="tr">
+                        <p>İçinde Jiuzhen'den tek boynuzlu atlar, Dayuan'dan atlar, Huangzhi'den gergedanlar ve Tiaozhi'den kuşlar var, Kunlun Dağları'nı aşıyor ve engin denizleri geçiyor, uzak diyarlardan ve garip yaratıklardan, otuz bin li kadar uzaktan geliyor.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《漢書》，宣帝詔曰：九真獻奇獸。晉灼《漢書注》曰：駒形，麟色，牛角。又《武紀》曰：貳師將軍廣利斬大宛王首，獲汗血馬。又曰：黃支自三萬里貢生犀。又曰：條枝國臨西海，有大鳥，卵如甕。《山海經》曰：帝之下都，崑崙之墟，高萬仞。《河圖括地象》曰：崑崙在西北，其高萬一千里。《子虛賦》曰：東注巨海也。
+            </div>
+        </div>
+    </div>
+    
+    <!-- 弹出窗口 -->
+    <div class="popup" id="charPopup">
+        <span class="popup-close" onclick="closePopup()">×</span>
+        <div class="popup-content">
+            <div class="popup-char"></div>
+            <div class="popup-pinyin"></div>
+            <div class="popup-meaning"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 单字点击事件
+        document.querySelectorAll('.char').forEach(char => {
+            char.addEventListener('click', function() {
+                const popup = document.getElementById('charPopup');
+                popup.querySelector('.popup-char').textContent = this.textContent;
+                popup.querySelector('.popup-pinyin').textContent = `拼音: ${this.dataset.pinyin}`;
+                popup.querySelector('.popup-meaning').textContent = `释义: ${this.dataset.meaning}`;
+                popup.style.display = 'block';
+            });
+        });
+        
+        // 关闭弹出窗口
+        function closePopup() {
+            document.getElementById('charPopup').style.display = 'none';
+        }
+        
+        // 段落朗读功能
+        let currentParagraphUtterances = [];
+        let currentReadingParagraph = null;
+        
+        function speakParagraph(btn) {
+            const paragraph = btn.closest('.paragraph');
+            
+            // 如果正在朗读当前段落，停止
+            if (currentReadingParagraph === paragraph && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                btn.textContent = '🔊';
+                currentReadingParagraph = null;
+                return;
+            }
+            
+            // 如果正在朗读其他段落，先停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                document.querySelectorAll('.control-btn').forEach(b => {
+                    if (b.textContent === '⏹') b.textContent = '🔊';
+                });
+            }
+            
+            // 开始朗读新段落
+            currentReadingParagraph = paragraph;
+            btn.textContent = '⏹';
+            
+            const sentences = paragraph.querySelectorAll('.sentence');
+            currentParagraphUtterances = [];
+            
+            // 准备所有句子语音
+            sentences.forEach((sentence, index) => {
+                let sentenceText = '';
+                sentence.querySelectorAll('.char').forEach(char => {
+                    if (!char.classList.contains('punctuation') || 
+                        ['，', '。', '！', '？', '：', '；'].includes(char.textContent)) {
+                        sentenceText += char.textContent;
+                    }
+                });
+                
+                const utterance = new SpeechSynthesisUtterance(sentenceText);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.8;
+                
+                utterance.onstart = function() {
+                    resetAllSentenceHighlights();
+                    sentence.classList.add('active');
+                    
+                    // 滚动到当前句子
+                    sentence.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+                
+                utterance.onend = function() {
+                    if (index === sentences.length - 1) {
+                        btn.textContent = '🔊';
+                        currentReadingParagraph = null;
+                    }
+                };
+                
+                currentParagraphUtterances.push(utterance);
+            });
+            
+            // 按顺序朗读所有句子
+            currentParagraphUtterances.forEach((utterance, index) => {
+                // 设置延迟，使句子之间有自然停顿
+                if (index > 0) {
+                    const prevDuration = currentParagraphUtterances[index-1].text.length * 100; // 估算前一句持续时间
+                    utterance.startTime = Date.now() + prevDuration + 300; // 300ms额外停顿
+                }
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+        
+        function resetAllSentenceHighlights() {
+            document.querySelectorAll('.sentence').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+        
+        // 显示/隐藏注释面板
+        function toggleAnnotationPanel(btn) {
+            const annotation = btn.nextElementSibling;
+            if (annotation.style.display === 'block') {
+                annotation.style.display = 'none';
+                btn.textContent = '顯示註釋';
+            } else {
+                annotation.style.display = 'block';
+                btn.textContent = '隱藏註釋';
+            }
+        }
+        
+        // 显示/隐藏翻译面板
+        function toggleTranslationPanel(btn) {
+            const panel = btn.closest('.paragraph').querySelector('.translation-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+            }
+        }
+        
+        // 切换翻译语言
+        function showTranslation(btn, lang) {
+            const panel = btn.closest('.translation-panel').querySelector('.translation-content');
+            panel.querySelectorAll('div').forEach(div => {
+                div.classList.remove('show');
+            });
+            panel.querySelector(`div[lang="${lang}"]`).classList.add('show');
+            
+            // 更新按钮状态
+            btn.closest('.translation-panel').querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+        
+        // 点击空白处关闭弹出窗口
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('charPopup')) {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>

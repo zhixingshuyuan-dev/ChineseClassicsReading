@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《西都赋》交互式閱讀系統</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋體", serif;
+            line-height: 2.5;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #3a3226;
+            color: #e0d5c8;
+        }
+        
+        h1 {
+            color: #d4b483;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #5d4b36;
+            padding-bottom: 10px;
+        }
+        
+        .main-text {
+            font-size: 24px;
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .char:hover {
+            color: #d4a373;
+            text-shadow: 0 0 3px rgba(212, 163, 115, 0.5);
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4a4235;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+        }
+        
+        .popup-content {
+            font-size: 16px;
+        }
+        
+        .popup-char {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #d4b483;
+        }
+        
+        .popup-pinyin, .popup-meaning {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px dashed #5d4b36;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #a89984;
+        }
+        
+        .paragraph {
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            margin-right: 6px;
+            border: none;
+            border-radius: 50%;
+            background: #5d4b36;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: #e0d5c8;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #7c6a53;
+            transform: scale(1.1);
+        }
+        
+        .annotation {
+            font-size: 18px;
+            background: #4a4235;
+            padding: 12px 15px;
+            border-left: 3px solid #a89984;
+            margin: 12px 0;
+            display: none;
+            color: #d4b483;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .annotation-char {
+            cursor: pointer;
+            border-bottom: 1px dotted #a89984;
+        }
+        
+        .annotation-char:hover {
+            color: #d4a373;
+        }
+        
+        .toggle-annotation {
+            background: #5d4b36;
+            border: none;
+            color: #e0d5c8;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-annotation:hover {
+            background: #7c6a53;
+        }
+        
+        .translation-panel {
+            display: none;
+            background: #4a4235;
+            border: 1px solid #5d4b36;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+        }
+        
+        .lang-btn {
+            background: #3a3226;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+            padding: 3px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn:hover {
+            background: #5d4b36;
+        }
+        
+        .lang-btn.active {
+            background: #a89984;
+            color: #3a3226;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #5d4b36;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .translation-content div {
+            display: none;
+            padding: 6px 0;
+        }
+        
+        .translation-content div.show {
+            display: block;
+        }
+        
+        .punctuation {
+            color: #a89984;
+        }
+        
+        .sentence {
+            display: inline;
+            position: relative;
+        }
+        
+        .sentence.active {
+            background-color: rgba(212, 180, 131, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>西都賦</h1>
+    
+    <div class="main-text">
+        <!-- 第一段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="hàn" data-meaning="Han Dynasty">漢</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="xī" data-meaning="west">西</span>
+                <span class="char" data-pinyin="dū" data-meaning="capital">都</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zài" data-meaning="located">在</span>
+                <span class="char" data-pinyin="yú" data-meaning="at">於</span>
+                <span class="char" data-pinyin="yōng" data-meaning="Yong">雍</span>
+                <span class="char" data-pinyin="zhōu" data-meaning="province">州</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shí" data-meaning="indeed">寔</span>
+                <span class="char" data-pinyin="yuē" data-meaning="called">曰</span>
+                <span class="char" data-pinyin="cháng" data-meaning="long">長</span>
+                <span class="char" data-pinyin="ān" data-meaning="peace">安</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                       <p>汉朝的西都，位于雍州之地，确实叫做长安。</p>
+                    </div>
+                    <div lang="en">
+                        <p>The western capital of the Han Dynasty is located in Yong Province, indeed called Chang'an.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Die westliche Hauptstadt der Han-Dynastie befindet sich in der Provinz Yong und heißt tatsächlich Chang'an.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>La capitale occidentale de la dynastie Han est située dans la province de Yong et s'appelle en effet Chang'an.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Западная столица династии Хань находится в провинции Юн и действительно называется Чанъань.</p>
+                    </div>
+                    <div lang="es">
+                        <p>La capital occidental de la dinastía Han se encuentra en la provincia de Yong y de hecho se llama Chang'an.</p>
+                    </div>
+                    <div lang="it">
+                        <p>La capitale occidentale della dinastia Han si trova nella provincia di Yong e si chiama davvero Chang'an.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>漢の西の都は雍州にあり、実に長安と呼ばれる。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="hàn" data-meaning="汉朝">漢</span>：<span class="annotation-char" data-pinyin="hàn cháo" data-meaning="Han Dynasty">汉朝</span><br>
+                <span class="annotation-char" data-pinyin="xī dū" data-meaning="西部都城">西都</span>：<span class="annotation-char" data-pinyin="xī bù dū chéng" data-meaning="western capital">西部都城</span><br>
+                <span class="annotation-char" data-pinyin="yōng zhōu" data-meaning="古代九州之一">雍州</span>：<span class="annotation-char" data-pinyin="gǔ dài jiǔ zhōu zhī yī" data-meaning="one of the nine ancient provinces">古代九州之一</span><br>
+                <span class="annotation-char" data-pinyin="shí" data-meaning="同'实'，确实">寔</span>：<span class="annotation-char" data-pinyin="tóng 'shí', què shí" data-meaning="same as 'real', indeed">同'实'，确实</span><br>
+                <span class="annotation-char" data-pinyin="cháng ān" data-meaning="今西安">長安</span>：<span class="annotation-char" data-pinyin="jīn xī ān" data-meaning="present-day Xi'an">今西安</span><br>
+                《<span class="annotation-char" data-pinyin="hàn shū" data-meaning="汉书">漢書</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="qín dì" data-meaning="Qin territory">秦地</span>於《<span class="annotation-char" data-pinyin="yǔ gòng" data-meaning="Tribute of Yu">禹貢</span>》<span class="annotation-char" data-pinyin="shí" data-meaning="time">時</span><span class="annotation-char" data-pinyin="kuà" data-meaning="span">跨</span><span class="annotation-char" data-pinyin="yōng" data-meaning="Yong">雍</span>、<span class="annotation-char" data-pinyin="liáng" data-meaning="Liang">梁</span><span class="annotation-char" data-pinyin="èr zhōu" data-meaning="two provinces">二州</span>，<span class="annotation-char" data-pinyin="hàn xīng" data-meaning="Han rise">漢興</span>，<span class="annotation-char" data-pinyin="lì dū" data-meaning="establish capital">立都</span><span class="annotation-char" data-pinyin="cháng ān" data-meaning="Chang'an">長安</span>。
+            </div>
+        </div>
+
+        <!-- 第二段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="zuǒ" data-meaning="left">左</span>
+                <span class="char" data-pinyin="jù" data-meaning="hold">據</span>
+                <span class="char" data-pinyin="hán" data-meaning="Hangu">函</span>
+                <span class="char" data-pinyin="gǔ" data-meaning="valley">谷</span>
+                <span class="char" data-pinyin="èr" data-meaning="two">二</span>
+                <span class="char" data-pinyin="xiáo" data-meaning="Xiao mountains">崤</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="zǔ" data-meaning="obstacle">阻</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="biǎo" data-meaning="mark">表</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="with">以</span>
+                <span class="char" data-pinyin="tài" data-meaning="great">太</span>
+                <span class="char" data-pinyin="huá" data-meaning="flower">華</span>
+                <span class="char" data-pinyin="zhōng" data-meaning="end">終</span>
+                <span class="char" data-pinyin="nán" data-meaning="south">南</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="shān" data-meaning="mountain">山</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                         <p>左边占据函谷关和崤山两座险阻，以太华山和终南山作为标志。</p>
+                    </div>
+                    <div lang="en">
+                        <p>On the left it holds the Hangu Pass and the two Xiao mountains as obstacles, marked by the Taihua and Zhongnan mountains.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Links hält es den Hangu-Pass und die beiden Xiao-Berge als Hindernisse, markiert durch die Taihua- und Zhongnan-Berge.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>À gauche, il tient le col de Hangu et les deux montagnes Xiao comme obstacles, marqués par les montagnes Taihua et Zhongnan.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Слева он удерживает перевал Ханьгу и две горы Сяо в качестве препятствий, отмеченных горами Тайхуа и Чжуннань.</p>
+                    </div>
+                    <div lang="es">
+                        <p>A la izquierda, sostiene el paso de Hangu y las dos montañas Xiao como obstáculos, marcados por las montañas Taihua y Zhongnan.</p>
+                    </div>
+                    <div lang="it">
+                        <p>A sinistra tiene il passo Hangu e i due monti Xiao come ostacoli, segnati dai monti Taihua e Zhongnan.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>左には函谷関と二崤の険阻を拠り所とし、太華山と終南山を標としている。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="hán gǔ" data-meaning="函谷关">函谷</span>：<span class="annotation-char" data-pinyin="hán gǔ guān" data-meaning="Hangu Pass">函谷关</span><br>
+                <span class="annotation-char" data-pinyin="èr xiáo" data-meaning="崤山的两座山峰">二崤</span>：<span class="annotation-char" data-pinyin="xiáo shān de liǎng zuò shān fēng" data-meaning="two peaks of Xiao Mountain">崤山的两座山峰</span><br>
+                <span class="annotation-char" data-pinyin="tài huá" data-meaning="太华山，即华山">太華</span>：<span class="annotation-char" data-pinyin="tài huá shān, jí huá shān" data-meaning="Taihua Mountain, i.e. Hua Mountain">太华山，即华山</span><br>
+                <span class="annotation-char" data-pinyin="zhōng nán" data-meaning="终南山">終南</span>：<span class="annotation-char" data-pinyin="zhōng nán shān" data-meaning="Zhongnan Mountain">终南山</span><br>
+                《<span class="annotation-char" data-pinyin="zhàn guó cè" data-meaning="Strategies of the Warring States">戰國策</span>》，<span class="annotation-char" data-pinyin="sū qín" data-meaning="Su Qin">蘇秦</span><span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="qín" data-meaning="Qin">秦</span>，<span class="annotation-char" data-pinyin="dōng" data-meaning="east">東</span><span class="annotation-char" data-pinyin="yǒu" data-meaning="have">有</span><span class="annotation-char" data-pinyin="xiáo" data-meaning="Xiao">殽</span>、<span class="annotation-char" data-pinyin="hán" data-meaning="Hangu">函</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="gù" data-meaning="solid">固</span>。《<span class="annotation-char" data-pinyin="yán tiě lùn" data-meaning="Discourses on Salt and Iron">鹽鐵論</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="qín" data-meaning="Qin">秦</span><span class="annotation-char" data-pinyin="zuǒ" data-meaning="left">左</span><span class="annotation-char" data-pinyin="xiáo" data-meaning="Xiao">殽</span>、<span class="annotation-char" data-pinyin="hán" data-meaning="Hangu">函</span>。《<span class="annotation-char" data-pinyin="hàn shū yīn yì" data-meaning="Han Book Pronunciation and Meaning">漢書音義</span>》，<span class="annotation-char" data-pinyin="wéi zhāo" data-meaning="Wei Zhao">韋昭</span><span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="hán gǔ guān" data-meaning="Hangu Pass">函谷關</span>。《<span class="annotation-char" data-pinyin="zuǒ shì chuán" data-meaning="Zuo's Commentary">左氏傳</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="xiáo" data-meaning="Xiao">崤</span><span class="annotation-char" data-pinyin="yǒu" data-meaning="have">有</span><span class="annotation-char" data-pinyin="èr" data-meaning="two">二</span><span class="annotation-char" data-pinyin="líng" data-meaning="hills">陵</span>，<span class="annotation-char" data-pinyin="qí" data-meaning="its">其</span><span class="annotation-char" data-pinyin="nán" data-meaning="south">南</span><span class="annotation-char" data-pinyin="líng" data-meaning="hill">陵</span><span class="annotation-char" data-pinyin="xià" data-meaning="Xia">夏</span><span class="annotation-char" data-pinyin="hòu" data-meaning="sovereign">后</span><span class="annotation-char" data-pinyin="gāo" data-meaning="Gao">臯</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="mù" data-meaning="tomb">墓</span>，<span class="annotation-char" data-pinyin="qí" data-meaning="its">其</span><span class="annotation-char" data-pinyin="běi" data-meaning="north">北</span><span class="annotation-char" data-pinyin="líng" data-meaning="hill">陵</span><span class="annotation-char" data-pinyin="wén" data-meaning="King Wen">文</span><span class="annotation-char" data-pinyin="wáng" data-meaning="king">王</span><span class="annotation-char" data-pinyin="suǒ" data-meaning="place">所</span><span class="annotation-char" data-pinyin="bì" data-meaning="avoid">避</span><span class="annotation-char" data-pinyin="fēng" data-meaning="wind">風</span><span class="annotation-char" data-pinyin="yǔ" data-meaning="rain">雨</span><span class="annotation-char" data-pinyin="yě" data-meaning="also">也</span>。<span class="annotation-char" data-pinyin="biǎo" data-meaning="mark">表</span>，<span class="annotation-char" data-pinyin="biāo" data-meaning="mark">標</span><span class="annotation-char" data-pinyin="yě" data-meaning="also">也</span>。《<span class="annotation-char" data-pinyin="shān hǎi jīng" data-meaning="Classic of Mountains and Seas">山海經</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="huá" data-meaning="Hua">華</span><span class="annotation-char" data-pinyin="shǒu" data-meaning="head">首</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="shān" data-meaning="mountain">山</span><span class="annotation-char" data-pinyin="xī" data-meaning="west">西</span><span class="annotation-char" data-pinyin="liù shí lǐ" data-meaning="sixty li">六十里</span><span class="annotation-char" data-pinyin="yuē" data-meaning="called">曰</span><span class="annotation-char" data-pinyin="tài" data-meaning="great">太</span><span class="annotation-char" data-pinyin="huá" data-meaning="Hua">華</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="shān" data-meaning="mountain">山</span>。《<span class="annotation-char" data-pinyin="máo shī" data-meaning="Mao's Poetry">毛詩</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="zhōng" data-meaning="end">終</span><span class="annotation-char" data-pinyin="nán" data-meaning="south">南</span><span class="annotation-char" data-pinyin="hé" data-meaning="what">何</span><span class="annotation-char" data-pinyin="yǒu" data-meaning="have">有</span>？<span class="annotation-char" data-pinyin="yǒu" data-meaning="have">有</span><span class="annotation-char" data-pinyin="tiáo" data-meaning="strip">條</span><span class="annotation-char" data-pinyin="yǒu" data-meaning="have">有</span><span class="annotation-char" data-pinyin="méi" data-meaning="trunk">枚</span>。<span class="annotation-char" data-pinyin="máo cháng" data-meaning="Mao Chang">毛萇</span><span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="zhōng" data-meaning="end">終</span><span class="annotation-char" data-pinyin="nán" data-meaning="south">南</span>，<span class="annotation-char" data-pinyin="zhōu" data-meaning="Zhou">周</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="míng" data-meaning="famous">名</span><span class="annotation-char" data-pinyin="shān" data-meaning="mountain">山</span><span class="annotation-char" data-pinyin="zhōng" data-meaning="middle">中</span><span class="annotation-char" data-pinyin="nán" data-meaning="south">南</span><span class="annotation-char" data-pinyin="yě" data-meaning="also">也</span>。
+            </div>
+        </div>
+
+        <!-- 第三段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="yòu" data-meaning="right">右</span>
+                <span class="char" data-pinyin="jiè" data-meaning="border">界</span>
+                <span class="char" data-pinyin="bāo" data-meaning="Baoxie">襃</span>
+                <span class="char" data-pinyin="xié" data-meaning="sloping">斜</span>
+                <span class="char" data-pinyin="lǒng" data-meaning="Long">隴</span>
+                <span class="char" data-pinyin="shǒu" data-meaning="head">首</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="xiǎn" data-meaning="danger">險</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="dài" data-meaning="belt">帶</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="with">以</span>
+                <span class="char" data-pinyin="hóng" data-meaning="vast">洪</span>
+                <span class="char" data-pinyin="hé" data-meaning="river">河</span>
+                <span class="char" data-pinyin="jīng" data-meaning="Jing">涇</span>
+                <span class="char" data-pinyin="wèi" data-meaning="Wei">渭</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="chuān" data-meaning="rivers">川</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>右边以褒斜道和陇山作为边界险要，环绕着黄河、泾水和渭水。</p>
+                    </div>
+                    <div lang="en">
+                        <p>On the right it borders the dangerous Baoxie Pass and Longshou Mountain, belted by the Hong, Jing and Wei rivers.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Rechts grenzt es an den gefährlichen Baoxie-Pass und den Longshou-Berg, gegürtet von den Flüssen Hong, Jing und Wei.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>À droite, il borde le dangereux col de Baoxie et la montagne Longshou, ceinturés par les rivières Hong, Jing et Wei.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Справа он граничит с опасным перевалом Баосе и горой Луншоу, опоясанный реками Хун, Цзин и Вэй.</p>
+                    </div>
+                    <div lang="es">
+                        <p>A la derecha limita con el peligroso paso de Baoxie y la montaña Longshou, ceñido por los ríos Hong, Jing y Wei.</p>
+                    </div>
+                    <div lang="it">
+                        <p>A destra confina con il pericoloso passo Baoxie e la montagna Longshou, cinto dai fiumi Hong, Jing e Wei.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>右には褒斜道と隴山の険しさを境界とし、黄河・涇河・渭河を帯としている。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="bāo xié" data-meaning="褒斜道，古代通道">襃斜</span>：<span class="annotation-char" data-pinyin="bāo xié dào, gǔ dài tōng dào" data-meaning="Baoxie Path, ancient passage">褒斜道，古代通道</span><br>
+                <span class="annotation-char" data-pinyin="lǒng shǒu" data-meaning="陇山之首">隴首</span>：<span class="annotation-char" data-pinyin="lǒng shān zhī shǒu" data-meaning="head of Long Mountain">陇山之首</span><br>
+                <span class="annotation-char" data-pinyin="hóng hé" data-meaning="黄河">洪河</span>：<span class="annotation-char" data-pinyin="huáng hé" data-meaning="Yellow River">黄河</span><br>
+                <span class="annotation-char" data-pinyin="jīng wèi" data-meaning="泾河和渭河">涇渭</span>：<span class="annotation-char" data-pinyin="jīng hé hé wèi hé" data-meaning="Jing River and Wei River">泾河和渭河</span><br>
+                《<span class="annotation-char" data-pinyin="cháng yáng fù" data-meaning="Long Poplar Ode">長楊賦</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="mìng" data-meaning="order">命</span><span class="annotation-char" data-pinyin="yòu" data-meaning="right">右</span><span class="annotation-char" data-pinyin="fú" data-meaning="support">扶</span><span class="annotation-char" data-pinyin="fēng" data-meaning="wind">風</span><span class="annotation-char" data-pinyin="fā" data-meaning="send">發</span><span class="annotation-char" data-pinyin="rén" data-meaning="people">人</span>，<span class="annotation-char" data-pinyin="xī" data-meaning="west">西</span><span class="annotation-char" data-pinyin="zì" data-meaning="from">自</span><span class="annotation-char" data-pinyin="bāo" data-meaning="Bao">襃</span><span class="annotation-char" data-pinyin="xié" data-meaning="Xie">斜</span>。《<span class="annotation-char" data-pinyin="liáng zhōu jì" data-meaning="Records of Liang Province">梁州記</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="wàn" data-meaning="ten thousand">萬</span><span class="annotation-char" data-pinyin="shí" data-meaning="stone">石</span><span class="annotation-char" data-pinyin="chéng" data-meaning="city">城</span><span class="annotation-char" data-pinyin="sù" data-meaning="against">泝</span><span class="annotation-char" data-pinyin="hàn" data-meaning="Han">漢</span><span class="annotation-char" data-pinyin="shàng" data-meaning="up">上</span><span class="annotation-char" data-pinyin="qī lǐ" data-meaning="seven li">七里</span><span class="annotation-char" data-pinyin="yǒu" data-meaning="have">有</span><span class="annotation-char" data-pinyin="bāo" data-meaning="Bao">襃</span><span class="annotation-char" data-pinyin="gǔ" data-meaning="valley">谷</span>，<span class="annotation-char" data-pinyin="nán" data-meaning="south">南</span><span class="annotation-char" data-pinyin="kǒu" data-meaning="mouth">口</span><span class="annotation-char" data-pinyin="yuē" data-meaning="called">曰</span><span class="annotation-char" data-pinyin="bāo" data-meaning="Bao">襃</span>，<span class="annotation-char" data-pinyin="běi" data-meaning="north">北</span><span class="annotation-char" data-pinyin="kǒu" data-meaning="mouth">口</span><span class="annotation-char" data-pinyin="yuē" data-meaning="called">曰</span><span class="annotation-char" data-pinyin="xié" data-meaning="Xie">斜</span>，<span class="annotation-char" data-pinyin="cháng" data-meaning="long">長</span><span class="annotation-char" data-pinyin="sì bǎi qī shí lǐ" data-meaning="470 li">四百七十里</span>。《<span class="annotation-char" data-pinyin="yán tiě lùn" data-meaning="Discourses on Salt and Iron">鹽鐵論</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="qín" data-meaning="Qin">秦</span><span class="annotation-char" data-pinyin="yòu" data-meaning="right">右</span><span class="annotation-char" data-pinyin="lǒng" data-meaning="Long">隴</span><span class="annotation-char" data-pinyin="è" data-meaning="narrow">阨</span>。《<span class="annotation-char" data-pinyin="hàn shū" data-meaning="Han Book">漢書</span>》，<span class="annotation-char" data-pinyin="xìng" data-meaning="fortunate">幸</span><span class="annotation-char" data-pinyin="yōng" data-meaning="Yong">雍</span>《<span class="annotation-char" data-pinyin="bái" data-meaning="white">白</span><span class="annotation-char" data-pinyin="lín" data-meaning="unicorn">麟</span><span class="annotation-char" data-pinyin="gē" data-meaning="song">歌</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="cháo" data-meaning="morning">朝</span><span class="annotation-char" data-pinyin="lǒng" data-meaning="Long">隴</span><span class="annotation-char" data-pinyin="shǒu" data-meaning="head">首</span>，<span class="annotation-char" data-pinyin="lǎn" data-meaning="view">覽</span><span class="annotation-char" data-pinyin="xī" data-meaning="west">西</span><span class="annotation-char" data-pinyin="yín" data-meaning="border">垠</span>。《<span class="annotation-char" data-pinyin="shàng shū" data-meaning="Book of Documents">尙書</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="dǎo" data-meaning="guide">導</span><span class="annotation-char" data-pinyin="hé" data-meaning="river">河</span><span class="annotation-char" data-pinyin="zì" data-meaning="from">自</span><span class="annotation-char" data-pinyin="jī" data-meaning="accumulate">積</span><span class="annotation-char" data-pinyin="shí" data-meaning="stone">石</span>，<span class="annotation-char" data-pinyin="nán" data-meaning="south">南</span><span class="annotation-char" data-pinyin="zhì" data-meaning="arrive">至</span><span class="annotation-char" data-pinyin="yú" data-meaning="at">于</span><span class="annotation-char" data-pinyin="huá" data-meaning="Hua">華</span><span class="annotation-char" data-pinyin="yīn" data-meaning="shade">陰</span>。《<span class="annotation-char" data-pinyin="shān hǎi jīng" data-meaning="Classic of Mountains and Seas">山海經</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jīng" data-meaning="Jing">涇</span><span class="annotation-char" data-pinyin="shuǐ" data-meaning="water">水</span><span class="annotation-char" data-pinyin="chū" data-meaning="exit">出</span><span class="annotation-char" data-pinyin="cháng" data-meaning="long">長</span><span class="annotation-char" data-pinyin="chéng" data-meaning="wall">城</span><span class="annotation-char" data-pinyin="běi" data-meaning="north">北</span>。《<span class="annotation-char" data-pinyin="shàng shū" data-meaning="Book of Documents">尙書</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="dǎo" data-meaning="guide">導</span><span class="annotation-char" data-pinyin="wèi" data-meaning="Wei">渭</span><span class="annotation-char" data-pinyin="zì" data-meaning="from">自</span><span class="annotation-char" data-pinyin="niǎo" data-meaning="bird">鳥</span><span class="annotation-char" data-pinyin="shǔ" data-meaning="rat">鼠</span><span class="annotation-char" data-pinyin="tóng" data-meaning="same">同</span><span class="annotation-char" data-pinyin="xué" data-meaning="hole">穴</span>。
+            </div>
+        </div>
+
+        <!-- 第四段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="huá" data-meaning="flower">華</span>
+                <span class="char" data-pinyin="shí" data-meaning="fruit">實</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="máo" data-meaning="plants">毛</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zé" data-meaning="then">則</span>
+                <span class="char" data-pinyin="jiǔ" data-meaning="nine">九</span>
+                <span class="char" data-pinyin="zhōu" data-meaning="provinces">州</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="shàng" data-meaning="upper">上</span>
+                <span class="char" data-pinyin="yú" data-meaning="fertile">腴</span>
+                <span class="char" data-pinyin="yān" data-meaning="also">焉</span>
+                <span class="char punctuation" data-pinyin="；" data-meaning="semicolon">；</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="fáng" data-meaning="defense">防</span>
+                <span class="char" data-pinyin="yù" data-meaning="defend">禦</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="zǔ" data-meaning="obstacle">阻</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zé" data-meaning="then">則</span>
+                <span class="char" data-pinyin="tiān" data-meaning="heaven">天</span>
+                <span class="char" data-pinyin="dì" data-meaning="earth">地</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="ào" data-meaning="secure">隩</span>
+                <span class="char" data-pinyin="qū" data-meaning="area">區</span>
+                <span class="char" data-pinyin="yān" data-meaning="also">焉</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>这里的花果植物，是九州最肥沃的土地；这里的防御险阻，是天地间最安全的区域。</p>
+                    </div>
+                    <div lang="en">
+                        <p>The flowers and fruits here are the most fertile land of the nine provinces; the defensive obstacles here are the most secure area between heaven and earth.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Die Blumen und Früchte hier sind das fruchtbarste Land der neun Provinzen; die defensiven Hindernisse hier sind das sicherste Gebiet zwischen Himmel und Erde.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Les fleurs et les fruits ici sont les terres les plus fertiles des neuf provinces; les obstacles défensifs ici sont la zone la plus sûre entre le ciel et la terre.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Цветы и фрукты здесь - самая плодородная земля девяти провинций; защитные препятствия здесь - самая безопасная область между небом и землей.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Las flores y frutas aquí son la tierra más fértil de las nueve provincias; los obstáculos defensivos aquí son el área más segura entre el cielo y la tierra.</p>
+                    </div>
+                    <div lang="it">
+                        <p>I fiori e i frutti qui sono la terra più fertile delle nove province; gli ostacoli difensivi qui sono l'area più sicura tra il cielo e la terra.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>ここにある花果植物は、九州で最も肥沃な土地であり、ここにある防御の険阻は、天地の間で最も安全な区域である。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="huá shí" data-meaning="花果">華實</span>：<span class="annotation-char" data-pinyin="huā guǒ" data-meaning="flowers and fruits">花果</span><br>
+                <span class="annotation-char" data-pinyin="máo" data-meaning="植物">毛</span>：<span class="annotation-char" data-pinyin="zhí wù" data-meaning="plants">植物</span><br>
+                <span class="annotation-char" data-pinyin="shàng yú" data-meaning="最肥沃的土地">上腴</span>：<span class="annotation-char" data-pinyin="zuì féi wò de tǔ dì" data-meaning="most fertile land">最肥沃的土地</span><br>
+                <span class="annotation-char" data-pinyin="ào qū" data-meaning="可以定居的安全区域">隩區</span>：<span class="annotation-char" data-pinyin="kě yǐ dìng jū de ān quán qū yù" data-meaning="safe area for settlement">可以定居的安全区域</span><br>
+                《<span class="annotation-char" data-pinyin="chūn qiū wén yào gōu" data-meaning="Spring and Autumn Literary Brilliance Hook">春秋文耀鉤</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="chūn" data-meaning="spring">春</span><span class="annotation-char" data-pinyin="zhì" data-meaning="arrive">致</span><span class="annotation-char" data-pinyin="qí" data-meaning="its">其</span><span class="annotation-char" data-pinyin="shí" data-meaning="time">時</span>，<span class="annotation-char" data-pinyin="huá" data-meaning="flower">華</span><span class="annotation-char" data-pinyin="shí" data-meaning="fruit">實</span><span class="annotation-char" data-pinyin="nǎi" data-meaning="then">乃</span><span class="annotation-char" data-pinyin="róng" data-meaning="flourish">榮</span>。《<span class="annotation-char" data-pinyin="zuǒ shì chuán" data-meaning="Zuo's Commentary">左氏傳</span>》，<span class="annotation-char" data-pinyin="jūn" data-meaning="gentleman">君</span><span class="annotation-char" data-pinyin="zǐ" data-meaning="son">子</span><span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jiàn" data-meaning="stream">澗</span><span class="annotation-char" data-pinyin="xī" data-meaning="brook">溪</span><span class="annotation-char" data-pinyin="zhǎo" data-meaning="pond">沼</span><span class="annotation-char" data-pinyin="zhǐ" data-meaning="islet">沚</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="máo" data-meaning="plants">毛</span>。《<span class="annotation-char" data-pinyin="hàn shū" data-meaning="Han Book">漢書</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="qín" data-meaning="Qin">秦</span><span class="annotation-char" data-pinyin="dì" data-meaning="land">地</span>，<span class="annotation-char" data-pinyin="jiǔ" data-meaning="nine">九</span><span class="annotation-char" data-pinyin="zhōu" data-meaning="provinces">州</span><span class="annotation-char" data-pinyin="gāo" data-meaning="fat">膏</span><span class="annotation-char" data-pinyin="yú" data-meaning="fertile">腴</span>。<span class="annotation-char" data-pinyin="yáng xióng" data-meaning="Yang Xiong">楊雄</span>《<span class="annotation-char" data-pinyin="wèi" data-meaning="guard">衞</span><span class="annotation-char" data-pinyin="wèi" data-meaning="guard">尉</span><span class="annotation-char" data-pinyin="zhēn" data-meaning="admonition">箴</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="shè" data-meaning="set">設</span><span class="annotation-char" data-pinyin="zhì" data-meaning="establish">置</span><span class="annotation-char" data-pinyin="shān" data-meaning="mountain">山</span><span class="annotation-char" data-pinyin="xiǎn" data-meaning="danger">險</span>，<span class="annotation-char" data-pinyin="jìn" data-meaning="all">盡</span><span class="annotation-char" data-pinyin="wèi" data-meaning="for">爲</span><span class="annotation-char" data-pinyin="fáng" data-meaning="defense">防</span><span class="annotation-char" data-pinyin="yù" data-meaning="defense">禦</span>。《<span class="annotation-char" data-pinyin="shuō wén" data-meaning="Explaining Characters">說文</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="ào" data-meaning="secure">隩</span>，<span class="annotation-char" data-pinyin="sì" data-meaning="four">四</span><span class="annotation-char" data-pinyin="fāng" data-meaning="direction">方</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="tǔ" data-meaning="land">土</span><span class="annotation-char" data-pinyin="kě" data-meaning="can">可</span><span class="annotation-char" data-pinyin="dìng" data-meaning="settle">定</span><span class="annotation-char" data-pinyin="jū" data-meaning="reside">居</span><span class="annotation-char" data-pinyin="zhě" data-meaning="one">者</span><span class="annotation-char" data-pinyin="yě" data-meaning="also">也</span>，<span class="annotation-char" data-pinyin="yú" data-meaning="at">於</span><span class="annotation-char" data-pinyin="bào" data-meaning="report">報</span><span class="annotation-char" data-pinyin="qiē" data-meaning="cut">切</span>。
+            </div>
+        </div>
+
+        <!-- 第五段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="shì" data-meaning="this">是</span>
+                <span class="char" data-pinyin="gù" data-meaning="therefore">故</span>
+                <span class="char" data-pinyin="héng" data-meaning="horizontal">橫</span>
+                <span class="char" data-pinyin="bèi" data-meaning="cover">被</span>
+                <span class="char" data-pinyin="liù" data-meaning="six">六</span>
+                <span class="char" data-pinyin="hé" data-meaning="directions">合</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="sān" data-meaning="three">三</span>
+                <span class="char" data-pinyin="chéng" data-meaning="become">成</span>
+                <span class="char" data-pinyin="dì" data-meaning="imperial">帝</span>
+                <span class="char" data-pinyin="jī" data-meaning="capital">畿</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zhōu" data-meaning="Zhou">周</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="with">以</span>
+                <span class="char" data-pinyin="lóng" data-meaning="dragon">龍</span>
+                <span class="char" data-pinyin="xīng" data-meaning="rise">興</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="qín" data-meaning="Qin">秦</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="with">以</span>
+                <span class="char" data-pinyin="hǔ" data-meaning="tiger">虎</span>
+                <span class="char" data-pinyin="shì" data-meaning="gaze">視</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>因此它广布天地四方，三次成为帝王之都。周朝如龙腾般兴起，秦朝似虎视般雄踞。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Therefore it widely covers all directions and became the imperial capital three times. The Zhou rose like a dragon, the Qin gazed like a tiger.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Daher bedeckt es weiträumig alle Richtungen und wurde dreimal zur kaiserlichen Hauptstadt. Die Zhou stiegen wie ein Drache auf, die Qin blickten wie ein Tiger.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Par conséquent, il couvre largement toutes les directions et est devenu trois fois la capitale impériale. Les Zhou se sont élevés comme un dragon, les Qin ont regardé comme un tigre.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Поэтому он широко охватывает все направления и трижды становился императорской столицей. Чжоу поднялись, как дракон, Цинь смотрели, как тигр.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Por lo tanto, cubre ampliamente todas las direcciones y se convirtió tres veces en la capital imperial. Los Zhou se levantaron como un dragón, los Qin miraron como un tigre.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Pertanto copre ampiamente tutte le direzioni e divenne tre volte la capitale imperiale. Gli Zhou si alzarono come un drago, i Qin guardarono come una tigre.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>それゆえに広く天地四方を覆い、三度帝都となった。周は龍のように興り、秦は虎のように雄視した。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="héng bèi" data-meaning="广泛覆盖">橫被</span>：<span class="annotation-char" data-pinyin="guǎng fàn fù gài" data-meaning="widely cover">广泛覆盖</span><br>
+                <span class="annotation-char" data-pinyin="liù hé" data-meaning="天地四方">六合</span>：<span class="annotation-char" data-pinyin="tiān dì sì fāng" data-meaning="heaven and earth, four directions">天地四方</span><br>
+                <span class="annotation-char" data-pinyin="dì jī" data-meaning="帝都">帝畿</span>：<span class="annotation-char" data-pinyin="dì dū" data-meaning="imperial capital">帝都</span><br>
+                <span class="annotation-char" data-pinyin="lóng xīng" data-meaning="如龙兴起">龍興</span>：<span class="annotation-char" data-pinyin="rú lóng xīng qǐ" data-meaning="rise like a dragon">如龙兴起</span><br>
+                <span class="annotation-char" data-pinyin="hǔ shì" data-meaning="如虎雄视">虎視</span>：<span class="annotation-char" data-pinyin="rú hǔ xióng shì" data-meaning="gaze like a tiger">如虎雄视</span><br>
+                《<span class="annotation-char" data-pinyin="hàn shū yīn yì" data-meaning="Han Book Pronunciation and Meaning">漢書音義</span>》，<span class="annotation-char" data-pinyin="wén" data-meaning="Wen">文</span><span class="annotation-char" data-pinyin="yǐng" data-meaning="Ying">穎</span><span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="guān" data-meaning="pass">關</span><span class="annotation-char" data-pinyin="xī" data-meaning="west">西</span><span class="annotation-char" data-pinyin="wèi" data-meaning="for">爲</span><span class="annotation-char" data-pinyin="héng" data-meaning="horizontal">橫</span>。<span class="annotation-char" data-pinyin="kǒng ān guó" data-meaning="Kong Anguo">孔安國</span>《<span class="annotation-char" data-pinyin="shàng shū chuán" data-meaning="Book of Documents Commentary">尙書傳</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="bèi" data-meaning="cover">被</span>，<span class="annotation-char" data-pinyin="jí" data-meaning="reach">及</span><span class="annotation-char" data-pinyin="yě" data-meaning="also">也</span>。《<span class="annotation-char" data-pinyin="lǚ shì chūn qiū" data-meaning="Lü's Spring and Autumn Annals">呂氏春秋</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="shén" data-meaning="spirit">神</span><span class="annotation-char" data-pinyin="tōng" data-meaning="connect">通</span><span class="annotation-char" data-pinyin="hū" data-meaning="in">乎</span><span class="annotation-char" data-pinyin="liù" data-meaning="six">六</span><span class="annotation-char" data-pinyin="hé" data-meaning="directions">合</span>。<span class="annotation-char" data-pinyin="gāo" data-meaning="Gao">高</span><span class="annotation-char" data-pinyin="yòu" data-meaning="induce">誘</span><span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="sì" data-meaning="four">四</span><span class="annotation-char" data-pinyin="fāng" data-meaning="direction">方</span><span class="annotation-char" data-pinyin="shàng" data-meaning="up">上</span><span class="annotation-char" data-pinyin="xià" data-meaning="down">下</span><span class="annotation-char" data-pinyin="wèi" data-meaning="for">爲</span><span class="annotation-char" data-pinyin="liù" data-meaning="six">六</span><span class="annotation-char" data-pinyin="hé" data-meaning="directions">合</span>。<span class="annotation-char" data-pinyin="sān" data-meaning="three">三</span><span class="annotation-char" data-pinyin="chéng" data-meaning="become">成</span><span class="annotation-char" data-pinyin="dì" data-meaning="imperial">帝</span><span class="annotation-char" data-pinyin="jī" data-meaning="capital">畿</span>，<span class="annotation-char" data-pinyin="wèi" data-meaning="refer to">謂</span><span class="annotation-char" data-pinyin="zhōu" data-meaning="Zhou">周</span>、<span class="annotation-char" data-pinyin="qín" data-meaning="Qin">秦</span>、<span class="annotation-char" data-pinyin="hàn" data-meaning="Han">漢</span><span class="annotation-char" data-pinyin="yě" data-meaning="also">也</span>。《<span class="annotation-char" data-pinyin="lè" data-meaning="music">樂</span><span class="annotation-char" data-pinyin="jī" data-meaning="auspicious">稽</span><span class="annotation-char" data-pinyin="jiā" data-meaning="good">嘉</span><span class="annotation-char" data-pinyin="yào" data-meaning="shine">耀</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="dé" data-meaning="virtue">德</span><span class="annotation-char" data-pinyin="xiàng" data-meaning="resemble">象</span><span class="annotation-char" data-pinyin="tiān" data-meaning="heaven">天</span><span class="annotation-char" data-pinyin="dì" data-meaning="earth">地</span><span class="annotation-char" data-pinyin="wèi" data-meaning="for">爲</span><span class="annotation-char" data-pinyin="dì" data-meaning="emperor">帝</span>。《<span class="annotation-char" data-pinyin="zhōu" data-meaning="Zhou">周</span><span class="annotation-char" data-pinyin="lǐ" data-meaning="rites">禮</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="fāng" data-meaning="square">方</span><span class="annotation-char" data-pinyin="qiān" data-meaning="thousand">千</span><span class="annotation-char" data-pinyin="lǐ" data-meaning="li">里</span><span class="annotation-char" data-pinyin="yuē" data-meaning="called">曰</span><span class="annotation-char" data-pinyin="wáng" data-meaning="king">王</span><span class="annotation-char" data-pinyin="jī" data-meaning="capital">畿</span>。《<span class="annotation-char" data-pinyin="shǐ" data-meaning="history">史</span><span class="annotation-char" data-pinyin="jì" data-meaning="record">記</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="zhōu" data-meaning="Zhou">周</span><span class="annotation-char" data-pinyin="hòu" data-meaning="sovereign">后</span><span class="annotation-char" data-pinyin="jì" data-meaning="millet">稷</span>，<span class="annotation-char" data-pinyin="míng" data-meaning="name">名</span><span class="annotation-char" data-pinyin="qì" data-meaning="abandon">弃</span>，<span class="annotation-char" data-pinyin="yáo" data-meaning="Yao">堯</span>、<span class="annotation-char" data-pinyin="shùn" data-meaning="Shun">舜</span><span class="annotation-char" data-pinyin="shí" data-meaning="time">時</span><span class="annotation-char" data-pinyin="wèi" data-meaning="as">爲</span><span class="annotation-char" data-pinyin="nóng" data-meaning="agriculture">農</span><span class="annotation-char" data-pinyin="shī" data-meaning="teacher">師</span>，<span class="annotation-char" data-pinyin="hào" data-meaning="title">號</span><span class="annotation-char" data-pinyin="hòu" data-meaning="sovereign">后</span><span class="annotation-char" data-pinyin="jì" data-meaning="millet">稷</span>，<span class="annotation-char" data-pinyin="xìng" data-meaning="surname">姓</span><span class="annotation-char" data-pinyin="jī" data-meaning="Ji">姬</span><span class="annotation-char" data-pinyin="shì" data-meaning="clan">氏</span>。<span class="annotation-char" data-pinyin="zhì" data-meaning="to">至</span><span class="annotation-char" data-pinyin="sūn" data-meaning="grandson">孫</span><span class="annotation-char" data-pinyin="gōng" data-meaning="duke">公</span><span class="annotation-char" data-pinyin="liú" data-meaning="Liu">劉</span>，<span class="annotation-char" data-pinyin="zhōu" data-meaning="Zhou">周</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="dào" data-meaning="way">道</span><span class="annotation-char" data-pinyin="xīng" data-meaning="rise">興</span>，<span class="annotation-char" data-pinyin="zhì" data-meaning="to">至</span><span class="annotation-char" data-pinyin="wén" data-meaning="King Wen">文</span><span class="annotation-char" data-pinyin="wáng" data-meaning="king">王</span><span class="annotation-char" data-pinyin="xǐ" data-meaning="move">徙</span><span class="annotation-char" data-pinyin="dū" data-meaning="capital">都</span><span class="annotation-char" data-pinyin="fēng" data-meaning="Feng">豐</span>，<span class="annotation-char" data-pinyin="wǔ" data-meaning="King Wu">武</span><span class="annotation-char" data-pinyin="wáng" data-meaning="king">王</span><span class="annotation-char" data-pinyin="miè" data-meaning="destroy">滅</span><span class="annotation-char" data-pinyin="zhòu" data-meaning="Zhou">紂</span>。<span class="annotation-char" data-pinyin="kǒng ān guó" data-meaning="Kong Anguo">孔安國</span>《<span class="annotation-char" data-pinyin="shàng shū" data-meaning="Book of Documents">尙書</span><span class="annotation-char" data-pinyin="xù" data-meaning="preface">序</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="hàn" data-meaning="Han">漢</span><span class="annotation-char" data-pinyin="shì" data-meaning="house">室</span><span class="annotation-char" data-pinyin="lóng" data-meaning="dragon">龍</span><span class="annotation-char" data-pinyin="xīng" data-meaning="rise">興</span>。《<span class="annotation-char" data-pinyin="shǐ" data-meaning="history">史</span><span class="annotation-char" data-pinyin="jì" data-meaning="record">記</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="qín" data-meaning="Qin">秦</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="xiān" data-meaning="ancestor">先</span>，<span class="annotation-char" data-pinyin="dì" data-meaning="emperor">帝</span><span class="annotation-char" data-pinyin="zhuān" data-meaning="special">顓</span><span class="annotation-char" data-pinyin="xū" data-meaning="Xu">頊</span><span class="annotation-char" data-pinyin="zhī" data-meaning="'s">之</span><span class="annotation-char" data-pinyin="miáo" data-meaning="sprout">苗</span><span class="annotation-char" data-pinyin="yì" data-meaning="descendant">裔</span>，<span class="annotation-char" data-pinyin="zhì" data-meaning="to">至</span><span class="annotation-char" data-pinyin="xiào" data-meaning="filial">孝</span><span class="annotation-char" data-pinyin="gōng" data-meaning="duke">公</span><span class="annotation-char" data-pinyin="zuò" data-meaning="make">作</span><span class="annotation-char" data-pinyin="xián" data-meaning="Xian">咸</span><span class="annotation-char" data-pinyin="yáng" data-meaning="Yang">陽</span>，<span class="annotation-char" data-pinyin="zhèng" data-meaning="government">政</span><span class="annotation-char" data-pinyin="bìng" data-meaning="merge">幷</span><span class="annotation-char" data-pinyin="liù" data-meaning="six">六</span><span class="annotation-char" data-pinyin="guó" data-meaning="states">國</span>，<span class="annotation-char" data-pinyin="chēng" data-meaning="call">稱</span><span class="annotation-char" data-pinyin="huáng" data-meaning="emperor">皇</span><span class="annotation-char" data-pinyin="dì" data-meaning="emperor">帝</span>。《<span class="annotation-char" data-pinyin="zhōu" data-meaning="Zhou">周</span><span class="annotation-char" data-pinyin="yì" data-meaning="Changes">易</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="hǔ" data-meaning="tiger">虎</span><span class="annotation-char" data-pinyin="shì" data-meaning="gaze">視</span><span class="annotation-char" data-pinyin="dān" data-meaning="covetous">眈</span><span class="annotation-char" data-pinyin="dān" data-meaning="covetous">眈</span>，<span class="annotation-char" data-pinyin="qí" data-meaning="its">其</span><span class="annotation-char" data-pinyin="yù" data-meaning="desire">欲</span><span class="annotation-char" data-pinyin="zhú" data-meaning="pursue">逐</span><span class="annotation-char" data-pinyin="zhú" data-meaning="pursue">逐</span>。
+            </div>
+        </div>
+    </div>
+    
+    <!-- 弹出窗口 -->
+    <div class="popup" id="charPopup">
+        <span class="popup-close" onclick="closePopup()">×</span>
+        <div class="popup-content">
+            <div class="popup-char"></div>
+            <div class="popup-pinyin"></div>
+            <div class="popup-meaning"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 单字点击事件
+        document.querySelectorAll('.char, .annotation-char').forEach(char => {
+            char.addEventListener('click', function() {
+                const popup = document.getElementById('charPopup');
+                popup.querySelector('.popup-char').textContent = this.textContent;
+                popup.querySelector('.popup-pinyin').textContent = `拼音: ${this.dataset.pinyin || ''}`;
+                popup.querySelector('.popup-meaning').textContent = `释义: ${this.dataset.meaning || ''}`;
+                popup.style.display = 'block';
+            });
+        });
+        
+        // 关闭弹出窗口
+        function closePopup() {
+            document.getElementById('charPopup').style.display = 'none';
+        }
+        
+        // 段落朗读功能
+        let currentParagraphUtterances = [];
+        let currentReadingParagraph = null;
+        
+        function speakParagraph(btn) {
+            const paragraph = btn.closest('.paragraph');
+            
+            // 如果正在朗读当前段落，停止
+            if (currentReadingParagraph === paragraph && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                btn.textContent = '🔊';
+                currentReadingParagraph = null;
+                return;
+            }
+            
+            // 如果正在朗读其他段落，先停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                document.querySelectorAll('.control-btn').forEach(b => {
+                    if (b.textContent === '⏹') b.textContent = '🔊';
+                });
+            }
+            
+            // 开始朗读新段落
+            currentReadingParagraph = paragraph;
+            btn.textContent = '⏹';
+            
+            const sentences = paragraph.querySelectorAll('.sentence');
+            currentParagraphUtterances = [];
+            
+            // 准备所有句子语音
+            sentences.forEach((sentence, index) => {
+                let sentenceText = '';
+                sentence.querySelectorAll('.char').forEach(char => {
+                    if (!char.classList.contains('punctuation') || 
+                        ['，', '。', '！', '？', '：', '；'].includes(char.textContent)) {
+                        sentenceText += char.textContent;
+                    }
+                });
+                
+                const utterance = new SpeechSynthesisUtterance(sentenceText);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.8;
+                
+                utterance.onstart = function() {
+                    resetAllSentenceHighlights();
+                    sentence.classList.add('active');
+                    
+                    // 滚动到当前句子
+                    sentence.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+                
+                utterance.onend = function() {
+                    if (index === sentences.length - 1) {
+                        btn.textContent = '🔊';
+                        currentReadingParagraph = null;
+                    }
+                };
+                
+                currentParagraphUtterances.push(utterance);
+            });
+            
+            // 按顺序朗读所有句子
+            currentParagraphUtterances.forEach((utterance, index) => {
+                // 设置延迟，使句子之间有自然停顿
+                if (index > 0) {
+                    const prevDuration = currentParagraphUtterances[index-1].text.length * 100; // 估算前一句持续时间
+                    utterance.startTime = Date.now() + prevDuration + 300; // 300ms额外停顿
+                }
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+        
+        function resetAllSentenceHighlights() {
+            document.querySelectorAll('.sentence').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+        
+        // 显示/隐藏注释面板
+        function toggleAnnotationPanel(btn) {
+            const annotation = btn.nextElementSibling;
+            if (annotation.style.display === 'block') {
+                annotation.style.display = 'none';
+                btn.textContent = '顯示註釋';
+            } else {
+                annotation.style.display = 'block';
+                btn.textContent = '隱藏註釋';
+            }
+        }
+        
+        // 显示/隐藏翻译面板
+        function toggleTranslationPanel(btn) {
+            const panel = btn.closest('.paragraph').querySelector('.translation-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+            }
+        }
+        
+        // 切换翻译语言
+        function showTranslation(btn, lang) {
+            const panel = btn.closest('.translation-panel').querySelector('.translation-content');
+            panel.querySelectorAll('div').forEach(div => {
+                div.classList.remove('show');
+            });
+            panel.querySelector(`div[lang="${lang}"]`).classList.add('show');
+            
+            // 更新按钮状态
+            btn.closest('.translation-panel').querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+        
+        // 点击空白处关闭弹出窗口
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('charPopup')) {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>

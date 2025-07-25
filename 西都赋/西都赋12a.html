@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《西都赋》交互式閱讀系統</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋體", serif;
+            line-height: 2.5;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #3a3226;
+            color: #e0d5c8;
+        }
+        
+        h1 {
+            color: #d4b483;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #5d4b36;
+            padding-bottom: 10px;
+        }
+        
+        .main-text {
+            font-size: 24px;
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .char:hover {
+            color: #d4a373;
+            text-shadow: 0 0 3px rgba(212, 163, 115, 0.5);
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4a4235;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+        }
+        
+        .popup-content {
+            font-size: 16px;
+        }
+        
+        .popup-char {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #d4b483;
+        }
+        
+        .popup-pinyin, .popup-meaning {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px dashed #5d4b36;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #a89984;
+        }
+        
+        .paragraph {
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            margin-right: 6px;
+            border: none;
+            border-radius: 50%;
+            background: #5d4b36;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: #e0d5c8;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #7c6a53;
+            transform: scale(1.1);
+        }
+        
+        .annotation {
+            font-size: 18px;
+            background: #4a4235;
+            padding: 12px 15px;
+            border-left: 3px solid #a89984;
+            margin: 12px 0;
+            display: none;
+            color: #d4b483;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .annotation-char {
+            cursor: pointer;
+            border-bottom: 1px dotted #a89984;
+        }
+        
+        .annotation-char:hover {
+            color: #d4a373;
+        }
+        
+        .toggle-annotation {
+            background: #5d4b36;
+            border: none;
+            color: #e0d5c8;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-annotation:hover {
+            background: #7c6a53;
+        }
+        
+        .translation-panel {
+            display: none;
+            background: #4a4235;
+            border: 1px solid #5d4b36;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+        }
+        
+        .lang-btn {
+            background: #3a3226;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+            padding: 3px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn:hover {
+            background: #5d4b36;
+        }
+        
+        .lang-btn.active {
+            background: #a89984;
+            color: #3a3226;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #5d4b36;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .translation-content div {
+            display: none;
+            padding: 6px 0;
+        }
+        
+        .translation-content div.show {
+            display: block;
+        }
+        
+        .punctuation {
+            color: #a89984;
+        }
+        
+        .sentence {
+            display: inline;
+            position: relative;
+        }
+        
+        .sentence.active {
+            background-color: rgba(212, 180, 131, 0.3);
+            border-radius: 3px;
+        }
+        
+        .annotation-tooltip {
+            position: absolute;
+            background: #4a4235;
+            border: 1px solid #5d4b36;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            z-index: 100;
+            display: none;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>西都賦</h1>
+    
+    <div class="main-text">
+        <!-- 第一段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="nèi" data-meaning="inside">內</span>
+                <span class="char" data-pinyin="zé" data-meaning="then">則</span>
+                <span class="char" data-pinyin="bié" data-meaning="separate">別</span>
+                <span class="char" data-pinyin="fēng" data-meaning="wind">風</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="jiāo" data-meaning="towering">嶕</span>
+                <span class="char" data-pinyin="yáo" data-meaning="high">嶢</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="miǎo" data-meaning="exquisite">眇</span>
+                <span class="char" data-pinyin="lì" data-meaning="beauty">麗</span>
+                <span class="char" data-pinyin="qiǎo" data-meaning="skill">巧</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="sǒng" data-meaning="rising">聳</span>
+                <span class="char" data-pinyin="zhuó" data-meaning="prominently">擢</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zhāng" data-meaning="display">張</span>
+                <span class="char" data-pinyin="qiān" data-meaning="thousand">千</span>
+                <span class="char" data-pinyin="mén" data-meaning="gates">門</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="lì" data-meaning="establish">立</span>
+                <span class="char" data-pinyin="wàn" data-meaning="ten">萬</span>
+                <span class="char" data-pinyin="hù" data-meaning="households">戶</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shùn" data-meaning="follow">順</span>
+                <span class="char" data-pinyin="yīn" data-meaning="yin">陰</span>
+                <span class="char" data-pinyin="yáng" data-meaning="yang">陽</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="to">以</span>
+                <span class="char" data-pinyin="kāi" data-meaning="open">開</span>
+                <span class="char" data-pinyin="hé" data-meaning="close">闔</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>內則別風之嶕嶢，眇麗巧而聳擢。張千門而立萬戶，順陰陽以開闔。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Inside, there is the towering Biefeng Tower, exquisitely beautiful and rising prominently. Thousands of gates and ten thousand households are set up, following yin and yang to open and close.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Im Inneren befindet sich der aufragende Biefeng-Turm, kunstvoll schön und markant aufsteigend. Tausende Tore und zehntausend Haushalte sind eingerichtet, folgen Yin und Yang, um sich zu öffnen und zu schließen.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>À l'intérieur, se dresse la tour Biefeng, d'une beauté exquise et s'élevant de manière proéminente. Des milliers de portes et dix mille ménages sont installés, suivant le yin et le yang pour s'ouvrir et se fermer.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Внутри находится возвышающаяся башня Biefeng, изысканно красивая и заметно поднимающаяся. Установлены тысячи ворот и десять тысяч домохозяйств, следуя инь и ян, чтобы открываться и закрываться.</p>
+                    </div>
+                    <div lang="es">
+                        <p>En el interior, se encuentra la torre Biefeng, exquisitamente hermosa y elevándose prominentemente. Se instalan miles de puertas y diez mil hogares, siguiendo el yin y el yang para abrirse y cerrarse.</p>
+                    </div>
+                    <div lang="it">
+                        <p>All'interno, si erge la torre Biefeng, squisitamente bella e in risalto. Sono installate migliaia di porte e diecimila famiglie, seguendo lo yin e lo yang per aprirsi e chiudersi.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>宮内には高く聳える別風闕があり、精巧で美しく高く突出している。千門万戸を設け、陰陽に順応して開閉する。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="bié fēng" data-meaning="别风阙">別風</span>：<span class="annotation-char" data-pinyin="jiàn zhāng gōng zhōng de zhé fēng què" data-meaning="Biefeng Tower in Jianzhang Palace">建章宫中的折风阙</span><br>
+                <span class="annotation-char" data-pinyin="jiāo yáo" data-meaning="高耸的样子">嶕嶢</span>：<span class="annotation-char" data-pinyin="gāo sǒng de yàng zi" data-meaning="towering appearance">高耸的样子</span><br>
+                <span class="annotation-char" data-pinyin="sǒng zhuó" data-meaning="高耸突出">聳擢</span>：<span class="annotation-char" data-pinyin="gāo sǒng tū chū" data-meaning="rising prominently">高耸突出</span><br>
+                <span class="annotation-char" data-pinyin="kāi hé" data-meaning="开合">開闔</span>：<span class="annotation-char" data-pinyin="mén de kāi guān" data-meaning="opening and closing of doors">门的开关</span><br>
+                《<span class="annotation-char" data-pinyin="sān fǔ gù shì" data-meaning="三辅故事">三輔故事</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jiàn zhāng gōng dōng yǒu zhé fēng què" data-meaning="East of Jianzhang Palace there is Zefeng Tower">建章宮東有折風闕</span>。《<span class="annotation-char" data-pinyin="guān zhōng jì" data-meaning="关中记">關中記</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="zhé fēng" data-meaning="Zefeng">折風</span>，<span class="annotation-char" data-pinyin="yī míng bié fēng" data-meaning="also called Biefeng">一名別風</span>。《<span class="annotation-char" data-pinyin="guǎng yǎ" data-meaning="广雅">廣雅</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jiāo yáo" data-meaning="high">嶕嶢</span>，<span class="annotation-char" data-pinyin="gāo yě" data-meaning="tall">高也</span>，<span class="annotation-char" data-pinyin="jiāo" data-meaning="Jiao">嶕</span>，<span class="annotation-char" data-pinyin="zī yáo qiē" data-meaning="pronunciation">茲堯切</span>。《<span class="annotation-char" data-pinyin="hàn shū" data-meaning="汉书">漢書</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jiàn zhāng gōng dù wéi qiān mén wàn hù" data-meaning="Jianzhang Palace has thousands of gates and ten thousand households">建章宮度爲千門萬戶</span>，<span class="annotation-char" data-pinyin="qián diàn dù gāo wèi yāng" data-meaning="front hall is higher than Weiyang">前殿度高未央</span>。《<span class="annotation-char" data-pinyin="cháng mén fù" data-meaning="长门赋">長門賦</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="zhèng diàn wéi yǐ zào tiān" data-meaning="main hall reaches the sky">正殿嵬以造天</span>，<span class="annotation-char" data-pinyin="qí gāo lín hū wèi yāng" data-meaning="its height overlooks Weiyang">其高臨乎未央</span>。
+            </div>
+        </div>
+
+        <!-- 第二段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="ěr" data-meaning="then">爾</span>
+                <span class="char" data-pinyin="nǎi" data-meaning="the">乃</span>
+                <span class="char" data-pinyin="zhèng" data-meaning="main">正</span>
+                <span class="char" data-pinyin="diàn" data-meaning="hall">殿</span>
+                <span class="char" data-pinyin="cuī" data-meaning="towering">崔</span>
+                <span class="char" data-pinyin="wéi" data-meaning="high">嵬</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="céng" data-meaning="layered">層</span>
+                <span class="char" data-pinyin="gòu" data-meaning="structure">構</span>
+                <span class="char" data-pinyin="jué" data-meaning="its">厥</span>
+                <span class="char" data-pinyin="gāo" data-meaning="height">高</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="lín" data-meaning="overlooking">臨</span>
+                <span class="char" data-pinyin="hū" data-meaning="the">乎</span>
+                <span class="char" data-pinyin="wèi" data-meaning="Weiyang">未</span>
+                <span class="char" data-pinyin="yāng" data-meaning="Palace">央</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jīng" data-meaning="passing">經</span>
+                <span class="char" data-pinyin="dài" data-meaning="Daidang">駘</span>
+                <span class="char" data-pinyin="dàng" data-meaning="Hall">盪</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="chū" data-meaning="exiting">出</span>
+                <span class="char" data-pinyin="sà" data-meaning="Sasuo">馺</span>
+                <span class="char" data-pinyin="suō" data-meaning="Hall">娑</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="dòng" data-meaning="connecting">洞</span>
+                <span class="char" data-pinyin="yì" data-meaning="Yiyi">枍</span>
+                <span class="char" data-pinyin="yì" data-meaning="Hall">詣</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="with">以</span>
+                <span class="char" data-pinyin="yǔ" data-meaning="and">與</span>
+                <span class="char" data-pinyin="tiān" data-meaning="Tianliang">天</span>
+                <span class="char" data-pinyin="liáng" data-meaning="Palace">梁</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>爾乃正殿崔嵬，層構厥高，臨乎未央。經駘盪而出馺娑，洞枍詣以與天梁。</p>
+                    </div>
+                    <div lang="en">
+                        <p>The main hall towers high, with its layered structure overlooking the Weiyang Palace. Passing through the Daidang Hall and exiting the Sasuo Hall, it connects the Yiyi Hall with the Tianliang Palace.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Die Haupthalle ragt hoch auf, mit ihrer geschichteten Struktur, die den Weiyang-Palast überblickt. Durch die Daidang-Halle gehend und die Sasuo-Halle verlassend, verbindet sie die Yiyi-Halle mit dem Tianliang-Palast.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>La salle principale se dresse haut, avec sa structure stratifiée surplombant le palais Weiyang. Passant par la salle Daidang et sortant de la salle Sasuo, elle relie la salle Yiyi au palais Tianliang.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Главный зал возвышается высоко, его многослойная структура overlooks дворец Вэйян. Проходя через зал Дайдан и выходя из зала Сасуо, он соединяет зал Йии с дворцом Тяньлян.</p>
+                    </div>
+                    <div lang="es">
+                        <p>La sala principal se eleva alta, con su estructura en capas que domina el palacio Weiyang. Pasando por la sala Daidang y saliendo de la sala Sasuo, conecta la sala Yiyi con el palacio Tianliang.</p>
+                    </div>
+                    <div lang="it">
+                        <p>La sala principale si erge alta, con la sua struttura a strati che domina il palazzo Weiyang. Passando attraverso la sala Daidang e uscendo dalla sala Sasuo, collega la sala Yiyi con il palazzo Tianliang.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>正殿は高く聳え、層をなす構造は非常に高く、未央宮を見下ろしている。駘盪殿を通り抜け馺娑殿を出て、枍詣殿と天梁宮を繋ぐ。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="cuī wéi" data-meaning="高耸的样子">崔嵬</span>：<span class="annotation-char" data-pinyin="gāo sǒng de yàng zi" data-meaning="towering appearance">高耸的样子</span><br>
+                <span class="annotation-char" data-pinyin="dài dàng" data-meaning="駘盪殿">駘盪</span>：<span class="annotation-char" data-pinyin="jiàn zhāng gōng zhōng de diàn míng" data-meaning="Daidang Hall in Jianzhang Palace">建章宫中的殿名</span><br>
+                <span class="annotation-char" data-pinyin="sà suō" data-meaning="馺娑殿">馺娑</span>：<span class="annotation-char" data-pinyin="jiàn zhāng gōng zhōng de diàn míng" data-meaning="Sasuo Hall in Jianzhang Palace">建章宫中的殿名</span><br>
+                <span class="annotation-char" data-pinyin="yì yì" data-meaning="枍詣殿">枍詣</span>：<span class="annotation-char" data-pinyin="jiàn zhāng gōng zhōng de diàn míng" data-meaning="Yiyi Hall in Jianzhang Palace">建章宫中的殿名</span><br>
+                <span class="annotation-char" data-pinyin="tiān liáng" data-meaning="天梁宫">天梁</span>：<span class="annotation-char" data-pinyin="gōng míng" data-meaning="palace name">宫名</span><br>
+                《<span class="annotation-char" data-pinyin="guān zhōng jì" data-meaning="关中记">關中記</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jiàn zhāng gōng yǒu sà suō dài dàng yì yì chéng guāng sì diàn" data-meaning="Jianzhang Palace has four halls: Sasuo, Daidang, Yiyi and Chengguang">建章宮有馺娑、駘盪、枍詣、承光四殿</span>。<span class="annotation-char" data-pinyin="sà" data-meaning="Sa">馺</span>，<span class="annotation-char" data-pinyin="sù hé qiē" data-meaning="pronunciation">素合切</span>。<span class="annotation-char" data-pinyin="suō" data-meaning="Suo">娑</span>，<span class="annotation-char" data-pinyin="sū kě qiē" data-meaning="pronunciation">蘇可切</span>。<span class="annotation-char" data-pinyin="dài" data-meaning="Dai">駘</span>，<span class="annotation-char" data-pinyin="yīn dài" data-meaning="pronunciation">音殆</span>。<span class="annotation-char" data-pinyin="yì" data-meaning="Yi">枍</span>，<span class="annotation-char" data-pinyin="wū yì qiē" data-meaning="pronunciation">烏詣切</span>。<span class="annotation-char" data-pinyin="tiān liáng" data-meaning="Tianliang">天梁</span>，<span class="annotation-char" data-pinyin="yì gōng míng yě" data-meaning="also a palace name">亦宮名也</span>。《<span class="annotation-char" data-pinyin="ěr yǎ" data-meaning="尔雅">爾雅</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="gài dài" data-meaning="cover">蓋戴</span>，<span class="annotation-char" data-pinyin="fù yě" data-meaning="to cover">覆也</span>。
+            </div>
+        </div>
+
+        <!-- 第三段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="shàng" data-meaning="above">上</span>
+                <span class="char" data-pinyin="fǎn" data-meaning="upturned">反</span>
+                <span class="char" data-pinyin="yǔ" data-meaning="eaves">宇</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="to">以</span>
+                <span class="char" data-pinyin="gài" data-meaning="cover">蓋</span>
+                <span class="char" data-pinyin="dài" data-meaning="reflect">戴</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jī" data-meaning="reflect">激</span>
+                <span class="char" data-pinyin="rì" data-meaning="sun">日</span>
+                <span class="char" data-pinyin="jǐng" data-meaning="light">景</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="nà" data-meaning="absorb">納</span>
+                <span class="char" data-pinyin="guāng" data-meaning="light">光</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>上反宇以蓋戴，激日景而納光。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Above, the upturned eaves cover and reflect sunlight, absorbing its light.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Oben bedecken und reflektieren die nach oben gewendeten Dachtraufen das Sonnenlicht und absorbieren sein Licht.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Au-dessus, les avant-toits retroussés couvrent et reflètent la lumière du soleil, absorbant sa lumière.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Наверху загнутые карнизы покрывают и отражают солнечный свет, поглощая его свет.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Arriba, los aleros levantados cubren y reflejan la luz solar, absorbiendo su luz.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Sopra, le grondaie rivolte verso l'alto coprono e riflettono la luce del sole, assorbendone la luce.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>上には反り返った軒が覆い、日光を反射して光を取り込む。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="fǎn yǔ" data-meaning="屋檐上翘">反宇</span>：<span class="annotation-char" data-pinyin="wū yán shàng qiào" data-meaning="upturned eaves">屋檐上翘</span><br>
+                <span class="annotation-char" data-pinyin="gài dài" data-meaning="覆盖">蓋戴</span>：<span class="annotation-char" data-pinyin="fù gài" data-meaning="to cover">覆盖</span><br>
+                <span class="annotation-char" data-pinyin="jī rì jǐng" data-meaning="反射日光">激日景</span>：<span class="annotation-char" data-pinyin="fǎn shè rì guāng" data-meaning="reflect sunlight">反射日光</span><br>
+                <span class="annotation-char" data-pinyin="nà guāng" data-meaning="吸纳光芒">納光</span>：<span class="annotation-char" data-pinyin="xī nà guāng máng" data-meaning="absorb light">吸纳光芒</span><br>
+                <span class="annotation-char" data-pinyin="yán gōng diàn guāng huī" data-meaning="宫殿光辉">言宮殿光輝</span>，<span class="annotation-char" data-pinyin="wài jī yú rì" data-meaning="外激于日">外激於日</span>，<span class="annotation-char" data-pinyin="rì jǐng xià zhào" data-meaning="日景下照">日景下照</span>，<span class="annotation-char" data-pinyin="ér fǎn nà qí guāng yě" data-meaning="而反纳其光也">而反納其光也</span>。
+            </div>
+        </div>
+
+        <!-- 第四段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="shén" data-meaning="divine">神</span>
+                <span class="char" data-pinyin="míng" data-meaning="brightness">明</span>
+                <span class="char" data-pinyin="yù" data-meaning="luxuriant">鬱</span>
+                <span class="char" data-pinyin="qí" data-meaning="its">其</span>
+                <span class="char" data-pinyin="tè" data-meaning="unique">特</span>
+                <span class="char" data-pinyin="qǐ" data-meaning="rise">起</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="suì" data-meaning="then">遂</span>
+                <span class="char" data-pinyin="yǎn" data-meaning="towering">偃</span>
+                <span class="char" data-pinyin="jiǎn" data-meaning="and">蹇</span>
+                <span class="char" data-pinyin="ér" data-meaning="ascending">而</span>
+                <span class="char" data-pinyin="shàng" data-meaning="up">上</span>
+                <span class="char" data-pinyin="jī" data-meaning="climb">躋</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yì" data-meaning="surpassing">軼</span>
+                <span class="char" data-pinyin="yún" data-meaning="clouds">雲</span>
+                <span class="char" data-pinyin="yǔ" data-meaning="rain">雨</span>
+                <span class="char" data-pinyin="yú" data-meaning="by">於</span>
+                <span class="char" data-pinyin="tài" data-meaning="more">太</span>
+                <span class="char" data-pinyin="bàn" data-meaning="than">半</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="hóng" data-meaning="rainbow">虹</span>
+                <span class="char" data-pinyin="ní" data-meaning="霓">霓</span>
+                <span class="char" data-pinyin="huí" data-meaning="circling">迴</span>
+                <span class="char" data-pinyin="dài" data-meaning="around">帶</span>
+                <span class="char" data-pinyin="yú" data-meaning="the">於</span>
+                <span class="char" data-pinyin="fén" data-meaning="beams">棼</span>
+                <span class="char" data-pinyin="méi" data-meaning="lintels">楣</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>神明鬱其特起，遂偃蹇而上躋。軼雲雨於太半，虹霓迴帶於棼楣。</p>
+                    </div>
+                    <div lang="en">
+                        <p>The Divine Brightness Tower rises luxuriantly and uniquely, then towers and ascends. Surpassing more than half of the clouds and rain, the rainbow circles around the beams and lintels.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Der Divine Brightness Tower erhebt sich üppig und einzigartig, dann ragt er auf und steigt empor. Mehr als die Hälfte der Wolken und des Regens übertreffend, kreist der Regenbogen um die Balken und Türstürze.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>La tour Divine Brightness s'élève luxuriante et unique, puis se dresse et monte. Dépassant plus de la moitié des nuages et de la pluie, l'arc-en-ciel encercle les poutres et les linteaux.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Башня Божественного Света поднимается пышно и уникально, затем возвышается и поднимается. Превосходя более половины облаков и дождя, радуга кружит вокруг балок и перемычек.</p>
+                    </div>
+                    <div lang="es">
+                        <p>La torre Divine Brightness se eleva exuberante y única, luego se alza y asciende. Superando más de la mitad de las nubes y la lluvia, el arcoíris rodea las vigas y los dinteles.</p>
+                    </div>
+                    <div lang="it">
+                        <p>La torre Divine Brightness si erge lussureggiante e unica, poi si alza e ascende. Superando più della metà delle nuvole e della pioggia, l'arcobaleno circonda le travi e gli architravi.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>神明台は鬱蒼と特立して聳え、高く上昇する。雲雨の大半を超え、虹が梁や楣に絡まる。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="shén míng" data-meaning="神明台">神明</span>：<span class="annotation-char" data-pinyin="shén míng tái" data-meaning="Divine Brightness Tower">神明台</span><br>
+                <span class="annotation-char" data-pinyin="yǎn jiǎn" data-meaning="高耸的样子">偃蹇</span>：<span class="annotation-char" data-pinyin="gāo sǒng de yàng zi" data-meaning="towering appearance">高耸的样子</span><br>
+                <span class="annotation-char" data-pinyin="yì" data-meaning="超越">軼</span>：<span class="annotation-char" data-pinyin="chāo yuè" data-meaning="surpass">超越</span><br>
+                <span class="annotation-char" data-pinyin="tài bàn" data-meaning="大半">太半</span>：<span class="annotation-char" data-pinyin="dà bàn" data-meaning="more than half">大半</span><br>
+                <span class="annotation-char" data-pinyin="fén méi" data-meaning="楼阁的梁和楣">棼楣</span>：<span class="annotation-char" data-pinyin="lóu gé de liáng hé méi" data-meaning="beams and lintels of the building">楼阁的梁和楣</span><br>
+                《<span class="annotation-char" data-pinyin="hàn shū" data-meaning="汉书">漢書</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="xiào wǔ lì shén míng tái" data-meaning="Emperor Xiaowu established the Divine Brightness Tower">孝武立神明臺</span>。<span class="annotation-char" data-pinyin="wáng yì" data-meaning="Wang Yi">王逸</span>《<span class="annotation-char" data-pinyin="chǔ cí zhù" data-meaning="Chu Ci Commentary">楚辭注</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="yǎn jiǎn" data-meaning="towering">偃蹇</span>，<span class="annotation-char" data-pinyin="gāo mào yě" data-meaning="high appearance">高貌也</span>。《<span class="annotation-char" data-pinyin="gōng yáng chuán" data-meaning="Gongyang Commentary">公羊傳</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jī zhě hé" data-meaning="what is Ji">躋者何</span>？<span class="annotation-char" data-pinyin="jī" data-meaning="Ji">躋</span>，<span class="annotation-char" data-pinyin="shēng yě" data-meaning="to ascend">升也</span>。《<span class="annotation-char" data-pinyin="sān cāng" data-meaning="Three Cang">三蒼</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="yì" data-meaning="surpass">軼</span>，<span class="annotation-char" data-pinyin="cóng hòu chū qián yě" data-meaning="to surpass from behind">從後出前也</span>，<span class="annotation-char" data-pinyin="yú zhì qiē" data-meaning="pronunciation">餘質切</span>。《<span class="annotation-char" data-pinyin="hàn shū yīn yì" data-meaning="Han Book Pronunciation and Meaning">漢書音義</span>》，<span class="annotation-char" data-pinyin="wéi zhāo" data-meaning="Wei Zhao">韋昭</span>《<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="fán shù sān fēn yǒu èr wèi tài bàn" data-meaning="two-thirds is called more than half">凡數三分有二爲太半</span>。《<span class="annotation-char" data-pinyin="shī zǐ" data-meaning="Shizi">尸子</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="hóng ní wèi xī yì" data-meaning="rainbow is called Xi Yi">虹霓爲析翳</span>。<span class="annotation-char" data-pinyin="fén" data-meaning="Fen">棼</span>，<span class="annotation-char" data-pinyin="yǐ jiàn shàng wén" data-meaning="already seen above">已見上文</span>。《<span class="annotation-char" data-pinyin="ěr yǎ" data-meaning="Er Ya">爾雅</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="méi wèi zhī liáng" data-meaning="lintel is called beam">楣謂之梁</span>，<span class="annotation-char" data-pinyin="méi jī qiē" data-meaning="pronunciation">靡飢切</span>。
+            </div>
+        </div>
+
+        <!-- 第五段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="suī" data-meaning="although">雖</span>
+                <span class="char" data-pinyin="qīng" data-meaning="light">輕</span>
+                <span class="char" data-pinyin="xùn" data-meaning="and">迅</span>
+                <span class="char" data-pinyin="yǔ" data-meaning="swift">與</span>
+                <span class="char" data-pinyin="piào" data-meaning="agile">僄</span>
+                <span class="char" data-pinyin="jiǎo" data-meaning="quick">狡</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yóu" data-meaning="still">猶</span>
+                <span class="char" data-pinyin="è" data-meaning="astonished">愕</span>
+                <span class="char" data-pinyin="chì" data-meaning="and">眙</span>
+                <span class="char" data-pinyin="ér" data-meaning="staring">而</span>
+                <span class="char" data-pinyin="bù" data-meaning="unable">不</span>
+                <span class="char" data-pinyin="néng" data-meaning="to">能</span>
+                <span class="char" data-pinyin="jiē" data-meaning="climb">階</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>雖輕迅與僄狡，猶愕眙而不能階。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Although light and swift and agile and quick, one is still astonished and staring, unable to climb.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Obwohl leicht und schnell und wendig und flink, ist man dennoch erstaunt und starrt, unfähig zu klettern.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Bien que léger et rapide et agile et vif, on est toujours étonné et regarde, incapable de grimper.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Хотя легкий и быстрый, и проворный, и быстрый, все же поражен и смотрит, не в силах подняться.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Aunque ligero y rápido y ágil y rápido, todavía está asombrado y mirando, incapaz de escalar.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Sebbene leggero e veloce e agile e veloce, si è ancora stupiti e si fissa, incapaci di scalare.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>軽快で敏捷であっても、驚いて見つめるだけで登ることはできない。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="piào jiǎo" data-meaning="轻捷">僄狡</span>：<span class="annotation-char" data-pinyin="qīng jié" data-meaning="light and swift">轻捷</span><br>
+                <span class="annotation-char" data-pinyin="è chì" data-meaning="惊视">愕眙</span>：<span class="annotation-char" data-pinyin="jīng shì" data-meaning="astonished stare">惊视</span><br>
+                <span class="annotation-char" data-pinyin="jiē" data-meaning="攀登">階</span>：<span class="annotation-char" data-pinyin="pān dēng" data-meaning="to climb">攀登</span><br>
+                《<span class="annotation-char" data-pinyin="fāng yán" data-meaning="方言">方言</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="piào" data-meaning="light">僄</span>，<span class="annotation-char" data-pinyin="qīng yě" data-meaning="light">輕也</span>，<span class="annotation-char" data-pinyin="fāng miào qiē" data-meaning="pronunciation">芳妙切</span>。<span class="annotation-char" data-pinyin="zhèng xuán" data-meaning="Zheng Xuan">鄭玄</span>《<span class="annotation-char" data-pinyin="lǐ jì zhù" data-meaning="Book of Rites Commentary">禮記注</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jiǎo" data-meaning="swift">狡</span>，<span class="annotation-char" data-pinyin="jí yě" data-meaning="quick">疾也</span>，<span class="annotation-char" data-pinyin="gǔ bǎo qiē" data-meaning="pronunciation">古飽切</span>。《<span class="annotation-char" data-pinyin="zì shū" data-meaning="Character Book">字書</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="è" data-meaning="astonished">愕</span>，<span class="annotation-char" data-pinyin="jīng yě" data-meaning="surprised">驚也</span>，<span class="annotation-char" data-pinyin="wǔ gè qiē" data-meaning="pronunciation">五各切</span>。《<span class="annotation-char" data-pinyin="zì lín" data-meaning="Character Forest">字林</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="chì" data-meaning="stare">眙</span>，<span class="annotation-char" data-pinyin="jīng mào" data-meaning="astonished appearance">驚貌</span>，<span class="annotation-char" data-pinyin="chì lì qiē" data-meaning="pronunciation">勑吏切</span>。
+            </div>
+        </div>
+
+        <!-- 第六段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="pān" data-meaning="climbing">攀</span>
+                <span class="char" data-pinyin="jǐng" data-meaning="Jinghan">井</span>
+                <span class="char" data-pinyin="hán" data-meaning="Tower">幹</span>
+                <span class="char" data-pinyin="ér" data-meaning="but">而</span>
+                <span class="char" data-pinyin="wèi" data-meaning="not">未</span>
+                <span class="char" data-pinyin="bàn" data-meaning="halfway">半</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="mù" data-meaning="eyes">目</span>
+                <span class="char" data-pinyin="xuàn" data-meaning="dizzy">眴</span>
+                <span class="char" data-pinyin="zhuǎn" data-meaning="and">轉</span>
+                <span class="char" data-pinyin="ér" data-meaning="turning">而</span>
+                <span class="char" data-pinyin="yì" data-meaning="mind">意</span>
+                <span class="char" data-pinyin="mí" data-meaning="confused">迷</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shè" data-meaning="leaving">舍</span>
+                <span class="char" data-pinyin="líng" data-meaning="the">櫺</span>
+                <span class="char" data-pinyin="kǎn" data-meaning="balustrade">檻</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="què" data-meaning="stepping">卻</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="back">倚</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="ruò" data-meaning="as">若</span>
+                <span class="char" data-pinyin="diān" data-meaning="if">顛</span>
+                <span class="char" data-pinyin="zhuì" data-meaning="falling">墜</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="fù" data-meaning="then">復</span>
+                <span class="char" data-pinyin="jī" data-meaning="pausing">稽</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="hún" data-meaning="soul">魂</span>
+                <span class="char" data-pinyin="huǎng" data-meaning="dazed">怳</span>
+                <span class="char" data-pinyin="huǎng" data-meaning="and">怳</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="losing">以</span>
+                <span class="char" data-pinyin="shī" data-meaning="measure">失</span>
+                <span class="char" data-pinyin="dù" data-meaning="circling">度</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="xún" data-meaning="the">巡</span>
+                <span class="char" data-pinyin="huí" data-meaning="path">迴</span>
+                <span class="char" data-pinyin="tú" data-meaning="and">塗</span>
+                <span class="char" data-pinyin="ér" data-meaning="descending">而</span>
+                <span class="char" data-pinyin="xià" data-meaning="low">下</span>
+                <span class="char" data-pinyin="dī" data-meaning="also">低</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>攀井幹而未半，目眴轉而意迷。舍櫺檻而卻倚，若顛墜而復稽。魂怳怳以失度，巡迴塗而下低。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Climbing the Jinghan Tower but not yet halfway, eyes dizzy and turning and mind confused. Leaving the balustrade and stepping back and leaning, as if falling and then pausing. Soul dazed and losing measure, circling the path and descending low.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Den Jinghan-Turm erklimmend, aber noch nicht auf halbem Weg, Augen schwindlig und drehend und Geist verwirrt. Die Balustrade verlassend und zurücktretend und lehnend, als ob man fällt und dann innehält. Seele benommen und das Maß verlierend, den Weg umkreisend und niedrig absteigend.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Grimpant la tour Jinghan mais pas encore à mi-chemin, les yeux étourdis et tournants et l'esprit confus. Quittant la balustrade et reculant et se penchant, comme si on tombait puis s'arrêtait. Âme étourdie et perdant la mesure, tournant autour du chemin et descendant bas.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Взбираясь на башню Цзинхань, но еще не на полпути, глаза кружатся и поворачиваются, а ум смущен. Покидая балюстраду и отступая и наклоняясь, как будто падая, а затем останавливаясь. Душа ошеломлена и теряет меру, кружа по пути и спускаясь низко.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Escalando la torre Jinghan pero aún no a mitad de camino, ojos mareados y girando y mente confusa. Dejando la balaustrada y retrocediendo y apoyándose, como si cayera y luego se detuviera. Alma aturdida y perdiendo la medida, rodeando el camino y descendiendo bajo.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Scalando la torre Jinghan ma non ancora a metà strada, occhi storditi e giranti e mente confusa. Lasciando la balaustrata e arretrando e appoggiandosi, come se cadesse e poi si fermasse. Anima stordita e perdendo la misura, girando intorno al percorso e scendendo in basso.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>井幹楼を登ってまだ半分にも至らず、目が眩み心が乱れる。欄干を離れて寄りかかり、墜落しそうになってまた止まる。神魂が恍惚として度を失い、道を巡りながら下りる。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                <span class="annotation-char" data-pinyin="jǐng hán" data-meaning="井幹楼">井幹</span>：<span class="annotation-char" data-pinyin="jǐng hán lóu" data-meaning="Jinghan Tower">井幹楼</span><br>
+                <span class="annotation-char" data-pinyin="mù xuàn" data-meaning="目眩">目眴</span>：<span class="annotation-char" data-pinyin="mù xuàn" data-meaning="dizzy eyes">目眩</span><br>
+                <span class="annotation-char" data-pinyin="líng kǎn" data-meaning="栏杆">櫺檻</span>：<span class="annotation-char" data-pinyin="lán gān" data-meaning="balustrade">栏杆</span><br>
+                <span class="annotation-char" data-pinyin="diān zhuì" data-meaning="坠落">顛墜</span>：<span class="annotation-char" data-pinyin="zhuì luò" data-meaning="to fall">坠落</span><br>
+                <span class="annotation-char" data-pinyin="jī" data-meaning="停留">稽</span>：<span class="annotation-char" data-pinyin="tíng liú" data-meaning="to pause">停留</span><br>
+                <span class="annotation-char" data-pinyin="huǎng huǎng" data-meaning="恍惚">怳怳</span>：<span class="annotation-char" data-pinyin="huǎng hū" data-meaning="dazed">恍惚</span><br>
+                《<span class="annotation-char" data-pinyin="hàn shū" data-meaning="汉书">漢書</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="wǔ dì zuò jǐng hán lóu" data-meaning="Emperor Wu built Jinghan Tower">武帝作井幹樓</span>，<span class="annotation-char" data-pinyin="gāo wǔ shí zhàng" data-meaning="50 zhang high">高五十丈</span>，<span class="annotation-char" data-pinyin="niǎn dào xiāng shǔ yān" data-meaning="with winding paths">輦道相屬焉</span>。<span class="annotation-char" data-pinyin="hán" data-meaning="Han">幹</span>，<span class="annotation-char" data-pinyin="yīn hán" data-meaning="pronunciation">音寒</span>。<span class="annotation-char" data-pinyin="sī mǎ biāo" data-meaning="Sima Biao">司馬彪</span>《<span class="annotation-char" data-pinyin="zhuāng zǐ zhù" data-meaning="Zhuangzi Commentary">莊子注</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jǐng hán" data-meaning="Jinghan">井幹</span>，<span class="annotation-char" data-pinyin="jǐng lán yě" data-meaning="well railing">井欄也</span>。《<span class="annotation-char" data-pinyin="cāng jié piān" data-meaning="Cang Jie Chapter">蒼頡篇</span>》<span class="annotation-char" data-pinyin="yún" data-meaning="said">云</span>：<span class="annotation-char" data-pinyin="xuàn" data-meaning="Xuan">眴</span>，<span class="annotation-char" data-pinyin="shì bù míng yě" data-meaning="unclear vision">視不明也</span>，<span class="annotation-char" data-pinyin="hóu biàn qiē" data-meaning="pronunciation">侯遍切</span>。《<span class="annotation-char" data-pinyin="shuō wén" data-meaning="Explaining Characters">說文</span>》，<span class="annotation-char" data-pinyin="líng" data-meaning="Ling">櫺</span>，<span class="annotation-char" data-pinyin="shǔn jiān zǐ yě" data-meaning="balustrade">楯間子也</span>，<span class="annotation-char" data-pinyin="lì dīng qiē" data-meaning="pronunciation">力丁切</span>。<span class="annotation-char" data-pinyin="wáng yì" data-meaning="Wang Yi">王逸</span>《<span class="annotation-char" data-pinyin="chǔ cí zhù" data-meaning="Chu Ci Commentary">楚辭注</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="kǎn" data-meaning="Kan">檻</span>，<span class="annotation-char" data-pinyin="shǔn yě" data-meaning="balustrade">楯也</span>，<span class="annotation-char" data-pinyin="hú àn qiē" data-meaning="pronunciation">胡黯切</span>。《<span class="annotation-char" data-pinyin="shuō wén" data-meaning="Explaining Characters">說文</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="jī" data-meaning="Ji">稽</span>，<span class="annotation-char" data-pinyin="liú zhǐ yě" data-meaning="to pause">留止也</span>。《<span class="annotation-char" data-pinyin="cháng mén fù" data-meaning="Long Gate Ode">長門賦</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="shén huǎng huǎng ér wài yín" data-meaning="soul dazed and wandering">神怳怳而外淫</span>。<span class="annotation-char" data-pinyin="wáng yì" data-meaning="Wang Yi">王逸</span>《<span class="annotation-char" data-pinyin="chǔ cí zhù" data-meaning="Chu Ci Commentary">楚辭注</span>》<span class="annotation-char" data-pinyin="yuē" data-meaning="said">曰</span>：<span class="annotation-char" data-pinyin="huǎng" data-meaning="Huang">怳</span>，<span class="annotation-char" data-pinyin="shī yì yě" data-meaning="lost">失意也</span>，<span class="annotation-char" data-pinyin="huàng wǎng qiē" data-meaning="pronunciation">況往切</span>。
+            </div>
+        </div>
+    </div>
+    
+    <!-- 弹出窗口 -->
+    <div class="popup" id="charPopup">
+        <span class="popup-close" onclick="closePopup()">×</span>
+        <div class="popup-content">
+            <div class="popup-char"></div>
+            <div class="popup-pinyin"></div>
+            <div class="popup-meaning"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 单字点击事件
+        document.querySelectorAll('.char, .annotation-char').forEach(char => {
+            char.addEventListener('click', function() {
+                const popup = document.getElementById('charPopup');
+                popup.querySelector('.popup-char').textContent = this.textContent;
+                popup.querySelector('.popup-pinyin').textContent = `拼音: ${this.dataset.pinyin || ''}`;
+                popup.querySelector('.popup-meaning').textContent = `释义: ${this.dataset.meaning || ''}`;
+                popup.style.display = 'block';
+            });
+            
+            // 添加鼠标悬停显示拼音功能
+            char.addEventListener('mouseenter', function(e) {
+                if(this.dataset.pinyin) {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'annotation-tooltip';
+                    tooltip.textContent = this.dataset.pinyin;
+                    tooltip.style.left = `${e.pageX + 10}px`;
+                    tooltip.style.top = `${e.pageY + 10}px`;
+                    document.body.appendChild(tooltip);
+                    
+                    this._tooltip = tooltip;
+                }
+            });
+            
+            char.addEventListener('mouseleave', function() {
+                if(this._tooltip) {
+                    this._tooltip.remove();
+                    delete this._tooltip;
+                }
+            });
+        });
+        
+        // 关闭弹出窗口
+        function closePopup() {
+            document.getElementById('charPopup').style.display = 'none';
+        }
+        
+        // 段落朗读功能
+        let currentParagraphUtterances = [];
+        let currentReadingParagraph = null;
+        
+        function speakParagraph(btn) {
+            const paragraph = btn.closest('.paragraph');
+            
+            // 如果正在朗读当前段落，停止
+            if (currentReadingParagraph === paragraph && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                btn.textContent = '🔊';
+                currentReadingParagraph = null;
+                return;
+            }
+            
+            // 如果正在朗读其他段落，先停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                document.querySelectorAll('.control-btn').forEach(b => {
+                    if (b.textContent === '⏹') b.textContent = '🔊';
+                });
+            }
+            
+            // 开始朗读新段落
+            currentReadingParagraph = paragraph;
+            btn.textContent = '⏹';
+            
+            const sentences = paragraph.querySelectorAll('.sentence');
+            currentParagraphUtterances = [];
+            
+            // 准备所有句子语音
+            sentences.forEach((sentence, index) => {
+                let sentenceText = '';
+                sentence.querySelectorAll('.char').forEach(char => {
+                    if (!char.classList.contains('punctuation') || 
+                        ['，', '。', '！', '？', '：', '；'].includes(char.textContent)) {
+                        sentenceText += char.textContent;
+                    }
+                });
+                
+                const utterance = new SpeechSynthesisUtterance(sentenceText);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.8;
+                
+                utterance.onstart = function() {
+                    resetAllSentenceHighlights();
+                    sentence.classList.add('active');
+                    
+                    // 滚动到当前句子
+                    sentence.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+                
+                utterance.onend = function() {
+                    if (index === sentences.length - 1) {
+                        btn.textContent = '🔊';
+                        currentReadingParagraph = null;
+                    }
+                };
+                
+                currentParagraphUtterances.push(utterance);
+            });
+            
+            // 按顺序朗读所有句子
+            currentParagraphUtterances.forEach((utterance, index) => {
+                // 设置延迟，使句子之间有自然停顿
+                if (index > 0) {
+                    const prevDuration = currentParagraphUtterances[index-1].text.length * 100; // 估算前一句持续时间
+                    utterance.startTime = Date.now() + prevDuration + 300; // 300ms额外停顿
+                }
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+        
+        function resetAllSentenceHighlights() {
+            document.querySelectorAll('.sentence').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+        
+        // 显示/隐藏注释面板
+        function toggleAnnotationPanel(btn) {
+            const annotation = btn.nextElementSibling;
+            if (annotation.style.display === 'block') {
+                annotation.style.display = 'none';
+                btn.textContent = '顯示註釋';
+            } else {
+                annotation.style.display = 'block';
+                btn.textContent = '隱藏註釋';
+            }
+        }
+        
+        // 显示/隐藏翻译面板
+        function toggleTranslationPanel(btn) {
+            const panel = btn.closest('.paragraph').querySelector('.translation-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+            }
+        }
+        
+        // 切换翻译语言
+        function showTranslation(btn, lang) {
+            const panel = btn.closest('.translation-panel').querySelector('.translation-content');
+            panel.querySelectorAll('div').forEach(div => {
+                div.classList.remove('show');
+            });
+            panel.querySelector(`div[lang="${lang}"]`).classList.add('show');
+            
+            // 更新按钮状态
+            btn.closest('.translation-panel').querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            
+            // 朗读翻译
+            const utterance = new SpeechSynthesisUtterance(panel.querySelector(`div[lang="${lang}"]`).textContent);
+            utterance.lang = {
+                'zh': 'zh-CN',
+                'en': 'en-US',
+                'de': 'de-DE',
+                'fr': 'fr-FR',
+                'ru': 'ru-RU',
+                'es': 'es-ES',
+                'it': 'it-IT',
+                'ja': 'ja-JP'
+            }[lang] || 'en-US';
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 点击空白处关闭弹出窗口
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('charPopup')) {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>

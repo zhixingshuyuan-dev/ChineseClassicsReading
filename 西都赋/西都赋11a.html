@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《兩都賦》交互式閱讀系統</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋體", serif;
+            line-height: 2.5;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #3a3226;
+            color: #e0d5c8;
+        }
+        
+        h1 {
+            color: #d4b483;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #5d4b36;
+            padding-bottom: 10px;
+        }
+        
+        .main-text {
+            font-size: 24px;
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .char:hover {
+            color: #d4a373;
+            text-shadow: 0 0 3px rgba(212, 163, 115, 0.5);
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4a4235;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+        }
+        
+        .popup-content {
+            font-size: 16px;
+        }
+        
+        .popup-char {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #d4b483;
+        }
+        
+        .popup-pinyin, .popup-meaning {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px dashed #5d4b36;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #a89984;
+        }
+        
+        .paragraph {
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            margin-right: 6px;
+            border: none;
+            border-radius: 50%;
+            background: #5d4b36;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: #e0d5c8;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #7c6a53;
+            transform: scale(1.1);
+        }
+        
+        .annotation {
+            font-size: 18px;
+            background: #4a4235;
+            padding: 12px 15px;
+            border-left: 3px solid #a89984;
+            margin: 12px 0;
+            display: none;
+            color: #d4b483;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .toggle-annotation {
+            background: #5d4b36;
+            border: none;
+            color: #e0d5c8;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-annotation:hover {
+            background: #7c6a53;
+        }
+        
+        .translation-panel {
+            display: none;
+            background: #4a4235;
+            border: 1px solid #5d4b36;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+        }
+        
+        .lang-btn {
+            background: #3a3226;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+            padding: 3px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn:hover {
+            background: #5d4b36;
+        }
+        
+        .lang-btn.active {
+            background: #a89984;
+            color: #3a3226;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #5d4b36;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .translation-content div {
+            display: none;
+            padding: 6px 0;
+        }
+        
+        .translation-content div.show {
+            display: block;
+        }
+        
+        .punctuation {
+            color: #a89984;
+        }
+        
+        .sentence {
+            display: inline;
+            position: relative;
+        }
+        
+        .sentence.active {
+            background-color: rgba(212, 180, 131, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>西都賦</h1>
+    
+    <div class="main-text">
+        <!-- 第一段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="yòu" data-meaning="also">又</span>
+                <span class="char" data-pinyin="yǒu" data-meaning="have">有</span>
+                <span class="char" data-pinyin="tiān" data-meaning="heaven">天</span>
+                <span class="char" data-pinyin="lù" data-meaning="blessing">祿</span>
+                <span class="char" data-pinyin="shí" data-meaning="stone">石</span>
+                <span class="char" data-pinyin="qú" data-meaning="conduit">渠</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="diǎn" data-meaning="classics">典</span>
+                <span class="char" data-pinyin="jí" data-meaning="records">籍</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="fǔ" data-meaning="repository">府</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="mìng" data-meaning="order">命</span>
+                <span class="char" data-pinyin="fū" data-meaning="officials">夫</span>
+                <span class="char" data-pinyin="dūn" data-meaning="diligently">惇</span>
+                <span class="char" data-pinyin="huì" data-meaning="instruct">誨</span>
+                <span class="char" data-pinyin="gù" data-meaning="old">故</span>
+                <span class="char" data-pinyin="lǎo" data-meaning="elder">老</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="míng" data-meaning="famous">名</span>
+                <span class="char" data-pinyin="rú" data-meaning="confucian">儒</span>
+                <span class="char" data-pinyin="shī" data-meaning="teacher">師</span>
+                <span class="char" data-pinyin="fù" data-meaning="master">傅</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jiǎng" data-meaning="discuss">講</span>
+                <span class="char" data-pinyin="lùn" data-meaning="debate">論</span>
+                <span class="char" data-pinyin="hū" data-meaning="on">乎</span>
+                <span class="char" data-pinyin="liù" data-meaning="six">《</span>
+                <span class="char" data-pinyin="yì" data-meaning="arts">六</span>
+                <span class="char" data-pinyin="yì" data-meaning="arts">蓺</span>
+                <span class="char" data-pinyin="》" data-meaning="closing quote">》</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jī" data-meaning="examine">稽</span>
+                <span class="char" data-pinyin="hé" data-meaning="compare">合</span>
+                <span class="char" data-pinyin="hū" data-meaning="on">乎</span>
+                <span class="char" data-pinyin="tóng" data-meaning="similarities">同</span>
+                <span class="char" data-pinyin="yì" data-meaning="differences">異</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>又有天禄阁、石渠阁，典籍之府。命官员勤教故老，名儒师傅。讲论《六艺》，稽考同异。</p>
+                    </div>
+                    <div lang="en">
+                        <p>There are also the Tianlu Pavilion and the Stone Conduit Pavilion, repositories of classics. Officials are ordered to diligently instruct the elders and famous Confucian teachers. They discuss and debate the Six Arts, examining and comparing similarities and differences.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Es gibt auch den Tianlu-Pavillon und den Stone Conduit-Pavillon, Aufbewahrungsorte der Klassiker. Beamte werden angewiesen, die Ältesten und berühmten konfuzianischen Lehrer fleißig zu unterrichten. Sie diskutieren und debattieren die Sechs Künste, untersuchen und vergleichen Ähnlichkeiten und Unterschiede.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Il y a aussi le pavillon Tianlu et le pavillon Stone Conduit, des dépôts de classiques. Les fonctionnaires sont chargés d'instruire diligemment les anciens et les célèbres maîtres confucéens. Ils discutent et débattent des Six Arts, examinant et comparant les similitudes et les différences.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Есть также павильон Тяньлу и павильон Каменного Канала, хранилища классики. Чиновникам приказано усердно обучать старейшин и известных учителей конфуцианства. Они обсуждают и спорят о Шести Искусствах, изучая и сравнивая сходства и различия.</p>
+                    </div>
+                    <div lang="es">
+                        <p>También están el Pabellón Tianlu y el Pabellón Stone Conduit, repositorios de clásicos. Los funcionarios reciben la orden de instruir diligentemente a los ancianos y a los famosos maestros confucianos. Discuten y debaten las Seis Artes, examinando y comparando similitudes y diferencias.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Ci sono anche il Padiglione Tianlu e il Padiglione Stone Conduit, depositi di classici. Ai funzionari viene ordinato di istruire diligentemente gli anziani e i famosi insegnanti confuciani. Discutono e dibattono le Sei Arti, esaminando e confrontando somiglianze e differenze.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>又天祿石渠有り、典籍の府。夫れ惇誨故老を命じ、名儒師傅。講論すること《六蓺》に於て、稽合すること同異に乎る。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《三輔故事》曰：天祿閣在大殿北，以閣秘書。石渠，已見上文。然同卷再見者，並云已見上文，務從省也。他皆類此。《爾雅》曰：惇，勉也。孔安國《尙書傳》曰：誨，教也。《周禮》曰：《六蓺》：禮、樂、射、御、書、數。孔安國《尙書傳》曰：稽，考也。
+            </div>
+        </div>
+
+        <!-- 第二段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="yòu" data-meaning="also">又</span>
+                <span class="char" data-pinyin="yǒu" data-meaning="have">有</span>
+                <span class="char" data-pinyin="chéng" data-meaning="inherit">承</span>
+                <span class="char" data-pinyin="míng" data-meaning="bright">明</span>
+                <span class="char" data-pinyin="jīn" data-meaning="gold">金</span>
+                <span class="char" data-pinyin="mǎ" data-meaning="horse">馬</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zhù" data-meaning="write">著</span>
+                <span class="char" data-pinyin="zuò" data-meaning="composition">作</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="tíng" data-meaning="court">庭</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="dà" data-meaning="great">大</span>
+                <span class="char" data-pinyin="yǎ" data-meaning="elegance">雅</span>
+                <span class="char" data-pinyin="hóng" data-meaning="broad">宏</span>
+                <span class="char" data-pinyin="dá" data-meaning="profound">達</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yú" data-meaning="here">於</span>
+                <span class="char" data-pinyin="zī" data-meaning="this">茲</span>
+                <span class="char" data-pinyin="wéi" data-meaning="form">爲</span>
+                <span class="char" data-pinyin="qún" data-meaning="groups">羣</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yuán" data-meaning="original">元</span>
+                <span class="char" data-pinyin="yuán" data-meaning="sources">元</span>
+                <span class="char" data-pinyin="běn" data-meaning="roots">本</span>
+                <span class="char" data-pinyin="běn" data-meaning="roots">本</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="dān" data-meaning="exhaustively">殫</span>
+                <span class="char" data-pinyin="jiàn" data-meaning="seen">見</span>
+                <span class="char" data-pinyin="qià" data-meaning="widely">洽</span>
+                <span class="char" data-pinyin="wén" data-meaning="heard">聞</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="qǐ" data-meaning="elucidate">啓</span>
+                <span class="char" data-pinyin="fā" data-meaning="develop">發</span>
+                <span class="char" data-pinyin="piān" data-meaning="chapters">篇</span>
+                <span class="char" data-pinyin="zhāng" data-meaning="sections">章</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jiào" data-meaning="collate">校</span>
+                <span class="char" data-pinyin="lǐ" data-meaning="organize">理</span>
+                <span class="char" data-pinyin="mì" data-meaning="secret">秘</span>
+                <span class="char" data-pinyin="wén" data-meaning="texts">文</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>又有承明殿、金马门，著作之庭。大雅宏达之士，于此成群。探究本源，广见博闻。启发篇章，校理秘文。</p>
+                    </div>
+                    <div lang="en">
+                        <p>There are also the Chengming Hall and the Golden Horse Gate, courts of writing and composition. Men of great elegance, broad and profound, form groups here. They investigate original sources and roots, seeing exhaustively and hearing widely. They elucidate and develop chapters and sections, collating and organizing secret texts.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Es gibt auch die Chengming-Halle und das Golden Horse Gate, Höfe des Schreibens und der Komposition. Männer von großer Eleganz, breit und tief, bilden hier Gruppen. Sie untersuchen ursprüngliche Quellen und Wurzeln, sehen erschöpfend und hören weit. Sie erläutern und entwickeln Kapitel und Abschnitte, kollationieren und organisieren geheime Texte.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Il y a aussi la salle Chengming et la porte Golden Horse, des cours d'écriture et de composition. Des hommes d'une grande élégance, larges et profonds, forment des groupes ici. Ils enquêtent sur les sources et les racines originales, voyant de manière exhaustive et entendant largement. Ils élucident et développent des chapitres et des sections, collationnent et organisent des textes secrets.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Есть также зал Чэнмин и ворота Золотой Лошади, дворы письма и сочинения. Люди великой элегантности, широкие и глубокие, образуют здесь группы. Они исследуют первоисточники и корни, видя исчерпывающе и слыша широко. Они разъясняют и разрабатывают главы и разделы, сверяют и систематизируют секретные тексты.</p>
+                    </div>
+                    <div lang="es">
+                        <p>También están el Salón Chengming y la Puerta del Caballo Dorado, cortes de escritura y composición. Hombres de gran elegancia, amplios y profundos, forman grupos aquí. Investigan fuentes y raíces originales, viendo exhaustivamente y escuchando ampliamente. Elucidan y desarrollan capítulos y secciones, cotejando y organizando textos secretos.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Ci sono anche la Sala Chengming e la Porta del Cavallo d'Oro, corti di scrittura e composizione. Uomini di grande elegancia, ampi e profondi, formano gruppi qui. Indagano su fonti e radici originali, vedendo esaustivamente e ascoltando ampiamente. Chiariscono e sviluppano capitoli e sezioni, collazionando e organizzando testi segreti.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>又承明金馬有り、著作の庭。大雅宏達、茲に於て羣を爲す。元元本本、見ること殫く聞くこと洽し。篇章を啓發し、秘文を校理す。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《漢書》曰：嚴助爲會稽太守，帝賜書曰：君猒承明之廬。張晏曰：承明廬在石渠門外。金馬，已見上文。大雅，謂有大雅之才者。詩有大雅，故以立稱焉。《漢書》，武帝曰：司馬相如之倫，皆辨智閎達。元元本本，謂得其元本也。《孔叢子》曰：萇弘曰：仲尼洽聞強記。《孝經鈎命決》曰：丘掇秘文。
+            </div>
+        </div>
+
+        <!-- 第三段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="zhōu" data-meaning="surround">周</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="with">以</span>
+                <span class="char" data-pinyin="gōu" data-meaning="hook">鉤</span>
+                <span class="char" data-pinyin="chén" data-meaning="array">陳</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="wèi" data-meaning="positions">位</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="wèi" data-meaning="guard">衞</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="with">以</span>
+                <span class="char" data-pinyin="yán" data-meaning="strict">嚴</span>
+                <span class="char" data-pinyin="gēng" data-meaning="watches">更</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="shǔ" data-meaning="offices">署</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zǒng" data-meaning="gather">總</span>
+                <span class="char" data-pinyin="lǐ" data-meaning="ritual">禮</span>
+                <span class="char" data-pinyin="guān" data-meaning="officials">官</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="jiǎ" data-meaning="top">甲</span>
+                <span class="char" data-pinyin="kē" data-meaning="graduates">科</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="qún" data-meaning="assemble">羣</span>
+                <span class="char" data-pinyin="bǎi" data-meaning="hundred">百</span>
+                <span class="char" data-pinyin="jùn" data-meaning="commanderies">郡</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="lián" data-meaning="honest">廉</span>
+                <span class="char" data-pinyin="xiào" data-meaning="filial">孝</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>四周以钩陈之位环绕，以严更之署护卫。总集礼官之甲科，聚集百郡之廉孝。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Surrounded by the positions of Gouchen, guarded by the offices of strict watches. Gathering the top graduates of ritual officials, assembling the honest and filial from a hundred commanderies.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Umgeben von den Positionen von Gouchen, bewacht von den Büros strenger Wachen. Versammeln der besten Absolventen der Ritualbeamten, Zusammenstellung der Ehrlichen und Frommen aus hundert Kommandanturen.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Entouré par les positions de Gouchen, gardé par les bureaux des veilles strictes. Rassembler les meilleurs diplômés des officiels rituels, assembler les honnêtes et filiaux d'une centaine de commanderies.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Окруженные позициями Гоучэнь, охраняемые офисами строгих дозоров. Собирая лучших выпускников ритуальных чиновников, собирая честных и почтительных из сотни командований.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Rodeado por las posiciones de Gouchen, custodiado por las oficinas de estrictas vigilias. Reuniendo a los mejores graduados de los funcionarios rituales, reuniendo a los honestos y filiales de cien comandancias.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Circondato dalle posizioni di Gouchen, sorvegliato dagli uffici di rigide ronde. Riunendo i migliori laureati dei funzionari rituali, assemblando gli onesti e filiali da un centinaio di comanderie.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>周りに鉤陳の位を以てし、衞に嚴更の署を以てす。禮官の甲科を總べ、百郡の廉孝を羣す。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《樂汁圖》曰：鉤陳，後宮也。服虔《甘泉賦注》曰：紫宮外營，勾陳星也。然王者亦法之。薛綜《西京賦注》曰：嚴更，督行夜鼓也。《漢書》曰：奉常掌禮儀，屬官有五經博士。天曰：匡衡射策甲科，除太常掌故。又曰：秦分天下爲郡縣。又曰：興廉舉孝也。
+            </div>
+        </div>
+
+        <!-- 第四段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="hǔ" data-meaning="tiger">虎</span>
+                <span class="char" data-pinyin="bēn" data-meaning="warriors">賁</span>
+                <span class="char" data-pinyin="zhuì" data-meaning="embroidered">贅</span>
+                <span class="char" data-pinyin="yī" data-meaning="robes">衣</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yān" data-meaning="eunuch">閹</span>
+                <span class="char" data-pinyin="yǐn" data-meaning="officials">尹</span>
+                <span class="char" data-pinyin="hūn" data-meaning="gate">閽</span>
+                <span class="char" data-pinyin="sì" data-meaning="keepers">寺</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="bì" data-meaning="steps">陛</span>
+                <span class="char" data-pinyin="jǐ" data-meaning="halberds">戟</span>
+                <span class="char" data-pinyin="bǎi" data-meaning="hundred">百</span>
+                <span class="char" data-pinyin="chóng" data-meaning="layers">重</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="gè" data-meaning="each">各</span>
+                <span class="char" data-pinyin="yǒu" data-meaning="have">有</span>
+                <span class="char" data-pinyin="diǎn" data-meaning="specific">典</span>
+                <span class="char" data-pinyin="sī" data-meaning="duties">司</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>虎贲勇士与缀衣官员，阉尹与阍寺。陛戟百重，各有专职。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Tiger warriors and officials with embroidered robes, eunuch officials and gate keepers. Halberds on the steps in a hundred layers, each with specific duties.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Tigerkrieger und Beamte mit bestickten Roben, Eunuchenbeamte und Torwächter. Hellebarden auf den Stufen in hundert Schichten, jeder mit spezifischen Aufgaben.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Guerriers tigres et officiels avec des robes brodées, officiels eunuques et gardiens de porte. Hallebardes sur les marches en cent couches, chacune avec des tâches spécifiques.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Тигровые воины и чиновники с вышитыми одеждами, чиновники-евнухи и привратники. Алебарды на ступенях в сотнях слоев, у каждого свои обязанности.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Guerreros tigres y funcionarios con túnicas bordadas, funcionarios eunucos y guardianes de puertas. Alabardas en los escalones en cien capas, cada una con deberes específicos.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Guerrieri tigre e funzionari con abiti ricamati, funzionari eunuchi e custodi delle porte. Alabarde sui gradini in cento strati, ognuno con compiti specifici.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>虎賁贅衣、閹尹閽寺。陛戟百重、各典司有り。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《尙書》，周公曰：綴衣虎賁。《公羊傳》曰：贅，猶綴也。贅，之銳切。《周禮》曰：內小臣奄，上士，又有閽人、寺人。《漢書》曰：太后盛服，坐武帳，武士陛戟，陳列殿下也。
+            </div>
+        </div>
+
+        <!-- 第五段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="zhōu" data-meaning="surrounding">周</span>
+                <span class="char" data-pinyin="lú" data-meaning="barracks">廬</span>
+                <span class="char" data-pinyin="qiān" data-meaning="thousand">千</span>
+                <span class="char" data-pinyin="liè" data-meaning="rows">列</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jiǎo" data-meaning="patrol">徼</span>
+                <span class="char" data-pinyin="dào" data-meaning="paths">道</span>
+                <span class="char" data-pinyin="qǐ" data-meaning="intricately">綺</span>
+                <span class="char" data-pinyin="cuò" data-meaning="interwoven">錯</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>周围庐舍千列，巡逻道路交错。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Surrounding barracks in a thousand rows, patrol paths intricately interwoven.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Umgebende Baracken in tausend Reihen, Patrouillenwege kunstvoll verwoben.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Caserne environnante en mille rangées, sentiers de patrouille entrelacés de manière complexe.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Окружающие казармы в тысячах рядов, патрульные дорожки замысловато переплетены.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Barracas circundantes en mil filas, senderos de patrulla intrincadamente entrelazados.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Baracche circostanti in mille file, sentieri di pattuglia intricatamente intrecciati.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>周廬千列、徼道綺錯す。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《史記》，衞令曰：周廬設卒甚謹。《漢書音義》，張晏曰：直宿曰廬。《漢書》曰：中尉掌徼循京師。如淳曰：所謂遊徼循禁，備盜賊也。
+            </div>
+        </div>
+
+        <!-- 第六段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="niǎn" data-meaning="imperial">輦</span>
+                <span class="char" data-pinyin="lù" data-meaning="path">路</span>
+                <span class="char" data-pinyin="jīng" data-meaning="plan">經</span>
+                <span class="char" data-pinyin="yíng" data-meaning="construct">營</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="xiū" data-meaning="repair">脩</span>
+                <span class="char" data-pinyin="chú" data-meaning="clear">除</span>
+                <span class="char" data-pinyin="fēi" data-meaning="flying">飛</span>
+                <span class="char" data-pinyin="gé" data-meaning="pavilions">閣</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>规划建造辇路，修治飞阁。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Plan and construct the imperial path, repair and clear the flying pavilions.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Planen und bauen Sie den kaiserlichen Pfad, reparieren und räumen Sie die fliegenden Pavillons.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Planifiez et construisez le sentier impérial, réparez et dégagez les pavillons volants.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Планируйте и стройте императорскую дорогу, ремонтируйте и очищайте летающие павильоны.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Planifique y construya el camino imperial, repare y despeje los pabellones voladores.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Pianifica e costruisci il sentiero imperiale, ripara e libera i padiglioni volanti.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>輦路を經營し、脩除飛閣す。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                輦路，輦道也。《上林賦》曰：輦道纚屬。如淳曰：輦道，閣道也。司馬彪《上林賦注》曰：除，樓陛也。
+            </div>
+        </div>
+
+        <!-- 第七段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="zì" data-meaning="from">自</span>
+                <span class="char" data-pinyin="wèi" data-meaning="wei">未</span>
+                <span class="char" data-pinyin="yāng" data-meaning="yang">央</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="lián" data-meaning="connecting">連</span>
+                <span class="char" data-pinyin="guì" data-meaning="gui">桂</span>
+                <span class="char" data-pinyin="gōng" data-meaning="palace">宮</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="běi" data-meaning="north">北</span>
+                <span class="char" data-pinyin="mí" data-meaning="extending">彌</span>
+                <span class="char" data-pinyin="míng" data-meaning="bright">明</span>
+                <span class="char" data-pinyin="guāng" data-meaning="light">光</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="gèn" data-meaning="reaching">亘</span>
+                <span class="char" data-pinyin="cháng" data-meaning="long">長</span>
+                <span class="char" data-pinyin="lè" data-meaning="happiness">樂</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="líng" data-meaning="crossing">凌</span>
+                <span class="char" data-pinyin="dèng" data-meaning="elevated">隥</span>
+                <span class="char" data-pinyin="dào" data-meaning="paths">道</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="chāo" data-meaning="surpassing">超</span>
+                <span class="char" data-pinyin="xī" data-meaning="western">西</span>
+                <span class="char" data-pinyin="yōng" data-meaning="walls">墉</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="hùn" data-meaning="combining">掍</span>
+                <span class="char" data-pinyin="jiàn" data-meaning="jian">建</span>
+                <span class="char" data-pinyin="zhāng" data-meaning="zhang">章</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="lián" data-meaning="connecting">連</span>
+                <span class="char" data-pinyin="wài" data-meaning="outer">外</span>
+                <span class="char" data-pinyin="shǔ" data-meaning="buildings">屬</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shè" data-meaning="setting up">設</span>
+                <span class="char" data-pinyin="bì" data-meaning="jade">璧</span>
+                <span class="char" data-pinyin="mén" data-meaning="gates">門</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="fèng" data-meaning="phoenix">鳳</span>
+                <span class="char" data-pinyin="què" data-meaning="towers">闕</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shàng" data-meaning="ascending">上</span>
+                <span class="char" data-pinyin="gū" data-meaning="octagonal">觚</span>
+                <span class="char" data-pinyin="léng" data-meaning="corners">稜</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="qī" data-meaning="perching">棲</span>
+                <span class="char" data-pinyin="jīn" data-meaning="golden">金</span>
+                <span class="char" data-pinyin="jué" data-meaning="sparrows">爵</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>从未央宫连接桂宫，北至明光宫直达长乐宫。跨越阁道超越西墙，合并建章宫连接外属。设立璧门之凤阙，上有觚棱栖金雀。</p>
+                    </div>
+                    <div lang="en">
+                        <p>From Weiyang Palace connecting to Gui Palace, north extending to Mingguang Palace and reaching Changle Palace. Crossing elevated paths and surpassing western walls, combining Jianzhang Palace and connecting outer buildings. Setting up the phoenix towers of jade gates, ascending octagonal corners and perching golden sparrows.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Vom Weiyang-Palast, der sich mit dem Gui-Palast verbindet, erstreckt sich der Norden bis zum Mingguang-Palast und erreicht den Changle-Palast. Überqueren Sie erhöhte Pfade und überwinden Sie westliche Mauern, kombinieren Sie den Jianzhang-Palast und verbinden Sie äußere Gebäude. Errichten Sie die Phönix-Türme der Jade-Tore, steigen Sie auf achteckige Ecken und setzen Sie sich mit goldenen Spatzen hin.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Du palais Weiyang se connectant au palais Gui, au nord s'étendant jusqu'au palais Mingguang et atteignant le palais Changle. Traversant des chemins surélevés et dépassant les murs occidentaux, combinant le palais Jianzhang et connectant des bâtiments extérieurs. Installer les tours phénix des portes de jade, monter les coins octogonaux et se percher avec des moineaux dorés.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>От дворца Вэйян, соединяющегося с дворцом Гуй, на севере простирается до дворца Мингуан и достигает дворца Чанлэ. Пересекая возвышенные дорожки и преодолевая западные стены, объединяя дворец Цзяньчжан и соединяя внешние постройки. Установка фениксовых башен нефритовых ворот, восхождение на восьмиугольные углы и насест с золотыми воробьями.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Desde el Palacio Weiyang conectándose con el Palacio Gui, al norte extendiéndose hasta el Palacio Mingguang y llegando al Palacio Changle. Cruzando caminos elevados y superando muros occidentales, combinando el Palacio Jianzhang y conectando edificios exteriores. Instalando las torres fénix de las puertas de jade, ascendiendo esquinas octogonales y posándose con gorriones dorados.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Dal Palazzo Weiyang che si collega al Palazzo Gui, a nord si estende fino al Palazzo Mingguang e raggiunge il Palazzo Changle. Attraversando sentieri rialzati e superando i muri occidentali, combinando il Palazzo Jianzhang e collegando gli edifici esterni. Installare le torri fenice delle porte di giada, salire angoli ottagonali e posarsi con passeri dorati.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>未央より桂宮に連なり、北は明光に彌りて長樂に亘る。隥道を凌ぎて西墉を超え、建章を掍して外屬に連なる。璧門の鳳闕を設け、觚稜に上りて金爵を棲ます。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《漢書》曰：高祖至長安，蕭何作未央宮。《三輔舊事》曰：桂宮內有明光殿。毛萇《詩傳》曰：彌，終也。《方言》曰：亘，竟也。亘與絙古字通。《漢書》曰：高祖修長樂宮。薛綜《西京賦注》曰：隥，閣道也，丁鄧切。毛萇《詩傳》曰：墉，城也。《方言》曰：掍，同也，音義與混同，胡本切。《漢書》曰：建章宮，其東則鳳闕，高二十餘丈，其南有璧門之屬。《漢書音義》，應劭曰：觚，八觚有隅者也，音孤。《說文》曰：稜，柧也，柧與觚同。稜，落登切。《三輔故事》曰：建章宮闕上有銅鳳皇。然金爵則銅鳳也。
+            </div>
+        </div>
+    </div>
+    
+    <!-- 弹出窗口 -->
+    <div class="popup" id="charPopup">
+        <span class="popup-close" onclick="closePopup()">×</span>
+        <div class="popup-content">
+            <div class="popup-char"></div>
+            <div class="popup-pinyin"></div>
+            <div class="popup-meaning"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 单字点击事件
+        document.querySelectorAll('.char').forEach(char => {
+            char.addEventListener('click', function() {
+                const popup = document.getElementById('charPopup');
+                popup.querySelector('.popup-char').textContent = this.textContent;
+                popup.querySelector('.popup-pinyin').textContent = `拼音: ${this.dataset.pinyin}`;
+                popup.querySelector('.popup-meaning').textContent = `释义: ${this.dataset.meaning}`;
+                popup.style.display = 'block';
+            });
+        });
+        
+        // 关闭弹出窗口
+        function closePopup() {
+            document.getElementById('charPopup').style.display = 'none';
+        }
+        
+        // 段落朗读功能
+        let currentParagraphUtterances = [];
+        let currentReadingParagraph = null;
+        
+        function speakParagraph(btn) {
+            const paragraph = btn.closest('.paragraph');
+            
+            // 如果正在朗读当前段落，停止
+            if (currentReadingParagraph === paragraph && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                btn.textContent = '🔊';
+                currentReadingParagraph = null;
+                return;
+            }
+            
+            // 如果正在朗读其他段落，先停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                document.querySelectorAll('.control-btn').forEach(b => {
+                    if (b.textContent === '⏹') b.textContent = '🔊';
+                });
+            }
+            
+            // 开始朗读新段落
+            currentReadingParagraph = paragraph;
+            btn.textContent = '⏹';
+            
+            const sentences = paragraph.querySelectorAll('.sentence');
+            currentParagraphUtterances = [];
+            
+            // 准备所有句子语音
+            sentences.forEach((sentence, index) => {
+                let sentenceText = '';
+                sentence.querySelectorAll('.char').forEach(char => {
+                    if (!char.classList.contains('punctuation') || 
+                        ['，', '。', '！', '？', '：', '；'].includes(char.textContent)) {
+                        sentenceText += char.textContent;
+                    }
+                });
+                
+                const utterance = new SpeechSynthesisUtterance(sentenceText);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.8;
+                
+                utterance.onstart = function() {
+                    resetAllSentenceHighlights();
+                    sentence.classList.add('active');
+                    
+                    // 滚动到当前句子
+                    sentence.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+                
+                utterance.onend = function() {
+                    if (index === sentences.length - 1) {
+                        btn.textContent = '🔊';
+                        currentReadingParagraph = null;
+                    }
+                };
+                
+                currentParagraphUtterances.push(utterance);
+            });
+            
+            // 按顺序朗读所有句子
+            currentParagraphUtterances.forEach((utterance, index) => {
+                // 设置延迟，使句子之间有自然停顿
+                if (index > 0) {
+                    const prevDuration = currentParagraphUtterances[index-1].text.length * 100; // 估算前一句持续时间
+                    utterance.startTime = Date.now() + prevDuration + 300; // 300ms额外停顿
+                }
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+        
+        function resetAllSentenceHighlights() {
+            document.querySelectorAll('.sentence').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+        
+        // 显示/隐藏注释面板
+        function toggleAnnotationPanel(btn) {
+            const annotation = btn.nextElementSibling;
+            if (annotation.style.display === 'block') {
+                annotation.style.display = 'none';
+                btn.textContent = '顯示註釋';
+            } else {
+                annotation.style.display = 'block';
+                btn.textContent = '隱藏註釋';
+            }
+        }
+        
+        // 显示/隐藏翻译面板
+        function toggleTranslationPanel(btn) {
+            const panel = btn.closest('.paragraph').querySelector('.translation-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+            }
+        }
+        
+        // 切换翻译语言
+        function showTranslation(btn, lang) {
+            const panel = btn.closest('.translation-panel').querySelector('.translation-content');
+            panel.querySelectorAll('div').forEach(div => {
+                div.classList.remove('show');
+            });
+            panel.querySelector(`div[lang="${lang}"]`).classList.add('show');
+            
+            // 更新按钮状态
+            btn.closest('.translation-panel').querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+        
+        // 点击空白处关闭弹出窗口
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('charPopup')) {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>

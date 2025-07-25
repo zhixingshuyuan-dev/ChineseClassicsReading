@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《西都赋》交互式閱讀系統</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋體", serif;
+            line-height: 2.5;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #3a3226;
+            color: #e0d5c8;
+        }
+        
+        h1 {
+            color: #d4b483;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #5d4b36;
+            padding-bottom: 10px;
+        }
+        
+        .main-text {
+            font-size: 24px;
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .char:hover {
+            color: #d4a373;
+            text-shadow: 0 0 3px rgba(212, 163, 115, 0.5);
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4a4235;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+        }
+        
+        .popup-content {
+            font-size: 16px;
+        }
+        
+        .popup-char {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #d4b483;
+        }
+        
+        .popup-pinyin, .popup-meaning {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px dashed #5d4b36;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #a89984;
+        }
+        
+        .paragraph {
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            margin-right: 6px;
+            border: none;
+            border-radius: 50%;
+            background: #5d4b36;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: #e0d5c8;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #7c6a53;
+            transform: scale(1.1);
+        }
+        
+        .annotation {
+            font-size: 18px;
+            background: #4a4235;
+            padding: 12px 15px;
+            border-left: 3px solid #a89984;
+            margin: 12px 0;
+            display: none;
+            color: #d4b483;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .toggle-annotation {
+            background: #5d4b36;
+            border: none;
+            color: #e0d5c8;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-annotation:hover {
+            background: #7c6a53;
+        }
+        
+        .translation-panel {
+            display: none;
+            background: #4a4235;
+            border: 1px solid #5d4b36;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+        }
+        
+        .lang-btn {
+            background: #3a3226;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+            padding: 3px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn:hover {
+            background: #5d4b36;
+        }
+        
+        .lang-btn.active {
+            background: #a89984;
+            color: #3a3226;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #5d4b36;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .translation-content div {
+            display: none;
+            padding: 6px 0;
+        }
+        
+        .translation-content div.show {
+            display: block;
+        }
+        
+        .punctuation {
+            color: #a89984;
+        }
+        
+        .sentence {
+            display: inline;
+            position: relative;
+        }
+        
+        .sentence.active {
+            background-color: rgba(212, 180, 131, 0.3);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>西都賦</h1>
+    
+    <div class="main-text">
+        <!-- 第一段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="jí" data-meaning="until">及</span>
+                <span class="char" data-pinyin="zhì" data-meaning="arrive">至</span>
+                <span class="char" data-pinyin="dà" data-meaning="great">大</span>
+                <span class="char" data-pinyin="hàn" data-meaning="Han">漢</span>
+                <span class="char" data-pinyin="shòu" data-meaning="receive">受</span>
+                <span class="char" data-pinyin="mìng" data-meaning="mandate">命</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="dū" data-meaning="capital">都</span>
+                <span class="char" data-pinyin="zhī" data-meaning="it">之</span>
+                <span class="char" data-pinyin="yě" data-meaning="particle">也</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yǎng" data-meaning="look up">仰</span>
+                <span class="char" data-pinyin="wù" data-meaning="realize">悟</span>
+                <span class="char" data-pinyin="dōng" data-meaning="east">東</span>
+                <span class="char" data-pinyin="jǐng" data-meaning="well">井</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="jīng" data-meaning="essence">精</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="fǔ" data-meaning="look down">俯</span>
+                <span class="char" data-pinyin="xié" data-meaning="harmonize">協</span>
+                <span class="char" data-pinyin="hé" data-meaning="river">《</span>
+                <span class="char" data-pinyin="tú" data-meaning="chart">河</span>
+                <span class="char" data-pinyin="tú" data-meaning="chart">圖</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">》</span>
+                <span class="char" data-pinyin="zhī" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="líng" data-meaning="spirit">靈</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>直到大汉接受天命定都于此，上悟东井星宿之精，下合《河图》之灵。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Until the great Han received the mandate and made it the capital, looking up to realize the essence of the Eastern Well constellation, and looking down to harmonize with the spirit of the River Chart.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Bis die große Han-Dynastie das Mandat erhielt und es zur Hauptstadt machte, blickte sie auf, um das Wesen der östlichen Brunnen-Konstellation zu erkennen, und blickte hinab, um sich mit dem Geist des Flussdiagramms zu harmonisieren.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Jusqu'à ce que la grande dynastie Han reçoive le mandat et en fasse sa capitale, levant les yeux pour réaliser l'essence de la constellation du Puits oriental, et baissant les yeux pour s'harmoniser avec l'esprit du Diagramme de la Rivière.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Пока великая династия Хань не получила мандат и не сделала ее столицей, глядя вверх, чтобы осознать сущность созвездия Восточного Колодца, и глядя вниз, чтобы гармонизироваться с духом Речной Карты.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Hasta que la gran dinastía Han recibió el mandato y la convirtió en capital, mirando hacia arriba para darse cuenta de la esencia de la constelación del Pozo Oriental, y mirando hacia abajo para armonizarse con el espíritu del Diagrama del Río.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Fino a quando la grande dinastia Han ricevette il mandato e ne fece la capitale, guardando in alto per realizzare l'essenza della costellazione del Pozzo Orientale, e guardando in basso per armonizzarsi con lo spirito del Diagramma del Fiume.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>大漢が天命を受けてここに都を定めるに至り、上は東井の星宿の精を悟り、下は『河図』の霊に合致した。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《漢書》曰：漢元年十月，五星聚于東井，沛公至灞上。又曰：以歷推之，從歲星也。此高祖受命之符。《尙書雒書》曰：《河圖》，命紀也。然《五經》緯，皆《河圖》也。《春秋漢含孳》曰：劉季握卯金刀，在軫北，字季，天下服。卯在東方，陽所立，仁且明。金在西方，陰所立，義成功。刀居右，字成章。刀擊秦，枉矢東流，水神哭祖龍。然則成功在西[4]，故都長安。
+            </div>
+        </div>
+
+        <!-- 第二段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="fèng" data-meaning="Fengchun">奉</span>
+                <span class="char" data-pinyin="chūn" data-meaning="spring">春</span>
+                <span class="char" data-pinyin="jiàn" data-meaning="propose">建</span>
+                <span class="char" data-pinyin="cè" data-meaning="strategy">策</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="liú" data-meaning="Liu">留</span>
+                <span class="char" data-pinyin="hóu" data-meaning="marquis">侯</span>
+                <span class="char" data-pinyin="yǎn" data-meaning="develop">演</span>
+                <span class="char" data-pinyin="chéng" data-meaning="complete">成</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>奉春君献策，留侯完善促成。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Fengchun proposed the strategy, and the Marquis of Liu developed and completed it.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Fengchun schlug die Strategie vor, und der Marquis von Liu entwickelte und vollendete sie.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Fengchun a proposé la stratégie, et le Marquis de Liu l'a développée et achevée.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Фэнчунь предложил стратегию, а маркиз Лю разработал и завершил ее.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Fengchun propuso la estrategia, y el Marqués de Liu la desarrolló y completó.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Fengchun propose la strategia, e il Marchese di Liu la sviluppa e la completa.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>奉春君が策を献策し、留侯が完成させた。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《漢書》曰：高祖西都洛陽，戍卒婁敬求見，說上曰：陛下都洛不便，不如入關，據秦之固。上問張良，良因勸上。是日車駕西都長安，拜婁敬爲奉春君，賜姓劉氏。又曰：封張良爲留侯也。《蒼頡篇》曰：演，引也。
+            </div>
+        </div>
+
+        <!-- 第三段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="tiān" data-meaning="heaven">天</span>
+                <span class="char" data-pinyin="rén" data-meaning="man">人</span>
+                <span class="char" data-pinyin="hé" data-meaning="together">合</span>
+                <span class="char" data-pinyin="yìng" data-meaning="respond">應</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yǐ" data-meaning="to">以</span>
+                <span class="char" data-pinyin="fā" data-meaning="manifest">發</span>
+                <span class="char" data-pinyin="huáng" data-meaning="imperial">皇</span>
+                <span class="char" data-pinyin="míng" data-meaning="brilliance">明</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="nǎi" data-meaning="then">乃</span>
+                <span class="char" data-pinyin="juàn" data-meaning="turn">眷</span>
+                <span class="char" data-pinyin="xī" data-meaning="west">西</span>
+                <span class="char" data-pinyin="gù" data-meaning="gaze">顧</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="shí" data-meaning="indeed">寔</span>
+                <span class="char" data-pinyin="wéi" data-meaning="is">惟</span>
+                <span class="char" data-pinyin="zuò" data-meaning="make">作</span>
+                <span class="char" data-pinyin="jīng" data-meaning="capital">京</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>天象人事相应，以彰显皇帝英明。于是眷顾西方，确实在此建都。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Heaven and man responded together to manifest the imperial brilliance. Then he turned his gaze westward and indeed made it the capital.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Himmel und Mensch antworteten gemeinsam, um den kaiserlichen Glanz zu manifestieren. Dann wandte er seinen Blick nach Westen und machte es tatsächlich zur Hauptstadt.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Le ciel et l'homme ont répondu ensemble pour manifester la brillance impériale. Puis il a tourné son regard vers l'ouest et en a fait la capitale.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Небо и человек ответили вместе, чтобы проявить императорский блеск. Затем он повернул взгляд на запад и действительно сделал его столицей.</p>
+                    </div>
+                    <div lang="es">
+                        <p>El cielo y el hombre respondieron juntos para manifestar el brillo imperial. Luego volvió su mirada hacia el oeste y de hecho lo convirtió en la capital.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Cielo e uomo hanno risposto insieme per manifestare lo splendore imperiale. Poi ha rivolto lo sguardo a ovest e ne ha fatto la capitale.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>天象と人事が相応じ、皇帝の英明を顕彰した。そこで西方を顧み、確かにここに都を建てた。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                天，謂五星也。人，謂婁敬也。皇，謂高祖也。《四子講德論》曰：天人並應。《毛詩》曰：乃眷西顧，此惟與宅。
+            </div>
+        </div>
+
+        <!-- 第四段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="yú" data-meaning="then">於</span>
+                <span class="char" data-pinyin="shì" data-meaning="this">是</span>
+                <span class="char" data-pinyin="xī" data-meaning="gaze">睎</span>
+                <span class="char" data-pinyin="qín" data-meaning="Qin">秦</span>
+                <span class="char" data-pinyin="lǐng" data-meaning="ridge">嶺</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="é" data-meaning="look">睋</span>
+                <span class="char" data-pinyin="běi" data-meaning="north">北</span>
+                <span class="char" data-pinyin="fù" data-meaning="hill">阜</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jiā" data-meaning="embrace">挾</span>
+                <span class="char" data-pinyin="fēng" data-meaning="Feng">灃</span>
+                <span class="char" data-pinyin="bà" data-meaning="Ba">灞</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jù" data-meaning="occupy">據</span>
+                <span class="char" data-pinyin="lóng" data-meaning="dragon">龍</span>
+                <span class="char" data-pinyin="shǒu" data-meaning="head">首</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'zh')">白话文</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ja')">日本語</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="zh" class="show">
+                        <p>于是眺望秦岭，观望北山。怀抱沣灞二水，据守龙首原。</p>
+                    </div>
+                    <div lang="en">
+                        <p>Then he gazed at the Qin Mountains and looked at the northern hills. Embracing the Feng and Ba rivers, he occupied the Dragon Head plain.</p>
+                    </div>
+                    <div lang="de">
+                        <p>Dann blickte er auf die Qin-Berge und schaute auf die nördlichen Hügel. Die Flüsse Feng und Ba umarmend, besetzte er die Drachenkopf-Ebene.</p>
+                    </div>
+                    <div lang="fr">
+                        <p>Puis il contempla les montagnes Qin et regarda les collines du nord. Embrassant les rivières Feng et Ba, il occupa la plaine de la Tête du Dragon.</p>
+                    </div>
+                    <div lang="ru">
+                        <p>Затем он взглянул на горы Цинь и посмотрел на северные холмы. Обнимая реки Фэн и Ба, он занял равнину Головы Дракона.</p>
+                    </div>
+                    <div lang="es">
+                        <p>Luego miró las montañas Qin y miró las colinas del norte. Abrazando los ríos Feng y Ba, ocupó la llanura de la Cabeza del Dragón.</p>
+                    </div>
+                    <div lang="it">
+                        <p>Poi guardò le montagne Qin e osservò le colline settentrionali. Abbracciando i fiumi Feng e Ba, occupò la pianura della Testa del Drago.</p>
+                    </div>
+                    <div lang="ja">
+                        <p>そこで秦嶺を眺め、北山を望んだ。沣灞の二水を抱き、龍首原を拠点とした。</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《說文》曰：睎，望也，呼衣切。秦嶺，南山也。《漢書》曰：秦地有南山。睋，視也，五哥切。北阜，山也。《漢書》，文帝曰：以北山石爲槨。張揖《上林賦注》曰：豐水出鄠南山豐谷。《漢書》曰：灞水出藍田谷。《山海經》曰：華山之西，龍首之山也。
+            </div>
+        </div>
+    </div>
+    
+    <!-- 弹出窗口 -->
+    <div class="popup" id="charPopup">
+        <span class="popup-close" onclick="closePopup()">×</span>
+        <div class="popup-content">
+            <div class="popup-char"></div>
+            <div class="popup-pinyin"></div>
+            <div class="popup-meaning"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 单字点击事件
+        document.querySelectorAll('.char').forEach(char => {
+            char.addEventListener('click', function() {
+                const popup = document.getElementById('charPopup');
+                popup.querySelector('.popup-char').textContent = this.textContent;
+                popup.querySelector('.popup-pinyin').textContent = `拼音: ${this.dataset.pinyin}`;
+                popup.querySelector('.popup-meaning').textContent = `释义: ${this.dataset.meaning}`;
+                popup.style.display = 'block';
+            });
+        });
+        
+        // 关闭弹出窗口
+        function closePopup() {
+            document.getElementById('charPopup').style.display = 'none';
+        }
+        
+        // 段落朗读功能
+        let currentParagraphUtterances = [];
+        let currentReadingParagraph = null;
+        
+        function speakParagraph(btn) {
+            const paragraph = btn.closest('.paragraph');
+            
+            // 如果正在朗读当前段落，停止
+            if (currentReadingParagraph === paragraph && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                btn.textContent = '🔊';
+                currentReadingParagraph = null;
+                return;
+            }
+            
+            // 如果正在朗读其他段落，先停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                document.querySelectorAll('.control-btn').forEach(b => {
+                    if (b.textContent === '⏹') b.textContent = '🔊';
+                });
+            }
+            
+            // 开始朗读新段落
+            currentReadingParagraph = paragraph;
+            btn.textContent = '⏹';
+            
+            const sentences = paragraph.querySelectorAll('.sentence');
+            currentParagraphUtterances = [];
+            
+            // 准备所有句子语音
+            sentences.forEach((sentence, index) => {
+                let sentenceText = '';
+                sentence.querySelectorAll('.char').forEach(char => {
+                    if (!char.classList.contains('punctuation') || 
+                        ['，', '。', '！', '？', '：', '；'].includes(char.textContent)) {
+                        sentenceText += char.textContent;
+                    }
+                });
+                
+                const utterance = new SpeechSynthesisUtterance(sentenceText);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                
+                utterance.onstart = function() {
+                    resetAllSentenceHighlights();
+                    sentence.classList.add('active');
+                    
+                    // 滚动到当前句子
+                    sentence.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+                
+                utterance.onend = function() {
+                    if (index === sentences.length - 1) {
+                        btn.textContent = '🔊';
+                        currentReadingParagraph = null;
+                    }
+                };
+                
+                currentParagraphUtterances.push(utterance);
+            });
+            
+            // 按顺序朗读所有句子
+            currentParagraphUtterances.forEach((utterance, index) => {
+                // 设置延迟，使句子之间有自然停顿
+                if (index > 0) {
+                    const prevDuration = currentParagraphUtterances[index-1].text.length * 100; // 估算前一句持续时间
+                    utterance.startTime = Date.now() + prevDuration + 300; // 300ms额外停顿
+                }
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+        
+        function resetAllSentenceHighlights() {
+            document.querySelectorAll('.sentence').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+        
+        // 显示/隐藏注释面板
+        function toggleAnnotationPanel(btn) {
+            const annotation = btn.nextElementSibling;
+            if (annotation.style.display === 'block') {
+                annotation.style.display = 'none';
+                btn.textContent = '顯示註釋';
+            } else {
+                annotation.style.display = 'block';
+                btn.textContent = '隱藏註釋';
+            }
+        }
+        
+        // 显示/隐藏翻译面板
+        function toggleTranslationPanel(btn) {
+            const panel = btn.closest('.paragraph').querySelector('.translation-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+            }
+        }
+        
+        // 切换翻译语言
+        function showTranslation(btn, lang) {
+            const panel = btn.closest('.translation-panel').querySelector('.translation-content');
+            panel.querySelectorAll('div').forEach(div => {
+                div.classList.remove('show');
+            });
+            panel.querySelector(`div[lang="${lang}"]`).classList.add('show');
+            
+            // 更新按钮状态
+            btn.closest('.translation-panel').querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+        
+        // 点击空白处关闭弹出窗口
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('charPopup')) {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>

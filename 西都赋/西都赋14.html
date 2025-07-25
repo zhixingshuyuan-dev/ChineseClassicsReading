@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《兩都賦》交互式閱讀系統</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋體", serif;
+            line-height: 2.5;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #3a3226;
+            color: #e0d5c8;
+        }
+        
+        h1 {
+            color: #d4b483;
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #5d4b36;
+            padding-bottom: 10px;
+        }
+        
+        .main-text {
+            font-size: 24px;
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+        
+        .char:hover {
+            color: #d4a373;
+            text-shadow: 0 0 3px rgba(212, 163, 115, 0.5);
+        }
+        
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #4a4235;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            max-width: 300px;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+        }
+        
+        .popup-content {
+            font-size: 16px;
+        }
+        
+        .popup-char {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #d4b483;
+        }
+        
+        .popup-pinyin, .popup-meaning {
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px dashed #5d4b36;
+        }
+        
+        .popup-close {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #a89984;
+        }
+        
+        .paragraph {
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            margin: 10px 0;
+        }
+        
+        .control-btn {
+            width: 32px;
+            height: 32px;
+            margin-right: 6px;
+            border: none;
+            border-radius: 50%;
+            background: #5d4b36;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: #e0d5c8;
+            font-size: 14px;
+        }
+        
+        .control-btn:hover {
+            background: #7c6a53;
+            transform: scale(1.1);
+        }
+        
+        .annotation {
+            font-size: 18px;
+            background: #4a4235;
+            padding: 12px 15px;
+            border-left: 3px solid #a89984;
+            margin: 12px 0;
+            display: none;
+            color: #d4b483;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .toggle-annotation {
+            background: #5d4b36;
+            border: none;
+            color: #e0d5c8;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 0;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .toggle-annotation:hover {
+            background: #7c6a53;
+        }
+        
+        .translation-panel {
+            display: none;
+            background: #4a4235;
+            border: 1px solid #5d4b36;
+            padding: 12px;
+            margin-top: 8px;
+            border-radius: 5px;
+        }
+        
+        .lang-btn {
+            background: #3a3226;
+            border: 1px solid #5d4b36;
+            color: #e0d5c8;
+            padding: 3px 8px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .lang-btn:hover {
+            background: #5d4b36;
+        }
+        
+        .lang-btn.active {
+            background: #a89984;
+            color: #3a3226;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #5d4b36;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .translation-content div {
+            display: none;
+            padding: 6px 0;
+        }
+        
+        .translation-content div.show {
+            display: block;
+        }
+        
+        .punctuation {
+            color: #a89984;
+        }
+        
+        .sentence {
+            display: inline;
+            position: relative;
+        }
+        
+        .sentence.active {
+            background-color: rgba(212, 180, 131, 0.3);
+            border-radius: 3px;
+        }
+        
+        .plain-chinese {
+            font-size: 16px;
+            color: #d4b483;
+            margin: 10px 0;
+            padding: 10px;
+            background: #4a4235;
+            border-radius: 5px;
+            border-left: 3px solid #a89984;
+        }
+    </style>
+</head>
+<body>
+    <h1>西都賦</h1>
+    
+    <div class="main-text">
+        <!-- 新增段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="ěr" data-meaning="then">爾</span>
+                <span class="char" data-pinyin="nǎi" data-meaning="then">乃</span>
+                <span class="char" data-pinyin="shèng" data-meaning="grand">盛</span>
+                <span class="char" data-pinyin="yú" data-meaning="entertainment">娛</span>
+                <span class="char" data-pinyin="yóu" data-meaning="excursion">游</span>
+                <span class="char" data-meaning="'s">之</span>
+                <span class="char" data-pinyin="zhuàng" data-meaning="magnificent">壯</span>
+                <span class="char" data-pinyin="guān" data-meaning="sight">觀</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="fèn" data-meaning="display">奮</span>
+                <span class="char" data-pinyin="tài" data-meaning="great">泰</span>
+                <span class="char" data-pinyin="wǔ" data-meaning="martial">武</span>
+                <span class="char" data-pinyin="hū" data-meaning="at">乎</span>
+                <span class="char" data-pinyin="shàng" data-meaning="upper">上</span>
+                <span class="char" data-pinyin="yòu" data-meaning="garden">囿</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yīn" data-meaning="because">因</span>
+                <span class="char" data-pinyin="zī" data-meaning="this">茲</span>
+                <span class="char" data-pinyin="yǐ" data-meaning="to">以</span>
+                <span class="char" data-pinyin="wēi" data-meaning="awe">威</span>
+                <span class="char" data-pinyin="róng" data-meaning="western tribes">戎</span>
+                <span class="char" data-pinyin="kuā" data-meaning="boast">夸</span>
+                <span class="char" data-pinyin="dí" data-meaning="northern tribes">狄</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="yào" data-meaning="display">耀</span>
+                <span class="char" data-pinyin="wēi" data-meaning="might">威</span>
+                <span class="char" data-pinyin="líng" data-meaning="spirit">靈</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="jiǎng" data-meaning="practice">講</span>
+                <span class="char" data-pinyin="wǔ" data-meaning="martial">武</span>
+                <span class="char" data-pinyin="shì" data-meaning="affairs">事</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="plain-chinese">
+                <p>白话文解释：于是盛大的娱乐游猎场面壮观，在上林苑中展示强大的武力。借此威慑西戎北狄，炫耀军威而演练武事。</p>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+                <button class="control-btn" onclick="speakPlainChinese(this)">🗣️</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="en" class="show">
+                        <p>Then came the grand spectacle of entertainment and hunting,</p>
+                        <p>Displaying mighty martial prowess in the upper gardens.</p>
+                        <p>Thereby awing the Rong and boasting to the Di tribes,</p>
+                        <p>Flashing military might while practicing martial arts.</p>
+                        <button class="lang-btn" onclick="speakTranslation('en', this)">🔊</button>
+                    </div>
+                    <div lang="de">
+                        <p>Dann kam das großartige Schauspiel der Unterhaltung und Jagd,</p>
+                        <p>Das mächtige Kampfkunst in den oberen Gärten zur Schau stellte.</p>
+                        <p>Dadurch die Rong beeindruckend und den Di-Stämmen prahlend,</p>
+                        <p>Militärische Macht zeigend während Kampfkünste geübt wurden.</p>
+                        <button class="lang-btn" onclick="speakTranslation('de', this)">🔊</button>
+                    </div>
+                    <div lang="fr">
+                        <p>Puis vint le grand spectacle de divertissement et de chasse,</p>
+                        <p>Exposant une puissante prouesse martiale dans les jardins supérieurs.</p>
+                        <p>Impressionnant ainsi les Rong et se vantant auprès des tribus Di,</p>
+                        <p>Étalent la puissance militaire tout en pratiquant les arts martiaux.</p>
+                        <button class="lang-btn" onclick="speakTranslation('fr', this)">🔊</button>
+                    </div>
+                    <div lang="ru">
+                        <p>Затем появилось грандиозное зрелище развлечений и охоты,</p>
+                        <p>Демонстрирующее могущественное боевое мастерство в верхних садах.</p>
+                        <p>Тем самым внушая трепет жунам и хвастаясь перед племенами ди,</p>
+                        <p>Демонстрируя военную мощь, практикуя боевые искусства.</p>
+                        <button class="lang-btn" onclick="speakTranslation('ru', this)">🔊</button>
+                    </div>
+                    <div lang="es">
+                        <p>Luego vino el gran espectáculo de entretenimiento y caza,</p>
+                        <p>Mostrando poderosas habilidades marciales en los jardines superiores.</p>
+                        <p>Así impresionando a los Rong y presumiendo ante las tribus Di,</p>
+                        <p>Mostrando poderío militar mientras practicaban artes marciales.</p>
+                        <button class="lang-btn" onclick="speakTranslation('es', this)">🔊</button>
+                    </div>
+                    <div lang="it">
+                        <p>Poi arrivò il grandioso spettacolo di intrattenimento e caccia,</p>
+                        <p>Mostrando una potente abilità marziale nei giardini superiori.</p>
+                        <p>Impressionando così i Rong e vantandosi con le tribù Di,</p>
+                        <p>Mostrando potenza militare mentre si praticavano arti marziali.</p>
+                        <button class="lang-btn" onclick="speakTranslation('it', this)">🔊</button>
+                    </div>
+                    <div lang="el">
+                        <p>Έπειτα ήρθε το μεγαλειώδες θέαμα ψυχαγωγίας και κυνηγιού,</p>
+                        <p>Επιδεικνύοντας ισχυρή πολεμική ικανότητα στους ανώτερους κήπους.</p>
+                        <p>Εντυπωσιάζοντας έτσι τους Ρονγκ και καυχώμενος στις φυλές Ντι,</p>
+                        <p>Επιδεικνύοντας στρατιωτική ισχύ ενώ ασκούσαν πολεμικές τέχνες.</p>
+                        <button class="lang-btn" onclick="speakTranslation('el', this)">🔊</button>
+                    </div>
+                    <div lang="tr">
+                        <p>Sonra eğlence ve avcılığın görkemli gösterisi geldi,</p>
+                        <p>Üst bahçelerde güçlü dövüş becerileri sergilendi.</p>
+                        <p>Böylece Rong'u etkileyerek ve Di kabilelerine övünerek,</p>
+                        <p>Dövüş sanatları uygulanırken askeri güç gösterildi.</p>
+                        <button class="lang-btn" onclick="speakTranslation('tr', this)">🔊</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《史記》，相如《封禪書》曰：斯事天下之壯觀。《禮記》曰：西方曰戎，北方曰狄。又曰：孟冬之月，天子乃命將帥講武習射御。《毛詩序》曰：有常德以立武事。
+            </div>
+        </div>
+
+        <!-- 第二段落 -->
+        <div class="paragraph">
+            <div class="sentence">
+                <span class="char" data-pinyin="mìng" data-meaning="order">命</span>
+                <span class="char" data-pinyin="jīng" data-meaning="Jing">荊</span>
+                <span class="char" data-pinyin="zhōu" data-meaning="Zhou">州</span>
+                <span class="char" data-pinyin="shǐ" data-meaning="make">使</span>
+                <span class="char" data-pinyin="qǐ" data-meaning="rise">起</span>
+                <span class="char" data-pinyin="niǎo" data-meaning="bird">鳥</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="zhào" data-meaning="summon">詔</span>
+                <span class="char" data-pinyin="liáng" data-meaning="Liang">梁</span>
+                <span class="char" data-pinyin="yě" data-meaning="wild">野</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="qū" data-meaning="drive">驅</span>
+                <span class="char" data-pinyin="shòu" data-meaning="beast">獸</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="máo" data-meaning="fur">毛</span>
+                <span class="char" data-pinyin="qún" data-meaning="group">羣</span>
+                <span class="char" data-pinyin="nèi" data-meaning="inside">內</span>
+                <span class="char" data-pinyin="tián" data-meaning="fill">闐</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="fēi" data-meaning="fly">飛</span>
+                <span class="char" data-pinyin="yǔ" data-meaning="feather">羽</span>
+                <span class="char" data-pinyin="shàng" data-meaning="above">上</span>
+                <span class="char" data-pinyin="fù" data-meaning="cover">覆</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jiē" data-meaning="connect">接</span>
+                <span class="char" data-pinyin="yì" data-meaning="wing">翼</span>
+                <span class="char" data-pinyin="cè" data-meaning="side">側</span>
+                <span class="char" data-pinyin="zú" data-meaning="foot">足</span>
+                <span class="char punctuation" data-pinyin="，" data-meaning="comma">，</span>
+            </div>
+            <div class="sentence">
+                <span class="char" data-pinyin="jí" data-meaning="gather">集</span>
+                <span class="char" data-pinyin="jìn" data-meaning="forbidden">禁</span>
+                <span class="char" data-pinyin="lín" data-meaning="forest">林</span>
+                <span class="char" data-pinyin="ér" data-meaning="and">而</span>
+                <span class="char" data-pinyin="tún" data-meaning="station">屯</span>
+                <span class="char" data-pinyin="jù" data-meaning="gather">聚</span>
+                <span class="char punctuation" data-pinyin="。" data-meaning="period">。</span>
+            </div>
+            
+            <div class="plain-chinese">
+                <p>白话文解释：命令荆州使者驱起飞鸟，诏令梁州郊野赶出野兽。毛群野兽充满苑内，飞禽羽族覆盖上空。翅膀相接，侧足而行，聚集在禁苑森林中。</p>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn" onclick="speakParagraph(this)">🔊</button>
+                <button class="control-btn" onclick="toggleTranslationPanel(this)">🌐</button>
+                <button class="control-btn" onclick="toggleAnnotation(this)">📜</button>
+                <button class="control-btn" onclick="speakPlainChinese(this)">🗣️</button>
+            </div>
+            
+            <div class="translation-panel">
+                <div>
+                    <button class="lang-btn active" onclick="showTranslation(this, 'en')">English</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'de')">Deutsch</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'fr')">Français</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'ru')">Русский</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'es')">Español</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'it')">Italiano</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'el')">Ελληνικά</button>
+                    <button class="lang-btn" onclick="showTranslation(this, 'tr')">Türkçe</button>
+                </div>
+                <div class="translation-content">
+                    <div lang="en" class="show">
+                        <p>Ordered the Jingzhou envoy to flush out birds,</p>
+                        <p>Summoned the Liang wilderness to drive forth beasts.</p>
+                        <p>Furred creatures filled the interior,</p>
+                        <p>Feathered flocks covered the skies above.</p>
+                        <p>Wings connected, stepping sideways,</p>
+                        <p>Gathering and stationing in the forbidden forests.</p>
+                        <button class="lang-btn" onclick="speakTranslation('en', this)">🔊</button>
+                    </div>
+                    <div lang="de">
+                        <p>Befahl dem Jingzhou-Gesandten, Vögel aufzuscheuchen,</p>
+                        <p>Berief die Liang-Wildnis, um Tiere vorwärts zu treiben.</p>
+                        <p>Felltiere füllten das Innere,</p>
+                        <p>Gefiederte Scharen bedeckten den Himmel darüber.</p>
+                        <p>Flügel verbunden, seitwärts schreitend,</p>
+                        <p>Sammelnd und stationierend in den verbotenen Wäldern.</p>
+                        <button class="lang-btn" onclick="speakTranslation('de', this)">🔊</button>
+                    </div>
+                    <div lang="fr">
+                        <p>Ordonné à l'envoyé de Jingzhou de faire sortir les oiseaux,</p>
+                        <p>Convoqué la nature sauvage de Liang pour chasser les bêtes.</p>
+                        <p>Les créatures à fourrure remplissaient l'intérieur,</p>
+                        <p>Les volées à plumes couvraient le ciel au-dessus.</p>
+                        <p>Ailes connectées, marchant de côté,</p>
+                        <p>Se rassemblant et stationnant dans les forêts interdites.</p>
+                        <button class="lang-btn" onclick="speakTranslation('fr', this)">🔊</button>
+                    </div>
+                    <div lang="ru">
+                        <p>Приказал цзинчжоускому посланнику вспугнуть птиц,</p>
+                        <p>Призвал лянские пустоши выгнать зверей.</p>
+                        <p>Меховые существа наполнили внутренности,</p>
+                        <p>Пернатые стаи покрыли небо сверху.</p>
+                        <p>Крылья соединены, шагая боком,</p>
+                        <p>Собираясь и располагаясь в запретных лесах.</p>
+                        <button class="lang-btn" onclick="speakTranslation('ru', this)">🔊</button>
+                    </div>
+                    <div lang="es">
+                        <p>Ordenó al enviado de Jingzhou que ahuyentara a los pájaros,</p>
+                        <p>Convocó el desierto de Liang para conducir a las bestias.</p>
+                        <p>Criaturas peludas llenaron el interior,</p>
+                        <p>Bandadas emplumadas cubrieron los cielos arriba.</p>
+                        <p>Alas conectadas, pisando de lado,</p>
+                        <p>Reuniéndose y estacionando en los bosques prohibidos.</p>
+                        <button class="lang-btn" onclick="speakTranslation('es', this)">🔊</button>
+                    </div>
+                    <div lang="it">
+                        <p>Ordinò all'inviato di Jingzhou di far uscire gli uccelli,</p>
+                        <p>Convocò la natura selvaggia di Liang per spingere avanti le bestie.</p>
+                        <p>Creature pelose riempivano l'interno,</p>
+                        <p>Stormi piumati coprivano il cielo sopra.</p>
+                        <p>Ali connesse, camminando lateralmente,</p>
+                        <p>Radunandosi e stazionando nelle foreste proibite.</p>
+                        <button class="lang-btn" onclick="speakTranslation('it', this)">🔊</button>
+                    </div>
+                    <div lang="el">
+                        <p>Παρήγγειλε στον απεσταλμένο του Jingzhou να διώξει τα πουλιά,</p>
+                        <p>Συγκαλέστηκε η Liang άγρια φύση για να οδηγήσει τα θηρία.</p>
+                        <p>Γουναρικά πλάσματα γέμισαν το εσωτερικό,</p>
+                        <p>Φτερωτά κοπάδια κάλυψαν τον ουρανό από πάνω.</p>
+                        <p>Φτερά συνδεδεμένα, περπατώντας πλάγια,</p>
+                        <p>Συγκεντρώνοντας και σταθμεύοντας στα απαγορευμένα δάση.</p>
+                        <button class="lang-btn" onclick="speakTranslation('el', this)">🔊</button>
+                    </div>
+                    <div lang="tr">
+                        <p>Jingzhou elçisine kuşları kovalamasını emretti,</p>
+                        <p>Liang vahşi doğasını hayvanları sürmeye çağırdı.</p>
+                        <p>Tüylü yaratıklar iç kısmı doldurdu,</p>
+                        <p>Tüylü sürüler yukarıdaki gökyüzünü kapladı.</p>
+                        <p>Kanatlar bağlı, yan yürüyerek,</p>
+                        <p>Yasak ormanlarda toplanıp konuşlandı.</p>
+                        <button class="lang-btn" onclick="speakTranslation('tr', this)">🔊</button>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="toggle-annotation" onclick="toggleAnnotationPanel(this)">顯示註釋</button>
+            <div class="annotation">
+                《尙書》曰：荊及衡陽惟荊州。又曰：華陽黑水惟梁州。然則南方多獸，故命使之。枚乘《兔園賦》曰：翶翔羣熙，交頸接翼。
+            </div>
+        </div>
+
+        <!-- 更多段落... -->
+    </div>
+    
+    <!-- 弹出窗口 -->
+    <div class="popup" id="charPopup">
+        <span class="popup-close" onclick="closePopup()">×</span>
+        <div class="popup-content">
+            <div class="popup-char"></div>
+            <div class="popup-pinyin"></div>
+            <div class="popup-meaning"></div>
+        </div>
+    </div>
+    
+    <script>
+        // 单字点击事件
+        document.querySelectorAll('.char').forEach(char => {
+            char.addEventListener('click', function() {
+                const popup = document.getElementById('charPopup');
+                popup.querySelector('.popup-char').textContent = this.textContent;
+                popup.querySelector('.popup-pinyin').textContent = `拼音: ${this.dataset.pinyin}`;
+                popup.querySelector('.popup-meaning').textContent = `释义: ${this.dataset.meaning}`;
+                popup.style.display = 'block';
+            });
+        });
+        
+        // 关闭弹出窗口
+        function closePopup() {
+            document.getElementById('charPopup').style.display = 'none';
+        }
+        
+        // 段落朗读功能
+        let currentParagraphUtterances = [];
+        let currentReadingParagraph = null;
+        
+        function speakParagraph(btn) {
+            const paragraph = btn.closest('.paragraph');
+            
+            // 如果正在朗读当前段落，停止
+            if (currentReadingParagraph === paragraph && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                btn.textContent = '🔊';
+                currentReadingParagraph = null;
+                return;
+            }
+            
+            // 如果正在朗读其他段落，先停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                resetAllSentenceHighlights();
+                document.querySelectorAll('.control-btn').forEach(b => {
+                    if (b.textContent === '⏹') b.textContent = '🔊';
+                });
+            }
+            
+            // 开始朗读新段落
+            currentReadingParagraph = paragraph;
+            btn.textContent = '⏹';
+            
+            const sentences = paragraph.querySelectorAll('.sentence');
+            currentParagraphUtterances = [];
+            
+            // 准备所有句子语音
+            sentences.forEach((sentence, index) => {
+                let sentenceText = '';
+                sentence.querySelectorAll('.char').forEach(char => {
+                    if (!char.classList.contains('punctuation') || 
+                        ['，', '。', '！', '？', '：', '；'].includes(char.textContent)) {
+                        sentenceText += char.textContent;
+                    }
+                });
+                
+                const utterance = new SpeechSynthesisUtterance(sentenceText);
+                utterance.lang = 'zh-TW';
+                utterance.rate = 0.8;
+                
+                utterance.onstart = function() {
+                    resetAllSentenceHighlights();
+                    sentence.classList.add('active');
+                    
+                    // 滚动到当前句子
+                    sentence.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                };
+                
+                utterance.onend = function() {
+                    if (index === sentences.length - 1) {
+                        btn.textContent = '🔊';
+                        currentReadingParagraph = null;
+                    }
+                };
+                
+                currentParagraphUtterances.push(utterance);
+            });
+            
+            // 按顺序朗读所有句子
+            currentParagraphUtterances.forEach((utterance, index) => {
+                // 设置延迟，使句子之间有自然停顿
+                if (index > 0) {
+                    const prevDuration = currentParagraphUtterances[index-1].text.length * 100; // 估算前一句持续时间
+                    utterance.startTime = Date.now() + prevDuration + 300; // 300ms额外停顿
+                }
+                window.speechSynthesis.speak(utterance);
+            });
+        }
+        
+        // 朗读白话文解释
+        function speakPlainChinese(btn) {
+            const paragraph = btn.closest('.paragraph');
+            const plainText = paragraph.querySelector('.plain-chinese p').textContent;
+            
+            // 如果正在朗读，停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                btn.textContent = '🗣️';
+                return;
+            }
+            
+            btn.textContent = '⏹';
+            
+            const utterance = new SpeechSynthesisUtterance(plainText);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.9;
+            
+            utterance.onend = function() {
+                btn.textContent = '🗣️';
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 朗读翻译文本
+        function speakTranslation(lang, btn) {
+            const translationDiv = btn.closest('.translation-content').querySelector(`div[lang="${lang}"]`);
+            const translationText = Array.from(translationDiv.querySelectorAll('p')).map(p => p.textContent).join(' ');
+            
+            // 如果正在朗读，停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                btn.textContent = '🔊';
+                return;
+            }
+            
+            btn.textContent = '⏹';
+            
+            const utterance = new SpeechSynthesisUtterance(translationText);
+            utterance.lang = getLanguageCode(lang);
+            utterance.rate = 0.9;
+            
+            utterance.onend = function() {
+                btn.textContent = '🔊';
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 获取语言代码
+        function getLanguageCode(lang) {
+            const codes = {
+                'en': 'en-US',
+                'de': 'de-DE',
+                'fr': 'fr-FR',
+                'ru': 'ru-RU',
+                'es': 'es-ES',
+                'it': 'it-IT',
+                'el': 'el-GR',
+                'tr': 'tr-TR'
+            };
+            return codes[lang] || 'en-US';
+        }
+        
+        function resetAllSentenceHighlights() {
+            document.querySelectorAll('.sentence').forEach(s => {
+                s.classList.remove('active');
+            });
+        }
+        
+        // 显示/隐藏注释面板
+        function toggleAnnotationPanel(btn) {
+            const annotation = btn.nextElementSibling;
+            if (annotation.style.display === 'block') {
+                annotation.style.display = 'none';
+                btn.textContent = '顯示註釋';
+            } else {
+                annotation.style.display = 'block';
+                btn.textContent = '隱藏註釋';
+            }
+        }
+        
+        // 显示/隐藏翻译面板
+        function toggleTranslationPanel(btn) {
+            const panel = btn.closest('.paragraph').querySelector('.translation-panel');
+            if (panel.style.display === 'block') {
+                panel.style.display = 'none';
+            } else {
+                panel.style.display = 'block';
+            }
+        }
+        
+        // 切换翻译语言
+        function showTranslation(btn, lang) {
+            const panel = btn.closest('.translation-panel').querySelector('.translation-content');
+            panel.querySelectorAll('div').forEach(div => {
+                div.classList.remove('show');
+            });
+            panel.querySelector(`div[lang="${lang}"]`).classList.add('show');
+            
+            // 更新按钮状态
+            btn.closest('.translation-panel').querySelectorAll('.lang-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+        
+        // 点击空白处关闭弹出窗口
+        window.addEventListener('click', function(event) {
+            if (event.target === document.getElementById('charPopup')) {
+                closePopup();
+            }
+        });
+    </script>
+</body>
+</html>
