@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>西游汉字探秘</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .sentence {
+      margin-bottom: 10px;
+      font-size: 48px;
+    }
+    .char {
+      display: inline-block;
+      margin: 5px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      user-select: none;
+    }
+    .char.known {
+      background-color: #eee;
+      color: #888;
+      pointer-events: none;
+    }
+    .box {
+      width: 200px;
+      min-height: 100px;
+      border: 2px dashed #666;
+      margin: 10px;
+      padding: 10px;
+      display: inline-block;
+      vertical-align: top;
+      overflow-y: auto;
+      max-height: 300px;
+    }
+    .box h3, .box h4 {
+      margin: 0 0 10px 0;
+    }
+    #structure-container {
+      display: flex;
+      gap: 20px;
+    }
+    #structure-container .box {
+      width: 600px;
+    }
+    #structure-container img {
+      width: 100px;
+      height: auto;
+      margin-bottom: 5px;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 18px;
+      color: green;
+    }
+    .info {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #333;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .word-display {
+      font-size: 20px;
+    }
+    .phrase-display {
+      font-size: 72px;
+      line-height: 2.2;
+    }
+    #nextButton, #skipButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>西游汉字探秘：闯关学汉字</h1>
+  <p>多次点击原文汉字，有惊喜！Click characters multiple times to discover surprises!</p>
+
+  <div class="sentence" id="sentence"></div>
+  <button id="readSentenceBtn">🔊 朗读整句</button>
+  <button id="nextButton">下一句</button>
+  <button id="skipButton">跳过此句</button>
+  <div class="info" id="charInfo"></div>
+
+  <div id="structure-container">
+    <div class="box" id="singleBox" ondragover="allowDrop(event)" ondrop="drop(event, 'single')">
+      <h3>独体字</h3>
+    </div>
+    <div class="box" id="structure-updown" ondragover="allowDrop(event)" ondrop="drop(event, 'updown')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/f1/%E4%B8%8A%E4%B8%8B%E7%BB%93%E6%9E%84.svg" alt="上下结构">
+      <h4>上下结构 (Top-Bottom Structure)</h4>
+    </div>
+    <div class="box" id="structure-leftright" ondragover="allowDrop(event)" ondrop="drop(event, 'leftright')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/1/1f/%E5%B7%A6%E5%8F%B3%E7%BB%93%E6%9E%84.svg" alt="左右结构">
+      <h4>左右结构 (Left-Right Structure)</h4>
+    </div>
+    <div class="box" id="structure-enclose" ondragover="allowDrop(event)" ondrop="drop(event, 'enclose')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/0e/%E5%8C%85%E5%9B%B4%E7%BB%93%E6%9E%84.svg" alt="包围结构">
+      <h4>包围结构 (Enclosed Structure)</h4>
+    </div>
+  </div>
+
+  <div id="feedback"></div>
+
+  <script>
+    const sentences = [
+      "却说那长老与八戒挑着行李，牵着马，慢慢的走。",
+      "忽听得松林背后有人叫道：“那挑担的且慢走！”",
+      "原来是那村中猎户，曾见过八戒相貌。",
+      "忙赶上叫道：“长老，那里去？”",
+      "三藏欠身答道：“上西天去。”",
+      "那人道：“西天路上多虎狼，须得多人护送方可。”",
+      "三藏道：“贫僧只求取经，不辞辛苦。”",
+      "那人又道：“你可要吃斋否？”",
+      "三藏答道：“斋戒为本。”",
+      "八戒道：“师父，天色晚了，前面有个村子，不如借宿一宿。”",
+      "三藏道：“也好。”",
+      "于是师徒四人进村借宿。",
+      "村人见他们是僧人，欣然接待。",
+      "晚饭后，三藏问：“村中有寺庙否？”",
+      "村人答：“有个小庙，破旧了。”",
+      "八戒道：“破也无妨，可避风雨。”",
+      "当晚师徒便宿于庙中。"
+    ];
+
+    let currentSentenceIndex = 0;
+    let knownChars = new Set();
+    const clickState = {};
+    const sentenceDiv = document.getElementById('sentence');
+    const infoBox = document.getElementById('charInfo');
+    const nextButton = document.getElementById('nextButton');
+    const readSentenceBtn = document.getElementById('readSentenceBtn');
+    const skipButton = document.getElementById('skipButton');
+
+    function renderSentence() {
+      sentenceDiv.innerHTML = '';
+      knownChars.clear();
+      const sentence = sentences[currentSentenceIndex];
+      for (const char of sentence.replace(/[，。：“”！]/g, '')) {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = char;
+        span.setAttribute('draggable', 'true');
+        span.setAttribute('data-char', char);
+        span.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', char);
+        });
+        span.addEventListener('click', () => handleCharClick(span, char));
+        sentenceDiv.appendChild(span);
+      }
+    }
+
+    function handleCharClick(span, ch) {
+      if (!clickState[ch]) clickState[ch] = 0;
+      clickState[ch]++;
+      const count = clickState[ch];
+
+      if (count === 1) {
+        speakChar(ch);
+      } else if (count === 2) {
+        infoBox.innerHTML = `<div class='word-display'>拼音：${getPinyin(ch)}</div>`;
+      } else if (count === 3) {
+        speakText(`拼音是${getPinyin(ch)}`);
+      }
+    }
+
+    function getPinyin(char) {
+      const fakeDict = {
+        '风': 'fēng', '花': 'huā', '马': 'mǎ', '鱼': 'yú', '光': 'guāng', '鸟': 'niǎo',
+        '那': 'nà', '长': 'cháng', '老': 'lǎo', '与': 'yǔ', '八': 'bā', '戒': 'jiè',
+        '挑': 'tiāo', '着': 'zhe', '行': 'xíng', '李': 'lǐ', '牵': 'qiān', '慢': 'màn', '走': 'zǒu'
+      };
+      return fakeDict[char] || '拼音';
+    }
+
+    function speakChar(char) {
+      const utter = new SpeechSynthesisUtterance(char);
+      utter.lang = 'zh-CN';
+      utter.rate = 0.75;
+      speechSynthesis.speak(utter);
+    }
+
+    function speakText(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'zh-CN';
+      utter.rate = 0.75;
+      speechSynthesis.speak(utter);
+    }
+
+    function allowDrop(e) {
+      e.preventDefault();
+    }
+
+    function drop(e, type) {
+      e.preventDefault();
+      const char = e.dataTransfer.getData('text');
+      if (knownChars.has(char)) return;
+      knownChars.add(char);
+
+      const el = document.createElement('div');
+      el.textContent = char;
+      el.style.fontSize = '20px';
+      el.style.padding = '5px';
+      el.style.cursor = 'default';
+      el.style.pointerEvents = 'none';
+      e.target.appendChild(el);
+
+      const allChars = document.querySelectorAll('.char');
+      allChars.forEach(span => {
+        if (span.textContent === char) {
+          span.classList.add('known');
+          span.draggable = false;
+        }
+      });
+
+      const total = knownChars.size;
+      if (total >= 10) {
+        const reward = document.getElementById('feedback');
+        reward.innerHTML = '🎉 分类正确！Well done!';
+        setTimeout(() => {
+          reward.innerHTML = '';
+          currentSentenceIndex++;
+          if (currentSentenceIndex < sentences.length) renderSentence();
+        }, 1000);
+      }
+    }
+
+    nextButton.addEventListener('click', () => {
+      if (currentSentenceIndex < sentences.length - 1) {
+        currentSentenceIndex++;
+        renderSentence();
+      }
+    });
+
+    skipButton.addEventListener('click', () => {
+      if (currentSentenceIndex < sentences.length - 1) {
+        currentSentenceIndex++;
+        renderSentence();
+      }
+    });
+
+    readSentenceBtn.addEventListener('click', () => {
+      const text = sentences[currentSentenceIndex];
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'zh-CN';
+      utter.rate = 0.75;
+      speechSynthesis.speak(utter);
+    });
+
+    renderSentence();
+  </script>
+</body>
+</html>

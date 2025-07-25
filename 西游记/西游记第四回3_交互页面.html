@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>第四回 第三段</title>
+  <style>
+    body {
+      background-color: #4b3621;
+      color: #f5f5dc;
+      font-family: serif;
+      padding: 2em;
+      font-size: 2em;
+    }
+    .line {
+      margin-bottom: 1em;
+      position: relative;
+    }
+    .char {
+      cursor: pointer;
+      padding: 0 2px;
+      position: relative;
+    }
+    .char:hover::after {
+      content: attr(data-pinyin);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #222;
+      color: #fff;
+      padding: 2px 5px;
+      font-size: 0.8em;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .popup {
+      display: none;
+      position: absolute;
+      background: #333;
+      color: #fff;
+      padding: 5px;
+      border-radius: 4px;
+      top: 1.5em;
+      left: 0;
+      z-index: 100;
+      font-size: 0.9em;
+    }
+    .translation {
+      display: none;
+      margin-top: 0.5em;
+      font-size: 0.9em;
+      background: #3a2f1d;
+      padding: 0.5em;
+    }
+    .highlight {
+      background: #a0522d;
+    }
+    button {
+      margin-left: 0.5em;
+      background: #eedc82;
+      color: #333;
+      font-weight: normal;
+      border: none;
+      padding: 1.5px 3px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 0.425em;
+    }
+    button:hover {
+      background: #d2b48c;
+    }
+    .lang-btn {
+      margin-left: 0.4em;
+      font-size: 0.75em;
+      background: #eedc82;
+      color: #333;
+      padding: 0.3em 0.8em;
+      border-radius: 1em;
+      border: none;
+      cursor: pointer;
+    }
+    .lang-btn.selected {
+      background: #a0522d;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <h2>第四回 官封弼马心何足 名注齐天意未宁</h2>
+  <h3>—— 第三段</h3>
+  <div style="font-size:1em;color:#eedc82;margin-bottom:1.2em">pinyin translation and read out</div>
+  <button onclick="toggleFullReading(this)">全文朗读</button>
+  <div id="content"></div>
+  <div id="popup" class="popup"></div>
+
+<script>
+// -- 句子与多语翻译 --
+const lines = [
+  "当时猴王欢欢喜喜，与木德星官径去到任。",
+  "事毕，木德回宫。",
+  "他在监里，会聚了监丞、监副、典簿、力士大小官员人等，查明本监事务，止有天马千匹。",
+  "这猴王查看了文簿，点明了马数。",
+  "本监中典簿管征备草料；力士官管刷洗马匹、扎草、饮水、煮料；监丞、监副辅佐催办；弼马昼夜不睡，滋养马匹。",
+  "日间舞弄犹可，夜间看管殷勤：但是马睡的，赶起来吃草；走的捉将来靠槽。",
+  "那些天马见了他，泯耳攒蹄，都养得肉肥膘满。",
+  "不觉的半月有馀。",
+  "一朝闲暇，众监官都安排酒席，一则与他接风，一则与他贺喜。",
+  "正在欢饮之间，猴王忽停杯问曰：“我这‘弼马温’，是个甚么官衔？”",
+  "众曰：“官名就是此了。”",
+  "又问：“此官是个几品？”",
+  "众道：“没有品从。”",
+  "猴王道：“没品，想是大之极也。”",
+  "众道：“不大，不大，只唤做‘未入流’。”",
+  "猴王道：“怎么叫做‘未入流’？”",
+  "众道：“末等。这样官儿，最低最小，只可与他看马。",
+  "似堂尊到任之后，这等殷勤，喂得马肥，只落得道声‘好’字；如稍有些尪羸，还要见责；再十分伤损，还要罚赎问罪。”",
+  "猴王闻此，不觉心头火起，咬牙大怒道：“这般渺视老孙！老孙在那花果山，称王称祖，怎么哄我来替他养马？养马者，乃后生小辈下贱之役，岂是待我的！不做他！不做他！我将去也！”",
+  "忽辣的一声，把公案推倒，耳中取出宝贝，幌一幌，碗来粗细，一路解数，直打出御马监，径至南天门。",
+  "众天丁知他受了仙箓，乃是个弼马温，不敢阻当，让他打出天门去了。"
+];
+
+const translationData = [
+  {zh: "当时猴王欢欢喜喜，与木德星官径去到任。", en: "At that time, the Monkey King happily went with the Star Officer of Wood Virtue straight to take up his post.", de: "Damals ging der Affenkönig voller Freude mit dem Holz-Sternbeamten direkt zur Amtsübernahme.", fr: "À ce moment-là, le Roi Singe suivit joyeusement le fonctionnaire de l’Étoile du Bois pour prendre son poste.", es: "En ese momento, el Rey Mono, feliz, fue con el Oficial Estrella de la Virtud de la Madera directamente a su cargo.", it: "In quel momento il Re Scimmia andò felice con l’Ufficiale della Stella del Legno a prendere servizio.", ru: "В то время Царь обезьян с радостью вместе со звездным чиновником Дерева отправился занять должность."},
+  {zh: "事毕，木德回宫。", en: "After everything was done, the Star Officer of Wood Virtue returned to the palace.", de: "Nachdem alles erledigt war, kehrte der Holz-Sternbeamte in den Palast zurück.", fr: "Une fois l’affaire réglée, le fonctionnaire de l’Étoile du Bois retourna au palais.", es: "Terminado el asunto, el Oficial de la Madera regresó al palacio.", it: "Finito tutto, l’Ufficiale della Stella del Legno tornò a palazzo.", ru: "После завершения всех дел чиновник Дерева вернулся во дворец."},
+  {zh: "他在监里，会聚了监丞、监副、典簿、力士大小官员人等，查明本监事务，止有天马千匹。", en: "In the stables, he gathered all the officials—assistant supervisors, deputies, clerks, and workers—checked all the affairs, and found that there were only a thousand heavenly horses.", de: "Im Stall versammelte er alle Beamten – Aufseher, Stellvertreter, Buchhalter und Arbeiter –, prüfte die Geschäfte und stellte fest, dass es nur tausend Himmelsrösser gab.", fr: "Dans les écuries, il réunit tous les responsables, vérifia les affaires et constata qu’il n’y avait que mille chevaux célestes.", es: "En las caballerizas reunió a todos los funcionarios, revisó los asuntos y vio que solo había mil caballos celestiales.", it: "Nelle scuderie riunì tutti i funzionari, controllò gli affari e trovò che c’erano solo mille cavalli celesti.", ru: "В конюшне он собрал всех чиновников — помощников, заместителей, писарей и работников — проверил дела и обнаружил, что имеется только тысяча небесных коней."},
+  {zh: "这猴王查看了文簿，点明了马数。", en: "The Monkey King checked the records and confirmed the number of horses.", de: "Der Affenkönig prüfte die Bücher und bestätigte die Anzahl der Pferde.", fr: "Le Roi Singe examina les registres et confirma le nombre de chevaux.", es: "El Rey Mono revisó los libros y comprobó el número de caballos.", it: "Il Re Scimmia controllò i registri e confermò il numero di cavalli.", ru: "Царь обезьян проверил ведомости и пересчитал количество лошадей."},
+  {zh: "本监中典簿管征备草料；力士官管刷洗马匹、扎草、饮水、煮料；监丞、监副辅佐催办；弼马昼夜不睡，滋养马匹。", en: "In the stables, the clerk managed the forage; the workers cleaned the horses, prepared grass, gave water, cooked feed; assistant and deputy supervisors helped oversee; and the Bimawen (Stable Supervisor) stayed up day and night to care for the horses.", de: "Im Amt verwaltete der Buchhalter das Futter; die Arbeiter putzten die Pferde, banden Gras, gaben Wasser, kochten Futter; die Aufseher und Stellvertreter halfen; und der Bimawen (Stallmeister) blieb Tag und Nacht wach, um die Pferde zu versorgen.", fr: "Dans ces écuries, le greffier s’occupait du fourrage; les travailleurs brossaient les chevaux, préparaient l’herbe, donnaient de l’eau, faisaient cuire la nourriture; les assistants supervisaient; et le Bimawen veillait jour et nuit à l’entretien des chevaux.", es: "En estas caballerizas, el secretario preparaba el forraje; los trabajadores limpiaban los caballos, preparaban el pasto, les daban agua, cocinaban la comida; los supervisores ayudaban; y el Bimawen (supervisor) velaba día y noche por los caballos.", it: "In queste scuderie il segretario si occupava del foraggio; i lavoratori lavavano i cavalli, preparavano l’erba, davano l’acqua, cucinavano il cibo; i supervisori aiutavano; e il Bimawen vegliava giorno e notte sui cavalli.", ru: "В этих конюшнях писарь отвечал за корм; работники чистили лошадей, вязали сено, поили, готовили еду; помощники следили за порядком; а Бимавэнь (главный смотритель) не спал ни днем ни ночью, ухаживая за конями."},
+  {zh: "日间舞弄犹可，夜间看管殷勤：但是马睡的，赶起来吃草；走的捉将来靠槽。", en: "During the day, it was acceptable to play around; at night, he watched over the horses attentively: if a horse was sleeping, he made it get up to eat grass; if one was walking, he caught it and brought it to the trough.", de: "Tagsüber konnte man spielen, nachts wurde sorgfältig überwacht: schlafende Pferde wurden geweckt, um zu fressen; laufende wurden eingefangen und an die Krippe gebracht.", fr: "Le jour, il pouvait s’amuser, la nuit il surveillait avec soin : les chevaux qui dormaient étaient réveillés pour manger ; ceux qui marchaient étaient ramenés à l’auge.", es: "Durante el día se podía distraer, pero de noche vigilaba atentamente: si algún caballo dormía, lo despertaba para comer; si andaba, lo llevaba al comedero.", it: "Di giorno poteva anche distrarsi, di notte vigilava con cura: i cavalli che dormivano venivano svegliati per mangiare; quelli che camminavano venivano riportati alla mangiatoia.", ru: "Днем можно было развлекаться, ночью он внимательно следил: спящих лошадей поднимал есть, гуляющих гнал к кормушке."},
+  {zh: "那些天马见了他，泯耳攒蹄，都养得肉肥膘满。", en: "Those heavenly horses, upon seeing him, laid back their ears and stamped their hooves; all of them grew fat and healthy.", de: "Die Himmelsrösser legten bei seinem Anblick die Ohren an und scharrten mit den Hufen; sie wurden alle fett und kräftig.", fr: "Les chevaux célestes, en le voyant, couchaient les oreilles et tapaient du sabot ; ils devinrent tous gras et vigoureux.", es: "Los caballos celestiales, al verlo, agachaban las orejas y golpeaban el suelo; todos se pusieron gordos y sanos.", it: "I cavalli celesti, vedendolo, abbassavano le orecchie e battevano gli zoccoli; diventarono tutti grassi e forti.", ru: "Те небесные кони, завидев его, прижимали уши и стучали копытами; все откормились до упитанности."},
+  {zh: "不觉的半月有馀。", en: "Unconsciously, more than half a month passed.", de: "Unbemerkt verging mehr als ein halber Monat.", fr: "Sans s’en apercevoir, plus de quinze jours passèrent.", es: "Sin darse cuenta, pasó más de medio mes.", it: "Senza accorgersene, passò più di mezzo mese.", ru: "Незаметно прошла больше половины месяца."},
+  {zh: "一朝闲暇，众监官都安排酒席，一则与他接风，一则与他贺喜。", en: "One day, during leisure, all the officials arranged a banquet, both to welcome him and to congratulate him.", de: "Eines Tages, in einer ruhigen Stunde, organisierten alle Aufseher ein Bankett, um ihn willkommen zu heißen und zu beglückwünschen.", fr: "Un jour de loisir, tous les responsables organisèrent un banquet, à la fois pour l’accueillir et le féliciter.", es: "Un día, durante el descanso, todos los funcionarios organizaron un banquete para darle la bienvenida y felicitarlo.", it: "Un giorno, nel tempo libero, tutti i funzionari organizzarono un banchetto per dargli il benvenuto e congratularsi.", ru: "Однажды на досуге все чиновники устроили пир — и чтобы поприветствовать, и чтобы поздравить его."},
+  {zh: "正在欢饮之间，猴王忽停杯问曰：“我这‘弼马温’，是个甚么官衔？”", en: "While drinking happily, the Monkey King suddenly put down his cup and asked: 'This Bimawen (Stable Supervisor), what kind of official title is it?'", de: "Beim fröhlichen Trinken legte der Affenkönig plötzlich den Becher ab und fragte: 'Dieser Bimawen – was für ein Amt ist das?'", fr: "Au cours du banquet, le Roi Singe posa soudain sa coupe et demanda : 'Ce poste de Bimawen, quel rang est-ce ?'", es: "En medio del banquete, el Rey Mono dejó de beber y preguntó: '¿Este Bimawen, qué tipo de cargo es?'", it: "Durante il banchetto, il Re Scimmia posò la coppa e chiese: 'Questo Bimawen, che carica è?'", ru: "Во время пира Царь обезьян вдруг остановил чашу и спросил: «Этот Бимавэнь — что за должность?»"},
+  {zh: "众曰：“官名就是此了。”", en: "They replied: 'That is the official title.'", de: "Sie antworteten: 'Das ist der Amtstitel.'", fr: "On répondit : 'C’est simplement ce titre.'", es: "Le respondieron: 'Ese es el nombre del cargo.'", it: "Risposero: 'Questo è il titolo ufficiale.'", ru: "Они ответили: «Это и есть должность»."},
+  {zh: "又问：“此官是个几品？”", en: "He asked again: 'What rank is this official?'", de: "Er fragte weiter: 'Welchen Rang hat dieses Amt?'", fr: "Il demanda encore : 'Quel rang ce poste a-t-il ?'", es: "Preguntó de nuevo: '¿De qué rango es este cargo?'"}, 
+  {zh: "众道：“没有品从。”",
+    en: "They answered: 'It has no official grade.'",
+    de: "Sie erwiderten: 'Es hat keinen Rang.'",
+    fr: "On répondit : 'Il n’y a pas de grade.'",
+    es: "Respondieron: 'No tiene rango.'",
+    it: "Risposero: 'Non ha grado.'",
+    ru: "Ответили: «Не имеет чина»."
+  },
+  {
+    zh: "猴王道：“没品，想是大之极也。”",
+    en: "The Monkey King said: 'No grade? Then it must be of the highest!'",
+    de: "Der Affenkönig meinte: 'Kein Rang? Dann ist es wohl das höchste!'",
+    fr: "Le Roi Singe dit : 'Pas de grade ? Alors c’est le plus haut !'",
+    es: "El Rey Mono dijo: '¿Sin rango? Entonces debe ser el mayor.'",
+    it: "Il Re Scimmia disse: 'Nessun grado? Allora sarà il più alto!'",
+    ru: "Царь обезьян сказал: «Без чина? Значит, высший!»"
+  },
+  {
+    zh: "众道：“不大，不大，只唤做‘未入流’。”",
+    en: "They said: 'Not high, not high, just called 'not in the ranks'.'",
+    de: "Sie sagten: 'Nein, nein, das heißt nur: nicht in der Rangliste.'",
+    fr: "On répondit : 'Non, non, c’est ce qu’on appelle “non classé”.'",
+    es: "Respondieron: 'No, no, solo se llama 'fuera de los rangos'.'",
+    it: "Risposero: 'No, no, si chiama 'fuori dal rango'.'",
+    ru: "Ответили: «Нет, нет, это называют “вне рангов”»."
+  },
+  {
+    zh: "猴王道：“怎么叫做‘未入流’？”",
+    en: "The Monkey King said: 'Why is it called 'not in the ranks'?'",
+    de: "Der Affenkönig fragte: 'Warum heißt es nicht in der Rangliste?'",
+    fr: "Le Roi Singe demanda : 'Pourquoi l’appelle-t-on “non classé” ?'",
+    es: "El Rey Mono preguntó: '¿Por qué se llama 'fuera de los rangos'?'",
+    it: "Il Re Scimmia chiese: 'Perché si chiama 'fuori dal rango'?'",
+    ru: "Царь обезьян спросил: «Почему называется 'вне рангов'?»"
+  },
+  {
+    zh: "众道：“末等。这样官儿，最低最小，只可与他看马。",
+    en: "They replied: 'It is the lowest. Such an official is the lowest of all, only fit to watch the horses.'",
+    de: "Sie antworteten: 'Es ist die niedrigste Stufe. So ein Amt ist das allerniedrigste, nur für die Pferde.'",
+    fr: "On répondit : 'C’est le plus bas. Ce genre de poste est le plus humble, seulement pour garder les chevaux.'",
+    es: "'Es el rango más bajo. Solo sirve para cuidar caballos.'",
+    it: "Risposero: 'È il grado più basso. Serve solo a guardare i cavalli.'",
+    ru: "Ответили: «Это самый низкий чин. Только присматривать за лошадьми»."
+  },
+  {
+    zh: "似堂尊到任之后，这等殷勤，喂得马肥，只落得道声‘好’字；如稍有些尪羸，还要见责；再十分伤损，还要罚赎问罪。”",
+    en: "If after taking office you are diligent and the horses get fat, at most you'll get a 'good' as praise; if some are thin, you will be blamed; if many are harmed, you'll be punished.",
+    de: "Selbst wenn du dich bemühst und die Pferde fett werden, heißt es nur 'gut'; sind einige mager, wirst du getadelt; gibt es viele Verluste, wirst du bestraft.",
+    fr: "Si, après votre prise de fonction, vous êtes diligent et que les chevaux engraissent, tout ce que vous recevrez sera un 'bien' ; s’ils sont maigres, vous serez blâmé ; s’il y a beaucoup de pertes, vous serez puni.",
+    es: "Si después de asumir el cargo los caballos engordan, solo recibirás un 'bien'; si algunos están flacos, serás reprendido; si hay muchas bajas, serás castigado.",
+    it: "Se dopo aver assunto la carica i cavalli ingrassano, riceverai solo un 'bene'; se sono magri, sarai rimproverato; se ci sono molti danni, sarai punito.",
+    ru: "Если после назначения будешь усерден, а кони станут толстыми — максимум скажут 'хорошо'; если худые — упрекнут; если много погибнет — накажут."
+  },
+  {
+    zh: "猴王闻此，不觉心头火起，咬牙大怒道：“这般渺视老孙！老孙在那花果山，称王称祖，怎么哄我来替他养马？养马者，乃后生小辈下贱之役，岂是待我的！不做他！不做他！我将去也！”",
+    en: "Hearing this, the Monkey King became furious: 'So you look down on Old Sun! On Flower-Fruit Mountain, I was king and ancestor, how could you trick me into raising horses? Raising horses is a menial job for youngsters, not for me! I quit! I quit! I'm leaving!'",
+    de: "Als der Affenkönig das hörte, wurde er wütend: 'So verachtet ihr den alten Sun! Auf dem Blumen-und-Früchte-Berg war ich König, wie konntet ihr mich zum Stallburschen machen? Pferdehüten ist für niedrige Leute, nichts für mich! Ich mache das nicht! Ich gehe!'",
+    fr: "En entendant cela, le Roi Singe se mit en colère : 'Ainsi vous méprisez le vieux Sun ! Sur la Montagne des Fleurs et des Fruits, j’étais roi, comment osez-vous me faire soigner les chevaux ? Ce travail n’est pas pour moi ! Je refuse ! Je m’en vais !'",
+    es: "Al oír esto, el Rey Mono se enfureció: '¡Así menospreciáis al viejo Sun! En la Montaña de las Flores y Frutas era rey, ¿cómo me engañaron para cuidar caballos? ¡Eso es para los más bajos! ¡No lo hago! ¡Me voy!'",
+    it: "Sentendo questo, il Re Scimmia si infuriò: 'Così disprezzate il vecchio Sun! Sulla Montagna dei Fiori e dei Frutti ero re, come avete potuto farmi accudire i cavalli? Non è un lavoro per me! Non lo faccio! Me ne vado!'",
+    ru: "Услышав это, Царь обезьян разозлился: «Так презираете старого Сунь! На Цветочно-Фруктовой горе я был царём, а меня заставили лошадей пасти? Это работа для низших, не для меня! Не буду! Ухожу!»"
+  },
+  {
+    zh: "忽辣的一声，把公案推倒，耳中取出宝贝，幌一幌，碗来粗细，一路解数，直打出御马监，径至南天门。",
+    en: "With a loud crash, he overturned the desk, took his treasure from his ear, waved it, and fought his way out of the Imperial Stables straight to the Southern Gate of Heaven.",
+    de: "Mit einem lauten Knall warf er den Tisch um, nahm seinen Schatz aus dem Ohr, schwang ihn und kämpfte sich direkt aus den kaiserlichen Ställen bis zum Südtor des Himmels.",
+    fr: "D’un bruit sec, il renversa la table, sortit son trésor de l’oreille, le fit tournoyer et se fraya un chemin hors des écuries impériales jusqu’à la porte sud du ciel.",
+    es: "Con un fuerte ruido, volcó la mesa, sacó su tesoro de la oreja, lo agitó y salió luchando de las caballerizas imperiales hasta la Puerta Sur del Cielo.",
+    it: "Con un forte rumore rovesciò la scrivania, prese il tesoro dall’orecchio, lo fece roteare e si fece strada fuori dalle scuderie imperiali fino alla Porta Sud del Cielo.",
+    ru: "С грохотом опрокинул стол, вынул сокровище из уха, взмахнул им и прорвался из императорских конюшен прямо к Южным вратам Неба."
+  },
+  {
+    zh: "众天丁知他受了仙箓，乃是个弼马温，不敢阻当，让他打出天门去了。",
+    en: "The heavenly guards, knowing he had received the immortal register and was a Bimawen, dared not stop him and let him go out through the gate.",
+    de: "Die Himmelswächter, die wussten, dass er ein Bimawen mit Unsterblichkeitsregister war, wagten nicht, ihn aufzuhalten, und ließen ihn durch das Tor.",
+    fr: "Les gardes célestes, sachant qu’il avait reçu le titre d’immortel comme Bimawen, n’osèrent l’arrêter et le laissèrent sortir.",
+    es: "Los guardianes celestiales, sabiendo que era un Bimawen con registro inmortal, no se atrevieron a detenerlo y lo dejaron salir por la puerta.",
+    it: "Le guardie celesti, sapendo che aveva ricevuto il registro degli immortali ed era un Bimawen, non osarono fermarlo e lo lasciarono uscire.",
+    ru: "Небесные стражи, зная что он — Бимавэнь с бессмертным статусом, не посмели остановить и пропустили его за ворота."
+  }
+  ];
+
+const pinyinMap = {
+  '当': 'dāng',
+  '时': 'shí',
+  '猴': 'hóu',
+  '王': 'wáng',
+  '欢': 'huān',
+  '喜': 'xǐ',
+  '与': 'yǔ',
+  '木': 'mù',
+  '德': 'dé',
+  '星': 'xīng',
+  '官': 'guān',
+  '径': 'jìng',
+  '去': 'qù',
+  '到': 'dào',
+  '任': 'rèn',
+  '事': 'shì',
+  '毕': 'bì',
+  '回': 'huí',
+  '宫': 'gōng',
+  '他': 'tā',
+  '在': 'zài',
+  '监': 'jiān',
+  '里': 'lǐ',
+  '会': 'huì',
+  '聚': 'jù',
+  '了': 'le',
+  '丞': 'chéng',
+  '副': 'fù',
+  '典': 'diǎn',
+  '簿': 'bù',
+  '力': 'lì',
+  '士': 'shì',
+  '大': 'dà',
+  '小': 'xiǎo',
+  '员': 'yuán',
+  '人': 'rén',
+  '等': 'děng',
+  '查': 'chá',
+  '明': 'míng',
+  '本': 'běn',
+  '务': 'wù',
+  '止': 'zhǐ',
+  '有': 'yǒu',
+  '天': 'tiān',
+  '马': 'mǎ',
+  '千': 'qiān',
+  '匹': 'pǐ',
+  '这': 'zhè',
+  '查': 'chá',
+  '看': 'kàn',
+  '文': 'wén',
+  '点': 'diǎn',
+  '数': 'shù',
+  '中': 'zhōng',
+  '管': 'guǎn',
+  '征': 'zhēng',
+  '备': 'bèi',
+  '草': 'cǎo',
+  '料': 'liào',
+  '刷': 'shuā',
+  '洗': 'xǐ',
+  '扎': 'zhā',
+  '饮': 'yǐn',
+  '水': 'shuǐ',
+  '煮': 'zhǔ',
+  '辅': 'fǔ',
+  '佐': 'zuǒ',
+  '催': 'cuī',
+  '办': 'bàn',
+  '弼': 'bì',
+  '温': 'wēn',
+  '昼': 'zhòu',
+  '夜': 'yè',
+  '不': 'bù',
+  '睡': 'shuì',
+  '滋': 'zī',
+  '养': 'yǎng',
+  '日': 'rì',
+  '间': 'jiān',
+  '舞': 'wǔ',
+  '弄': 'nòng',
+  '犹': 'yóu',
+  '可': 'kě',
+  '看': 'kàn',
+  '管': 'guǎn',
+  '殷': 'yīn',
+  '勤': 'qín',
+  '但': 'dàn',
+  '是': 'shì',
+  '睡': 'shuì',
+  '的': 'de',
+  '赶': 'gǎn',
+  '起': 'qǐ',
+  '来': 'lái',
+  '吃': 'chī',
+  '走': 'zǒu',
+  '捉': 'zhuō',
+  '将': 'jiāng',
+  '靠': 'kào',
+  '槽': 'cáo',
+  '那': 'nà',
+  '些': 'xiē',
+  '泯': 'mǐn',
+  '耳': 'ěr',
+  '攒': 'cuán',
+  '蹄': 'tí',
+  '都': 'dōu',
+  '得': 'dé',
+  '肉': 'ròu',
+  '肥': 'féi',
+  '膘': 'biāo',
+  '满': 'mǎn',
+  '觉': 'jué',
+  '半': 'bàn',
+  '月': 'yuè',
+  '馀': 'yú',
+  '一': 'yī',
+  '朝': 'zhāo',
+  '闲': 'xián',
+  '暇': 'xiá',
+  '众': 'zhòng',
+  '安排': 'ānpái',
+  '酒': 'jiǔ',
+  '席': 'xí',
+  '则': 'zé',
+  '与': 'yǔ',
+  '接': 'jiē',
+  '风': 'fēng',
+  '贺': 'hè',
+  '喜': 'xǐ',
+  '正': 'zhèng',
+  '欢': 'huān',
+  '饮': 'yǐn',
+  '之': 'zhī',
+  '间': 'jiān',
+  '忽': 'hū',
+  '停': 'tíng',
+  '杯': 'bēi',
+  '问': 'wèn',
+  '曰': 'yuē',
+  '甚': 'shèn',
+  '么': 'me',
+  '衔': 'xián',
+  '品': 'pǐn',
+  '从': 'cóng',
+  '没': 'méi',
+  '想': 'xiǎng',
+  '极': 'jí',
+  '只': 'zhǐ',
+  '唤': 'huàn',
+  '做': 'zuò',
+  '未': 'wèi',
+  '入': 'rù',
+  '流': 'liú',
+  '叫': 'jiào',
+  '末': 'mò',
+  '等': 'děng',
+  '这样': 'zhèyàng',
+  '儿': 'ér',
+  '最': 'zuì',
+  '低': 'dī',
+  '小': 'xiǎo',
+  '只': 'zhǐ',
+  '可': 'kě',
+  '看': 'kàn',
+  '马': 'mǎ',
+  '似': 'sì',
+  '堂': 'táng',
+  '尊': 'zūn',
+  '之': 'zhī',
+  '后': 'hòu',
+  '这': 'zhè',
+  '等': 'děng',
+  '殷': 'yīn',
+  '勤': 'qín',
+  '喂': 'wèi',
+  '得': 'dé',
+  '只': 'zhǐ',
+  '落': 'luò',
+  '道': 'dào',
+  '声': 'shēng',
+  '好': 'hǎo',
+  '如': 'rú',
+  '稍': 'shāo',
+  '有': 'yǒu',
+  '些': 'xiē',
+  '尪': 'wāng',
+  '羸': 'léi',
+  '还': 'hái',
+  '要': 'yào',
+  '见': 'jiàn',
+  '责': 'zé',
+  '再': 'zài',
+  '十': 'shí',
+  '分': 'fēn',
+  '伤': 'shāng',
+  '损': 'sǔn',
+  '罚': 'fá',
+  '赎': 'shú',
+  '问': 'wèn',
+  '罪': 'zuì',
+  '闻': 'wén',
+  '此': 'cǐ',
+  '心': 'xīn',
+  '头': 'tóu',
+  '火': 'huǒ',
+  '起': 'qǐ',
+  '咬': 'yǎo',
+  '牙': 'yá',
+  '怒': 'nù',
+  '渺': 'miǎo',
+  '视': 'shì',
+  '老': 'lǎo',
+  '孙': 'sūn',
+  '在': 'zài',
+  '那': 'nà',
+  '花': 'huā',
+  '果': 'guǒ',
+  '山': 'shān',
+  '称': 'chēng',
+  '祖': 'zǔ',
+  '怎': 'zěn',
+  '么': 'me',
+  '哄': 'hǒng',
+  '来': 'lái',
+  '替': 'tì',
+  '养': 'yǎng',
+  '者': 'zhě',
+  '乃': 'nǎi',
+  '后': 'hòu',
+  '生': 'shēng',
+  '小': 'xiǎo',
+  '辈': 'bèi',
+  '下': 'xià',
+  '贱': 'jiàn',
+  '之': 'zhī',
+  '役': 'yì',
+  '岂': 'qǐ',
+  '待': 'dài',
+  '的': 'de',
+  '不做': 'bùzuò',
+  '将': 'jiāng',
+  '去': 'qù',
+  '也': 'yě',
+  '辣': 'là',
+  '一': 'yī',
+  '声': 'shēng',
+  '把': 'bǎ',
+  '公': 'gōng',
+  '案': 'àn',
+  '推': 'tuī',
+  '倒': 'dǎo',
+  '耳': 'ěr',
+  '中': 'zhōng',
+  '取': 'qǔ',
+  '出': 'chū',
+  '宝': 'bǎo',
+  '贝': 'bèi',
+  '幌': 'huǎng',
+  '碗': 'wǎn',
+  '粗': 'cū',
+  '细': 'xì',
+  '路': 'lù',
+  '解': 'jiě',
+  '数': 'shù',
+  '直': 'zhí',
+  '打': 'dǎ',
+  '御': 'yù',
+  '马': 'mǎ',
+  '监': 'jiān',
+  '径': 'jìng',
+  '至': 'zhì',
+  '南': 'nán',
+  '门': 'mén',
+  '天': 'tiān',
+  '丁': 'dīng',
+  '知': 'zhī',
+  '受': 'shòu',
+  '了': 'le',
+  '仙': 'xiān',
+  '箓': 'lù',
+  '乃': 'nǎi',
+  '是': 'shì',
+  '敢': 'gǎn',
+  '阻': 'zǔ',
+  '当': 'dāng',
+  '让': 'ràng',
+  '他': 'tā',
+  '打': 'dǎ',
+  '天': 'tiān',
+  '门': 'mén',
+  '去': 'qù',
+  '了': 'le'
+};
+const definitionMap = {
+  '当': 'at, when',
+  '时': 'time',
+  '猴': 'monkey',
+  '王': 'king',
+  '欢': 'joy',
+  '喜': 'happy',
+  '与': 'with, and',
+  '木德星官': 'Star Officer of Wood Virtue (heavenly official)',
+  '木': 'wood',
+  '德': 'virtue',
+  '星': 'star',
+  '官': 'official',
+  '径': 'straight, directly',
+  '去': 'go',
+  '到': 'arrive',
+  '任': 'post, position',
+  '事': 'affair, matter',
+  '毕': 'finish',
+  '回': 'return',
+  '宫': 'palace',
+  '他': 'he',
+  '在': 'in, at',
+  '监': 'supervisor, stable',
+  '里': 'inside',
+  '会': 'gather, meet',
+  '聚': 'assemble',
+  '了': 'particle for completed action',
+  '丞': 'assistant supervisor',
+  '副': 'deputy',
+  '典簿': 'clerk, bookkeeper',
+  '典': 'clerk',
+  '簿': 'register, record book',
+  '力士': 'worker, groom',
+  '力': 'strength',
+  '士': 'person, official',
+  '大小官员': 'officials of all ranks',
+  '大': 'big',
+  '小': 'small',
+  '员': 'person',
+  '人': 'person',
+  '等': 'and so on, all',
+  '查': 'check, investigate',
+  '明': 'make clear',
+  '本': 'this',
+  '务': 'affair',
+  '止': 'only',
+  '有': 'have',
+  '天马': 'celestial horse',
+  '千': 'thousand',
+  '匹': 'measure word for horse',
+  '这': 'this',
+  '查': 'check',
+  '看': 'look, check',
+  '文': 'document',
+  '点明': 'clarify, confirm',
+  '点': 'count, check',
+  '数': 'number',
+  '本监': 'this stable/office',
+  '中': 'in',
+  '管': 'manage',
+  '征备': 'prepare, collect',
+  '草料': 'forage',
+  '草': 'grass',
+  '料': 'feed',
+  '刷洗': 'brush and wash',
+  '刷': 'brush',
+  '洗': 'wash',
+  '扎草': 'tie grass',
+  '扎': 'tie',
+  '饮水': 'give water',
+  '饮': 'drink',
+  '水': 'water',
+  '煮料': 'cook feed',
+  '煮': 'cook',
+  '辅佐': 'assist',
+  '辅': 'assist',
+  '佐': 'assist',
+  '催办': 'urge to handle',
+  '催': 'urge',
+  '办': 'handle',
+  '弼马温': 'Bimawen (Stable Supervisor, a low heavenly post)',
+  '弼': 'assist',
+  '温': 'Bimawen (title)',
+  '昼夜': 'day and night',
+  '昼': 'day',
+  '夜': 'night',
+  '不': 'not',
+  '睡': 'sleep',
+  '滋养': 'nourish, care',
+  '滋': 'nourish',
+  '养': 'raise, feed',
+  '日间': 'during the day',
+  '日': 'day',
+  '间': 'interval',
+  '舞弄': 'play, amuse',
+  '舞': 'dance',
+  '弄': 'play',
+  '犹可': 'still acceptable',
+  '犹': 'still',
+  '可': 'acceptable',
+  '夜间': 'at night',
+  '看管': 'watch over',
+  '殷勤': 'diligently',
+  '殷': 'diligent',
+  '勤': 'diligent',
+  '但是': 'but',
+  '马睡的': 'those horses sleeping',
+  '赶起来': 'make get up',
+  '赶': 'drive, make',
+  '起': 'rise',
+  '来': 'come',
+  '吃草': 'eat grass',
+  '吃': 'eat',
+  '草': 'grass',
+  '走的': 'those walking',
+  '捉将来': 'catch and bring',
+  '捉': 'catch',
+  '将': 'bring',
+  '靠槽': 'to the trough',
+  '靠': 'lean on, near',
+  '槽': 'trough',
+  '那些': 'those',
+  '天马': 'heavenly horse',
+  '见': 'see',
+  '泯耳': 'lay back ears',
+  '泯': 'flatten, lay back',
+  '耳': 'ear',
+  '攒蹄': 'stamp hooves',
+  '攒': 'gather, stamp',
+  '蹄': 'hoof',
+  '都': 'all',
+  '养得': 'grow',
+  '肉肥膘满': 'fat and healthy',
+  '肉': 'meat',
+  '肥': 'fat',
+  '膘': 'fat',
+  '满': 'full',
+  '不觉': 'unconsciously',
+  '觉': 'feel, realize',
+  '半月有馀': 'more than half a month',
+  '半': 'half',
+  '月': 'month',
+  '馀': 'surplus, more than',
+  '一朝': 'one day',
+  '闲暇': 'leisure',
+  '闲': 'leisure',
+  '暇': 'free time',
+  '众监官': 'all officials',
+  '安排': 'arrange',
+  '酒席': 'banquet',
+  '酒': 'wine',
+  '席': 'banquet',
+  '一则': 'one reason',
+  '接风': 'welcome',
+  '贺喜': 'congratulate',
+  '正': 'just',
+  '之': 'between',
+  '间': 'interval',
+  '忽': 'suddenly',
+  '停杯': 'put down cup',
+  '停': 'stop',
+  '杯': 'cup',
+  '问曰': 'asked',
+  '甚么': 'what',
+  '甚': 'what',
+  '么': 'suffix',
+  '官衔': 'official title',
+  '官': 'official',
+  '衔': 'title',
+  '众曰': 'they replied',
+  '曰': 'said',
+  '官名': 'official name',
+  '就是': 'is just',
+  '此了': 'this',
+  '又问': 'asked again',
+  '此官': 'this official',
+  '几品': 'what rank',
+  '几': 'how many',
+  '品': 'rank, grade',
+  '众道': 'they said',
+  '没有': 'no',
+  '品从': 'official grade',
+  '没品': 'no grade',
+  '想': 'think',
+  '大之极': 'the highest',
+  '极': 'extreme',
+  '不大': 'not high',
+  '只唤做': 'only called',
+  '未入流': 'not in the ranks',
+  '未': 'not yet',
+  '入': 'enter',
+  '流': 'rank, stream',
+  '叫做': 'called',
+  '末等': 'the lowest',
+  '这样': 'such',
+  '官儿': 'official',
+  '最低最小': 'lowest and smallest',
+  '最低': 'lowest',
+  '最小': 'smallest',
+  '只可': 'only can',
+  '与他': 'for him',
+  '看马': 'watch horses',
+  '似堂尊': 'as your lordship',
+  '堂尊': 'your lordship',
+  '到任': 'take office',
+  '之后': 'after',
+  '这等': 'such',
+  '殷勤': 'diligence',
+  '喂得马肥': 'feed horses fat',
+  '只落得': 'at most get',
+  '道声': 'say',
+  '好字': 'good',
+  '如稍有些尪羸': 'if a little thin',
+  '稍有些': 'a little',
+  '尪羸': 'weak, thin',
+  '还要': 'still',
+  '见责': 'be blamed',
+  '再十分伤损': 'if much harmed',
+  '再': 'again',
+  '十分': 'very',
+  '伤损': 'damage',
+  '还要罚赎问罪': 'punished and held responsible',
+  '罚': 'punish',
+  '赎': 'redeem',
+  '问罪': 'hold responsible',
+  '猴王': 'Monkey King',
+  '闻此': 'hearing this',
+  '不觉': 'unconsciously',
+  '心头火起': 'anger arose',
+  '心头': 'in the heart',
+  '火': 'fire',
+  '起': 'arise',
+  '咬牙': 'grit teeth',
+  '大怒': 'angry',
+  '这般': 'such',
+  '渺视': 'look down on',
+  '老孙': 'Old Sun (Monkey King’s nickname)',
+  '在那花果山': 'on Flower-Fruit Mountain',
+  '花果山': 'Flower-Fruit Mountain',
+  '称王称祖': 'called king and ancestor',
+  '称王': 'be king',
+  '称祖': 'be ancestor',
+  '怎么': 'how',
+  '哄我': 'trick me',
+  '来替他养马': 'come to raise his horses',
+  '养马者': 'horsekeeper',
+  '乃': 'is',
+  '后生小辈': 'younger generation',
+  '下贱之役': 'menial job',
+  '岂是待我的': 'how could it be for me',
+  '不做他': 'won’t do it',
+  '我将去也': 'I will leave',
+  '忽辣的一声': 'with a loud crash',
+  '忽辣': 'loud sound',
+  '一声': 'a sound',
+  '把公案推倒': 'overturned the desk',
+  '公案': 'desk',
+  '推倒': 'overturn',
+  '耳中取出宝贝': 'take treasure from ear',
+  '耳中': 'from the ear',
+  '宝贝': 'treasure',
+  '幌一幌': 'wave it',
+  '幌': 'swing, wave',
+  '碗来粗细': 'as thick as a bowl',
+  '碗': 'bowl',
+  '粗细': 'thickness',
+  '一路解数': 'all the way fighting',
+  '一路': 'all the way',
+  '解数': 'moves, tricks',
+  '直打出御马监': 'fought out of the Imperial Stables',
+  '直': 'straight',
+  '御马监': 'Imperial Stables',
+  '径至南天门': 'straight to the Southern Gate of Heaven',
+  '径至': 'directly to',
+  '南天门': 'Southern Heavenly Gate',
+  '众天丁': 'heavenly guards',
+  '天丁': 'heavenly guard',
+  '知他受了仙箓': 'knowing he received the immortal register',
+  '仙箓': 'immortal register',
+  '乃是个弼马温': 'was a Bimawen',
+  '不敢阻当': 'dared not stop',
+  '让他打出天门去了': 'let him go out the gate'
+};
+const contentDiv = document.getElementById('content');
+    const popup = document.getElementById('popup');
+
+    lines.forEach((line, index) => {
+      const div = document.createElement('div');
+      div.className = 'line';
+      div.dataset.index = index;
+
+      for (let char of line) {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = char;
+        span.dataset.pinyin = pinyinMap[char] || '';
+        span.addEventListener('click', (e) => {
+          popup.style.display = 'block';
+          popup.style.top = `${e.pageY + 5}px`;
+          popup.style.left = `${e.pageX + 5}px`;
+          popup.textContent = `${char}:${definitionMap[char] || '未收录'}`;
+        });
+        div.appendChild(span);
+      }
+
+      const readBtn = document.createElement('button');
+      readBtn.textContent = '朗读';
+      readBtn.onclick = () => speakLine(index, line, readBtn);
+      div.appendChild(readBtn);
+
+      const transBtn = document.createElement('button');
+      transBtn.textContent = '翻译';
+      transBtn.onclick = () => {
+        const transDiv = div.querySelector('.translation');
+        if (transDiv) transDiv.style.display = transDiv.style.display === 'none' ? 'block' : 'none';
+      };
+      div.appendChild(transBtn);
+
+      const translation = document.createElement('div');
+      translation.className = 'translation';
+      translation.innerHTML = `
+        <button onclick="toggleTranslation(this, 'en')">英文</button>
+        <button onclick="toggleTranslation(this, 'de')">德文</button>
+        <button onclick="toggleTranslation(this, 'fr')">法文</button>
+        <button onclick="toggleTranslation(this, 'es')">西班牙文</button>
+        <button onclick="toggleTranslation(this, 'it')">意大利文</button>
+        <button onclick="toggleTranslation(this, 'ru')">俄文</button>
+        <div class='trans-content' data-lang='en' style='display:none;margin-top:0.5em'>${translationData[index].en}</div>
+        <div class='trans-content' data-lang='de' style='display:none;margin-top:0.5em'>${translationData[index].de}</div>
+        <div class='trans-content' data-lang='fr' style='display:none;margin-top:0.5em'>${translationData[index].fr}</div>
+        <div class='trans-content' data-lang='es' style='display:none;margin-top:0.5em'>${translationData[index].es}</div>
+        <div class='trans-content' data-lang='it' style='display:none;margin-top:0.5em'>${translationData[index].it}</div>
+        <div class='trans-content' data-lang='ru' style='display:none;margin-top:0.5em'>${translationData[index].ru}</div>`;
+      div.appendChild(translation);
+
+      contentDiv.appendChild(div);
+    });
+
+    document.body.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('char')) popup.style.display = 'none';
+    });
+
+    let utterance = null;
+    function speakLine(index, text, btn) {
+      if (utterance) {
+        speechSynthesis.cancel();
+        utterance = null;
+        btn.textContent = '朗读';
+        document.querySelectorAll('.line').forEach(l => l.classList.remove('highlight'));
+        return;
+      }
+      utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      utterance.onend = () => {
+        document.querySelector(`[data-index='${index}']`).classList.remove('highlight');
+        btn.textContent = '朗读';
+        utterance = null;
+      };
+      document.querySelector(`[data-index='${index}']`).classList.add('highlight');
+      speechSynthesis.speak(utterance);
+      btn.textContent = '停止';
+    }
+
+    function toggleFullReading(button) {
+      if (utterance) {
+        speechSynthesis.cancel();
+        utterance = null;
+        button.textContent = '全文朗读';
+        document.querySelectorAll('.line').forEach(l => l.classList.remove('highlight'));
+        return;
+      }
+
+      let i = 0;
+      function readNext() {
+        if (i >= lines.length) {
+          utterance = null;
+          button.textContent = '全文朗读';
+          return;
+        }
+        const line = lines[i];
+        const div = document.querySelector(`[data-index='${i}']`);
+        document.querySelectorAll('.line').forEach(l => l.classList.remove('highlight'));
+        div.classList.add('highlight');
+        utterance = new SpeechSynthesisUtterance(line);
+        utterance.lang = 'zh-CN';
+        utterance.onend = () => {
+          i++;
+          readNext();
+        };
+        speechSynthesis.speak(utterance);
+      }
+      button.textContent = '停止朗读';
+      readNext();
+    }
+  function toggleTranslation(button, lang) {
+  const container = button.parentElement;
+  const blocks = container.querySelectorAll('.trans-content');
+  blocks.forEach(b => b.style.display = b.dataset.lang === lang ? 'block' : 'none');
+}
+</script>
+</body>
+</html>

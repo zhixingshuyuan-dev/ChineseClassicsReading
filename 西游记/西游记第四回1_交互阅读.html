@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>第四回 第一段交互阅读</title>
+  <style>
+    body {
+      background-color: #4b3621;
+      color: #f5f5dc;
+      font-family: serif;
+      padding: 2em;
+      font-size: 2em;
+    }
+    .line {
+      margin-bottom: 1em;
+      position: relative;
+    }
+    .char {
+      cursor: pointer;
+      padding: 0 2px;
+      position: relative;
+    }
+    .char:hover::after {
+      content: attr(data-pinyin);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #222;
+      color: #fff;
+      padding: 2px 5px;
+      font-size: 0.8em;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .popup {
+      display: none;
+      position: absolute;
+      background: #333;
+      color: #fff;
+      padding: 5px;
+      border-radius: 4px;
+      top: 1.5em;
+      left: 0;
+      z-index: 100;
+      font-size: 0.9em;
+    }
+    .translation {
+      display: none;
+      margin-top: 0.5em;
+      font-size: 0.9em;
+      background: #3a2f1d;
+      padding: 0.5em;
+    }
+    .highlight {
+      background: #a0522d;
+    }
+    button {
+      margin-left: 0.5em;
+      background: #eedc82;
+      color: #333;
+      font-weight: normal;
+      border: none;
+      padding: 1.5px 3px;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 0.425em;
+    }
+    button:hover {
+      background: #d2b48c;
+    }
+  </style>
+</head>
+<body>
+  <h2>第四回 官封弼马心何足 名注齐天意未宁</h2>
+
+  <button onclick="toggleFullReading(this)">全文朗读</button>
+  <div id="content"></div>
+  <div id="popup" class="popup"></div>
+
+  <script>
+    const lines = [
+  "那太白金星与美猴王，同出了洞天深处，一齐驾云而起。",
+  "原来悟空筋斗云比众不同，十分快疾，把个金星撇在脑后，先至南天门外。",
+  "正欲收云前进，被增长天王领着庞、刘、苟、毕、邓、辛、张、陶，一路大力天丁，枪刀剑戟，挡住天门，不肯放进。",
+  "猴王道：“这个金星老儿，乃奸诈之徒！既请老孙，如何教人动刀动枪，阻塞门路？”",
+  "正嚷间，金星倏到。悟空就觌面发狠道：“你这老儿，怎么哄我？被你说奉玉帝招安旨意来请，却怎么教这些人阻住天门，不放老孙进去？”",
+  "金星笑道：“大王息怒。你自来未曾到此天堂，却又无名，众天丁又与你素不相识，他怎肯放你擅入？等如今见了天尊，授了仙箓，注了官名，向后随你出入，谁复挡也？”",
+  "悟空道：“这等说，也罢，我不进去了。”金星又用手扯住道：“你还同我进去。”",
+  "将近天门，金星高叫道：“那天门天将，大小吏兵，放开路者。此乃下界仙人，我奉玉帝圣旨宣他来也。”",
+  "那增长天王与众天丁俱才敛兵退避。猴王始信其言，同金星缓步入里观看。"
+];
+
+    const pinyinMap = {
+      '那': 'nà', '太': 'tài', '白': 'bái', '金': 'jīn', '星': 'xīng',
+      '与': 'yǔ', '美': 'měi', '猴': 'hóu', '王': 'wáng', '同': 'tóng',
+      '出': 'chū', '了': 'le', '洞': 'dòng', '天': 'tiān', '深': 'shēn',
+      '处': 'chù', '一': 'yī', '齐': 'qí', '驾': 'jià', '云': 'yún',
+      '而': 'ér', '起': 'qǐ', '原': 'yuán', '来': 'lái', '悟': 'wù',
+      '空': 'kōng', '筋': 'jīn', '斗': 'dǒu', '比': 'bǐ', '众': 'zhòng',
+      '不': 'bù', '十': 'shí', '分': 'fēn', '快': 'kuài', '疾': 'jí',
+      '把': 'bǎ', '个': 'gè', '撇': 'piē', '在': 'zài', '脑': 'nǎo',
+      '后': 'hòu', '先': 'xiān', '至': 'zhì', '南': 'nán', '门': 'mén',
+      '外': 'wài', '正': 'zhèng', '欲': 'yù', '收': 'shōu', '前': 'qián',
+      '进': 'jìn', '被': 'bèi', '增': 'zēng', '长': 'zhǎng', '领': 'lǐng',
+      '着': 'zhe', '庞': 'páng', '刘': 'liú', '苟': 'gǒu', '毕': 'bì',
+      '邓': 'dèng', '辛': 'xīn', '张': 'zhāng', '陶': 'táo', '路': 'lù',
+      '大': 'dà', '力': 'lì', '枪': 'qiāng', '刀': 'dāo', '剑': 'jiàn',
+      '戟': 'jǐ', '挡': 'dǎng', '住': 'zhù', '肯': 'kěn',
+      '老': 'lǎo', '儿': 'ér', '乃': 'nǎi', '奸': 'jiān', '诈': 'zhà', '之': 'zhī', '徒': 'tú',
+      '既': 'jì', '请': 'qǐng', '孙': 'sūn', '如': 'rú', '何': 'hé', '教': 'jiào', '人': 'rén',
+      '动': 'dòng', '枪': 'qiāng', '阻': 'zǔ', '塞': 'sè', '门': 'mén', '路': 'lù',
+      '嚷': 'rǎng', '倏': 'shū', '觌': 'dí', '面': 'miàn', '发': 'fā', '狠': 'hěn',
+      '哄': 'hǒng', '奉': 'fèng', '玉': 'yù', '帝': 'dì', '招': 'zhāo', '安': 'ān',
+      '旨': 'zhǐ', '意': 'yì', '未': 'wèi', '曾': 'céng', '到': 'dào', '此': 'cǐ',
+      '堂': 'táng', '无': 'wú', '名': 'míng', '素': 'sù', '识': 'shí', '擅': 'shàn',
+      '入': 'rù', '今': 'jīn', '见': 'jiàn', '尊': 'zūn', '授': 'shòu', '仙': 'xiān',
+      '箓': 'lù', '注': 'zhù', '官': 'guān', '向': 'xiàng', '后': 'hòu', '随': 'suí',
+      '复': 'fù', '也': 'yě', '扯': 'chě', '近': 'jìn', '高': 'gāo', '叫': 'jiào',
+      '吏': 'lì', '兵': 'bīng', '放': 'fàng', '开': 'kāi', '者': 'zhě', '下': 'xià',
+      '界': 'jiè', '宣': 'xuān', '俱': 'jù', '才': 'cái', '敛': 'liǎn', '退': 'tuì',
+      '避': 'bì', '始': 'shǐ', '信': 'xìn', '缓': 'huǎn', '步': 'bù', '入': 'rù', '里': 'lǐ', '观': 'guān'
+    };
+
+    const definitionMap = {
+      '那': 'that', '太': 'great', '白': 'white', '金': 'gold', '星': 'star',
+      '与': 'and', '美': 'beautiful', '猴': 'monkey', '王': 'king', '同': 'together',
+      '出': 'go out', '了': 'particle', '洞': 'cave', '天': 'heaven', '深': 'deep',
+      '处': 'place', '一': 'one', '齐': 'together', '驾': 'ride', '云': 'cloud',
+      '而': 'and', '起': 'rise', '原': 'original', '来': 'come', '悟': 'enlighten',
+      '空': 'empty', '筋': 'tendon', '斗': 'fight', '比': 'compare', '众': 'many',
+      '不': 'not', '十': 'very', '分': 'part', '快': 'fast', '疾': 'speedy',
+      '把': 'hold', '个': 'classifier', '撇': 'leave behind', '在': 'at', '脑': 'brain',
+      '后': 'back', '先': 'first', '至': 'arrive', '南': 'south', '门': 'gate',
+      '外': 'outside', '正': 'just', '欲': 'want to', '收': 'withdraw', '前': 'forward',
+      '进': 'enter', '被': 'by', '增': 'increase', '长': 'chief', '领': 'lead',
+      '着': 'particle', '庞': 'Pang', '刘': 'Liu', '苟': 'Gou', '毕': 'Bi',
+      '邓': 'Deng', '辛': 'Xin', '张': 'Zhang', '陶': 'Tao', '路': 'road',
+      '大': 'big', '力': 'force', '枪': 'spear', '刀': 'knife', '剑': 'sword',
+      '戟': 'halberd', '挡': 'block', '住': 'hold', '肯': 'willing',
+      '老': 'old', '儿': 'man', '乃': 'indeed', '奸': 'treacherous', '诈': 'deceitful', '之': 'of', '徒': 'fellow',
+      '既': 'already', '请': 'invite', '孙': 'Sun', '如': 'as', '何': 'how', '教': 'cause', '人': 'person',
+      '动': 'move', '阻': 'block', '塞': 'block',
+      '嚷': 'shout', '倏': 'suddenly', '觌': 'face to face', '面': 'face', '发': 'send out', '狠': 'fierce',
+      '哄': 'deceive', '奉': 'receive (orders)', '玉': 'jade', '帝': 'emperor', '招': 'recruit', '安': 'appease',
+      '旨': 'imperial edict', '意': 'intention', '未': 'not yet', '曾': 'ever', '到': 'arrive', '此': 'this',
+      '堂': 'hall', '无': 'no', '名': 'name', '素': 'previously', '识': 'know', '擅': 'without permission',
+      '入': 'enter', '今': 'now', '见': 'see', '尊': 'lord', '授': 'grant', '仙': 'immortal',
+      '箓': 'register', '注': 'assign', '官': 'official', '向': 'towards', '后': 'after', '随': 'follow',
+      '复': 'again', '也': 'also', '扯': 'pull', '近': 'near', '高': 'shout', '叫': 'call',
+      '吏': 'official', '兵': 'soldier', '放': 'let go', '开': 'open', '者': 'person', '下': 'lower',
+      '界': 'world', '宣': 'announce', '俱': 'all', '才': 'just then', '敛': 'withdraw', '退': 'retreat',
+      '避': 'avoid', '始': 'then', '信': 'believe', '缓': 'slow', '步': 'step', '里': 'inside', '观': 'look around',
+      '一': 'one',
+'丁': 'male adult; robust; T-shaped',
+'七': 'seven',
+'万': 'ten thousand',
+'丈': 'zhang (unit of length, 3.3m); elder',
+'三': 'three',
+'上': 'up; above; previous',
+'下': 'down; under; next',
+'不': 'not; no',
+'与': 'and; with; give',
+'丑': 'ugly; clown; second of the twelve Earthly Branches',
+'专': 'specialized; focus on',
+'且': 'moreover; yet; and',
+'世': 'world; lifetime; era',
+'丘': 'hill; mound; surname',
+'丙': 'third of the ten Heavenly Stems',
+'业': 'business; profession; occupation',
+'东': 'east',
+'丝': 'silk; thread',
+'丞': 'assistant; official title',
+'丢': 'lose; throw; discard',
+'两': 'two; both',
+'严': 'strict; severe',
+'丧': 'funeral; mourning; lose',
+'个': 'individual; single; (measure word)',
+'中': 'middle; center; in',
+'丰': 'abundant; plentiful; lush',
+'串': 'string together; a bunch',
+'临': 'approach; overlook; facing',
+'为': 'for; because of; to do; to act as',
+'丽': 'beautiful; pretty',
+'举': 'raise; lift; recommend',
+'乃': 'then; so; thus',
+'久': 'long time; duration',
+'么': 'interrogative particle; tiny',
+'义': 'justice; righteousness; meaning',
+'之': 'of; him; her; it',
+'乌': 'crow; black',
+'乎': 'in; at; from; particle',
+'乏': 'lack; be short of',
+'乐': 'happy; music',
+'乒': 'ping (ping pong)',
+'乓': 'pong (ping pong)',
+'乔': 'tall; lofty; proud',
+'乖': 'well-behaved; clever',
+'乘': 'ride; take advantage of; multiply',
+'乙': 'second of the ten Heavenly Stems',
+'九': 'nine',
+'乞': 'beg; ask for',
+'也': 'also; too',
+'习': 'practice; study',
+'乡': 'village; country; hometown',
+'书': 'book; document; letter',
+'买': 'buy; purchase',
+'乱': 'chaos; disorder; messy',
+'乳': 'milk; breast',
+'乾': 'dry; Heaven; male principle (Qian trigram)',
+'了': 'particle; to finish',
+'予': 'give; grant',
+'争': 'contend; dispute; fight',
+'事': 'matter; affair; thing',
+'二': 'two',
+'于': 'at; in; to; than',
+'亏': 'deficient; lose',
+'云': 'cloud',
+'互': 'mutual; each other',
+'五': 'five',
+'井': 'well; neat',
+'亚': 'Asia; second; inferior',
+'些': 'some; several',
+'亡': 'to die; perish',
+'交': 'exchange; hand over; associate',
+'亥': 'twelfth of the Earthly Branches',
+'亦': 'also; too',
+'产': 'produce; give birth; property',
+'亨': 'smooth; successful',
+'亩': 'unit of area (about 666.7 m²)',
+  '当': 'should',
+  '作': 'make',
+  '用': 'use',
+  '成': 'become',
+  '去': 'leave',
+  '里': 'in',
+  '说': 'talk',
+  '道': 'road',
+  '也': 'too',
+  '子': 'son',
+  '得': 'gain',
+  '于': 'to',
+  '就': 'just',
+  '出': 'produce',
+  '时': 'season',
+  '分': 'divide',
+  '对': 'to',
+  '生': 'give birth',
+  '能': 'ability',
+  '下': 'under',
+  '还': 'return',
+  '学': 'school',
+  '都': 'capital',
+  '过': 'over',
+  '家': 'house',
+  '自': 'from',
+  '后': 'later',
+  '作': 'act',
+  '里': 'mile',
+  '用': 'use',
+  '道': 'Tao',
+  '时': 'hour',
+  '年': 'annual',
+  '然': 'natural',
+  '天': 'sky',
+  '事': 'event',
+  '去': 'remove',
+  '起': 'rise',
+  '把': 'handle',
+  '对': 'face',
+  '以': 'by',
+  '还': 'yet',
+  '作': 'compose',
+  '进': 'advance',
+  '多': 'more',
+  '种': 'type',
+  '地': 'ground',
+  '而': 'but',
+  '方': 'square',
+  '无': 'no',
+  '定': 'decide',
+  '方': 'method',
+  '后': 'queen',
+  '气': 'air',
+  '小': 'tiny',
+  '学': 'science',
+  '军': 'army',
+  '文': 'literature',
+  '力': 'strength',
+  '长': 'long',
+  '水': 'water',
+  '工': 'work',
+  '心': 'mind',
+  '知': 'know',
+  '同': 'together',
+  '国': 'state',
+  '重': 'heavy',
+  '物': 'thing',
+  '手': 'hand',
+  '应': 'should',
+  '关': 'close',
+  '机': 'machine',
+  '地': 'place',
+  '山': 'mountain',
+  '先': 'first',
+  '名': 'name',
+  '几': 'how many',
+  '市': 'market',
+  '前': 'front',
+  '开': 'open',
+  '体': 'body',
+  '三': 'three',
+  '自': 'since',
+  '己': 'self',
+  '高': 'high',
+  '长': 'grow',
+  '现': 'appear',
+  '实': 'real',
+  '业': 'profession',
+  '理': 'reason',
+     '表': 'table',
+  '化': 'change',
+  '老': 'old',
+  '总': 'always',
+  '市': 'city',
+  '发': 'hair',
+  '明': 'bright',
+  '见': 'meet',
+  '面': 'face',
+  '真': 'true',
+  '现': 'now',
+  '通': 'pass through',
+  '明': 'clear',
+  '问': 'ask',
+  '力': 'force',
+  '它': 'it',
+  '主': 'master',
+  '直': 'straight',
+  '定': 'fixed',
+  '此': 'this',
+  '外': 'outside',
+  '些': 'some',
+  '与': 'with',
+  '活': 'live',
+  '正': 'right',
+  '感': 'feel',
+  '想': 'think',
+  '见': 'view',
+  '知': 'knowledge',
+  '全': 'whole',
+  '再': 'again',
+  '二': 'two',
+  '业': 'trade',
+  '动': 'move',
+  '因': 'cause',
+  '于': 'because of',
+  '此': 'here',
+  '由': 'from',
+  '每': 'every',
+  '百': 'hundred',
+  '主': 'host',
+  '意': 'meaning',
+  '打': 'hit',
+  '车': 'vehicle',
+  '工': 'craft',
+  '外': 'other',
+  '风': 'wind',
+  '飞': 'fly',
+  '安': 'safe',
+  '乐': 'happy',
+  '星': 'star',
+  '放': 'release',
+  '物': 'object',
+  '服': 'clothes',
+  '空': 'empty',
+  '形': 'form',
+  '事': 'affair',
+  '报': 'report',
+  '平': 'flat',
+  '走': 'walk',
+  '书': 'book',
+  '节': 'section',
+  '色': 'color',
+  '话': 'speech',
+  '求': 'seek',
+  '始': 'start',
+  '新': 'new',
+  '头': 'head',
+  '身': 'body',
+  '名': 'famous',
+  '求': 'request',
+  '重': 'repeat',
+  '话': 'talk',
+  '观': 'observe',
+  '觉': 'sense',
+  '元': 'yuan',
+  '并': 'combine',
+  '位': 'position',
+  '求': 'demand',
+  '解': 'explain',
+  '注': 'note',
+  '受': 'receive',
+  '许': 'allow',
+  '答': 'answer',
+  '断': 'break',
+  '细': 'fine',
+  '研': 'study',
+  '究': 'research',
+  '须': 'must',
+  '类': 'type',
+  '集': 'gather',
+  '标': 'mark',
+  '指': 'point',
+  '性': 'nature',
+  '气': 'air',
+  '求': 'seek',
+  '况': 'situation',
+  '技': 'skill',
+  '层': 'layer',
+  '复': 'repeat',
+  '段': 'section',
+  '室': 'room',
+  '院': 'yard',
+  '费': 'fee',
+  '价': 'price',
+  '态': 'state',
+  '班': 'class',
+  '例': 'example',
+  '照': 'shine',
+  '容': 'contain',
+  '调': 'adjust',
+  '局': 'office',
+  '利': 'benefit',
+  '确': 'true',
+  '传': 'pass',
+  '失': 'lose',
+  '份': 'portion',
+  '器': 'tool',
+  '值': 'value',
+  '按': 'press',
+  '密': 'secret',
+  '职': 'duty',
+  '呢': 'ne',
+  '消': 'disappear',
+  '息': 'rest',
+  '京': 'capital',
+  '华': 'splendid',
+  '王': 'king',
+  '县': 'county',
+  '静': 'quiet',
+  '乘': 'ride',
+  '原': 'original',
+  '陈': 'display',
+  '建': 'build',
+  '保': 'protect',
+  '持': 'hold',
+  '件': 'piece',
+  '艺': 'art',
+  '局': 'bureau',
+  '限': 'limit',
+  '取': 'take',
+  '展': 'display',
+  '益': 'benefit',
+  '验': 'examine',
+  '验': 'test',
+  '资': 'resources',
+  '必': 'must',
+  '困': 'distress',
+  '士': 'scholar',
+  '资': 'capital',
+  '首': 'head',
+  '列': 'row',
+  '久': 'long time',
+  '消': 'eliminate',
+  '准': 'standard',
+  '效': 'effect',
+  '派': 'send',
+  '疑': 'doubt',
+  '友': 'friend',
+  '术': 'art',
+  '观': 'view',
+  '律': 'law',
+  '诉': 'complain',
+  '供': 'supply',
+  '根': 'root',
+  '述': 'state',
+  '扩': 'expand',
+  '展': 'develop',
+  '超': 'super',
+  '越': 'cross',
+  '据': 'according to',
+  '策': 'strategy',
+  '演': 'perform',
+  '编': 'edit',
+  '简': 'simple',
+  '历': 'pass through',
+  '专': 'special',
+  '属': 'belong',
+  '顾': 'look after',
+  '症': 'illness',
+  '丰': 'abundant',
+  '参': 'participate',
+  '警': 'alert',
+  '责': 'duty',
+  '备': 'prepare',
+  '录': 'record',
+  '劳': 'labor',
+  '竟': 'unexpectedly',
+  '略': 'brief',
+  '床': 'bed',
+  '县': 'county',
+  '趣': 'interest',
+  '众': 'crowd',
+  '险': 'danger',
+  '素': 'plain',
+  '顺': 'smooth',
+  '输': 'transport',
+  '圣': 'holy',
+  '功': 'achievement',
+  '距': 'distance',
+  '端': 'end',
+  '括': 'include',
+  '既': 'already',
+  '未': 'not yet',
+  '伤': 'injury',
+  '批': 'criticize',
+  '预': 'prepare',
+  '泪': 'tear',
+  '材': 'material',
+  '调': 'tune',
+  '供': 'provide',
+  '案': 'case',
+  '批': 'batch',
+  '册': 'booklet',
+  '厚': 'thick',
+  '责': 'responsibility',
+  '紧': 'tight',
+  '舞': 'dance',
+  '吸': 'inhale',
+  '赠': 'give',
+  '顶': 'top',
+  '础': 'foundation',
+  '册': 'volume',
+  '救': 'rescue',
+  '善': 'goodness',
+  '群': 'group',
+  '渐': 'gradually',
+  '消': 'dispel',
+  '危': 'danger',
+  '皮': 'skin',
+  '膜': 'membrane',
+  '症': 'symptom',
+  '压': 'press',
+  '针': 'needle',
+  '脑': 'brain',
+  '汤': 'soup',
+  '甚': 'very',
+  '敌': 'enemy',
+  '雄': 'male',
+  '鸡': 'chicken',
+  '鸭': 'duck',
+  '扇': 'fan',
+  '斜': 'slanting',
+  '途': 'road',
+  '誉': 'praise',
+  '层': 'floor',
+  '浪': 'wave',
+  '源': 'source',
+  '贴': 'paste',
+  '阻': 'hinder',
+  '暗': 'dark',
+  '寄': 'send',
+  '竟': 'after all',
+  '授': 'give',
+  '折': 'fold',
+  '障': 'obstruct',
+  '壳': 'shell',
+  '堆': 'pile',
+  '尺': 'ruler',
+  '暂': 'temporary',
+  '顾': 'take care',
+  '帐': 'account',
+  '喷': 'spout',
+  '液': 'liquid',
+  '币': 'currency',
+  '盼': 'hope',
+  '率': 'rate',
+  '份': 'share',
+  '仍': 'still',
+  '篇': 'piece',
+  '帐': 'tent',
+  '遥': 'distant',
+  '捕': 'catch',
+  '披': 'drape',
+  '舍': 'abandon',
+  '俩': 'two (people)',
+  '径': 'path',
+  '篮': 'basket',
+  '眉': 'eyebrow',
+  '虽': 'although',
+  '迅': 'fast',
+  '袋': 'bag',
+  '腰': 'waist',
+  '胃': 'stomach',
+  '胳': 'arm',
+  '膊': 'arm',
+  '肚': 'belly',
+  '脏': 'dirty',
+  '舒': 'comfortable',
+  '屉': 'drawer',
+  '脾': 'spleen',
+  '肠': 'intestine',
+  '胆': 'gallbladder',
+  '肺': 'lung',
+  '肩': 'shoulder',
+  '臂': 'arm',
+  '骨': 'bone',
+  '髓': 'marrow',
+  '肤': 'skin',
+  '膝': 'knee',
+  '脚': 'foot',
+  '趾': 'toe',
+  '踝': 'ankle',
+  '踢': 'kick',
+  '踹': 'kick',
+  '踏': 'step on',
+  '踩': 'tread',
+  '踪': 'trace',
+  '踪': 'track',
+  '趟': 'trip',
+  '跪': 'kneel',
+  '跳': 'jump',
+  '跃': 'leap',
+  '跑': 'run',
+  '趴': 'lie on stomach',
+  '躺': 'lie down',
+  '蹲': 'squat',
+  '踩': 'stamp',
+  '踩': 'trample',
+  '蹄': 'hoof',
+  '蹬': 'step on',
+  '蹦': 'bounce',
+  '蹲': 'crouch',
+  '蹬': 'pedal',
+  '蹦': 'jump',
+  '躁': 'restless',
+  '躲': 'hide',
+  '躯': 'body',
+  '躺': 'recline',
+  '轰': 'boom',
+  '轨': 'track',
+  '轮': 'wheel',
+  '软': 'soft',
+  '轴': 'axis',
+  '轻': 'light',
+  '载': 'carry',
+  '较': 'compare',
+  '输': 'lose',
+  '辩': 'debate',
+  '辅': 'assist',
+  '辆': 'vehicle',
+  '辖': 'govern',
+  '辫': 'braid',
+  '辩': 'argue',
+  '边': 'side',
+  '辽': 'vast',
+  '达': 'reach',
+  '迁': 'move',
+  '迎': 'welcome',
+  '运': 'transport',
+  '过': 'pass',
+  '进': 'enter',
+  '连': 'connect',
+  '送': 'deliver',
+  '适': 'suitable',
+  '选': 'choose',
+  '递': 'deliver',
+  '逛': 'stroll',
+  '通': 'through',
+  '逗': 'tease',
+  '造': 'make',
+  '逼': 'force',
+  '逃': 'escape',
+  '逆': 'contrary',
+  '选': 'select',
+  '逐': 'chase',
+  '遥': 'distant',
+  '捕': 'catch',
+  '披': 'drape',
+  '舍': 'abandon',
+  '俩': 'two (people)',
+  '径': 'path',
+  '篮': 'basket',
+  '眉': 'eyebrow',
+  '虽': 'although',
+  '迅': 'fast',
+  '袋': 'bag',
+  '腰': 'waist',
+  '胃': 'stomach',
+  '胳': 'arm',
+  '膊': 'arm',
+  '肚': 'belly',
+  '脏': 'dirty',
+  '舒': 'comfortable',
+  '屉': 'drawer',
+  '脾': 'spleen',
+  '肠': 'intestine',
+  '胆': 'gallbladder',
+  '肺': 'lung',
+  '肩': 'shoulder',
+  '臂': 'arm',
+  '骨': 'bone',
+  '髓': 'marrow',
+  '肤': 'skin',
+  '膝': 'knee',
+  '脚': 'foot',
+  '趾': 'toe',
+  '踝': 'ankle',
+  '踢': 'kick',
+  '踹': 'kick',
+  '踏': 'step on',
+  '踩': 'tread',
+  '踪': 'trace',
+  '踪': 'track',
+  '趟': 'trip',
+  '跪': 'kneel',
+  '跳': 'jump',
+  '跃': 'leap',
+  '跑': 'run',
+  '趴': 'lie on stomach',
+  '躺': 'lie down',
+  '蹲': 'squat',
+  '踩': 'stamp',
+  '踩': 'trample',
+  '蹄': 'hoof',
+  '蹬': 'step on',
+  '蹦': 'bounce',
+  '蹲': 'crouch',
+  '蹬': 'pedal',
+  '蹦': 'jump',
+  '躁': 'restless',
+  '躲': 'hide',
+  '躯': 'body',
+  '躺': 'recline',
+  '轰': 'boom',
+  '轨': 'track',
+  '轮': 'wheel',
+  '软': 'soft',
+  '轴': 'axis',
+  '轻': 'light',
+  '载': 'carry',
+  '较': 'compare',
+  '输': 'lose',
+  '辩': 'debate',
+  '辅': 'assist',
+  '辆': 'vehicle',
+  '辖': 'govern',
+  '辫': 'braid',
+  '辩': 'argue',
+  '边': 'side',
+  '辽': 'vast',
+  '达': 'reach',
+  '迁': 'move',
+  '迎': 'welcome',
+  '运': 'transport',
+  '过': 'pass',
+  '进': 'enter',
+  '连': 'connect',
+  '送': 'deliver',
+  '适': 'suitable',
+  '选': 'choose',
+  '递': 'deliver',
+  '逛': 'stroll',
+  '通': 'through',
+  '逗': 'tease',
+  '造': 'make',
+  '逼': 'force',
+  '逃': 'escape',
+  '逆': 'contrary',
+  '选': 'select',
+  '逐': 'chase',
+  '锁': 'lock',
+  '锄': 'hoe',
+  '锅': 'pot',
+  '锈': 'rust',
+  '锋': 'edge',
+  '锐': 'sharp',
+  '错': 'wrong',
+  '锡': 'tin',
+  '锣': 'gong',
+  '锤': 'hammer',
+  '锦': 'brocade',
+  '锻': 'forge',
+  '键': 'key',
+  '锯': 'saw',
+  '锹': 'spade',
+  '锻': 'temper',
+  '锲': 'engrave',
+  '锵': 'clang',
+  '锷': 'edge (of blade)',
+  '锻': 'forge',
+  '锹': 'shovel',
+  '镀': 'plate',
+  '镇': 'town',
+  '镐': 'pickaxe',
+  '镜': 'mirror',
+  '镣': 'shackle',
+  '镰': 'sickle',
+  '镶': 'inlay',
+  '长': 'long',
+  '门': 'door',
+  '闪': 'flash',
+  '闭': 'close',
+  '问': 'ask',
+  '闯': 'rush',
+  '闰': 'leap (year)',
+  '闲': 'idle',
+  '间': 'between',
+  '闷': 'bored',
+  '闸': 'sluice',
+  '闹': 'noisy',
+  '闺': 'boudoir',
+  '闻': 'hear',
+  '闽': 'Min (Fujian)',
+  '闼': 'side door',
+  '闽': 'Fujian',
+  '阁': 'pavilion',
+  '阅': 'read',
+  '阀': 'valve',
+  '阂': 'barrier',
+  '队': 'team',
+  '防': 'defend',
+  '阳': 'sun',
+  '阴': 'shade',
+  '阵': 'battle array',
+  '阶': 'step',
+  '阻': 'block',
+  '阿': 'ah',
+  '附': 'attach',
+  '际': 'border',
+  '陆': 'land',
+  '陈': 'arrange',
+  '陕': 'Shaanxi',
+  '随': 'follow',
+  '隐': 'hide',
+  '隔': 'separate',
+  '隙': 'crack',
+  '障': 'barrier',
+  '际': 'boundary',
+  '难': 'difficult',
+  '雀': 'sparrow',
+  '雁': 'wild goose',
+  '雄': 'male',
+  '雅': 'elegant',
+  '集': 'gather',
+  '雇': 'hire',
+  '雍': 'harmonious',
+  '雏': 'chick',
+  '雕': 'carve',
+  '雨': 'rain',
+  '雪': 'snow',
+  '零': 'zero',
+  '雷': 'thunder',
+  '雾': 'fog',
+  '需': 'need',
+  '震': 'shake',
+  '霄': 'sky',
+  '霍': 'quick',
+  '霎': 'in a flash',
+  '霉': 'mold',
+  '霸': 'tyrant',
+  '霹': 'crack (of thunder)',
+  '露': 'dew',
+  '青': 'green',
+  '静': 'quiet',
+  '非': 'wrong',
+  '靠': 'lean on',
+  '面': 'face',
+  '革': 'leather',
+  '匡': 'correct',
+  '匣': 'case',
+  '匪': 'bandit',
+  '匹': 'match',
+  '区': 'district',
+  '医': 'doctor',
+  '匾': 'horizontal board',
+  '匿': 'hide',
+  '十': 'ten',
+  '千': 'thousand',
+  '升': 'rise',
+  '午': 'noon',
+  '半': 'half',
+  '华': 'splendid',
+  '协': 'cooperate',
+  '卑': 'low',
+  '卒': 'soldier',
+  '卓': 'outstanding',
+  '单': 'single',
+  '卖': 'sell',
+  '南': 'south',
+  '博': 'broad',
+  '卜': 'divine',
+  '卞': 'impetuous',
+  '占': 'occupy',
+  '卡': 'card',
+  '卢': 'Lu',
+  '卤': 'salt',
+  '卦': 'divination symbol',
+  '卧': 'lie down',
+  '卫': 'guard',
+  '印': 'seal',
+  '危': 'danger',
+  '即': 'namely',
+  '却': 'but',
+  '卵': 'egg',
+  '卷': 'roll',
+  '卸': 'unload',
+  '卿': 'minister',
+  '厂': 'factory',
+  '厄': 'adversity',
+  '厅': 'hall',
+  '历': 'history',
+  '厉': 'strict',
+  '压': 'press',
+  '厌': 'dislike',
+  '厕': 'toilet',
+  '厘': 'centi-',
+  '厚': 'thick',
+  '原': 'original',
+  '厢': 'side room',
+  '厦': 'mansion',
+  '去': 'go',
+  '参': 'join',
+  '又': 'again',
+  '叉': 'fork',
+  '及': 'reach',
+  '友': 'friend',
+  '双': 'pair',
+  '反': 'reverse',
+  '发': 'send out',
+  '叔': 'uncle',
+  '取': 'take',
+  '受': 'receive',
+  '变': 'change',
+  '叙': 'narrate',
+  '叛': 'rebel',
+  '叠': 'fold',
+  '口': 'mouth',
+  '古': 'ancient',
+  '句': 'sentence',
+  '另': 'other',
+  '只': 'only',
+  '叫': 'call',
+  '召': 'summon',
+  '叭': 'trumpet',
+  '叮': 'sting',
+  '可': 'can',
+  '台': 'platform',
+  '史': 'history',
+  '右': 'right',
+  '叶': 'leaf',
+  '号': 'number',
+  '司': 'take charge',
+  '叹': 'sigh',
+  '吁': 'call on',
+  '吃': 'eat',
+  '各': 'each',
+  '合': 'combine',
+  '吉': 'lucky'
+};
+
+  
+
+    const translationData = [
+  {
+    zh: "那太白金星与美猴王，同出了洞天深处，一齐驾云而起。",
+    en: "The Great White Star (Venus) and the Handsome Monkey King came out from the deep cave together, riding clouds into the sky.",
+    de: "Der Große Venusstern und der schöne Affenkönig traten gemeinsam aus der tiefen Höhle und stiegen auf Wolken empor.",
+    fr: "La Grande Étoile Blanche et le Roi Singe sortirent ensemble de la grotte profonde et montèrent dans les nuées.",
+    es: "La Gran Estrella Blanca y el Rey Mono salieron juntos de la profunda cueva, ascendiendo en las nubes.",
+    it: "La Grande Stella Bianca e il Re Scimmia uscirono insieme dalla profonda caverna, salendo sulle nuvole.",
+    ru: "Великая Белая Звезда и Красивый Король-обезьяна вместе вышли из глубокой пещеры и поднялись на облаках."
+  },
+  {
+    zh: "原来悟空筋斗云比众不同，十分快疾，把个金星撇在脑后，先至南天门外。",
+    en: "It turns out that Wukong's somersault cloud was unique—extremely fast. He left Venus far behind and arrived first at the Southern Heavenly Gate.",
+    de: "Wukongs Überschlagswolke war ungewöhnlich schnell. Er ließ den Venus weit zurück und erreichte als Erster das südliche Himmelstor.",
+    fr: "La nuée culbute de Wukong était d'une rapidité exceptionnelle. Il laissa Vénus loin derrière et atteignit en premier la porte sud du Ciel.",
+    es: "Resulta que la nube voladora de Wukong era extraordinariamente rápida; dejó atrás a Venus y llegó primero a la Puerta Sur del Cielo.",
+    it: "La nuvola capriola di Wukong era unica e velocissima; lasciò indietro Venere e arrivò per primo alla Porta Celeste Sud.",
+    ru: "Оказывается, облако переворота Укуна было необычайно быстрым — он оставил Венеру далеко позади и первым достиг Южных Небесных Врат."
+  
+  },
+  {
+    zh: "正欲收云前进，被增长天王领着庞、刘、苟、毕、邓、辛、张、陶，一路大力天丁，枪刀剑戟，挡住天门，不肯放进。",
+    en: "Just as he was about to put away the cloud and proceed, the Heavenly King Zengzhang led Pang, Liu, Gou, Bi, Deng, Xin, Zhang, and Tao—with a squad of strong heavenly warriors wielding weapons—to block the gate and refuse entry.",
+    de: "Gerade als er weiterfliegen wollte, trat ihm der Himmelskönig Zengzhang mit Pang, Liu, Gou, Bi, Deng, Xin, Zhang und Tao sowie einer Schar himmlischer Krieger mit Waffen entgegen und versperrte das Tor.",
+    fr: "Alors qu'il allait avancer, le Roi céleste Zengzhang, accompagné de Pang, Liu, Gou, Bi, Deng, Xin, Zhang et Tao, et de puissants guerriers armés, bloqua la porte et lui refusa l'accès.",
+    es: "Cuando estaba a punto de avanzar, el Rey Celestial Zengzhang y sus generales bloquearon la puerta con armas, negándose a dejarle pasar.",
+    it: "Quando stava per avanzare, il Re Celeste Zengzhang, con i suoi generali e guerrieri armati, bloccò la porta celeste e non lo lasciò entrare.",
+    ru: "Когда он собирался войти, Небесный царь Цзэнчжан с генералами и солдатами преградили ему путь и не впустили."
+    
+  },
+  {
+    zh: "猴王道：“这个金星老儿，乃奸诈之徒！既请老孙，如何教人动刀动枪，阻塞门路？”",
+    en: "The Monkey King said: 'This old fellow Venus is a traitor! If you invited me, why let these men wield blades and spears to block my way?'",
+    de: "Der Affenkönig sagte: 'Dieser alte Venus ist ein Betrüger! Wenn er mich eingeladen hat, warum lässt er dann Krieger mit Waffen das Tor versperren?'",
+    fr: "Le Roi Singe dit : 'Ce vieillard Vénus est un traître ! Si tu m'as invité, pourquoi alors ces soldats armés m'empêchent-ils d'entrer ?'",
+    es: "El Rey Mono dijo: '¡Este viejo Venus es un traidor! Si me invitaste, ¿por qué dejas que usen armas para bloquear mi camino?'",
+    it: "Il Re Scimmia disse: 'Questo vecchio Venere è un traditore! Se mi hai invitato, perché permetti che mi blocchino con armi?'",
+    ru: "Король-обезьяна сказал: «Этот старик Венера — обманщик! Если ты меня пригласил, почему позволил блокировать мне дорогу оружием?»"
+  
+  },
+  {
+    zh: "正嚷间，金星倏到。悟空就觌面发狠道：“你这老儿，怎么哄我？被你说奉玉帝招安旨意来请，却怎么教这些人阻住天门，不放老孙进去？”",
+    en: "As he was shouting, Venus suddenly arrived. Wukong furiously said to his face: 'Old man, how could you deceive me? You said you came under the Jade Emperor's order to invite me. Why then are these men blocking the gate and not letting me in?'",
+    de: "Während er schimpfte, kam Venus plötzlich an. Wukong sagte wütend: 'Alter Mann, wie konntest du mich täuschen? Du hast gesagt, du seist im Auftrag des Jadekaisers gekommen. Warum also blockieren diese Leute das Himmelstor?'",
+    fr: "Alors qu'il criait, Vénus arriva soudain. Wukong dit avec colère : 'Vieil homme, comment as-tu pu me tromper ? Tu m’as dit être envoyé par l’Empereur de Jade, alors pourquoi ces gens m’empêchent-ils d’entrer ?'",
+    es: "Mientras gritaba, Venus llegó repentinamente. Wukong le dijo enojado: '¿Cómo pudiste engañarme? Dijiste que venías por orden del Emperador de Jade, ¿entonces por qué me bloquean la puerta?'",
+    it: "Mentre gridava, Venere arrivò improvvisamente. Wukong disse furioso: 'Come hai potuto ingannarmi? Hai detto che venivi per ordine dell’Imperatore di Giada, allora perché mi bloccano la porta?'",
+    ru: "Пока он кричал, Венера внезапно появился. Укун рассерженно сказал: «Как ты мог меня обмануть? Ты сказал, что пришёл по приказу Нефритового Императора, так почему же меня не пускают?»"
+    },
+  {
+    zh: "金星笑道：“大王息怒。你自来未曾到此天堂，却又无名，众天丁又与你素不相识，他怎肯放你擅入？等如今见了天尊，授了仙箓，注了官名，向后随你出入，谁复挡也？”",
+    en: "Venus smiled and said: 'Calm down, great king. You've never been to Heaven before and have no official title. The heavenly guards don't know you, so why would they let you in? But once you've met the Celestial Lord and received your immortal register and official post, none will stop you anymore.'",
+    de: "Venus lächelte und sagte: 'Beruhige dich, großer König. Du warst noch nie zuvor im Himmel und hast keinen Titel. Die himmlischen Wächter kennen dich nicht – warum sollten sie dich hineinlassen? Doch wenn du den Himmelsfürsten gesehen und dein Amt erhalten hast, wird dich niemand mehr aufhalten.'",
+    fr: "Vénus sourit et dit : 'Calmez-vous, grand roi. Vous n’êtes jamais venu au Ciel et vous n’avez pas de titre. Les gardes célestes ne vous connaissent pas. Pourquoi vous laisseraient-ils entrer ? Une fois que vous aurez rencontré le Seigneur céleste et reçu votre registre immortel et votre fonction, plus personne ne vous arrêtera.'",
+    es: "Venus sonrió y dijo: 'Tranquilízate, gran rey. Nunca has venido aquí y no tienes título. Los guardias celestiales no te conocen, ¿cómo dejarían que entres? Cuando tengas tu puesto oficial, nadie te detendrá.'",
+    it: "Venere sorrise e disse: 'Calmati, grande re. Non sei mai stato qui e non hai titolo. Le guardie celesti non ti conoscono; quando otterrai il titolo, nessuno ti fermerà.'",
+    ru: "Венера улыбнулся и сказал: «Успокойся, великий король. Ты никогда не был здесь и не имеешь звания. Небесные стражи тебя не знают — кто же тебя пустит? Когда получишь титул, никто больше не остановит.»"
+    },
+  {
+    zh: "悟空道：“这等说，也罢，我不进去了。”金星又用手扯住道：“你还同我进去。”",
+    en: "Wukong said: 'If that's how it is, fine, I'm not going in.' But Venus pulled him and said: 'Come in with me anyway.'",
+    de: "Wukong sagte: 'Wenn das so ist, dann gehe ich nicht hinein.' Doch Venus zog ihn und sagte: 'Geh trotzdem mit mir hinein.'",
+    fr: "Wukong dit : 'Dans ce cas, je n’entre pas.' Mais Vénus le tira par la main : 'Entre quand même avec moi.'",
+    es: "Wukong dijo: 'Si es así, entonces no entro.' Pero Venus lo tomó de la mano y dijo: 'Ven conmigo de todos modos.'",
+    it: "Wukong disse: 'Se è così, allora non entro.' Ma Venere lo tirò e disse: 'Vieni comunque con me.'",
+    ru: "Укун сказал: «Если так, тогда я не войду.» Но Венера взял его за руку: «Пойдем всё равно со мной.»"
+    },
+  {
+    zh: "将近天门，金星高叫道：“那天门天将，大小吏兵，放开路者。此乃下界仙人，我奉玉帝圣旨宣他来也。”",
+    en: "Approaching the Heavenly Gate, Venus shouted: 'Heavenly generals and all officials, clear the way! This is a celestial from the mortal world. I bring him here under the Jade Emperor’s edict.'",
+    de: "Als sie sich dem Himmelstor näherten, rief Venus: 'Himmlische Generäle und Beamte, macht Platz! Dieser hier ist ein Unsterblicher aus der Unterwelt. Ich bringe ihn im Auftrag des Jadekaisers.'",
+    fr: "En s’approchant de la Porte Céleste, Vénus cria : 'Généraux et officiers célestes, ouvrez la voie ! C’est un immortel venu du monde d’en bas. Je l’amène sur ordre de l’Empereur de Jade.'",
+    es: "Al acercarse a la Puerta Celestial, Venus gritó: '¡Generales y oficiales, abran el paso! Este es un inmortal del mundo terrenal, lo traigo por orden del Emperador de Jade.'",
+    it: "Avvicinandosi alla Porta Celeste, Venere gridò: 'Generali e ufficiali, fate largo! Questo è un immortale del mondo terreno, lo porto qui per ordine dell’Imperatore di Giada.'",
+    ru: "Подходя к Небесным вратам, Венера закричал: «Генералы и стражи, откройте дорогу! Это бессмертный из нижнего мира, я привёл его по приказу Нефритового Императора.»"
+    },
+  {
+    zh: "那增长天王与众天丁俱才敛兵退避。猴王始信其言，同金星缓步入里观看。",
+    en: "Then the Heavenly King Zengzhang and his soldiers finally withdrew their weapons and stepped aside. The Monkey King, now convinced, walked in slowly with Venus to look around.",
+    de: "Da zogen der Himmelskönig Zengzhang und seine Himmelskrieger ihre Waffen zurück. Der Affenkönig, nun überzeugt, betrat langsam mit Venus das Innere, um sich umzusehen.",
+    fr: "Le Roi céleste Zengzhang et ses soldats se retirèrent alors. Le Roi Singe, convaincu, entra lentement avec Vénus pour regarder autour de lui.",
+    es: "Entonces el Rey Celestial y los soldados retiraron sus armas. El Rey Mono, convencido, entró lentamente con Venus para observar.",
+    it: "Allora il Re Celeste e i soldati ritirarono le armi. Il Re Scimmia, ormai convinto, entrò lentamente con Venere per guardarsi intorno.",
+    ru: "Тогда Небесный царь и солдаты убрали оружие. Король-обезьяна, убедившись, медленно вошёл вместе с Венерой осматриваться."
+    }
+];
+
+    const contentDiv = document.getElementById('content');
+    const popup = document.getElementById('popup');
+
+    lines.forEach((line, index) => {
+      const div = document.createElement('div');
+      div.className = 'line';
+      div.dataset.index = index;
+
+      for (let char of line) {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = char;
+        span.dataset.pinyin = pinyinMap[char] || '';
+        span.addEventListener('click', (e) => {
+          popup.style.display = 'block';
+          popup.style.top = `${e.pageY + 5}px`;
+          popup.style.left = `${e.pageX + 5}px`;
+          popup.textContent = `${char}:${definitionMap[char] || '未收录'}`;
+        });
+        div.appendChild(span);
+      }
+
+      const readBtn = document.createElement('button');
+      readBtn.textContent = '朗读';
+      readBtn.onclick = () => speakLine(index, line, readBtn);
+      div.appendChild(readBtn);
+
+      const transBtn = document.createElement('button');
+      transBtn.textContent = '翻译';
+      transBtn.onclick = () => {
+        const transDiv = div.querySelector('.translation');
+        if (transDiv) transDiv.style.display = transDiv.style.display === 'none' ? 'block' : 'none';
+      };
+      div.appendChild(transBtn);
+
+      const translation = document.createElement('div');
+      translation.className = 'translation';
+      translation.innerHTML = `
+        <button onclick="toggleTranslation(this, 'en')">英文</button>
+        <button onclick="toggleTranslation(this, 'de')">德文</button>
+        <button onclick="toggleTranslation(this, 'fr')">法文</button>
+        <button onclick="toggleTranslation(this, 'es')">西班牙文</button>
+        <button onclick="toggleTranslation(this, 'it')">意大利文</button>
+        <button onclick="toggleTranslation(this, 'ru')">俄文</button>
+        <div class='trans-content' data-lang='en' style='display:none;margin-top:0.5em'>${translationData[index].en}</div>
+        <div class='trans-content' data-lang='de' style='display:none;margin-top:0.5em'>${translationData[index].de}</div>
+        <div class='trans-content' data-lang='fr' style='display:none;margin-top:0.5em'>${translationData[index].fr}</div>
+        <div class='trans-content' data-lang='es' style='display:none;margin-top:0.5em'>${translationData[index].es}</div>
+        <div class='trans-content' data-lang='it' style='display:none;margin-top:0.5em'>${translationData[index].it}</div>
+        <div class='trans-content' data-lang='ru' style='display:none;margin-top:0.5em'>${translationData[index].ru}</div>`;
+      div.appendChild(translation);
+
+      contentDiv.appendChild(div);
+    });
+
+    document.body.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('char')) popup.style.display = 'none';
+    });
+
+    let utterance = null;
+    function speakLine(index, text, btn) {
+      if (utterance) {
+        speechSynthesis.cancel();
+        utterance = null;
+        btn.textContent = '朗读';
+        document.querySelectorAll('.line').forEach(l => l.classList.remove('highlight'));
+        return;
+      }
+      utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      utterance.onend = () => {
+        document.querySelector(`[data-index='${index}']`).classList.remove('highlight');
+        btn.textContent = '朗读';
+        utterance = null;
+      };
+      document.querySelector(`[data-index='${index}']`).classList.add('highlight');
+      speechSynthesis.speak(utterance);
+      btn.textContent = '停止';
+    }
+
+    function toggleFullReading(button) {
+      if (utterance) {
+        speechSynthesis.cancel();
+        utterance = null;
+        button.textContent = '全文朗读';
+        document.querySelectorAll('.line').forEach(l => l.classList.remove('highlight'));
+        return;
+      }
+
+      let i = 0;
+      function readNext() {
+        if (i >= lines.length) {
+          utterance = null;
+          button.textContent = '全文朗读';
+          return;
+        }
+        const line = lines[i];
+        const div = document.querySelector(`[data-index='${i}']`);
+        document.querySelectorAll('.line').forEach(l => l.classList.remove('highlight'));
+        div.classList.add('highlight');
+        utterance = new SpeechSynthesisUtterance(line);
+        utterance.lang = 'zh-CN';
+        utterance.onend = () => {
+          i++;
+          readNext();
+        };
+        speechSynthesis.speak(utterance);
+      }
+      button.textContent = '停止朗读';
+      readNext();
+    }
+  function toggleTranslation(button, lang) {
+  const container = button.parentElement;
+  const blocks = container.querySelectorAll('.trans-content');
+  blocks.forEach(b => b.style.display = b.dataset.lang === lang ? 'block' : 'none');
+}
+</script>
+</body>
+</html>

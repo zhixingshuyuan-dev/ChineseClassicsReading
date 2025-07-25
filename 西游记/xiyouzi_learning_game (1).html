@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>西游汉字探秘</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .sentence {
+      margin-bottom: 10px;
+      font-size: 24px;
+    }
+    .char {
+      display: inline-block;
+      margin: 5px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      user-select: none;
+    }
+    .char.known {
+      background-color: #eee;
+      color: #888;
+      pointer-events: none;
+    }
+    .box {
+      width: 200px;
+      min-height: 100px;
+      border: 2px dashed #666;
+      margin: 10px;
+      padding: 10px;
+      display: inline-block;
+      vertical-align: top;
+    }
+    .box h3, .box h4 {
+      margin: 0 0 10px 0;
+    }
+    #structure-container {
+      display: flex;
+      gap: 20px;
+    }
+    #structure-container .box {
+      width: 600px;
+    }
+    #structure-container img {
+      width: 100px;
+      height: auto;
+      margin-bottom: 5px;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 18px;
+      color: green;
+    }
+    .info {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #333;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .word-display {
+      font-size: 20px;
+    }
+    .phrase-display {
+      font-size: 48px;
+      line-height: 2.2;
+    }
+    #nextButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>西游汉字探秘：闯关学汉字</h1>
+  <p>多次点击原文汉字，有惊喜！Click characters multiple times to discover surprises!</p>
+
+  <div class="sentence" id="sentence"></div>
+  <button id="readSentenceBtn">🔊 朗读整句</button>
+  <button id="nextButton">下一句</button>
+  <div class="info" id="charInfo"></div>
+
+  <div id="structure-container">
+    <div class="box" id="singleBox" ondragover="allowDrop(event)" ondrop="drop(event, 'single')">
+      <h3>独体字</h3>
+    </div>
+    <div class="box" id="structure-updown" ondragover="allowDrop(event)" ondrop="drop(event, 'updown')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/f/f1/%E4%B8%8A%E4%B8%8B%E7%BB%93%E6%9E%84.svg" alt="上下结构">
+      <h4>上下结构 (Top-Bottom Structure)</h4>
+    </div>
+    <div class="box" id="structure-leftright" ondragover="allowDrop(event)" ondrop="drop(event, 'leftright')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/1/1f/%E5%B7%A6%E5%8F%B3%E7%BB%93%E6%9E%84.svg" alt="左右结构">
+      <h4>左右结构 (Left-Right Structure)</h4>
+    </div>
+    <div class="box" id="structure-enclose" ondragover="allowDrop(event)" ondrop="drop(event, 'enclose')">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/0/0e/%E5%8C%85%E5%9B%B4%E7%BB%93%E6%9E%84.svg" alt="包围结构">
+      <h4>包围结构 (Enclosed Structure)</h4>
+    </div>
+  </div>
+
+  <div id="feedback"></div>
+
+  <script>
+    const sentences = [
+      '却说那长老与八戒挑着行李，牵着马，慢慢的走。',
+      '忽听得松林背后有人叫道：“那挑担的且慢走！”'
+    ];
+
+    let currentSentenceIndex = 0;
+    const sentenceDiv = document.getElementById('sentence');
+    const infoBox = document.getElementById('charInfo');
+    const nextButton = document.getElementById('nextButton');
+    const readSentenceBtn = document.getElementById('readSentenceBtn');
+    let knownChars = new Set();
+    let learnedCount = 0;
+    const clickState = {};
+
+    const demoData = {
+      '却': { pinyin: 'què', word: '但是', phrase: '我很累却不能休息', structure: 'leftright' },
+      '说': { pinyin: 'shuō', word: '说话', phrase: '他说了什么', structure: 'leftright' },
+      '那': { pinyin: 'nà', word: '那个', phrase: '那个孩子很聪明', structure: 'enclose' },
+      '长': { pinyin: 'zhǎng', word: '长大', phrase: '他长大了', structure: 'single' },
+      '老': { pinyin: 'lǎo', word: '老人', phrase: '那位老人很慈祥', structure: 'updown' },
+      '与': { pinyin: 'yǔ', word: '参与', phrase: '他参与了比赛', structure: 'single' },
+      '八': { pinyin: 'bā', word: '八月', phrase: '八月天气热', structure: 'single' },
+      '戒': { pinyin: 'jiè', word: '戒指', phrase: '他戴了戒指', structure: 'leftright' },
+      '挑': { pinyin: 'tiāo', word: '挑选', phrase: '你可以挑喜欢的', structure: 'leftright' },
+      '着': { pinyin: 'zhe', word: '看着', phrase: '他看着窗外', structure: 'leftright' },
+      '行': { pinyin: 'xíng', word: '行走', phrase: '他在路上行走', structure: 'leftright' },
+      '李': { pinyin: 'lǐ', word: '行李', phrase: '行李太多了', structure: 'updown' },
+      '牵': { pinyin: 'qiān', word: '牵手', phrase: '他们牵手走路', structure: 'leftright' },
+      '马': { pinyin: 'mǎ', word: '马车', phrase: '马车来了', structure: 'single' },
+      '慢': { pinyin: 'màn', word: '慢慢', phrase: '慢慢走不着急', structure: 'leftright' },
+      '的': { pinyin: 'de', word: '我的', phrase: '这是我的书', structure: 'leftright' },
+      '走': { pinyin: 'zǒu', word: '走路', phrase: '他走得很快', structure: 'leftright' },
+      '忽': { pinyin: 'hū', word: '忽然', phrase: '他忽然笑了', structure: 'leftright' },
+      '听': { pinyin: 'tīng', word: '听见', phrase: '我听见声音了', structure: 'leftright' },
+      '得': { pinyin: 'dé', word: '得到', phrase: '我得到了一本书', structure: 'leftright' },
+      '松': { pinyin: 'sōng', word: '松树', phrase: '松树高大', structure: 'leftright' },
+      '林': { pinyin: 'lín', word: '树林', phrase: '树林很密', structure: 'leftright' },
+      '背': { pinyin: 'bèi', word: '背后', phrase: '背后有人来', structure: 'leftright' },
+      '后': { pinyin: 'hòu', word: '后来', phrase: '后来他回家了', structure: 'leftright' },
+      '有': { pinyin: 'yǒu', word: '有名', phrase: '他很有名', structure: 'leftright' },
+      '人': { pinyin: 'rén', word: '人民', phrase: '人民万岁', structure: 'single' },
+      '叫': { pinyin: 'jiào', word: '叫喊', phrase: '他大声叫喊', structure: 'leftright' },
+      '道': { pinyin: 'dào', word: '说道', phrase: '他说道...', structure: 'leftright' },
+      '“': { pinyin: '', word: '', phrase: '', structure: 'single' },
+      '”': { pinyin: '', word: '', phrase: '', structure: 'single' },
+      '且': { pinyin: 'qiě', word: '且慢', phrase: '你且慢些', structure: 'leftright' },
+      '慢': { pinyin: 'màn', word: '慢慢', phrase: '慢慢走不着急', structure: 'leftright' }
+    };
+
+    function renderSentence() {
+      sentenceDiv.innerHTML = '';
+      const sentence = sentences[currentSentenceIndex];
+      for (const char of sentence.replace(/[，。：“”！]/g, '')) {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = char;
+        span.setAttribute('draggable', 'true');
+        span.setAttribute('data-char', char);
+        span.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('text/plain', char);
+        });
+        span.addEventListener('click', () => handleCharClick(span, char));
+        sentenceDiv.appendChild(span);
+      }
+    }
+
+    nextButton.addEventListener('click', () => {
+      if (currentSentenceIndex < sentences.length - 1) {
+        currentSentenceIndex++;
+        renderSentence();
+      }
+    });
+
+    readSentenceBtn.addEventListener('click', () => {
+      const text = sentences[currentSentenceIndex];
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'zh-CN';
+      utter.rate = 0.75;
+      speechSynthesis.speak(utter);
+    });
+
+    function handleCharClick(span, ch) {
+      if (!demoData[ch]) return;
+      if (!clickState[ch]) clickState[ch] = 0;
+      clickState[ch]++;
+      const count = clickState[ch];
+      const data = demoData[ch];
+
+      if (count === 1) {
+        speakChar(ch);
+      } else if (count === 2) {
+        infoBox.innerHTML = `<div class='word-display'>拼音：${data.pinyin}</div>`;
+        setTimeout(() => infoBox.innerHTML = '', 3000);
+      } else if (count === 3) {
+        speakText(`${data.word}的${ch}`);
+      } else if (count === 4) {
+        infoBox.innerHTML = `<div class='word-display'>词汇：${data.word}</div>`;
+      } else if (count === 5) {
+        const phraseHtml = generatePinyinMarkup(data.phrase);
+        infoBox.innerHTML = `<div class='phrase-display'>${phraseHtml}</div>`;
+      } else if (count === 6) {
+        speakText(data.phrase);
+        learnedCount++;
+        document.getElementById('feedback').innerText = `你学会了 ${learnedCount} 个汉字！`;
+      }
+    }
+
+    function generatePinyinMarkup(text) {
+      return text.split('').map(ch => {
+        const py = demoData[ch]?.pinyin || ' ';
+        return `<div style='display:inline-block;text-align:center;margin:0 4px;'>
+                  <div style='font-size:20px;'>${py}</div>
+                  <div>${ch}</div>
+                </div>`;
+      }).join('');
+    }
+
+    function speakChar(char) {
+      const utter = new SpeechSynthesisUtterance(char);
+      utter.lang = 'zh-CN';
+      utter.rate = 0.75;
+      speechSynthesis.speak(utter);
+    }
+
+    function speakText(text) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'zh-CN';
+      utter.rate = 0.75;
+      speechSynthesis.speak(utter);
+    }
+
+    function allowDrop(e) {
+      e.preventDefault();
+    }
+
+    function drop(e, type) {
+      e.preventDefault();
+      const char = e.dataTransfer.getData('text');
+      if (knownChars.has(char)) return;
+      const data = demoData[char];
+      if (!data || !data.structure) return;
+
+      const el = document.createElement('div');
+      el.textContent = char;
+      el.style.fontSize = '20px';
+      el.style.padding = '5px';
+      el.style.cursor = 'default';
+      el.style.pointerEvents = 'none';
+      e.target.appendChild(el);
+
+      if (type === data.structure || (type === 'single' && data.structure === 'single')) {
+        speakText('分类正确！Well done!');
+        document.getElementById('feedback').innerText = '分类正确！Well done!';
+      } else {
+        speakText('分类错误，再试一次');
+        document.getElementById('feedback').innerText = '分类错误，再试一次';
+        el.style.backgroundColor = '#fcc';
+      }
+    }
+
+    renderSentence();
+  </script>
+</body>
+</html>

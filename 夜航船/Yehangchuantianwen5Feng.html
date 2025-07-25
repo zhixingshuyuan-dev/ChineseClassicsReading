@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>《天文部·風卷》多语阅读辅助</title>
+  <style>
+    body {
+      font-family: 'Noto Serif TC', serif;
+      line-height: 1.8;
+      padding: 20px;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    .section {
+      margin-bottom: 50px;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .text {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .char-wrap {
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+      margin: 0 1px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .char-wrap:hover {
+      background-color: #2a2a2a;
+    }
+    .popup {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2b2b2b;
+      border: 1px solid #555;
+      padding: 5px 8px;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 10;
+      color: #f0f0f0;
+    }
+    .char-wrap:hover .popup {
+      display: block;
+    }
+    .button-bar {
+      margin-top: 12px;
+    }
+    button {
+      margin: 4px 6px 0 0;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background-color: #333;
+      color: #f0f0f0;
+      cursor: pointer;
+    }
+    .translation {
+      margin-top: 12px;
+      font-size: 16px;
+      color: #d0d0d0;
+      white-space: pre-wrap;
+      background-color: #222;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+  </style>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script>
+const data = [
+  `風神名封十八姨，又名馮異。雲神名雲將。`,
+  `八風：八節之風，立春條風（赦小過，出稽留），春分明庶風（正封疆，修田疇），立夏清明風（出幣帛，禮諸侯），夏至景風（辯大將，封有功），立秋涼風（報土功，祀四郊），秋分閭闔風（解懸垂，琴瑟不張），立冬不周風（修宮室，完邊城），冬至廣漢風（誅有罪，斷大刑）。`,
+  `四時風：春之風，自下升上，紙鳶因之以起。夏之風，橫行空中，故樹杪多風聲。秋之風，自上而下，木葉因之以隕。冬之風，著土而行，是以吼地而生寒。`,
+  `少女風：管輅過清河，倪太守以天旱為憂。輅曰：「樹上已有少女微風，樹間已有陽鳥和鳴。其雨至矣。」果如其言。`,
+  `颶風：《嶺表錄》：颶風之作，多在初秋，作則海潮溢，俗謂之颶母風。`,
+  `石尤風：石氏女為尤郎婦。尤為商遠出，妻阻之，不從。郎出不歸，石病且死，曰：「吾恨不能阻郎行。後有商賈遠行者，吾當作大風以阻之。」自後行旅遇逆風，曰：「此石尤風也。」`,
+  `羊角風：《莊子》：「大鵬起於北溟，而徙南溟也，摶扶搖羊角而上者九萬裏。」宋熙寧間，武城有旋風如羊角，拔木，官舍卷入雲中，人民墜地死。`,
+  `花信風：唐徐師川詩雲：「一百五日寒食雨，二十四番花信風。」《歲時記》曰：「一月二氣六候，自小寒至谷雨。四月八氣二十四候，每候五日，以一花之風信應之。」`,
+  `泰山雲：《公羊傳》：泰山之雲，觸石而起，膚寸而合，不崇朝而雨天下。`,
+  `卿雲：若雲非雲，若煙非煙，郁郁紛紛，蕭索輪菌，謂之慶雲。王者德至於山陵，則卿雲出。《春秋繁露》：「人君修德，則矞雲見。」雲五色為卿，三色為矞。`,
+  `沆瀣：夜半清氣從北方起者，謂之沆瀣。`,
+  `神瀵：《列子》言：神瀵即《易》所謂山澤氣相蒸，雲興而為雨也。陳希夷詩：「倏爾火輪煎地脈，愕然神瀵湧山椒。」`,
+  `白雲孤飛：狄仁傑嘗赴并州法掾，登天行山，見白雲孤飛，泣曰：「吾親舍其下。」`,
+  `五色雲：宋韓琦，弱冠及第，方傳臚，時太史奏：「五色雲現。」出入將相，為一代名臣。`,
+  `風：天地之使也，大塊之噫氣，陰陽之怒而為風也。《洛神賦》：「屏翳收風」。屏翳，風師也，又名飛廉；飛廉，神禽，即箕主也。又曰：「箕主簸揚，能致風雨。」`,
+  `風木悲：《春秋》：臯魚宦遊列國，歸而母卒，泣曰：「樹欲靜而風不息，子欲養而親不在。」遂自刎死。`,
+  `歌南風之詩：大舜彈五絃之琴，歌南風之詩，曰：「南風之熏兮，可以解吾民之慍兮；南風之時兮，可以阜吾民之財兮。」`,
+  `占風知赦：漢河內張成善風角，推占當赦，教子殺人。司隸李膺督促收捕，既而逢宥獲免，膺疾憤愈憤疾，竟按殺之。`,
+  `祭風破操：操連船艦於赤壁，周瑜用黃蓋火攻之策。時隆冬無東南風，諸葛孔明築壇而祭，應期風至，大破曹兵。`,
+  `雲霞：雲，山川之氣也。日旁彩雲名霞，東西二方赤色，亦曰霞。《易經》：「雲從龍，風從虎。」孔子曰：「於我如浮雲」。`,
+  `雲出無心：陶詞：「雲無心而出岫。」`,
+  `占雲：二至、二分，望雲色以卜歲之豐兇水旱。`,
+  `行雲：楚襄王游於高唐，夢一女曰：「妾在巫山之陽，高丘之上，朝為行雲，暮為行雨。」比旦視之，如其言。`,
+  `落霞：王勃《滕王閣賦》：「落霞與孤鶩齊飛。」後一士子夜泊江中，聞水中吟，此士曰：「何不云『落霞孤鶩齊飛，秋水長天一色』。」鬼遂絕。`
+]
+
+const dictionary = {
+  "風": { pinyin: "fēng", en: "wind" },
+  "神": { pinyin: "shén", en: "god; deity" },
+  "名": { pinyin: "míng", en: "name" },
+  "封": { pinyin: "fēng", en: "to seal; surname" },
+  "十八": { pinyin: "shí bā", en: "eighteen" },
+  "姨": { pinyin: "yí", en: "aunt" },
+  "又": { pinyin: "yòu", en: "again; also" },
+  "馮": { pinyin: "Féng", en: "surname Feng" },
+  "異": { pinyin: "yì", en: "different; unusual" },
+  "雲": { pinyin: "yún", en: "cloud" },
+  "將": { pinyin: "jiāng", en: "will; shall; general" },
+  
+  "八": { pinyin: "bā", en: "eight" },
+  "節": { pinyin: "jié", en: "festival; joint" },
+  "之": { pinyin: "zhī", en: "of; (possessive particle)" },
+  "立": { pinyin: "lì", en: "to stand; establish" },
+  "春": { pinyin: "chūn", en: "spring" },
+  "條": { pinyin: "tiáo", en: "strip; article" },
+  "赦": { pinyin: "shè", en: "to pardon" },
+  "小": { pinyin: "xiǎo", en: "small" },
+  "過": { pinyin: "guò", en: "to pass; mistake" },
+  "出": { pinyin: "chū", en: "to go out" },
+  "稽": { pinyin: "jī", en: "to check; delay" },
+  "留": { pinyin: "liú", en: "to stay" },
+  "明": { pinyin: "míng", en: "bright; clear" },
+  "庶": { pinyin: "shù", en: "common; numerous" },
+  "正": { pinyin: "zhèng", en: "correct; upright" },
+  "疆": { pinyin: "jiāng", en: "border" },
+  "修": { pinyin: "xiū", en: "to repair; cultivate" },
+  "田": { pinyin: "tián", en: "field" },
+  "疇": { pinyin: "chóu", en: "farmland; category" },
+  "夏": { pinyin: "xià", en: "summer" },
+  "清": { pinyin: "qīng", en: "clear; pure" },
+  "幣": { pinyin: "bì", en: "coin; currency" },
+  "帛": { pinyin: "bó", en: "silk" },
+  "禮": { pinyin: "lǐ", en: "ritual; courtesy" },
+  "諸": { pinyin: "zhū", en: "all; various" },
+  "侯": { pinyin: "hóu", en: "marquis" },
+  "至": { pinyin: "zhì", en: "to arrive; extremely" },
+  "景": { pinyin: "jǐng", en: "scenery; bright" },
+  "辯": { pinyin: "biàn", en: "to debate" },
+  "大": { pinyin: "dà", en: "big" },
+  "功": { pinyin: "gōng", en: "merit; work" },
+  "秋": { pinyin: "qiū", en: "autumn" },
+  "涼": { pinyin: "liáng", en: "cool" },
+  "報": { pinyin: "bào", en: "to report; repay" },
+  "土": { pinyin: "tǔ", en: "earth" },
+  "祀": { pinyin: "sì", en: "to worship" },
+  "郊": { pinyin: "jiāo", en: "suburbs" },
+  "閭": { pinyin: "lǘ", en: "village gate" },
+  "闔": { pinyin: "hé", en: "to close; all" },
+  "解": { pinyin: "jiě", en: "to untie; explain" },
+  "懸": { pinyin: "xuán", en: "to hang" },
+  "垂": { pinyin: "chuí", en: "to hang down" },
+  "琴": { pinyin: "qín", en: "zither" },
+  "瑟": { pinyin: "sè", en: "zither" },
+  "張": { pinyin: "zhāng", en: "to stretch; surname" },
+  "冬": { pinyin: "dōng", en: "winter" },
+  "不": { pinyin: "bù", en: "not" },
+  "周": { pinyin: "zhōu", en: "Zhou dynasty; all around" },
+  "完": { pinyin: "wán", en: "complete" },
+  "邊": { pinyin: "biān", en: "side; border" },
+  "城": { pinyin: "chéng", en: "city" },
+  "廣": { pinyin: "guǎng", en: "wide" },
+  "漢": { pinyin: "hàn", en: "Han dynasty" },
+  "誅": { pinyin: "zhū", en: "to punish" },
+  "有": { pinyin: "yǒu", en: "to have" },
+  "罪": { pinyin: "zuì", en: "crime" },
+  "斷": { pinyin: "duàn", en: "to break; decide" },
+  "刑": { pinyin: "xíng", en: "punishment" },
+  
+  "四": { pinyin: "sì", en: "four" },
+  "時": { pinyin: "shí", en: "time; season" },
+  "自": { pinyin: "zì", en: "from; self" },
+  "下": { pinyin: "xià", en: "below" },
+  "升": { pinyin: "shēng", en: "to rise" },
+  "上": { pinyin: "shàng", en: "above" },
+  "紙": { pinyin: "zhǐ", en: "paper" },
+  "鳶": { pinyin: "yuān", en: "kite (bird)" },
+  "因": { pinyin: "yīn", en: "because; follow" },
+  "以": { pinyin: "yǐ", en: "with; by means of" },
+  "起": { pinyin: "qǐ", en: "to rise" },
+  "橫": { pinyin: "héng", en: "horizontal" },
+  "行": { pinyin: "xíng", en: "to walk" },
+  "空": { pinyin: "kōng", en: "empty; sky" },
+  "中": { pinyin: "zhōng", en: "middle" },
+  "故": { pinyin: "gù", en: "reason; therefore" },
+  "樹": { pinyin: "shù", en: "tree" },
+  "杪": { pinyin: "miǎo", en: "treetop" },
+  "多": { pinyin: "duō", en: "many" },
+  "聲": { pinyin: "shēng", en: "sound" },
+  "木": { pinyin: "mù", en: "wood" },
+  "葉": { pinyin: "yè", en: "leaf" },
+  "隕": { pinyin: "yǔn", en: "to fall" },
+  "著": { pinyin: "zhuó", en: "to attach" },
+  "而": { pinyin: "ér", en: "and; but" },
+  "是": { pinyin: "shì", en: "is; this" },
+  "吼": { pinyin: "hǒu", en: "to roar" },
+  "地": { pinyin: "dì", en: "earth; ground" },
+  "生": { pinyin: "shēng", en: "to be born; life" },
+  "寒": { pinyin: "hán", en: "cold" },
+  
+  // 继续添加其他生词...
+  "颶": { pinyin: "jù", en: "hurricane" },
+  "嶺": { pinyin: "lǐng", en: "mountain range" },
+  "表": { pinyin: "biǎo", en: "surface; table" },
+  "錄": { pinyin: "lù", en: "record" },
+  "作": { pinyin: "zuò", en: "to do; make" },
+  "初": { pinyin: "chū", en: "beginning" },
+  "海": { pinyin: "hǎi", en: "sea" },
+  "潮": { pinyin: "cháo", en: "tide" },
+  "溢": { pinyin: "yì", en: "to overflow" },
+  "俗": { pinyin: "sú", en: "custom; vulgar" },
+  "謂": { pinyin: "wèi", en: "to call; say" },
+  "母": { pinyin: "mǔ", en: "mother" },
+  
+  // 更多字典条目...
+}
+
+const langs = ['en', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'vi', 'ru', 'el', 'la', 'th', 'ms', 'ar']
+
+function renderChar(c) {
+  if (!dictionary[c]) return `<span class="char-wrap">${c}</span>`
+  const { pinyin, en } = dictionary[c]
+  return `
+    <span class="char-wrap">
+      ${c}
+      <span class="popup">${pinyin}<br>${en}</span>
+    </span>`
+}
+
+const content = document.getElementById('content')
+
+data.forEach((paragraph, i) => {
+  const div = document.createElement('div')
+  div.className = 'section'
+
+  const raw = document.createElement('div')
+  raw.className = 'text'
+  raw.innerText = paragraph
+
+  const btnRead = document.createElement('button')
+  btnRead.textContent = '朗讀'
+  btnRead.onclick = () => {
+    if (btnRead.dataset.playing === 'true') {
+      speechSynthesis.cancel()
+      btnRead.dataset.playing = 'false'
+    } else {
+      const utter = new SpeechSynthesisUtterance(paragraph)
+      utter.lang = 'zh-CN'
+      speechSynthesis.speak(utter)
+      btnRead.dataset.playing = 'true'
+      utter.onend = () => btnRead.dataset.playing = 'false'
+    }
+  }
+
+  const annotated = document.createElement('div')
+  annotated.className = 'text'
+  annotated.innerHTML = [...paragraph].map(renderChar).join('')
+
+  const bar = document.createElement('div')
+  bar.className = 'button-bar'
+
+  langs.forEach(lang => {
+    const b = document.createElement('button')
+    b.textContent = lang
+    b.onclick = async () => {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=${lang}&dt=t&q=${encodeURIComponent(paragraph)}`)
+      const json = await res.json()
+      const translated = json[0].map(d => d[0]).join('')
+      div.querySelector('.translation').textContent = `${lang}:\n${translated}`
+    }
+    bar.appendChild(b)
+  })
+
+  const trans = document.createElement('div')
+  trans.className = 'translation'
+
+  div.append(raw, btnRead, annotated, bar, trans)
+  content.appendChild(div)
+})
+</script>
+
+</body>
+</html>

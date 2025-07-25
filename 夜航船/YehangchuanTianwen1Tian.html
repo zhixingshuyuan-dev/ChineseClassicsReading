@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>《天文部·象緯》多语阅读辅助</title>
+  <style>
+    body {
+      font-family: 'Noto Serif TC', serif;
+      line-height: 1.8;
+      padding: 20px;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    .section {
+      margin-bottom: 50px;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .text {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .char-wrap {
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+      margin: 0 1px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .char-wrap:hover {
+      background-color: #2a2a2a;
+    }
+    .popup {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2b2b2b;
+      border: 1px solid #555;
+      padding: 5px 8px;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 10;
+      color: #f0f0f0;
+    }
+    .char-wrap:hover .popup {
+      display: block;
+    }
+    .button-bar {
+      margin-top: 12px;
+    }
+    button {
+      margin: 4px 6px 0 0;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background-color: #333;
+      color: #f0f0f0;
+      cursor: pointer;
+    }
+    .translation {
+      margin-top: 12px;
+      font-size: 16px;
+      color: #d0d0d0;
+      white-space: pre-wrap;
+      background-color: #222;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+</style>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script>
+const data = [
+  `九天：東方蒼天，南方炎天，西方浩天，北方玄天，東北旻天，西北幽天，西南朱天，東南陽天，中央鈞天。`,
+  `日、月、星謂之三光。日、月合金、木、水、火、土五星謂之七政，又謂之七曜。日月所止舍，一日更七次，謂之七襄。`,
+  `二十八宿：東方七宿：角，木蛟；亢，金龍；氐，土貉；房，日兔；心，月狐；尾，火虎；箕，水豹。北方七宿：斗，木獬；牛，金牛；女，土蝠；虛，日鼠；危，月燕；室，火豬；壁，水貐。西方七宿：奎，木狼；婁，金狗；胃，土雉；昴，日雞；畢，月烏；觜，火猴；參，水猿。南方七宿：井，木犴；鬼，金羊；柳，土獐；星，日馬；張，月鹿；翼，火蛇；軫，水蚓。`,
+  `分野：角亢氐：鄭，兗州。房心：宋，豫州。尾箕：燕，幽州。女牛：吳，揚州。虛危：齊，青州。室壁：衛，并州。奎婁胃：魯，徐州。昴畢；趙，冀州。觜參：晉，益州。井鬼：秦，雍州。柳星張：周，三河。翼軫：楚，荊州。`,
+  `納音五行：甲子乙丑海中金，丙寅丁卯爐中火，戊辰己巳大林木，庚午辛未路旁土，壬申癸酉劍鋒金，甲戌乙亥山頭火，丙子丁丑澗下水，戊寅己卯城頭土，庚辰辛巳金蠟金，壬午癸未楊柳木，甲申乙酉泉中水，丙戌丁亥屋上土，戊子己丑霹靂火，庚寅辛卯松柏木，壬辰癸巳長流水，甲午乙未沙中金，丙申丁酉山下火，戊戌己亥平地水，庚子辛丑壁上土，壬寅卯金箔金，甲辰乙巳覆燈火，丙午丁未天河水，戊申己酉大驛土，庚戌辛亥釵釧金，壬子癸丑桑柘木，甲寅乙卯大溪水，丙辰丁巳沙中土，戊午己未天上火，庚申辛酉石榴木，壬戌癸亥大海水。天裂陽不足，地動陰有余。`,
+  `梁太清二年六月，天裂於西北，長十尺，闊二丈，光出如電，聲若雷。`,
+  `唐中和三年，浙西天鳴，聲如轉磨，無雲而雨。無形有聲，謂之妖鼓；無雲而雨，謂之天泣。`
+]
+
+const dictionary = {
+  "九": { pinyin: "jiǔ", en: "nine" },
+  "天": { pinyin: "tiān", en: "heaven; sky" },
+  "東": { pinyin: "dōng", en: "east" },
+  "方": { pinyin: "fāng", en: "direction; square" },
+  "蒼": { pinyin: "cāng", en: "dark blue; gray" },
+  "南": { pinyin: "nán", en: "south" },
+  "炎": { pinyin: "yán", en: "flame; hot" },
+  "西": { pinyin: "xī", en: "west" },
+  "浩": { pinyin: "hào", en: "vast; grand" },
+  "北": { pinyin: "běi", en: "north" },
+  "玄": { pinyin: "xuán", en: "mysterious; profound" },
+  "北": { pinyin: "běi", en: "north" },
+  "東北": { pinyin: "dōngběi", en: "northeast" },
+  "旻": { pinyin: "mín", en: "sky; heaven (poetic)" },
+  "西北": { pinyin: "xīběi", en: "northwest" },
+  "幽": { pinyin: "yōu", en: "secluded; dark" },
+  "西南": { pinyin: "xīnán", en: "southwest" },
+  "朱": { pinyin: "zhū", en: "vermilion; red" },
+  "東南": { pinyin: "dōngnán", en: "southeast" },
+  "陽": { pinyin: "yáng", en: "sun; positive (yin-yang)" },
+  "中央": { pinyin: "zhōngyāng", en: "central" },
+  "鈞": { pinyin: "jūn", en: "even; equal" },
+
+  "日": { pinyin: "rì", en: "sun; day" },
+  "月": { pinyin: "yuè", en: "moon; month" },
+  "星": { pinyin: "xīng", en: "star" },
+  "謂": { pinyin: "wèi", en: "to say; to call" },
+  "之": { pinyin: "zhī", en: "(possessive particle)" },
+  "三": { pinyin: "sān", en: "three" },
+  "光": { pinyin: "guāng", en: "light" },
+  "合": { pinyin: "hé", en: "to combine; to join" },
+  "金": { pinyin: "jīn", en: "metal; gold" },
+  "木": { pinyin: "mù", en: "wood" },
+  "水": { pinyin: "shuǐ", en: "water" },
+  "火": { pinyin: "huǒ", en: "fire" },
+  "土": { pinyin: "tǔ", en: "earth; soil" },
+  "五星": { pinyin: "wǔ xīng", en: "five planets" },
+  "七": { pinyin: "qī", en: "seven" },
+  "政": { pinyin: "zhèng", en: "govern; politics" },
+  "曜": { pinyin: "yào", en: "shine; day of week" },
+  "所": { pinyin: "suǒ", en: "place; (particle)" },
+  "止": { pinyin: "zhǐ", en: "to stop" },
+  "舍": { pinyin: "shè", en: "house; to give up" },
+  "一": { pinyin: "yī", en: "one" },
+  "日更": { pinyin: "rì gēng", en: "daily change" },
+  "次": { pinyin: "cì", en: "time; order" },
+  "襄": { pinyin: "xiāng", en: "to assist; aid" },
+
+  "二十八": { pinyin: "èr shí bā", en: "twenty-eight" },
+  "宿": { pinyin: "xiù", en: "constellation; lodging" },
+  "角": { pinyin: "jiǎo", en: "horn" },
+  "蛟": { pinyin: "jiāo", en: "flood dragon" },
+  "亢": { pinyin: "kàng", en: "neck; high" },
+  "龍": { pinyin: "lóng", en: "dragon" },
+  "氐": { pinyin: "dī", en: "root; base" },
+  "貉": { pinyin: "hé", en: "raccoon dog" },
+  "房": { pinyin: "fáng", en: "room; house" },
+  "兔": { pinyin: "tù", en: "rabbit" },
+  "心": { pinyin: "xīn", en: "heart" },
+  "狐": { pinyin: "hú", en: "fox" },
+  "尾": { pinyin: "wěi", en: "tail" },
+  "虎": { pinyin: "hǔ", en: "tiger" },
+  "箕": { pinyin: "jī", en: "winnowing basket" },
+  "豹": { pinyin: "bào", en: "leopard" },
+  "斗": { pinyin: "dǒu", en: "dipper; bucket" },
+  "獬": { pinyin: "xiè", en: "mythical beast" },
+  "牛": { pinyin: "niú", en: "ox" },
+  "女": { pinyin: "nǚ", en: "female; woman" },
+  "蝠": { pinyin: "fú", en: "bat" },
+  "虛": { pinyin: "xū", en: "empty; void" },
+  "鼠": { pinyin: "shǔ", en: "rat; mouse" },
+  "危": { pinyin: "wēi", en: "danger; peril" },
+  "燕": { pinyin: "yàn", en: "swallow (bird)" },
+  "室": { pinyin: "shì", en: "room" },
+  "豬": { pinyin: "zhū", en: "pig" },
+  "壁": { pinyin: "bì", en: "wall" },
+  "貐": { pinyin: "yù", en: "wild boar" },
+  "奎": { pinyin: "kuí", en: "star name" },
+  "狼": { pinyin: "láng", en: "wolf" },
+  "婁": { pinyin: "lóu", en: "star name" },
+  "狗": { pinyin: "gǒu", en: "dog" },
+  "胃": { pinyin: "wèi", en: "stomach" },
+  "雉": { pinyin: "zhì", en: "pheasant" },
+  "昴": { pinyin: "mǎo", en: "star name" },
+  "雞": { pinyin: "jī", en: "chicken" },
+  "畢": { pinyin: "bì", en: "end; star name" },
+  "烏": { pinyin: "wū", en: "crow" },
+  "觜": { pinyin: "zī", en: "beak; star name" },
+  "猴": { pinyin: "hóu", en: "monkey" },
+  "參": { pinyin: "shēn", en: "three; star name" },
+  "猿": { pinyin: "yuán", en: "ape" },
+  "井": { pinyin: "jǐng", en: "well (water)" },
+  "犴": { pinyin: "àn", en: "wild beast" },
+  "鬼": { pinyin: "guǐ", en: "ghost" },
+  "羊": { pinyin: "yáng", en: "sheep" },
+  "柳": { pinyin: "liǔ", en: "willow tree" },
+  "獐": { pinyin: "zhāng", en: "small deer" },
+  "星": { pinyin: "xīng", en: "star" },
+  "馬": { pinyin: "mǎ", en: "horse" },
+  "張": { pinyin: "zhāng", en: "to open; surname" },
+  "鹿": { pinyin: "lù", en: "deer" },
+  "翼": { pinyin: "yì", en: "wing" },
+  "蛇": { pinyin: "shé", en: "snake" },
+  "軫": { pinyin: "zhěn", en: "star name" },
+  "蚓": { pinyin: "yǐn", en: "earthworm" },
+
+  "分": { pinyin: "fēn", en: "to divide; part" },
+  "野": { pinyin: "yě", en: "field; wilderness" },
+  "鄭": { pinyin: "zhèng", en: "Zheng (state)" },
+  "兗": { pinyin: "yǎn", en: "Yan (place)" },
+  "州": { pinyin: "zhōu", en: "state; province" },
+  "宋": { pinyin: "sòng", en: "Song (dynasty/state)" },
+  "豫": { pinyin: "yù", en: "Yu (place)" },
+  "燕": { pinyin: "yān", en: "Yan (state)" },
+  "幽": { pinyin: "yōu", en: "secluded" },
+  "吳": { pinyin: "wú", en: "Wu (state)" },
+  "揚": { pinyin: "yáng", en: "Yang (place)" },
+  "齊": { pinyin: "qí", en: "Qi (state)" },
+  "青": { pinyin: "qīng", en: "blue-green; youth" },
+  "衛": { pinyin: "wèi", en: "Wei (state)" },
+  "并": { pinyin: "bìng", en: "to combine" },
+  "魯": { pinyin: "lǔ", en: "Lu (state)" },
+  "徐": { pinyin: "xú", en: "Xu (state)" },
+  "趙": { pinyin: "zhào", en: "Zhao (state)" },
+  "冀": { pinyin: "jì", en: "Ji (place)" },
+  "晉": { pinyin: "jìn", en: "Jin (state)" },
+  "益": { pinyin: "yì", en: "Yi (place)" },
+  "秦": { pinyin: "qín", en: "Qin (state)" },
+  "雍": { pinyin: "yōng", en: "Yong (place)" },
+  "周": { pinyin: "zhōu", en: "Zhou (dynasty)" },
+  "三": { pinyin: "sān", en: "three" },
+  "國": { pinyin: "guó", en: "country; state" },
+
+  "分": { pinyin: "fēn", en: "to divide" },
+  "別": { pinyin: "bié", en: "to separate" },
+  "分別": { pinyin: "fēnbié", en: "to distinguish; difference" },
+
+  "漢": { pinyin: "hàn", en: "Han (dynasty/people)" },
+  "族": { pinyin: "zú", en: "ethnic group; clan" },
+  "為": { pinyin: "wéi", en: "to do; to be" },
+  "玄": { pinyin: "xuán", en: "mysterious" },
+  "黃": { pinyin: "huáng", en: "yellow" },
+  "者": { pinyin: "zhě", en: "person; -er (suffix)" },
+  "凡": { pinyin: "fán", en: "ordinary; all" },
+  "言": { pinyin: "yán", en: "word; speech" },
+  "地": { pinyin: "dì", en: "earth; land" },
+  "物": { pinyin: "wù", en: "thing; object" },
+  "之": { pinyin: "zhī", en: "of (possessive particle)" },
+  "象": { pinyin: "xiàng", en: "image; appearance" },
+  "緯": { pinyin: "wěi", en: "weft; latitude" },
+
+  "玉": { pinyin: "yù", en: "jade" },
+  "石": { pinyin: "shí", en: "stone" },
+  "金": { pinyin: "jīn", en: "metal; gold" },
+  "木": { pinyin: "mù", en: "wood" },
+  "水": { pinyin: "shuǐ", en: "water" },
+  "火": { pinyin: "huǒ", en: "fire" },
+  "土": { pinyin: "tǔ", en: "earth" },
+
+  "天": { pinyin: "tiān", en: "heaven" },
+  "人": { pinyin: "rén", en: "person" },
+  "皇": { pinyin: "huáng", en: "emperor" },
+  "王": { pinyin: "wáng", en: "king" },
+  "帝": { pinyin: "dì", en: "emperor" },
+
+  "日": { pinyin: "rì", en: "sun" },
+  "月": { pinyin: "yuè", en: "moon" },
+  "星": { pinyin: "xīng", en: "star" },
+
+  "氣": { pinyin: "qì", en: "energy; air" },
+  "形": { pinyin: "xíng", en: "shape; form" },
+  "象": { pinyin: "xiàng", en: "image; shape" },
+
+  "貴": { pinyin: "guì", en: "valuable; noble" },
+  "尊": { pinyin: "zūn", en: "respect; honor" },
+
+  "常": { pinyin: "cháng", en: "often; common" },
+  "化": { pinyin: "huà", en: "to change; transform" },
+
+  "六": { pinyin: "liù", en: "six" },
+  "星": { pinyin: "xīng", en: "star" },
+
+  "分": { pinyin: "fēn", en: "to divide" },
+  "為": { pinyin: "wéi", en: "to be; to act" },
+
+  "玄": { pinyin: "xuán", en: "mysterious" },
+  "黃": { pinyin: "huáng", en: "yellow" },
+
+  "之": { pinyin: "zhī", en: "possessive particle" },
+
+  "者": { pinyin: "zhě", en: "person" },
+  "也": { pinyin: "yě", en: "(final particle)" },
+  "其": { pinyin: "qí", en: "its; his; her" },
+  "是": { pinyin: "shì", en: "is; are" },
+
+  "於": { pinyin: "yú", en: "at; in; on" },
+  "其": { pinyin: "qí", en: "its; his; her" },
+
+  "故": { pinyin: "gù", en: "therefore; reason" },
+  "以": { pinyin: "yǐ", en: "using; with" },
+  "觀": { pinyin: "guān", en: "to observe" },
+  "察": { pinyin: "chá", en: "to examine" },
+  "天": { pinyin: "tiān", en: "heaven; sky" },
+  "地": { pinyin: "dì", en: "earth; land" },
+  "人": { pinyin: "rén", en: "people" },
+
+  "之": { pinyin: "zhī", en: "of (possessive)" },
+  "象": { pinyin: "xiàng", en: "image; form" },
+  "變": { pinyin: "biàn", en: "change; transform" },
+
+  "以": { pinyin: "yǐ", en: "by means of" },
+  "知": { pinyin: "zhī", en: "to know" },
+  "神": { pinyin: "shén", en: "spirit; deity" },
+  "明": { pinyin: "míng", en: "bright; clear" },
+
+  "故": { pinyin: "gù", en: "therefore" },
+  "載": { pinyin: "zǎi", en: "to record; to carry" },
+  "之": { pinyin: "zhī", en: "possessive particle" },
+  "書": { pinyin: "shū", en: "book; document" },
+
+  "曰": { pinyin: "yuē", en: "say; speak" },
+  "天": { pinyin: "tiān", en: "heaven" },
+  "經": { pinyin: "jīng", en: "classic text" },
+  "云": { pinyin: "yún", en: "say; cloud" },
+
+  "天": { pinyin: "tiān", en: "heaven" },
+  "道": { pinyin: "dào", en: "way; path" },
+  "大": { pinyin: "dà", en: "big; great" },
+  "成": { pinyin: "chéng", en: "to complete; to accomplish" },
+
+  "夫": { pinyin: "fū", en: "man; husband" },
+  "人": { pinyin: "rén", en: "person" },
+  "者": { pinyin: "zhě", en: "person; one who" },
+  "天": { pinyin: "tiān", en: "heaven" },
+  "地": { pinyin: "dì", en: "earth" },
+  "之": { pinyin: "zhī", en: "of" },
+  "精": { pinyin: "jīng", en: "essence; spirit" },
+  "氣": { pinyin: "qì", en: "energy; breath" },
+
+  "焉": { pinyin: "yān", en: "where; how" },
+  "得": { pinyin: "dé", en: "to obtain; to get" },
+  "而": { pinyin: "ér", en: "and; but" },
+  "已": { pinyin: "yǐ", en: "already" }
+}
+ 
+
+const langs = ['en', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'vi', 'ru', 'el', 'la', 'th', 'ms', 'ar']
+
+function renderChar(c) {
+  if (!dictionary[c]) return `<span class="char-wrap">${c}</span>`
+  const { pinyin, en } = dictionary[c]
+  return `
+    <span class="char-wrap">
+      ${c}
+      <span class="popup">${pinyin}<br>${en}</span>
+    </span>`
+}
+
+const content = document.getElementById('content')
+
+data.forEach((paragraph, i) => {
+  const div = document.createElement('div')
+  div.className = 'section'
+
+  const raw = document.createElement('div')
+  raw.className = 'text'
+  raw.innerText = paragraph
+
+  const btnRead = document.createElement('button')
+  btnRead.textContent = '朗讀'
+  btnRead.onclick = () => {
+    if (btnRead.dataset.playing === 'true') {
+      speechSynthesis.cancel()
+      btnRead.dataset.playing = 'false'
+    } else {
+      const utter = new SpeechSynthesisUtterance(paragraph)
+      utter.lang = 'zh-CN'
+      speechSynthesis.speak(utter)
+      btnRead.dataset.playing = 'true'
+      utter.onend = () => btnRead.dataset.playing = 'false'
+    }
+  }
+
+  const annotated = document.createElement('div')
+  annotated.className = 'text'
+  annotated.innerHTML = [...paragraph].map(renderChar).join('')
+
+  const bar = document.createElement('div')
+  bar.className = 'button-bar'
+
+  langs.forEach(lang => {
+    const b = document.createElement('button')
+    b.textContent = lang
+    b.onclick = async () => {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=${lang}&dt=t&q=${encodeURIComponent(paragraph)}`)
+      const json = await res.json()
+      const translated = json[0].map(d => d[0]).join('')
+      div.querySelector('.translation').textContent = `${lang}:\n${translated}`
+    }
+    bar.appendChild(b)
+  })
+
+  const trans = document.createElement('div')
+  trans.className = 'translation'
+
+  div.append(raw, btnRead, annotated, bar, trans)
+  content.appendChild(div)
+})
+</script>
+
+</body>
+</html>

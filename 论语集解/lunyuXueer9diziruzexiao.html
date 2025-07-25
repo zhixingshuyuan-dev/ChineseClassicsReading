@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>论语解读 - 弟子入则孝</title>
+    <style>
+        body {
+            font-family: "楷体", KaiTi, "STKaiti", serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #e2e8f0;
+            background-color: #1a202c;
+        }
+        h1 {
+            font-family: "黑体", SimHei, sans-serif;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #fbd38d;
+        }
+        .main-text {
+            font-size: 22px;
+            text-align: center;
+            margin: 40px 0;
+            line-height: 2;
+            padding: 20px;
+            background-color: #2d3748;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #4a5568;
+        }
+        .char-container {
+            display: inline-block;
+            cursor: pointer;
+            margin: 0 1px;
+            position: relative;
+            vertical-align: top;
+        }
+        .char-pinyin {
+            display: none;
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fbd38d;
+            color: #1a202c;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .char-english {
+            display: none;
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #fbd38d;
+            color: #1a202c;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 14px;
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .char-pinyin:after, .char-english:after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px 5px 0;
+            border-style: solid;
+            border-color: #fbd38d transparent transparent;
+        }
+        .char-pinyin:after {
+            bottom: -5px;
+        }
+        .char-english:after {
+            top: -5px;
+            border-width: 0 5px 5px;
+            border-color: transparent transparent #fbd38d;
+        }
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin: 25px 0;
+        }
+        button {
+            font-family: "楷体", KaiTi, "STKaiti", serif;
+            padding: 8px 16px;
+            background-color: #4a5568;
+            border: 1px solid #718096;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 15px;
+            color: #e2e8f0;
+        }
+        button:hover {
+            background-color: #718096;
+            transform: translateY(-2px);
+        }
+        button.active {
+            background-color: #fbd38d;
+            color: #1a202c;
+            border-color: #fbd38d;
+        }
+        #annotationContent {
+            background-color: #2d3748;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #4a5568;
+        }
+        .annotation-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #fbd38d;
+            font-size: 18px;
+            border-bottom: 1px solid #4a5568;
+            padding-bottom: 8px;
+        }
+        .original-text {
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #4a5568;
+            color: #e2e8f0;
+        }
+        .plain-text {
+            background-color: #4a5568;
+            padding: 15px;
+            border-radius: 5px;
+            line-height: 1.7;
+            color: #e2e8f0;
+            border-left: 3px solid #fbd38d;
+        }
+        .plain-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #fbd38d;
+        }
+        .translation-text {
+            background-color: #4a5568;
+            padding: 15px;
+            border-radius: 5px;
+            line-height: 1.7;
+            color: #e2e8f0;
+            border-left: 3px solid #68d391;
+            margin-top: 15px;
+            display: none;
+        }
+        .translation-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #68d391;
+        }
+        #annotationContent > div:first-child {
+            text-align: center;
+            color: #a0aec0;
+            font-style: italic;
+        }
+        .translation-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .translation-buttons button {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>子曰：「弟子入則孝，出則弟，謹而信，汎愛眾而親仁。行有餘力，則以學文。」</h1>
+    
+    <div class="main-text">
+        <span class="char-container">
+            <span>子</span>
+            <span class="char-pinyin">zǐ</span>
+            <span class="char-english">Master</span>
+        </span>
+        <span class="char-container">
+            <span>曰</span>
+            <span class="char-pinyin">yuē</span>
+            <span class="char-english">said</span>
+        </span>
+        <span class="char-container">
+            <span>：</span>
+        </span>
+        <span class="char-container">
+            <span>「</span>
+        </span>
+        <span class="char-container">
+            <span>弟</span>
+            <span class="char-pinyin">dì</span>
+            <span class="char-english">younger brother</span>
+        </span>
+        <span class="char-container">
+            <span>子</span>
+            <span class="char-pinyin">zǐ</span>
+            <span class="char-english">child</span>
+        </span>
+        <span class="char-container">
+            <span>入</span>
+            <span class="char-pinyin">rù</span>
+            <span class="char-english">enter</span>
+        </span>
+        <span class="char-container">
+            <span>則</span>
+            <span class="char-pinyin">zé</span>
+            <span class="char-english">then</span>
+        </span>
+        <span class="char-container">
+            <span>孝</span>
+            <span class="char-pinyin">xiào</span>
+            <span class="char-english">filial piety</span>
+        </span>
+        <span class="char-container">
+            <span>，</span>
+        </span>
+        <span class="char-container">
+            <span>出</span>
+            <span class="char-pinyin">chū</span>
+            <span class="char-english">go out</span>
+        </span>
+        <span class="char-container">
+            <span>則</span>
+            <span class="char-pinyin">zé</span>
+            <span class="char-english">then</span>
+        </span>
+        <span class="char-container">
+            <span>弟</span>
+            <span class="char-pinyin">tì</span>
+            <span class="char-english">fraternal duty</span>
+        </span>
+        <span class="char-container">
+            <span>，</span>
+        </span>
+        <span class="char-container">
+            <span>謹</span>
+            <span class="char-pinyin">jǐn</span>
+            <span class="char-english">prudent</span>
+        </span>
+        <span class="char-container">
+            <span>而</span>
+            <span class="char-pinyin">ér</span>
+            <span class="char-english">and</span>
+        </span>
+        <span class="char-container">
+            <span>信</span>
+            <span class="char-pinyin">xìn</span>
+            <span class="char-english">trustworthy</span>
+        </span>
+        <span class="char-container">
+            <span>，</span>
+        </span>
+        <span class="char-container">
+            <span>汎</span>
+            <span class="char-pinyin">fàn</span>
+            <span class="char-english">universal</span>
+        </span>
+        <span class="char-container">
+            <span>愛</span>
+            <span class="char-pinyin">ài</span>
+            <span class="char-english">love</span>
+        </span>
+        <span class="char-container">
+            <span>眾</span>
+            <span class="char-pinyin">zhòng</span>
+            <span class="char-english">people</span>
+        </span>
+        <span class="char-container">
+            <span>而</span>
+            <span class="char-pinyin">ér</span>
+            <span class="char-english">and</span>
+        </span>
+        <span class="char-container">
+            <span>親</span>
+            <span class="char-pinyin">qīn</span>
+            <span class="char-english">be close to</span>
+        </span>
+        <span class="char-container">
+            <span>仁</span>
+            <span class="char-pinyin">rén</span>
+            <span class="char-english">benevolence</span>
+        </span>
+        <span class="char-container">
+            <span>。</span>
+        </span>
+        <span class="char-container">
+            <span>行</span>
+            <span class="char-pinyin">xíng</span>
+            <span class="char-english">practice</span>
+        </span>
+        <span class="char-container">
+            <span>有</span>
+            <span class="char-pinyin">yǒu</span>
+            <span class="char-english">have</span>
+        </span>
+        <span class="char-container">
+            <span>餘</span>
+            <span class="char-pinyin">yú</span>
+            <span class="char-english">surplus</span>
+        </span>
+        <span class="char-container">
+            <span>力</span>
+            <span class="char-pinyin">lì</span>
+            <span class="char-english">energy</span>
+        </span>
+        <span class="char-container">
+            <span>，</span>
+        </span>
+        <span class="char-container">
+            <span>則</span>
+            <span class="char-pinyin">zé</span>
+            <span class="char-english">then</span>
+        </span>
+        <span class="char-container">
+            <span>以</span>
+            <span class="char-pinyin">yǐ</span>
+            <span class="char-english">use</span>
+        </span>
+        <span class="char-container">
+            <span>學</span>
+            <span class="char-pinyin">xué</span>
+            <span class="char-english">study</span>
+        </span>
+        <span class="char-container">
+            <span>文</span>
+            <span class="char-pinyin">wén</span>
+            <span class="char-english">culture</span>
+        </span>
+        <span class="char-container">
+            <span>。</span>
+        </span>
+        <span class="char-container">
+            <span>」</span>
+        </span>
+    </div>
+    
+    <div class="buttons">
+        <button onclick="speakChinese()">朗读全文</button>
+        <button onclick="showAnnotation('考異')">考異</button>
+        <button onclick="showAnnotation('考證')">考證</button>
+        <button onclick="showAnnotation('集解')">集解</button>
+        <button onclick="showAnnotation('唐以前古注')">唐以前古注</button>
+        <button onclick="showAnnotation('集注')">集注</button>
+        <button onclick="showAnnotation('餘論')">餘論</button>
+        <button onclick="showAnnotation('發明')">發明</button>
+    </div>
+    
+    <div id="annotationContent">
+        <div>请点击上方按钮选择注解类别</div>
+    </div>
+    
+    <script>
+        // 朗读功能
+        function speakChinese() {
+            if ('speechSynthesis' in window) {
+                const speech = new SpeechSynthesisUtterance();
+                speech.text = "子曰：「弟子入則孝，出則弟，謹而信，汎愛眾而親仁。行有餘力，則以學文。」";
+                speech.lang = "zh-CN";
+                speech.rate = 0.8;
+                window.speechSynthesis.speak(speech);
+            } else {
+                alert("您的浏览器不支持语音合成功能，请使用现代浏览器如Chrome、Edge等。");
+            }
+        }
+        
+        // 注解内容
+        const annotations = {
+            '考異': {
+                original: "釋文：「弟」，本亦作「悌」。\n皇本作「悌」。\n左傳襄公二十八年正義引文「汎」字作「氾」。\n韓昌黎集•讀墨子篇：「孔子泛愛仁。」「汎」字作「泛」。\n荀悦漢紀•孝元帝論引孔子曰：「行有餘力，則可以學文。」有「可」字。",
+                plain: "《经典释文》记载：'弟'字有的版本写作'悌'。\n皇侃的《论语义疏》版本中写作'悌'。\n《左传》襄公二十八年正义引用时'汎'字作'氾'。\n韩愈《读墨子篇》中写作'泛爱仁'。\n荀悦《汉纪•孝元帝论》引用时作'则可以学文'，多'可'字。"
+            },
+            '考證': {
+                original: "潘氏集箋：儀禮•士相見禮曰：「與老者言，言使弟子。與幼者言，言孝弟於父兄。」賈疏：「『與老者言，言使弟子』者，謂七十致仕之人。依書傳，大夫致仕爲父師，士致仕爲少師，教鄉里子弟。雷次宗云：『學生事師雖無服，有父兄之恩，故稱弟子也。』云『與幼者言，言孝弟於父兄』者，幼與老對，此幼卽弟子之類。孝弟，事父兄之名，是人行之本，故云『言孝弟於父兄』。」是弟子爲學者之稱，又幼者之通稱也。子罕篇「出則事公卿，入則事父兄。」而此乃以事父兄分屬出入者。孝經云：「事父孝，故忠可移於君。事兄弟，故順可移於長。」一則就百行之本言之，故云入；一則就推暨者言之，故云出也。謹，說文云：「慎也。」楚辭•卜居「將氾氾若水中之鳬乎」，王逸注「氾氾，普愛眾也。」說文「氾，濫也」，段注引論語此文謂假「汎」爲「氾」。論語述何曰：「此因上文孝弟忠信愛仁而類記之。文者，字之始。誦法六經先正聲音文字，謂小學也。」四書賸言曰：「姚立方云：『文，字也。非詩書六藝之文。言弟子稍閒，使學字耳。』說文：『文，交畫也。』」劉氏正義：言有餘力學文，則無餘力不得學文可知。先之以孝弟諸行，而學文後之者。文有理誼，非童子所知。若教成人，則百行皆所當謹，非教術所能徧及，故惟冀其博文，以求自得之而已。此夫子四教，先文後行，與此言教弟子之法異也。",
+                plain: "潘维城《论语集笺》引《仪礼•士相见礼》说明'弟子'既指学生也泛指年轻人。\n《孝经》指出孝悌是各种德行的根本。\n'谨'字在《说文解字》中解释为'慎'。\n'汎'字与'氾'通假，表示普遍的爱。\n关于'文'的解释有两种观点：\n1. 何休认为指文字（小学）\n2. 姚际恒认为指书写文字\n刘宝楠《论语正义》指出：\n- 有余力才学文说明德行优先\n- 儿童教育以行为主，成人教育则以文化为主\n- 这与孔子'文、行、忠、信'四教的顺序不同"
+            },
+            '集解': {
+                original: "馬曰：「文者，古之遺文。」",
+                plain: "马融注：'文'指古代流传下来的文献。"
+            },
+            '唐以前古注': {
+                original: "釋文引鄭注：文，道藝也。\n皇疏：或問曰：「此云『行有餘力，則以學文』，後云『子以四教：文、行、忠、信』，是學文或先或后，何也？」答曰：「論語之體悉是應機適會，教體多方，隨須而與，不可一例責之。」",
+                plain: "郑玄注：'文'指六艺等道艺。\n皇侃《论语义疏》回答关于学文顺序的问题：\n《论语》是根据不同情况施教，教学方法多样，不能一概而论。"
+            },
+            '集注': {
+                original: "謹者，行之有常也。信者，言之有實也。汎，廣也。眾，謂眾人。親，近也。仁，謂仁者。餘力，猶言暇日以用也。文，謂詩書六藝之文。程子曰：「爲弟子之職，力有餘則學文。不修其職而先文，非爲己之學也。」尹氏曰：「德行，本也。文藝，末也。窮其本末，知所先後，可以入德矣。」洪氏曰：「未有餘力而學文，則文滅其質。有餘力而不學文，則質勝而野。」愚謂力行而不學文，則無以考聖賢之成法，識事理之當然，而所行或出於私意，非但失之於野而已。",
+                plain: "朱熹《集注》解释：\n'谨'指行为有常轨\n'信'指言语真实\n'汎'是广泛的意思\n'文'指《诗》《书》等六艺\n引程颐观点：先尽本分再学文\n引尹焞观点：德行为本，文艺为末\n引洪氏观点：文质要相称\n朱熹认为：只实践不学习会流于粗野，且可能出于私意"
+            },
+            '餘論': {
+                original: "四書辨疑：南軒曰：「非謂行此數事有餘力而後學文也，言當以是數者爲本，以其餘力學文也。」此比注文爲詳。然所謂以其餘力，亦不知其果爲何者之餘力也。夫弟子當爲之事，言不能盡，舉此數事，急先務也。行有餘力，乃是普言弟子當爲之事，行之而餘暇，則以學文也。黄氏震日鈔：此章教人爲學，以躬行爲本，躬行以孝弟爲先。文則行有餘力而後學之，所謂文者，又禮樂射御書數之謂，非言語文字之末。今之學者乃或反是，豈因講造化性命之高遠，反忘孝弟謹信之切近乎？然嘗思之，二者本無異旨也。造化流行，賦於萬物，是之謂性。而人得其至粹，善性發見，始終事親，是之謂孝，而推之爲百行。是孝也者，其體源於造化流行之粹，其用達爲天下國家之仁，本末之貫皆此物也。故論語一書首章先言學，次章卽言孝弟。至於性與天道，則未嘗輕發其秘。豈非孝弟實行，正從性與天道中來，聖門之學惟欲約之使歸於實行哉？\n按：閻氏若璩曰：「史記•孔子世家：『孔子以詩書禮樂教，弟子蓋三千焉，身通六藝者七十有二人。』」又曰：「言六藝者折衷於夫子。以詩書六藝詁文字，語本無病。毛氏攻之非也。」",
+                plain: "《四书辨疑》引张栻观点：要以孝悌等为本，有余力才学文\n黄震《日钞》指出：\n- 本章强调实践为本，孝悌为先\n- '文'指六艺而非文字\n- 批评当时学者好高骛远忽视基本\n- 认为孝悌与天道本性相通\n按语引阎若璩考证孔子教学情况"
+            },
+            '發明': {
+                original: "反身錄：今之教者，不過督以口耳章句屬對作文，朝夕之所啟迪而鼓舞者，惟是博名謀利之技。蒙養弗端，童習而長安之，以致固有之良日封日閉，名利之念漸萌漸熾。誦讀之勤、文藝之工適足以長傲遂非，率意恣情。今須力反其弊，教子弟務遵此章從事。大本既立，夫然後肄習詩書藝業，則教不淩躐，庶成人有德，小子有造矣。陸隴其松陽講義：大抵人之氣稟雖有不同，然亦差不多。只是從小便習壞了，氣稟不好的固愈習愈壞，卽氣稟好的，亦同歸於壞。童蒙之時，根脚既不曾正得，到得長大時，便如性成一般。卽能回頭改悔，發憤自新，也費盡氣力，況改悔發憤者甚少。此人才所以日衰，皆由蒙養之道失也。後世爲父兄者，有弟子而不教，固無論矣。卽有能教者，又都從利禄起見。束髪受書，卽便以利禄誘之，不期其爲大聖大賢，而但願其享高官厚禄。這箇念頭橫於胸中，念頭既差，工夫必不能精實，只求掩飾於外，可以悦人而已。教學如此，人才安得而不壞哉？爲人父兄者，胡不一思而甘使子弟爲俗人也？",
+                plain: "《反身录》批评当时教育：\n- 只重章句作文\n- 鼓励追名逐利\n- 导致本性被蒙蔽\n主张回归本章教导，先立根本\n《松阳讲义》指出：\n- 人的禀赋原本相近\n- 幼时教育不当导致后来难以改正\n- 批评当时教育功利化\n- 呼吁重视童蒙教育"
+            }
+        };
+
+        // 多语言翻译
+        const translations = {
+            'en': {
+                title: "English Translation",
+                text: "The Master said: 'A young man should be filial at home and respectful abroad. He should be earnest and truthful, loving all but becoming intimate with the virtuous. When he has energy to spare, he should study cultural accomplishments.'"
+            },
+            'fr': {
+                title: "Traduction Française",
+                text: "Le Maître dit : 'Un jeune homme doit être pieux à la maison et respectueux à l'extérieur. Il doit être sincère et digne de confiance, aimant tous les hommes mais se liant d'amitié avec les vertueux. S'il lui reste du temps et de l'énergie, qu'il les consacre à l'étude des arts libéraux.'"
+            },
+            'de': {
+                title: "Deutsche Übersetzung",
+                text: "Der Meister sprach: 'Ein junger Mann soll zu Hause kindlich pietätvoll und draußen ehrerbietig sein. Er soll gewissenhaft und wahrhaft sein, alle Menschen lieben, aber mit den Tugendhaften vertraut werden. Wenn er noch Kraft übrig hat, soll er die Kultur studieren.'"
+            },
+            'es': {
+                title: "Traducción Española",
+                text: "El Maestro dijo: 'Un joven debe ser filial en casa y respetuoso fuera. Debe ser sincero y veraz, amar a todos pero acercarse a los virtuosos. Cuando le quede energía, debe estudiar las artes culturales.'"
+            },
+            'ja': {
+                title: "日本語訳",
+                text: "子曰く、「弟子入りては則ち孝、出でては則ち悌、謹みて信、広く衆を愛して仁に親しむ。行いて余力有らば、則ち以て文を学ぶ」と。"
+            },
+            'ko': {
+                title: "한국어 번역",
+                text: "공자께서 말씀하셨다: '제자는 안에서는 효도하고 밖에서는 공손해야 하며, 신중하고 신의가 있어야 하고, 널리 사람들을 사랑하면서 인자한 사람과 친해야 한다. 행실에 여력이 있으면 글을 배워야 한다.'"
+            },
+            'la': {
+                title: "Latina Translatio",
+                text: "Magister dixit: 'Discipulus domi sit pius, foris reverens. Sit diligens et fidelis, omnes amans sed cum virtute familiaris. Si superest industria, litteris studeat.'"
+            },
+            'el': {
+                title: "Ελληνική Μετάφραση",
+                text: "Ο Δάσκαλος είπε: 'Ένας νεαρός πρέπει να είναι ευσεβής στο σπίτι και σεβαστός έξω. Πρέπει να είναι ειλικρινής και αξιόπιστος, να αγαπά όλους αλλά να γίνεται στενός φίλος με τους ενάρετους. Όταν έχει περισσότερη ενέργεια, πρέπει να μελετά πολιτιστικά επιτεύγματα.'"
+            }
+        };
+        
+        // 当前选中的注解类型
+        let currentAnnotation = null;
+        
+        // 显示注解功能
+        function showAnnotation(type) {
+            if (!annotations[type]) return;
+            
+            currentAnnotation = type;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.buttons button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 构建注解内容
+            let content = `
+                <div class="annotation-title">【${type}】</div>
+                <div class="original-text">${annotations[type].original}</div>
+                <div class="plain-title">白话文翻译：</div>
+                <div class="plain-text">${annotations[type].plain}</div>
+                <div style="text-align: right; margin-top: 15px;">
+                    <button onclick="speakAnnotation()" style="padding: 5px 12px; font-size: 14px; margin-right: 5px;">
+                        语音讲解
+                    </button>
+                    <button onclick="showTranslation()" style="padding: 5px 12px; font-size: 14px; background-color: #68d391; border-color: #68d391;">
+                        多语翻译
+                    </button>
+                </div>
+                <div id="translationSection" class="translation-text">
+                    <div class="translation-title">多语翻译</div>
+                    <div class="translation-buttons">
+                        <button onclick="showSpecificTranslation('en')">English</button>
+                        <button onclick="showSpecificTranslation('fr')">Français</button>
+                        <button onclick="showSpecificTranslation('de')">Deutsch</button>
+                        <button onclick="showSpecificTranslation('es')">Español</button>
+                        <button onclick="showSpecificTranslation('ja')">日本語</button>
+                        <button onclick="showSpecificTranslation('ko')">한국어</button>
+                        <button onclick="showSpecificTranslation('la')">Latina</button>
+                        <button onclick="showSpecificTranslation('el')">Ελληνικά</button>
+                    </div>
+                    <div id="translationContent" style="margin-top: 10px;"></div>
+                </div>
+            `;
+            
+            document.getElementById("annotationContent").innerHTML = content;
+        }
+        
+        // 显示/隐藏翻译区域
+        function showTranslation() {
+            const section = document.getElementById("translationSection");
+            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // 显示特定语言翻译
+        function showSpecificTranslation(lang) {
+            if (!translations[lang]) return;
+            
+            const content = document.getElementById("translationContent");
+            content.innerHTML = `
+                <div><strong>${translations[lang].title}:</strong></div>
+                <div>${translations[lang].text}</div>
+            `;
+        }
+        
+        // 朗读注解（先读原文句子，再读对应翻译）
+        function speakAnnotation() {
+            if (!currentAnnotation || !annotations[currentAnnotation]) {
+                alert("请先选择注解内容");
+                return;
+            }
+            
+            if (!window.speechSynthesis) {
+                alert("您的浏览器不支持语音合成功能");
+                return;
+            }
+            
+            // 停止当前所有语音
+            window.speechSynthesis.cancel();
+            
+            const originalText = annotations[currentAnnotation].original;
+            const plainText = annotations[currentAnnotation].plain;
+            
+            // 分割原文为句子
+            const sentences = originalText.split(/([。！？\n])/).reduce((acc, val, i, arr) => {
+                if (i % 2 === 0) {
+                    const pair = val + (arr[i+1] || '');
+                    if (pair.trim()) acc.push(pair.trim());
+                }
+                return acc;
+            }, []);
+            
+            // 分割白话文为对应解释
+            const plainParts = plainText.split('\n').filter(p => p.trim());
+            
+            // 逐个朗读原文句子和对应解释
+            let index = 0;
+            
+            function speakNext() {
+                if (index < sentences.length) {
+                    // 朗读原文句子
+                    const speech1 = new SpeechSynthesisUtterance();
+                    speech1.text = sentences[index];
+                    speech1.lang = "zh-CN";
+                    speech1.rate = 0.7;
+                    
+                    // 朗读对应的白话解释
+                    const speech2 = new SpeechSynthesisUtterance();
+                    speech2.text = index < plainParts.length ? plainParts[index] : "";
+                    speech2.lang = "zh-CN";
+                    speech2.rate = 0.8;
+                    
+                    // 先读原文，读完后再读解释
+                    speech1.onend = function() {
+                        if (speech2.text) {
+                            window.speechSynthesis.speak(speech2);
+                            speech2.onend = function() {
+                                index++;
+                                setTimeout(speakNext, 300);
+                            };
+                        } else {
+                            index++;
+                            setTimeout(speakNext, 300);
+                        }
+                    };
+                    
+                    window.speechSynthesis.speak(speech1);
+                }
+            }
+            
+            speakNext();
+        }
+        
+        // 为每个汉字添加点击显示拼音/英文功能
+        document.querySelectorAll('.char-container').forEach(container => {
+            const pinyin = container.querySelector('.char-pinyin');
+            const english = container.querySelector('.char-english');
+            let clickCount = 0;
+            
+            if (!pinyin && !english) return;
+            
+            container.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                clickCount++;
+                
+                // 隐藏所有提示
+                document.querySelectorAll('.char-pinyin, .char-english').forEach(p => {
+                    p.style.display = 'none';
+                });
+                
+                // 第一次点击显示拼音，第二次显示英文
+                if (clickCount % 2 === 1 && pinyin) {
+                    pinyin.style.display = 'block';
+                } else if (english) {
+                    english.style.display = 'block';
+                }
+                
+                // 3秒后自动隐藏
+                setTimeout(() => {
+                    if (pinyin) pinyin.style.display = 'none';
+                    if (english) english.style.display = 'none';
+                }, 3000);
+            });
+        });
+        
+        // 点击页面其他地方隐藏所有提示
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.char-pinyin, .char-english').forEach(p => {
+                p.style.display = 'none';
+            });
+        });
+    </script>
+</body>
+</html>

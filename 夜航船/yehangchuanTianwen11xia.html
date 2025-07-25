@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>《夜航船-天文部-夏卷》多语阅读辅助</title>
+  <style>
+    body {
+      font-family: 'Noto Serif TC', serif;
+      line-height: 1.8;
+      padding: 20px;
+      background-color: #221a15;
+      color: #e0d8d0;
+    }
+    .section {
+      margin-bottom: 50px;
+      padding: 20px;
+      background-color: #2a211b;
+      border: 1px solid #44362b;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .text {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .char-wrap {
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+      margin: 0 1px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .char-wrap:hover {
+      background-color: #3a2e25;
+    }
+    .popup {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #3a2e25;
+      border: 1px solid #554738;
+      padding: 5px 8px;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 10;
+      color: #f0e8e0;
+    }
+    .char-wrap:hover .popup {
+      display: block;
+    }
+    .button-bar {
+      margin-top: 12px;
+    }
+    button {
+      margin: 4px 6px 0 0;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #554738;
+      background-color: #3a2e25;
+      color: #f0e8e0;
+      cursor: pointer;
+    }
+    .translation {
+      margin-top: 12px;
+      font-size: 16px;
+      color: #d0c8c0;
+      white-space: pre-wrap;
+      background-color: #332a22;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #44362b;
+    }
+  </style>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script>
+const data = [
+  `夜航船-天文部-夏卷`,
+  `天祺節
+宋真宗以四月一日為天祺節。`,
+  `麥秋
+《月令》：麥秋至。蔡邕章句曰：百穀各以生為春，熟為秋。故麥以夏為秋。`,
+  `浴佛
+王欽若於四月八日作放生會。《荊楚歲時記》：四月八日建齋，作龍華會，浴佛。`,
+  `小滿
+四月中小滿後陰，一日生一分，積三十分，而成一晝，為夏至。四月乾之終，謂之滿者，言陰氣自此而生發也。又孟夏萬物生長稍得盈滿，故云小滿。一作黴𪑳，一作霉𪑳。俗云：早間芒種晚間黴。又云：夏至落雨主重黴，小暑落雨主三黴。`,
+  `□柳五月五日，士人於郊野或演武場走馬較射，謂之□柳。`,
+  `制百藥
+午日午時，頭柄正掩五鬼，於此時制百藥，無不靈驗。`,
+  `采艾
+師曠制，五日采艾占病。齊景公制，五日百索懸臂及釵頭符。`,
+  `續命縷
+午日以五彩絲系臂上，謂之續命縷，辟兵及鬼，令人不病。`,
+  `角黍
+屈原午日投汨羅，楚人以竹筒貯米，投水祭之。有歐回者見三閭大夫，曰：「君所祭物，多為蛟龍所奪，須裹以楝樹葉，五彩絲縛之，可免龍患。」故後人制為角黍。一曰唐天寶中，宮中五日造粉團角食，以小角弓射之，中者方食，故曰角黍。`,
+  `競渡
+屈原以五日死，楚人以舟楫拯之，謂之競渡。又曰：五日投角黍以祭屈原，恐為蛟龍所奪，故為龍舟以逐之。`,
+  `五瑞
+端陽日以石榴、蔡花、菖蒲、艾葉、黃梔花插瓶中，謂之五瑞，辟除不祥。`,
+  `五毒
+蛇、虎、蜈蚣、蠍、蟾蜍，謂之五毒。官家或繪之宮扇，或織之袍緞，午日服用之，以辟瘟氣。`,
+  `賜梟羹
+《郊祀誌》：漢令郡國進梟鳥，五日為羹，賜百官，以惡鳥故食之，以辟諸惡也。`,
+  `浴蘭湯
+五月五日蓄蘭為湯以沐浴。《楚辭·離騷》：「浴蘭湯兮沐芳華。」`,
+  `天貺節
+宋祥符四年，詔六月六日天書再降，為天貺節。`,
+  `夏至數九
+一九和二九，扇子不離手；三九二十七，飲水甜如蜜；四九三十六，拭汗如出浴；五九四十五，頭帶黃葉舞；六九五十四，乘涼入佛寺；七九六十三，床頭尋被單；八九七十二，思量蓋夾被；九九八十一，家家打炭墼。`,
+  `賜肉
+《漢書》：伏日詔賜諸郎肉，東方朔拔劍割肉，謂其同官曰：「伏日宜早歸，請受賜。」即懷肉而去。`,
+  `三伏
+立春、立夏、立冬皆以相生而代。至於立秋，以金代火。金畏火，故至庚日必伏。蓋庚者金也。夏至後第三庚為初伏，四庚為中伏，立秋後初庚為末伏。秦穆公於是日進辟惡餅。`,
+  `天中節
+《提要錄》：「端午為天中節。」又曰蒲節，以是日用菖蒲泛酒故耳。`,
+  `竹醉日
+五月十日為竹醉日。是日移竹易活。又三伏內斫竹則不蛀。`
+]
+
+const dictionary = {
+  "夜": { pinyin: "yè", en: "night" },
+  "航": { pinyin: "háng", en: "sail; navigate" },
+  "船": { pinyin: "chuán", en: "boat; ship" },
+  "天": { pinyin: "tiān", en: "heaven; sky" },
+  "文": { pinyin: "wén", en: "writing; literature" },
+  "部": { pinyin: "bù", en: "department; part" },
+  "夏": { pinyin: "xià", en: "summer" },
+  "卷": { pinyin: "juàn", en: "volume" },
+  "祺": { pinyin: "qí", en: "auspicious" },
+  "節": { pinyin: "jié", en: "festival" },
+  "宋": { pinyin: "sòng", en: "Song dynasty" },
+  "真": { pinyin: "zhēn", en: "true" },
+  "宗": { pinyin: "zōng", en: "ancestor" },
+  "以": { pinyin: "yǐ", en: "with" },
+  "四": { pinyin: "sì", en: "four" },
+  "月": { pinyin: "yuè", en: "month" },
+  "一": { pinyin: "yī", en: "one" },
+  "日": { pinyin: "rì", en: "day" },
+  "為": { pinyin: "wéi", en: "be" },
+  "麥": { pinyin: "mài", en: "wheat" },
+  "秋": { pinyin: "qiū", en: "autumn" },
+  "令": { pinyin: "lìng", en: "order" },
+  "蔡": { pinyin: "cài", en: "surname Cai" },
+  "邕": { pinyin: "yōng", en: "harmonious" },
+  "章": { pinyin: "zhāng", en: "chapter" },
+  "句": { pinyin: "jù", en: "sentence" },
+  "曰": { pinyin: "yuē", en: "say" },
+  "百": { pinyin: "bǎi", en: "hundred" },
+  "穀": { pinyin: "gǔ", en: "grain" },
+  "各": { pinyin: "gè", en: "each" },
+  "生": { pinyin: "shēng", en: "life" },
+  "春": { pinyin: "chūn", en: "spring" },
+  "熟": { pinyin: "shú", en: "ripe" },
+  "故": { pinyin: "gù", en: "therefore" },
+  "浴": { pinyin: "yù", en: "bathe" },
+  "佛": { pinyin: "fó", en: "Buddha" },
+  "王": { pinyin: "wáng", en: "king" },
+  "欽": { pinyin: "qīn", en: "respect" },
+  "若": { pinyin: "ruò", en: "if" },
+  "於": { pinyin: "yú", en: "at" },
+  "八": { pinyin: "bā", en: "eight" },
+  "作": { pinyin: "zuò", en: "make" },
+  "放": { pinyin: "fàng", en: "release" },
+  "會": { pinyin: "huì", en: "meeting" },
+  "荊": { pinyin: "jīng", en: "thistle" },
+  "楚": { pinyin: "chǔ", en: "clear" },
+  "歲": { pinyin: "suì", en: "year" },
+  "時": { pinyin: "shí", en: "time" },
+  "記": { pinyin: "jì", en: "record" },
+  "建": { pinyin: "jiàn", en: "build" },
+  "齋": { pinyin: "zhāi", en: "fast" },
+  "龍": { pinyin: "lóng", en: "dragon" },
+  "華": { pinyin: "huá", en: "splendid" },
+  "小": { pinyin: "xiǎo", en: "small" },
+  "滿": { pinyin: "mǎn", en: "full" },
+  "中": { pinyin: "zhōng", en: "middle" },
+  "後": { pinyin: "hòu", en: "after" },
+  "陰": { pinyin: "yīn", en: "negative" },
+  "分": { pinyin: "fēn", en: "minute" },
+  "積": { pinyin: "jī", en: "accumulate" },
+  "三": { pinyin: "sān", en: "three" },
+  "十": { pinyin: "shí", en: "ten" },
+  "成": { pinyin: "chéng", en: "become" },
+  "晝": { pinyin: "zhòu", en: "daytime" },
+  "至": { pinyin: "zhì", en: "arrive" },
+  "乾": { pinyin: "qián", en: "heaven" },
+  "終": { pinyin: "zhōng", en: "end" },
+  "謂": { pinyin: "wèi", en: "call" },
+  "之": { pinyin: "zhī", en: "it" },
+  "者": { pinyin: "zhě", en: "one who" },
+  "言": { pinyin: "yán", en: "speak" },
+  "氣": { pinyin: "qì", en: "energy" },
+  "自": { pinyin: "zì", en: "from" },
+  "此": { pinyin: "cǐ", en: "this" },
+  "發": { pinyin: "fā", en: "emit" },
+  "又": { pinyin: "yòu", en: "also" },
+  "孟": { pinyin: "mèng", en: "eldest" },
+  "萬": { pinyin: "wàn", en: "ten thousand" },
+  "物": { pinyin: "wù", en: "thing" },
+  "長": { pinyin: "zhǎng", en: "grow" },
+  "稍": { pinyin: "shāo", en: "slightly" },
+  "得": { pinyin: "dé", en: "obtain" },
+  "盈": { pinyin: "yíng", en: "full" },
+  "云": { pinyin: "yún", en: "say" },
+  "作": { pinyin: "zuò", en: "make" },
+  "黴": { pinyin: "méi", en: "mold" },
+  "俗": { pinyin: "sú", en: "custom" },
+  "早": { pinyin: "zǎo", en: "early" },
+  "間": { pinyin: "jiān", en: "between" },
+  "芒": { pinyin: "máng", en: "awn" },
+  "種": { pinyin: "zhǒng", en: "seed" },
+  "晚": { pinyin: "wǎn", en: "evening" },
+  "落": { pinyin: "luò", en: "fall" },
+  "雨": { pinyin: "yǔ", en: "rain" },
+  "主": { pinyin: "zhǔ", en: "main" },
+  "重": { pinyin: "zhòng", en: "heavy" },
+  "暑": { pinyin: "shǔ", en: "heat" },
+  "柳": { pinyin: "liǔ", en: "willow" },
+  "五": { pinyin: "wǔ", en: "five" },
+  "士": { pinyin: "shì", en: "scholar" },
+  "人": { pinyin: "rén", en: "person" },
+  "郊": { pinyin: "jiāo", en: "suburb" },
+  "野": { pinyin: "yě", en: "wild" },
+  "或": { pinyin: "huò", en: "or" },
+  "演": { pinyin: "yǎn", en: "perform" },
+  "武": { pinyin: "wǔ", en: "martial" },
+  "場": { pinyin: "chǎng", en: "field" },
+  "走": { pinyin: "zǒu", en: "walk" },
+  "馬": { pinyin: "mǎ", en: "horse" },
+  "較": { pinyin: "jiào", en: "compare" },
+  "射": { pinyin: "shè", en: "shoot" },
+  "制": { pinyin: "zhì", en: "make" },
+  "藥": { pinyin: "yào", en: "medicine" },
+  "午": { pinyin: "wǔ", en: "noon" },
+  "時": { pinyin: "shí", en: "time" },
+  "頭": { pinyin: "tóu", en: "head" },
+  "柄": { pinyin: "bǐng", en: "handle" },
+  "正": { pinyin: "zhèng", en: "correct" },
+  "掩": { pinyin: "yǎn", en: "cover" },
+  "鬼": { pinyin: "guǐ", en: "ghost" },
+  "無": { pinyin: "wú", en: "without" },
+  "不": { pinyin: "bù", en: "not" },
+  "靈": { pinyin: "líng", en: "spirit" },
+  "驗": { pinyin: "yàn", en: "verify" },
+  "采": { pinyin: "cǎi", en: "pick" },
+  "艾": { pinyin: "ài", en: "mugwort" },
+  "師": { pinyin: "shī", en: "teacher" },
+  "曠": { pinyin: "kuàng", en: "vast" },
+  "占": { pinyin: "zhān", en: "divine" },
+  "病": { pinyin: "bìng", en: "illness" },
+  "齊": { pinyin: "qí", en: "Qi state" },
+  "景": { pinyin: "jǐng", en: "scenery" },
+  "公": { pinyin: "gōng", en: "duke" },
+  "索": { pinyin: "suǒ", en: "rope" },
+  "懸": { pinyin: "xuán", en: "hang" },
+  "臂": { pinyin: "bì", en: "arm" },
+  "及": { pinyin: "jí", en: "and" },
+  "釵": { pinyin: "chāi", en: "hairpin" },
+  "符": { pinyin: "fú", en: "talisman" },
+  "續": { pinyin: "xù", en: "continue" },
+  "命": { pinyin: "mìng", en: "life" },
+  "縷": { pinyin: "lǚ", en: "thread" },
+  "彩": { pinyin: "cǎi", en: "color" },
+  "絲": { pinyin: "sī", en: "silk" },
+  "系": { pinyin: "xì", en: "tie" },
+  "上": { pinyin: "shàng", en: "on" },
+  "辟": { pinyin: "bì", en: "ward off" },
+  "兵": { pinyin: "bīng", en: "soldier" },
+  "令": { pinyin: "lìng", en: "make" },
+  "角": { pinyin: "jiǎo", en: "horn" },
+  "黍": { pinyin: "shǔ", en: "millet" },
+  "屈": { pinyin: "qū", en: "bend" },
+  "原": { pinyin: "yuán", en: "origin" },
+  "投": { pinyin: "tóu", en: "throw" },
+  "汨": { pinyin: "mì", en: "name of river" },
+  "羅": { pinyin: "luó", en: "net" },
+  "楚": { pinyin: "chǔ", en: "Chu state" },
+  "竹": { pinyin: "zhú", en: "bamboo" },
+  "筒": { pinyin: "tǒng", en: "tube" },
+  "貯": { pinyin: "zhù", en: "store" },
+  "米": { pinyin: "mǐ", en: "rice" },
+  "水": { pinyin: "shuǐ", en: "water" },
+  "祭": { pinyin: "jì", en: "sacrifice" },
+  "歐": { pinyin: "ōu", en: "surname Ou" },
+  "回": { pinyin: "huí", en: "return" },
+  "見": { pinyin: "jiàn", en: "see" },
+  "三": { pinyin: "sān", en: "three" },
+  "閭": { pinyin: "lǘ", en: "village" },
+  "大": { pinyin: "dà", en: "big" },
+  "夫": { pinyin: "fū", en: "man" },
+  "君": { pinyin: "jūn", en: "lord" },
+  "所": { pinyin: "suǒ", en: "place" },
+  "多": { pinyin: "duō", en: "many" },
+  "蛟": { pinyin: "jiāo", en: "flood dragon" },
+  "奪": { pinyin: "duó", en: "seize" },
+  "須": { pinyin: "xū", en: "must" },
+  "裹": { pinyin: "guǒ", en: "wrap" },
+  "楝": { pinyin: "liàn", en: "chinaberry" },
+  "樹": { pinyin: "shù", en: "tree" },
+  "葉": { pinyin: "yè", en: "leaf" },
+  "縛": { pinyin: "fù", en: "bind" },
+  "免": { pinyin: "miǎn", en: "avoid" },
+  "患": { pinyin: "huàn", en: "disaster" },
+  "後": { pinyin: "hòu", en: "later" },
+  "唐": { pinyin: "táng", en: "Tang dynasty" },
+  "天": { pinyin: "tiān", en: "heaven" },
+  "寶": { pinyin: "bǎo", en: "treasure" },
+  "宮": { pinyin: "gōng", en: "palace" },
+  "造": { pinyin: "zào", en: "make" },
+  "粉": { pinyin: "fěn", en: "powder" },
+  "團": { pinyin: "tuán", en: "ball" },
+  "食": { pinyin: "shí", en: "food" },
+  "弓": { pinyin: "gōng", en: "bow" },
+  "中": { pinyin: "zhòng", en: "hit" },
+  "方": { pinyin: "fāng", en: "then" },
+  "競": { pinyin: "jìng", en: "compete" },
+  "渡": { pinyin: "dù", en: "cross" },
+  "死": { pinyin: "sǐ", en: "die" },
+  "舟": { pinyin: "zhōu", en: "boat" },
+  "楫": { pinyin: "jí", en: "oar" },
+  "拯": { pinyin: "zhěng", en: "save" },
+  "逐": { pinyin: "zhú", en: "chase" },
+  "瑞": { pinyin: "ruì", en: "auspicious" },
+  "端": { pinyin: "duān", en: "upright" },
+  "陽": { pinyin: "yáng", en: "sun" },
+  "石": { pinyin: "shí", en: "stone" },
+  "榴": { pinyin: "liú", en: "pomegranate" },
+  "花": { pinyin: "huā", en: "flower" },
+  "菖": { pinyin: "chāng", en: "calamus" },
+  "蒲": { pinyin: "pú", en: "cattail" },
+  "梔": { pinyin: "zhī", en: "gardenia" },
+  "插": { pinyin: "chā", en: "insert" },
+  "瓶": { pinyin: "píng", en: "bottle" },
+  "除": { pinyin: "chú", en: "remove" },
+  "祥": { pinyin: "xiáng", en: "auspicious" },
+  "毒": { pinyin: "dú", en: "poison" },
+  "蛇": { pinyin: "shé", en: "snake" },
+  "虎": { pinyin: "hǔ", en: "tiger" },
+  "蜈": { pinyin: "wú", en: "centipede" },
+  "蚣": { pinyin: "gōng", en: "centipede" },
+  "蠍": { pinyin: "xiē", en: "scorpion" },
+  "蟾": { pinyin: "chán", en: "toad" },
+  "蜍": { pinyin: "chú", en: "toad" },
+  "官": { pinyin: "guān", en: "official" },
+  "家": { pinyin: "jiā", en: "family" },
+  "繪": { pinyin: "huì", en: "paint" },
+  "扇": { pinyin: "shàn", en: "fan" },
+  "織": { pinyin: "zhī", en: "weave" },
+  "袍": { pinyin: "páo", en: "robe" },
+  "緞": { pinyin: "duàn", en: "satin" },
+  "服": { pinyin: "fú", en: "wear" },
+  "用": { pinyin: "yòng", en: "use" },
+  "瘟": { pinyin: "wēn", en: "epidemic" },
+  "賜": { pinyin: "cì", en: "bestow" },
+  "梟": { pinyin: "xiāo", en: "owl" },
+  "羹": { pinyin: "gēng", en: "soup" },
+  "郊": { pinyin: "jiāo", en: "suburb" },
+  "祀": { pinyin: "sì", en: "sacrifice" },
+  "誌": { pinyin: "zhì", en: "record" },
+  "漢": { pinyin: "hàn", en: "Han dynasty" },
+  "令": { pinyin: "lìng", en: "order" },
+  "郡": { pinyin: "jùn", en: "commandery" },
+  "國": { pinyin: "guó", en: "state" },
+  "進": { pinyin: "jìn", en: "present" },
+  "鳥": { pinyin: "niǎo", en: "bird" },
+  "百": { pinyin: "bǎi", en: "hundred" },
+  "官": { pinyin: "guān", en: "official" },
+  "惡": { pinyin: "è", en: "evil" },
+  "食": { pinyin: "shí", en: "eat" },
+  "諸": { pinyin: "zhū", en: "various" },
+  "蘭": { pinyin: "lán", en: "orchid" },
+  "湯": { pinyin: "tāng", en: "soup" },
+  "蓄": { pinyin: "xù", en: "store" },
+  "沐": { pinyin: "mù", en: "wash" },
+  "芳": { pinyin: "fāng", en: "fragrant" },
+  "貺": { pinyin: "kuàng", en: "gift" },
+  "祥": { pinyin: "xiáng", en: "auspicious" },
+  "符": { pinyin: "fú", en: "talisman" },
+  "詔": { pinyin: "zhào", en: "edict" },
+  "書": { pinyin: "shū", en: "book" },
+  "再": { pinyin: "zài", en: "again" },
+  "降": { pinyin: "jiàng", en: "descend" },
+  "數": { pinyin: "shǔ", en: "count" },
+  "九": { pinyin: "jiǔ", en: "nine" },
+  "扇": { pinyin: "shàn", en: "fan" },
+  "離": { pinyin: "lí", en: "leave" },
+  "手": { pinyin: "shǒu", en: "hand" },
+  "飲": { pinyin: "yǐn", en: "drink" },
+  "甜": { pinyin: "tián", en: "sweet" },
+  "蜜": { pinyin: "mì", en: "honey" },
+  "拭": { pinyin: "shì", en: "wipe" },
+  "汗": { pinyin: "hàn", en: "sweat" },
+  "出": { pinyin: "chū", en: "exit" },
+  "帶": { pinyin: "dài", en: "wear" },
+  "黃": { pinyin: "huáng", en: "yellow" },
+  "舞": { pinyin: "wǔ", en: "dance" },
+  "乘": { pinyin: "chéng", en: "ride" },
+  "涼": { pinyin: "liáng", en: "cool" },
+  "入": { pinyin: "rù", en: "enter" },
+  "佛": { pinyin: "fó", en: "Buddha" },
+  "寺": { pinyin: "sì", en: "temple" },
+  "床": { pinyin: "chuáng", en: "bed" },
+  "頭": { pinyin: "tóu", en: "head" },
+  "尋": { pinyin: "xún", en: "search" },
+  "被": { pinyin: "bèi", en: "quilt" },
+  "單": { pinyin: "dān", en: "single" },
+  "思": { pinyin: "sī", en: "think" },
+  "量": { pinyin: "liàng", en: "measure" },
+  "蓋": { pinyin: "gài", en: "cover" },
+  "夾": { pinyin: "jiá", en: "lined" },
+  "家": { pinyin: "jiā", en: "family" },
+  "打": { pinyin: "dǎ", en: "beat" },
+  "炭": { pinyin: "tàn", en: "charcoal" },
+  "墼": { pinyin: "jī", en: "brick" },
+  "肉": { pinyin: "ròu", en: "meat" },
+  "漢": { pinyin: "hàn", en: "Han dynasty" },
+  "伏": { pinyin: "fú", en: "dog days" },
+  "詔": { pinyin: "zhào", en: "edict" },
+  "諸": { pinyin: "zhū", en: "various" },
+  "郎": { pinyin: "láng", en: "gentleman" },
+  "東": { pinyin: "dōng", en: "east" },
+  "方": { pinyin: "fāng", en: "direction" },
+  "朔": { pinyin: "shuò", en: "first day" },
+  "拔": { pinyin: "bá", en: "pull" },
+  "劍": { pinyin: "jiàn", en: "sword" },
+  "割": { pinyin: "gē", en: "cut" },
+  "同": { pinyin: "tóng", en: "same" },
+  "官": { pinyin: "guān", en: "official" },
+  "宜": { pinyin: "yí", en: "should" },
+  "早": { pinyin: "zǎo", en: "early" },
+  "歸": { pinyin: "guī", en: "return" },
+  "請": { pinyin: "qǐng", en: "please" },
+  "受": { pinyin: "shòu", en: "receive" },
+  "即": { pinyin: "jí", en: "then" },
+  "懷": { pinyin: "huái", en: "bosom" },
+  "立": { pinyin: "lì", en: "stand" },
+  "皆": { pinyin: "jiē", en: "all" },
+  "相": { pinyin: "xiāng", en: "mutual" },
+  "生": { pinyin: "shēng", en: "life" },
+  "代": { pinyin: "dài", en: "replace" },
+  "至": { pinyin: "zhì", en: "arrive" },
+  "金": { pinyin: "jīn", en: "metal" },
+  "畏": { pinyin: "wèi", en: "fear" },
+  "火": { pinyin: "huǒ", en: "fire" },
+  "庚": { pinyin: "gēng", en: "seventh" },
+  "蓋": { pinyin: "gài", en: "cover" },
+  "初": { pinyin: "chū", en: "beginning" },
+  "中": { pinyin: "zhōng", en: "middle" },
+  "末": { pinyin: "mò", en: "end" },
+  "秦": { pinyin: "qín", en: "Qin state" },
+  "穆": { pinyin: "mù", en: "reverent" },
+  "是": { pinyin: "shì", en: "this" },
+  "進": { pinyin: "jìn", en: "present" },
+  "餅": { pinyin: "bǐng", en: "cake" },
+  "提": { pinyin: "tí", en: "lift" },
+  "要": { pinyin: "yào", en: "important" },
+  "錄": { pinyin: "lù", en: "record" },
+  "端": { pinyin: "duān", en: "upright" },
+  "午": { pinyin: "wǔ", en: "noon" },
+  "蒲": { pinyin: "pú", en: "cattail" },
+  "泛": { pinyin: "fàn", en: "float" },
+  "酒": { pinyin: "jiǔ", en: "wine" },
+  "耳": { pinyin: "ěr", en: "ear" },
+  "醉": { pinyin: "zuì", en: "drunk" },
+  "移": { pinyin: "yí", en: "move" },
+  "易": { pinyin: "yì", en: "easy" },
+  "活": { pinyin: "huó", en: "live" },
+  "斫": { pinyin: "zhuó", en: "chop" },
+  "蛀": { pinyin: "zhù", en: "moth" }
+}
+
+const langs = ['en', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'vi', 'ru', 'el', 'la', 'th', 'ms', 'ar']
+
+function renderChar(c) {
+  if (!dictionary[c]) return `<span class="char-wrap">${c}</span>`
+  const { pinyin, en } = dictionary[c]
+  return `
+    <span class="char-wrap">
+      ${c}
+      <span class="popup">${pinyin}<br>${en}</span>
+    </span>`
+}
+
+const content = document.getElementById('content')
+
+data.forEach((paragraph, i) => {
+  const div = document.createElement('div')
+  div.className = 'section'
+
+  const raw = document.createElement('div')
+  raw.className = 'text'
+  raw.innerText = paragraph
+
+  const btnRead = document.createElement('button')
+  btnRead.textContent = '朗讀'
+  btnRead.onclick = () => {
+    if (btnRead.dataset.playing === 'true') {
+      speechSynthesis.cancel()
+      btnRead.dataset.playing = 'false'
+    } else {
+      const utter = new SpeechSynthesisUtterance(paragraph)
+      utter.lang = 'zh-CN'
+      speechSynthesis.speak(utter)
+      btnRead.dataset.playing = 'true'
+      utter.onend = () => btnRead.dataset.playing = 'false'
+    }
+  }
+
+  const annotated = document.createElement('div')
+  annotated.className = 'text'
+  annotated.innerHTML = [...paragraph].map(renderChar).join('')
+
+  const bar = document.createElement('div')
+  bar.className = 'button-bar'
+
+  langs.forEach(lang => {
+    const b = document.createElement('button')
+    b.textContent = lang
+    b.onclick = async () => {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=${lang}&dt=t&q=${encodeURIComponent(paragraph)}`)
+      const json = await res.json()
+      const translated = json[0].map(d => d[0]).join('')
+      div.querySelector('.translation').textContent = `${lang}:\n${translated}`
+    }
+    bar.appendChild(b)
+  })
+
+  const trans = document.createElement('div')
+  trans.className = 'translation'
+
+  div.append(raw, btnRead, annotated, bar, trans)
+  content.appendChild(div)
+})
+</script>
+
+</body>
+</html>

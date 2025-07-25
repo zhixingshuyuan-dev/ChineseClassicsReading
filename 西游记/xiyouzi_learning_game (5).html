@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>西游汉字探秘</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .sentence {
+      margin-bottom: 10px;
+      font-size: 48px;
+    }
+    .char {
+      display: inline-block;
+      margin: 5px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      user-select: none;
+    }
+    .char.known {
+      background-color: #eee;
+      color: #888;
+      pointer-events: none;
+    }
+    .box {
+      width: 200px;
+      min-height: 100px;
+      border: 2px dashed #666;
+      margin: 10px;
+      padding: 10px;
+      display: inline-block;
+      vertical-align: top;
+      overflow-y: auto;
+      max-height: 300px;
+    }
+    .box h3, .box h4 {
+      margin: 0 0 10px 0;
+    }
+    #structure-container {
+      display: flex;
+      gap: 20px;
+    }
+    #structure-container .box {
+      width: 600px;
+    }
+    #structure-container img {
+      width: 100px;
+      height: auto;
+      margin-bottom: 5px;
+    }
+    #feedback {
+      margin-top: 20px;
+      font-size: 18px;
+      color: green;
+    }
+    .info {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #333;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .word-display {
+      font-size: 20px;
+    }
+    .phrase-display {
+      font-size: 72px;
+      line-height: 2.2;
+    }
+    #nextButton, #skipButton {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 18px;
+    }
+    .completion {
+      background-color: #e0ffe0;
+      padding: 20px;
+      border: 2px solid #00aa00;
+      border-radius: 10px;
+      font-size: 24px;
+      margin-top: 30px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>西游汉字探秘：闯关学汉字</h1>
+  <p>多次点击原文汉字，有惊喜！Click characters multiple times to discover surprises!</p>
+
+  <div class="sentence" id="sentence"></div>
+  <button id="readSentenceBtn">🔊 朗读整句</button>
+  <button id="nextButton">下一句</button>
+  <button id="skipButton">跳过此句</button>
+  <div class="info" id="charInfo"></div>
+
+  <div id="feedback"></div>
+  <div id="completion" class="completion" style="display: none;">🎉 恭喜你，完成所有句子！Congratulations, you've finished all the sentences!</div>
+
+  <script>
+    const sentences = [
+      "那太白金星与美猴王同出了洞天深处，一齐驾云而起。",
+      "原来悟空斤斗云比众不同，十分快疾，把个金星撇在脑后，先至南天门外。",
+      "正欲收云前进，被增长天王领著庞、刘、苟、毕、邓、辛、张、陶一路大力天丁，枪刀剑戟，挡住天门，不肯放进。",
+      "猴王道：这个金星老儿乃奸诈之徒，既请老孙，如何教人动刀动枪，阻塞门路？",
+      "正嚷间，金星倏到。",
+      "悟空就觌面发狠道：你这老儿，怎么哄我？被你说奉玉帝招安旨意来请，却怎么教这些人阻住天门，不放老孙进去？",
+      "金星笑道：大王息怒。你自来未曾到此天堂，却又无名，众天丁又与你素不相识，他怎肯放你擅入？",
+      "等如今见了天尊，授了仙箓，注了官名，向后随你出入，谁复挡也？",
+      "悟空道：这等说，也罢，我不进去了。",
+      "金星又用手扯住道：你还同我进去。",
+      "将近天门，金星高叫道：那天门天将、大小吏兵，放开路者。",
+      "此乃下界仙人，我奉玉帝圣旨，宣他来也。",
+      "那增长天王与众天丁俱才敛兵退避。",
+      "猴王始信其言，同金星缓步入里观看。"
+    ];
+
+    let currentSentenceIndex = 0;
+    let knownChars = new Set();
+    let clickState = {};
+    const sentenceDiv = document.getElementById('sentence');
+    const infoBox = document.getElementById('charInfo');
+    const nextButton = document.getElementById('nextButton');
+    const readSentenceBtn = document.getElementById('readSentenceBtn');
+    const skipButton = document.getElementById('skipButton');
+    const completionBox = document.getElementById('completion');
+
+    function renderSentence() {
+      sentenceDiv.innerHTML = '';
+      knownChars.clear();
+      clickState = {}; // 清除前一句的点击状态
+      const sentence = sentences[currentSentenceIndex];
+      for (const char of sentence.replace(/[，。：“”！、？]/g, '')) {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = char;
+        span.setAttribute('data-char', char);
+        span.addEventListener('click', () => handleCharClick(span, char));
+        sentenceDiv.appendChild(span);
+      }
+    }
+
+    function handleCharClick(span, ch) {
+      if (span.classList.contains('known')) return;
+      if (!clickState[ch]) clickState[ch] = 0;
+      clickState[ch]++;
+      const count = clickState[ch];
+
+      if (count === 1) {
+        speakChar(ch);
+      } else if (count === 2) {
+        infoBox.innerHTML = `<div class='word-display'>拼音：${getPinyin(ch)}</div>`;
+      } else if (count === 3) {
+        infoBox.innerHTML += `<div class='word-display'>常见词：${getWord(ch)}</div>`;
+      } else if (count === 4) {
+        infoBox.innerHTML += `<div class='word-display'>例句：${getExample(ch)}</div>`;
+        span.classList.add('known');
+      }
+    }
+
+    function getPinyin(char) {
+      const fakeDict = { '孙': 'sūn', '悟': 'wù', '空': 'kōng', '猴': 'hóu', '王': 'wáng', '天': 'tiān', '门': 'mén', '金': 'jīn', '星': 'xīng', '云': 'yún', '兵': 'bīng' };
+      return fakeDict[char] || '拼音';
+    }
+
+    function getWord(char) {
+      const wordDict = { '悟': '悟空', '门': '天门', '星': '金星', '猴': '猴王', '兵': '士兵' };
+      return wordDict[char] || '词语';
+    }
+
+    function getExample(char) {
+      const exampleDict = { '悟': '悟空是花果山美猴王。', '门': '他站在南天门外。', '星': '太白金星奉命来请。', '猴': '猴王大闹天宫。', '兵': '天兵天将排成阵。' };
+      return exampleDict[char] || '例句';
+    }
+
+    function speakChar(char) {
+      const utter = new SpeechSynthesisUtterance(char);
+      utter.lang = 'zh-CN';
+      utter.rate = 0.75;
+      speechSynthesis.speak(utter);
+    }
+
+    nextButton.addEventListener('click', () => {
+      if (currentSentenceIndex < sentences.length - 1) {
+        currentSentenceIndex++;
+        renderSentence();
+      } else {
+        sentenceDiv.innerHTML = '';
+        completionBox.style.display = 'block';
+      }
+    });
+
+    skipButton.addEventListener('click', () => {
+      if (currentSentenceIndex < sentences.length - 1) {
+        currentSentenceIndex++;
+        renderSentence();
+      } else {
+        sentenceDiv.innerHTML = '';
+        completionBox.style.display = 'block';
+      }
+    });
+
+    readSentenceBtn.addEventListener('click', () => {
+      const text = sentences[currentSentenceIndex];
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'zh-CN';
+      utter.rate = 0.75;
+      speechSynthesis.speak(utter);
+    });
+
+    renderSentence();
+  </script>
+</body>
+</html>

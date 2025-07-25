@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>《天文部·雨卷》多语阅读辅助</title>
+  <style>
+    body {
+      font-family: 'Noto Serif TC', serif;
+      line-height: 1.8;
+      padding: 20px;
+      background-color: #121212;
+      color: #e0e0e0;
+    }
+    .section {
+      margin-bottom: 50px;
+      padding: 20px;
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .text {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .char-wrap {
+      cursor: pointer;
+      position: relative;
+      display: inline-block;
+      margin: 0 1px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+    .char-wrap:hover {
+      background-color: #2a2a2a;
+    }
+    .popup {
+      display: none;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2b2b2b;
+      border: 1px solid #555;
+      padding: 5px 8px;
+      font-size: 14px;
+      white-space: nowrap;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      border-radius: 4px;
+      z-index: 10;
+      color: #f0f0f0;
+    }
+    .char-wrap:hover .popup {
+      display: block;
+    }
+    .button-bar {
+      margin-top: 12px;
+    }
+    button {
+      margin: 4px 6px 0 0;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #555;
+      background-color: #333;
+      color: #f0f0f0;
+      cursor: pointer;
+    }
+    .translation {
+      margin-top: 12px;
+      font-size: 16px;
+      color: #d0d0d0;
+      white-space: pre-wrap;
+      background-color: #222;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #444;
+    }
+  </style>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script>
+const data = [
+  `雨神名漭滉本郎，雨師名萍翳。`,
+  `商羊舞：齊有一足鳥，舞於殿前。齊侯問於孔子，孔子曰：「此鳥名商羊。兒童有謠曰：『天將大雨，商羊鼓舞。』是為大雨之兆。」後果然。`,
+  `石燕飛：《湘州記》：零陵山有石燕，遇風雨則起飛舞，雨止還為石。`,
+  `洗兵雨：武王伐紂，風霽而乘以大雨。散宜生諫曰：「非妖與？」武王曰：「非也，天洗兵也。」`,
+  `雨工：唐柳毅，過洞庭，見女子牧羊道畔，怪而問之。女曰：「非羊也。此雨工雷霆之類也。」遂為女致書龍宮，妻毅以女。今為洞庭君。`,
+  `蜥蜴致雨：關中求雨，尋蜥蜴十數，置甕中，童男女咒曰：「蜥蜴蜥蜴，興雲吐霧，致雨滂沱，放汝歸去。」宋鹹平時用此法禱雨，屢驗。於小春月內雨為液雨。時雨為澍雨。雨雪雜下為雨汁。`,
+  `禦史雨：唐平原有冤獄，天久不雨。顏真卿為禦史，按行部邑決獄而雨，號「禦史雨」。`,
+  `隨車雨：宋陳戩知處州，時大旱，公下車，雨遂沾足，人謂之隨車雨。`,
+  `三年不雨：於公，東海郡決曹，決獄平恕。海州孝婦少寡，無子，姑欲嫁之，不肯。姑自經。姑女誣告孝婦，捕治，獄成。於公以為冤，太守竟殺之，郡中三年苦旱。後守聽於公言，徒步往祭，立雨。`,
+  `侍郎雨：正統九年，浙江臺寧等府久旱，民多疾疫。上遣禮部右侍郎王英，賚香帛往祀南鎮。英至紹興，大雨，水深二尺。祭祀之夕，雨止見星。次日，又大雨，田野沾足。人皆曰：「此侍郎雨也。」`,
+  `雨雹如鬥：漢方儲，官太常。永元中郊祀，儲言且有天變，宜更擇日，上不從。已而風日晴暢。郊還，責其欺罔，因飲鴆死。須臾，而雹大如鬥，死者千計。上使召儲，無及矣。`,
+  `冒雨剪韭：郭林宗友人夜至，冒雨剪韭作炊餅。杜詩：「夜雨剪春韭」。`,
+  `雨粟雨金錢：倉頡造字成，天雨粟，鬼夜哭。大禹時，天雨金三日。翁仲儒家極貧，天雨金十餅，稱巨富。熊袞至孝，父母死，不能葬，呼天號泣，天雨錢十萬，以終其葬事。`,
+  `雨：《大戴經》雲：天地積陰，溫則為雨。雹，雨冰也，盛陽雨水溫暖，陰氣脅之不相入，則轉而為雹。`,
+  `畢星好雨：月行西南入於畢，則多雨。《易》曰「雲行雨施，品物流行。」俗雲：「雨三日以往為霖。」小雨曰，大雨曰霈，久雨為霪雨，亦曰天漏。`,
+  `禱雨：湯有七年之旱，太史占之曰：「當以人禱。」湯曰：「吾所為請雨者，民也。若以人禱，吾請自當。」遂齋戒，剪發斷爪，素車白馬，身嬰白茅，以為犧牲，禱於桑林之野，以六事自責曰：「政不節歟？民失職歟？宮室崇歟？女謁盛歟？苞苴行歟？讒夫昌歟？」言未已，大雨，方數千裏。`,
+  `霖雨放宮人：宋開寶五年，大雨，河決。太祖謂宰相曰：「霖雨不止，得非時政所闕。朕恐掖庭幽閉者眾。」因告諭後宮：「有願歸其家者，具以情言。」得百名，悉厚賜遣之。`,
+  `上圖得雨：宋神宗七年，大旱，歲饑，征斂苛急，流民扶攜塞道，羸疾無完衣，或茹木實草根，至身被鎖械，而負瓦揭木，賣以償官，累累不絕。監安上門鄭俠乃繪所見為圖，發馬遞上之言：「陛下親臣圖，以行臣之言，一日不雨，乞斬臣，以正欺君之罪。」帝見圖長嘆，寢不能寐。翌旦，命罷新法十八事。民聞之，歡呼相賀。是日，大雨，遠近沾洽。`,
+  `商霖：宋徽宗時，蔡京久盜國柄，中外怨疾。商英能立異同，更稱為賢，帝因人望而相之。時久旱，彗星中天，商英受命。是夕，彗不見。明日，雨。帝喜書「商霖」二字賜之。`,
+  `兵道雨：明蔡懋德，以參政備兵真定。天久旱，尺寸土皆焦。懋德禱雨輒應，屬邑民爭迎之。禱所至，即雨，民歡呼曰「兵道雨」。`,
+  `大雹示警：周孝王命秦非子主馬於、渭之間，馬大蕃息，王封為附庸之君，邑於秦，使續伯益後。其日大雨雹，牛馬死，江漢俱凍。明天啟二年，大雨雹著屋，瓦磧俱碎，禾稼多傷。`,
+  `雨血：元順帝二年正月朔，雨血於汴梁，著衣皆赤。`
+]
+
+const dictionary = {
+  "雨": { pinyin: "yǔ", en: "rain" },
+  "神": { pinyin: "shén", en: "god; deity" },
+  "名": { pinyin: "míng", en: "name" },
+  "漭": { pinyin: "mǎng", en: "vast; expansive" },
+  "滉": { pinyin: "huàng", en: "deep and wide (of water)" },
+  "本": { pinyin: "běn", en: "origin; root" },
+  "郎": { pinyin: "láng", en: "gentleman; youth" },
+  "師": { pinyin: "shī", en: "teacher; master" },
+  "萍": { pinyin: "píng", en: "duckweed" },
+  "翳": { pinyin: "yì", en: "to shade; screen" },
+  
+  "商": { pinyin: "shāng", en: "commerce; Shang dynasty" },
+  "羊": { pinyin: "yáng", en: "sheep" },
+  "舞": { pinyin: "wǔ", en: "to dance" },
+  "齊": { pinyin: "qí", en: "Qi state; even" },
+  "有": { pinyin: "yǒu", en: "to have" },
+  "一": { pinyin: "yī", en: "one" },
+  "足": { pinyin: "zú", en: "foot; sufficient" },
+  "鳥": { pinyin: "niǎo", en: "bird" },
+  "於": { pinyin: "yú", en: "at; in" },
+  "殿": { pinyin: "diàn", en: "palace hall" },
+  "前": { pinyin: "qián", en: "front" },
+  "侯": { pinyin: "hóu", en: "marquis" },
+  "問": { pinyin: "wèn", en: "to ask" },
+  "孔": { pinyin: "kǒng", en: "hole; Confucius" },
+  "子": { pinyin: "zǐ", en: "child; master" },
+  "曰": { pinyin: "yuē", en: "to say" },
+  "此": { pinyin: "cǐ", en: "this" },
+  "兒": { pinyin: "ér", en: "child" },
+  "童": { pinyin: "tóng", en: "child" },
+  "謠": { pinyin: "yáo", en: "ballad; rumor" },
+  "天": { pinyin: "tiān", en: "heaven; sky" },
+  "將": { pinyin: "jiāng", en: "will; shall" },
+  "大": { pinyin: "dà", en: "big" },
+  "鼓": { pinyin: "gǔ", en: "drum" },
+  "是": { pinyin: "shì", en: "is; this" },
+  "為": { pinyin: "wéi", en: "to be; act as" },
+  "兆": { pinyin: "zhào", en: "omen; million" },
+  "後": { pinyin: "hòu", en: "after" },
+  "果": { pinyin: "guǒ", en: "fruit; indeed" },
+  "然": { pinyin: "rán", en: "so; correct" },
+  
+  "石": { pinyin: "shí", en: "stone" },
+  "燕": { pinyin: "yàn", en: "swallow (bird)" },
+  "飛": { pinyin: "fēi", en: "to fly" },
+  "湘": { pinyin: "xiāng", en: "Xiang river" },
+  "州": { pinyin: "zhōu", en: "state; prefecture" },
+  "記": { pinyin: "jì", en: "record" },
+  "零": { pinyin: "líng", en: "zero" },
+  "陵": { pinyin: "líng", en: "hill; tomb" },
+  "山": { pinyin: "shān", en: "mountain" },
+  "遇": { pinyin: "yù", en: "to meet" },
+  "風": { pinyin: "fēng", en: "wind" },
+  "則": { pinyin: "zé", en: "then; rule" },
+  "起": { pinyin: "qǐ", en: "to rise" },
+  "止": { pinyin: "zhǐ", en: "to stop" },
+  "還": { pinyin: "hái", en: "still; return" },
+  
+  // 继续添加其他生词...
+  "洗": { pinyin: "xǐ", en: "to wash" },
+  "兵": { pinyin: "bīng", en: "soldier; weapon" },
+  "武": { pinyin: "wǔ", en: "military" },
+  "王": { pinyin: "wáng", en: "king" },
+  "伐": { pinyin: "fá", en: "to attack" },
+  "紂": { pinyin: "Zhòu", en: "King Zhou (last Shang ruler)" },
+  "霽": { pinyin: "jì", en: "to clear up (after rain)" },
+  "乘": { pinyin: "chéng", en: "to ride; multiply" },
+  "散": { pinyin: "sàn", en: "to scatter" },
+  "宜": { pinyin: "yí", en: "suitable" },
+  "生": { pinyin: "shēng", en: "to be born; life" },
+  "諫": { pinyin: "jiàn", en: "to remonstrate" },
+  "妖": { pinyin: "yāo", en: "demon; weird" },
+  "與": { pinyin: "yǔ", en: "and; with" },
+  
+  "工": { pinyin: "gōng", en: "work; worker" },
+  "唐": { pinyin: "Táng", en: "Tang dynasty" },
+  "柳": { pinyin: "liǔ", en: "willow" },
+  "毅": { pinyin: "yì", en: "resolute" },
+  "過": { pinyin: "guò", en: "to pass" },
+  "洞": { pinyin: "dòng", en: "cave" },
+  "庭": { pinyin: "tíng", en: "courtyard" },
+  "見": { pinyin: "jiàn", en: "to see" },
+  "女": { pinyin: "nǚ", en: "female" },
+  "子": { pinyin: "zǐ", en: "child" },
+  "牧": { pinyin: "mù", en: "to herd" },
+  "道": { pinyin: "dào", en: "road; way" },
+  "畔": { pinyin: "pàn", en: "bank; side" },
+  "怪": { pinyin: "guài", en: "strange" },
+  "非": { pinyin: "fēi", en: "not" },
+  "雷": { pinyin: "léi", en: "thunder" },
+  "霆": { pinyin: "tíng", en: "thunderbolt" },
+  "類": { pinyin: "lèi", en: "category" },
+  "遂": { pinyin: "suì", en: "thereupon" },
+  "致": { pinyin: "zhì", en: "to send" },
+  "書": { pinyin: "shū", en: "book; to write" },
+  "龍": { pinyin: "lóng", en: "dragon" },
+  "宮": { pinyin: "gōng", en: "palace" },
+  "妻": { pinyin: "qī", en: "wife" },
+  "今": { pinyin: "jīn", en: "now" },
+  "君": { pinyin: "jūn", en: "lord; gentleman" },
+  
+  // 更多字典条目...
+}
+
+const langs = ['en', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'vi', 'ru', 'el', 'la', 'th', 'ms', 'ar']
+
+function renderChar(c) {
+  if (!dictionary[c]) return `<span class="char-wrap">${c}</span>`
+  const { pinyin, en } = dictionary[c]
+  return `
+    <span class="char-wrap">
+      ${c}
+      <span class="popup">${pinyin}<br>${en}</span>
+    </span>`
+}
+
+const content = document.getElementById('content')
+
+data.forEach((paragraph, i) => {
+  const div = document.createElement('div')
+  div.className = 'section'
+
+  const raw = document.createElement('div')
+  raw.className = 'text'
+  raw.innerText = paragraph
+
+  const btnRead = document.createElement('button')
+  btnRead.textContent = '朗讀'
+  btnRead.onclick = () => {
+    if (btnRead.dataset.playing === 'true') {
+      speechSynthesis.cancel()
+      btnRead.dataset.playing = 'false'
+    } else {
+      const utter = new SpeechSynthesisUtterance(paragraph)
+      utter.lang = 'zh-CN'
+      speechSynthesis.speak(utter)
+      btnRead.dataset.playing = 'true'
+      utter.onend = () => btnRead.dataset.playing = 'false'
+    }
+  }
+
+  const annotated = document.createElement('div')
+  annotated.className = 'text'
+  annotated.innerHTML = [...paragraph].map(renderChar).join('')
+
+  const bar = document.createElement('div')
+  bar.className = 'button-bar'
+
+  langs.forEach(lang => {
+    const b = document.createElement('button')
+    b.textContent = lang
+    b.onclick = async () => {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=zh-CN&tl=${lang}&dt=t&q=${encodeURIComponent(paragraph)}`)
+      const json = await res.json()
+      const translated = json[0].map(d => d[0]).join('')
+      div.querySelector('.translation').textContent = `${lang}:\n${translated}`
+    }
+    bar.appendChild(b)
+  })
+
+  const trans = document.createElement('div')
+  trans.className = 'translation'
+
+  div.append(raw, btnRead, annotated, bar, trans)
+  content.appendChild(div)
+})
+</script>
+
+</body>
+</html>
