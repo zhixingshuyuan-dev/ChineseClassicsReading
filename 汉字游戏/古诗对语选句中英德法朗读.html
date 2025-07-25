@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>古诗对语选句朗读多语翻译</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      font-family: "微软雅黑", sans-serif;
+      color: #fff;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+      background-size: auto;
+    }
+
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #charInput {
+      width: 200px;
+      min-height: 32px;
+      max-height: 180px;
+      font-size: 16px;
+      resize: none;
+      overflow: hidden;
+      padding: 8px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 6px;
+      background-color: #e0f7fa;
+      color: #000;
+      line-height: 1.4;
+      font-family: "微软雅黑", sans-serif;
+      transition: height 0.2s ease;
+    }
+    #charInput:focus {
+      outline: none;
+      box-shadow: 0 0 6px #0ff;
+    }
+
+    button {
+      margin-top: 6px;
+      margin-left: 4px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background: #00bcd4;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0097a7;
+    }
+
+    #wordDetail {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 30, 40, 0.95);
+      border: 2px solid #00fff7;
+      border-radius: 12px;
+      padding: 20px;
+      width: 80%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 2000;
+      box-shadow: 0 0 20px rgba(0, 255, 247, 0.5);
+      display: none;
+    }
+
+    #wordDetail h2 {
+      color: #00fff7;
+      margin-top: 0;
+      text-align: center;
+      font-size: 36px;
+      line-height: 1.5;
+    }
+
+    #wordDetail .author {
+      font-size: 20px;
+      color: #ffcc00;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    #wordDetail .translation {
+      background: rgba(0, 20, 30, 0.7);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-size: 18px;
+    }
+
+    #wordDetail .translation-title {
+      font-weight: bold;
+      color: #00bcd4;
+      margin-bottom: 5px;
+    }
+
+    #closeDetail {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #00fff7;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    #speakBtn {
+      display: block;
+      margin: 15px auto;
+      padding: 8px 16px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #speakBtn:hover {
+      background: #0097a7;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="controls">
+        <textarea id="charInput" placeholder="输入汉字（如：战利胜）" oninput="autoResize(this)"></textarea>
+        <br>
+        <button onclick="useCustomChars()">使用</button>
+        <button onclick="useDefaultChars()">字库</button>
+        <button id="autoPlayBtn">自动播放</button>
+        <button id="stopPlayBtn">停止播放</button>
+    </div>
+  </div>
+
+  <div id="wordDetail">
+    <button id="closeDetail">×</button>
+    <h2 id="detailVerse"></h2>
+    <div class="author" id="detailAuthor"></div>
+    <div class="translation">
+      <div class="translation-title">English:</div>
+      <div id="detailEnglish"></div>
+    </div>
+    <div class="translation">
+      <div class="translation-title">Deutsch:</div>
+      <div id="detailGerman"></div>
+    </div>
+    <div class="translation">
+      <div class="translation-title">Français:</div>
+      <div id="detailFrench"></div>
+    </div>
+  </div>
+
+  <script>
+    // 扩展词汇库，包含诗句和多语言翻译
+    const wordVocabulary = {
+      '锦江春色来天地，玉垒浮云变古今': { 
+        author: '唐·杜甫《登楼》', 
+        english: 'The spring scenery of Jin River comes between heaven and earth, The floating clouds over Yulei Fortress change from ancient to modern times.',
+        german: 'Die Frühlingslandschaft des Jin-Flusses kommt zwischen Himmel und Erde, Die schwebenden Wolken über der Yulei-Festung wechseln von alten zu modernen Zeiten.',
+        french: 'Le paysage printanier de la rivière Jin vient entre ciel et terre, Les nuages flottants sur la forteresse Yulei changent des temps anciens aux temps modernes.'
+      },
+      '建标天地阔，诣绝古今迷': { 
+        author: '唐·杜甫《奉赠太常张卿二十韵》', 
+        english: 'Establishing standards makes heaven and earth vast, Reaching the ultimate confounds ancient and modern.',
+        german: 'Standards setzen macht Himmel und Erde weit, Das Erreichen des Ultimativen verwirrt Antike und Moderne.',
+        french: 'Établir des normes rend le ciel et la terre vastes, Atteindre l\'ultime confond l\'ancien et le moderne.'
+      },
+      '路穿天地险，人续古今愁': { 
+        author: '唐·白居易《发白狗峡次黄牛峡登高寺却望忠州》', 
+        english: 'The road passes through the dangers of heaven and earth, People continue the sorrows of ancient and modern.',
+        german: 'Die Straße führt durch die Gefahren von Himmel und Erde, Die Menschen setzen die Sorgen der Antike und Moderne fort.',
+        french: 'La route traverse les dangers du ciel et de la terre, Les gens continuent les chagrins de l\'ancien et du moderne.'
+      },
+      '江山磨尽古今事，风雨送来天地愁': { 
+        author: '宋·胡仲弓《颐斋诗筒急递次韵奉酬》', 
+        english: 'Rivers and mountains wear away all past and present affairs, Wind and rain bring the sorrows of heaven and earth.',
+        german: 'Flüsse und Berge verschleißen alle Angelegenheiten der Vergangenheit und Gegenwart, Wind und Regen bringen die Sorgen von Himmel und Erde.',
+        french: 'Les rivières et les montagnes usent toutes les affaires du passé et du présent, Le vent et la pluie apportent les chagrins du ciel et de la terre.'
+      },
+      '名胜直同天地老，青山不管古今忙': { 
+        author: '南宋·戴复古《罗汉寺》', 
+        english: 'Famous sites grow old together with heaven and earth, Green mountains care not for the busyness of past and present.',
+        german: 'Berühmte Stätten altern zusammen mit Himmel und Erde, Grüne Berge kümmern sich nicht um die Geschäftigkeit von Vergangenheit und Gegenwart.',
+        french: 'Les sites célèbres vieillissent avec le ciel et la terre, Les montagnes vertes ne se soucient pas de l\'agitation du passé et du présent.'
+      },
+      '汴水波声天地远，上林春色古今同': { 
+        author: '北宋·李新《送刘金部三首 其二》', 
+        english: 'The sound of Bian River waves carries far between heaven and earth, The spring scenery of Shanglin Garden remains the same through ages.',
+        german: 'Der Klang der Bian-Fluss-Wellen trägt weit zwischen Himmel und Erde, Die Frühlingslandschaft des Shanglin-Gartens bleibt durch die Zeiten gleich.',
+        french: 'Le son des vagues de la rivière Bian porte loin entre ciel et terre, Le paysage printanier du jardin Shanglin reste le même à travers les âges.'
+      },
+      '无色图从天地展，有声画与古今看': { 
+        author: '南宋·吴潜《十一二用喜雪韵四首 其一》', 
+        english: 'Colorless pictures unfold between heaven and earth, Soundful paintings are viewed by past and present.',
+        german: 'Farblose Bilder entfalten sich zwischen Himmel und Erde, Klangvolle Gemälde werden von Vergangenheit und Gegenwart betrachtet.',
+        french: 'Des images sans couleur se déploient entre ciel et terre, Des peintures sonores sont vues par le passé et le présent.'
+      },
+      '千里放开天地景，一轮题尽古今诗': { 
+        author: '北宋·杨齐和《中秋对月》', 
+        english: 'A thousand miles release the scenery between heaven and earth, One moon inspires all poetry from ancient to modern.',
+        german: 'Tausend Meilen entfalten die Landschaft zwischen Himmel und Erde, Ein Mond inspiriert alle Poesie von der Antike bis zur Moderne.',
+        french: 'Mille lieues libèrent le paysage entre ciel et terre, Une lune inspire toute la poésie de l\'antiquité à nos jours.'
+      },
+      '豪杰彫零天地老，山河牢落古今愁': { 
+        author: '南宋·何梦桂《挽邵青溪二章 其一》', 
+        english: 'Heroes wither as heaven and earth grow old, Mountains and rivers desolate with past and present sorrows.',
+        german: 'Helden verwelken, während Himmel und Erde altern, Berge und Flüsse öde mit Vergangenheits- und Gegenwartssorgen.',
+        french: 'Les héros se flétrissent alors que le ciel et la terre vieillissent, Montagnes et rivières désolées avec les chagrins du passé et du présent.'
+      },
+      '葛岭春风天地醉，芜湖夜月古今愁': { 
+        author: '南宋·彭秋宇《感旧》', 
+        english: 'Spring breeze on Ge Ridge intoxicates heaven and earth, Night moon over Wu Lake saddens past and present.',
+        german: 'Frühlingsbrise auf dem Ge-Grat berauscht Himmel und Erde, Nachtmond über dem Wu-See betrübt Vergangenheit und Gegenwart.',
+        french: 'La brise printanière sur la crête Ge enivre ciel et terre, La lune nocturne sur le lac Wu attriste le passé et le présent.'
+      },
+      '雪屋五更天地独，梅诗一句古今难': { 
+        author: '宋末元初·方回《岁尽即事三首 其二》', 
+        english: 'Snowy hut at fifth watch stands alone between heaven and earth, One line of plum blossom poetry challenges past and present.',
+        german: 'Schneehütte zur fünften Nachtwache steht allein zwischen Himmel und Erde, Eine Zeile Pflaumenblütenpoesie fordert Vergangenheit und Gegenwart heraus.',
+        french: 'Une hutte enneigée à la cinquième veille se dresse seule entre ciel et terre, Un vers de poésie de fleur de prunier défie le passé et le présent.'
+      },
+      '一樽长照古今月，两鬓不禁天地秋': { 
+        author: '宋末元初·于石《次韵君会感思》', 
+        english: 'One cup forever reflects the moon of past and present, Two temples cannot resist the autumn of heaven and earth.',
+        german: 'Eine Tasse reflektiert für immer den Mond von Vergangenheit und Gegenwart, Zwei Schläfen können dem Herbst von Himmel und Erde nicht widerstehen.',
+        french: 'Une coupe reflète éternellement la lune du passé et du présent, Deux tempes ne peuvent résister à l\'automne du ciel et de la terre.'
+      },
+      '滏水波声天地远，灞陵山色古今同': { 
+        author: '北宋·李新《挽史太君词》', 
+        english: 'The sound of Fu River waves carries far between heaven and earth, The mountain scenery of Baling remains the same through ages.',
+        german: 'Der Klang der Fu-Fluss-Wellen trägt weit zwischen Himmel und Erde, Die Berglandschaft von Baling bleibt durch die Zeiten gleich.',
+        french: 'Le son des vagues de la rivière Fu porte loin entre ciel et terre, Le paysage montagneux de Baling reste le même à travers les âges.'
+      },
+      '俯仰尚嫌天地窄，卷舒宁计古今长': { 
+        author: '南宋·陈渊《寄傲轩》', 
+        english: 'Looking up and down still finds heaven and earth narrow, Rolling and unrolling cares not for the length of past and present.',
+        german: 'Nach oben und unten schauend findet man Himmel und Erde noch eng, Aufrollen und Abrollen kümmert sich nicht um die Länge von Vergangenheit und Gegenwart.',
+        french: 'Regarder en haut et en bas trouve encore le ciel et la terre étroits, Enrouler et dérouler ne se soucie pas de la longueur du passé et du présent.'
+      },
+      '牢落二贤天地外，风流三绝古今间': { 
+        author: '北宋·苏舜元《青州资政寄示小楷伯夷颂许昌相公以诗跋尾因作诗谢二公兼呈永兴观文相公》', 
+        english: 'Two sages desolate beyond heaven and earth, Three excellences romantic between past and present.',
+        german: 'Zwei Weisen öde jenseits von Himmel und Erde, Drei Vortrefflichkeiten romantisch zwischen Vergangenheit und Gegenwart.',
+        french: 'Deux sages désolés au-delà du ciel et de la terre, Trois excellences romantiques entre le passé et le présent.'
+      },
+      '天地无情催岁月，古今何物是功名': { 
+        author: '宋末元初·黎廷瑞《金陵岁晚》', 
+        english: 'Heaven and earth heartlessly hasten the years, What thing in past or present counts as achievement?',
+        german: 'Himmel und Erde beschleunigen herzlos die Jahre, Was zählt in Vergangenheit oder Gegenwart als Leistung?',
+        french: 'Le ciel et la terre précipitent impitoyablement les années, Quelle chose dans le passé ou le présent compte comme réalisation?'
+      },
+      '古今不泯春秋笔，天地难欺暮夜金': { 
+        author: '宋末元初·俞德邻《老病》', 
+        english: 'The Spring and Autumn brush never fades through ages, Heaven and earth can hardly conceal night gold.',
+        german: 'Der Frühling-und-Herbst-Pinsel verblasst nie durch die Zeiten, Himmel und Erde können Nachtgold kaum verbergen.',
+        french: 'Le pinceau des Printemps et Automnes ne s\'efface jamais à travers les âges, Le ciel et la terre peuvent difficilement cacher l\'or nocturne.'
+      },
+      '古今上下几千首，天地中间八九椽': { 
+        author: '宋·胡仲弓《晚眺 其二》', 
+        english: 'Thousands of poems above and below through ages, Eight or nine rafters between heaven and earth.',
+        german: 'Tausende Gedichte oben und unten durch die Zeiten, Acht oder neun Dachsparren zwischen Himmel und Erde.',
+        french: 'Des milliers de poèmes en haut et en bas à travers les âges, Huit ou neuf chevrons entre ciel et terre.'
+      },
+      '天地无情搔短发，古今多变付残杯': { 
+        author: '宋末元初·谢枋得《题东观壁 其一》', 
+        english: 'Heaven and earth heartlessly tease my short hair, Past and present changes are left to the dregs of wine.',
+        german: 'Himmel und Erde necken herzlos mein kurzes Haar, Vergangenheits- und Gegenwartsveränderungen werden den Weinresten überlassen.',
+        french: 'Le ciel et la terre taquinent impitoyablement mes cheveux courts, Les changements du passé et du présent sont laissés aux restes de vin.'
+      },
+      '古今蔽显神功相，天地韬藏裕眼迷': { 
+        author: '南宋·陈宓《和枢上人韵》', 
+        english: 'Divine achievements appear and disappear through ages, Heaven and earth conceal and confuse the generous eye.',
+        german: 'Göttliche Leistungen erscheinen und verschwinden durch die Zeiten, Himmel und Erde verbergen und verwirren das großzügige Auge.',
+        french: 'Les réalisations divines apparaissent et disparaissent à travers les âges, Le ciel et la terre cachent et confondent l\'œil généreux.'
+      },
+      '古今更欲悲何事，天地长留景似人': { 
+        author: '宋·汪藻《过金陵》', 
+        english: 'What more should past and present grieve about? Heaven and earth forever retain scenes like people.',
+        german: 'Worüber sollten Vergangenheit und Gegenwart noch trauern? Himmel und Erde bewahren für immer Szenen wie Menschen.',
+        french: 'De quoi le passé et le présent devraient-ils encore s\'attrister? Le ciel et la terre conservent pour toujours des scènes comme des personnes.'
+      },
+      '已识古今体，且知天地全': { 
+        author: '宋·孔平仲《咏大》', 
+        english: 'Already knowing the forms of past and present, And understanding the completeness of heaven and earth.',
+        german: 'Bereits die Formen von Vergangenheit und Gegenwart kennend, Und die Vollständigkeit von Himmel und Erde verstehend.',
+        french: 'Connaissant déjà les formes du passé et du présent, Et comprenant l\'intégralité du ciel et de la terre.'
+      },
+      '机深天地秘，知少古今难': { 
+        author: '北宋·韩琦《甲午冬阅》', 
+        english: 'Profound mechanisms conceal heaven and earth secrets, Little knowledge faces past and present difficulties.',
+        german: 'Tiefgründige Mechanismen verbergen Himmel-und-Erde-Geheimnisse, Geringes Wissen steht vor Vergangenheits- und Gegenwartsschwierigkeiten.',
+        french: 'Des mécanismes profonds cachent les secrets du ciel et de la terre, Peu de connaissances font face aux difficultés du passé et du présent.'
+      },
+      '生德齐天地，仁声振古今': { 
+        author: '北宋·韩琦《仁宗皇帝揭辞三首 其一》', 
+        english: 'Virtue equal to heaven and earth, Benevolent reputation shaking past and present.',
+        german: 'Tugend gleich Himmel und Erde, Wohltätiger Ruf erschüttert Vergangenheit und Gegenwart.',
+        french: 'Vertu égale au ciel et à la terre, Réputation bienveillante secouant le passé et le présent.'
+      },
+      '古今同逆旅，天地一愁城': { 
+        author: '清末民国初·易顺鼎《宿乐乡关用陈伯玉晚次诗韵》', 
+        english: 'Past and present share the same inn, Heaven and earth form one sorrowful city.',
+        german: 'Vergangenheit und Gegenwart teilen das gleiche Gasthaus, Himmel und Erde bilden eine traurige Stadt.',
+        french: 'Le passé et le présent partagent la même auberge, Le ciel et la terre forment une ville triste.'
+      },
+      '古今难得者，天地锡恩然': { 
+        author: '清·弘历《除夕》', 
+        english: 'What is rare through ages, Heaven and earth bestow grace thus.',
+        german: 'Was durch die Zeiten selten ist, Himmel und Erde verleihen so Gnade.',
+        french: 'Ce qui est rare à travers les âges, Le ciel et la terre accordent ainsi la grâce.'
+      },
+      '古今学有别，天地德无涯': { 
+        author: '清·弘历《仲春经筵》', 
+        english: 'Learning differs between past and present, The virtue of heaven and earth knows no bounds.',
+        german: 'Lernen unterscheidet sich zwischen Vergangenheit und Gegenwart, Die Tugend von Himmel und Erde kennt keine Grenzen.',
+        french: 'L\'apprentissage diffère entre le passé et le présent, La vertu du ciel et de la terre ne connaît pas de limites.'
+      },
+      '天地元无着，古今不可涯': { 
+        author: '清·赵冕镐《记知庵夜》', 
+        english: 'Heaven and earth originally have no attachment, Past and present cannot be limited.',
+        german: 'Himmel und Erde hatten ursprünglich keine Bindung, Vergangenheit und Gegenwart können nicht begrenzt werden.',
+        french: 'Le ciel et la terre n\'avaient à l\'origine aucune attache, Le passé et le présent ne peuvent être limités.'
+      },
+      '大海无天地，愁云自古今': { 
+        author: '清·南龙翼《早发赤关阻风更滞。次秋潭韵》', 
+        english: 'The great sea has no heaven or earth, Sorrowful clouds exist since ancient times.',
+        german: 'Das große Meer hat keinen Himmel oder Erde, Traurige Wolken existieren seit alten Zeiten.',
+        french: 'La grande mer n\'a ni ciel ni terre, Les nuages tristes existent depuis les temps anciens.'
+      },
+      '天地客同老，古今僧自闲': { 
+        author: '明末清初·张文光《观音阁》', 
+        english: 'Guest of heaven and earth grows old together, Monk of past and present remains leisurely.',
+        german: 'Gast von Himmel und Erde wird gemeinsam alt, Mönch von Vergangenheit und Gegenwart bleibt gemächlich.',
+        french: 'L\'invité du ciel et de la terre vieillit ensemble, Le moine du passé et du présent demeure paisible.'
+      },
+      '果知天地大，不尽古今愁': { 
+        author: '清·陈玉璂《同友登京口避风馆高阁望江题壁》', 
+        english: 'Truly knowing the vastness of heaven and earth, Cannot exhaust the sorrows of past and present.',
+        german: 'Wahrhaft die Weite von Himmel und Erde kennend, Kann die Sorgen von Vergangenheit und Gegenwart nicht erschöpfen.',
+        french: 'Connaissant vraiment l\'immensité du ciel et de la terre, Ne peut épuiser les chagrins du passé et du présent.'
+      },
+      '龙沙天地□，沉水古今流': { 
+        author: '清·戴梓《佳公子招游郊野座中赠陈省斋杨玉斧两太史 其一》', 
+        english: 'Dragon sand heaven and earth □, Sinking water flows through past and present.',
+        german: 'Drachen-Sand Himmel und Erde □, Sinkendes Wasser fließt durch Vergangenheit und Gegenwart.',
+        french: 'Sable du dragon ciel et terre □, Eau coulante coule à travers le passé et le présent.'
+      },
+      '量包天地外，色染古今容': { 
+        author: '清·胤禛《登望海楼》', 
+        english: 'Capacity embraces beyond heaven and earth, Color dyes the appearance of past and present.',
+        german: 'Kapazität umarmt jenseits von Himmel und Erde, Farbe färbt das Aussehen von Vergangenheit und Gegenwart.',
+        french: 'La capacité embrasse au-delà du ciel et de la terre, La couleur teint l\'apparence du passé et du présent.'
+      },
+      '当途豺虎塞天地，片刻波澜变古今': { 
+        author: '清末民国初·仇亮《绝命诗六首 其六》', 
+        english: 'Jackals and tigers on the road block heaven and earth, Moments of waves change past and present.',
+        german: 'Schakale und Tiger auf dem Weg blockieren Himmel und Erde, Momente von Wellen verändern Vergangenheit und Gegenwart.',
+        french: 'Les chacals et tigres sur la route bloquent ciel et terre, Des moments de vagues changent le passé et le présent.'
+      },
+      '园圃拓余天地老，江湖历尽古今春': { 
+        author: '现当代·章敬和《还山吟 其二》', 
+        english: 'Gardens expanded make heaven and earth old, Rivers and lakes experienced exhaust past and present springs.',
+        german: 'Erweiterte Gärten machen Himmel und Erde alt, Erfahrene Flüsse und Seen erschöpfen Vergangenheits- und Gegenwartsfrühlinge.',
+        french: 'Les jardins agrandis rendent le ciel et la terre vieux, Les rivières et lacs expérimentés épuisent les printemps du passé et du présent.'
+      },
+      '圣伏神徂天地尽，山崩钟应古今奇': { 
+        author: '清末至民国·方守敦《寄怀光炯》', 
+        english: 'Saints hidden and spirits gone, heaven and earth exhausted, Mountains collapsed and bells responded, past and present marveled.',
+        german: 'Heilige versteckt und Geister weg, Himmel und Erde erschöpft, Berge eingestürzt und Glocken antworteten, Vergangenheit und Gegenwart staunten.',
+        french: 'Saints cachés et esprits partis, ciel et terre épuisés, Montagnes effondrées et cloches répondirent, passé et présent émerveillés.'
+      },
+      '商鼎不嫌天地老，河声淘出古今情': { 
+        author: '现当代·章敬和《应《郑州年鉴》索题》', 
+        english: 'Shang Dynasty tripod does not mind heaven and earth growing old, River sounds wash out past and present feelings.',
+        german: 'Shang-Dynastie-Tripod stört sich nicht daran, dass Himmel und Erde alt werden, Flussgeräusche waschen Vergangenheits- und Gegenwartsgefühle aus.',
+        french: 'Le trépied de la dynastie Shang ne se soucie pas du vieillissement du ciel et de la terre, Les sons de la rivière lavent les sentiments du passé et du présent.'
+      },
+      '古今来往鱼龙梦，天地沉浮荻苇风': { 
+        author: '清末至民国·袁嘉谷《游来鹤亭》', 
+        english: 'Fish and dragon dreams come and go through ages, Reeds and rushes wind rises and falls between heaven and earth.',
+        german: 'Fisch- und Drachen-Träume kommen und gehen durch die Zeiten, Schilf- und Röhricht-Wind steigt und fällt zwischen Himmel und Erde.',
+        french: 'Les rêves de poissons et de dragons vont et viennent à travers les âges, Le vent des roseaux et des joncs monte et descend entre ciel et terre.'
+      },
+      '此景古今同慨喟，有人天地感秕糠': { 
+        author: '清末至民国·苏继祖《秋兴八首（选二） 其一》', 
+        english: 'This scene makes past and present sigh together, Someone feels chaff between heaven and earth.',
+        german: 'Diese Szene lässt Vergangenheit und Gegenwart gemeinsam seufzen, Jemand fühlt Spreu zwischen Himmel und Erde.',
+        french: 'Cette scène fait soupirer ensemble le passé et le présent, Quelqu\'un ressent la balle entre ciel et terre.'
+      },
+      '古今人物藏胸底，天地山川出指头': { 
+        author: '现当代·章敬和《参观黄河窑洞工艺》', 
+        english: 'Past and present figures stored in the chest, Heaven and earth mountains and rivers emerge from fingertips.',
+        german: 'Vergangenheits- und Gegenwartsfiguren in der Brust gespeichert, Himmel-und-Erde-Berge und -Flüsse entstehen aus Fingerspitzen.',
+        french: 'Les figures du passé et du présent stockées dans la poitrine, Les montagnes et rivières du ciel et de la terre émergent du bout des doigts.'
+      },
+      '浩唱唤醒天地醉，长戈挥尽古今愁': { 
+        author: '现当代·彭靖《山中秋兴用杜老韵 （八首） 其六》', 
+        english: 'Great singing awakens heaven and earth from drunkenness, Long spear waves away past and present sorrows.',
+        german: 'Großes Singen weckt Himmel und Erde aus der Trunkenheit, Lange Speer weht Vergangenheits- und Gegenwartssorgen weg.',
+        french: 'Un grand chant réveille le ciel et la terre de l\'ivresse, Une longue lance balaie les chagrins du passé et du présent.'
+      },
+      '古今成世变，天地入愁心': { 
+        author: '清末至民国·刘咸荥《临江关小饮 其一》', 
+        english: 'Past and present become worldly changes, Heaven and earth enter sorrowful heart.',
+        german: 'Vergangenheit und Gegenwart werden weltliche Veränderungen, Himmel und Erde betreten trauriges Herz.',
+        french: 'Le passé et le présent deviennent des changements mondains, Le ciel et la terre entrent dans un cœur triste.'
+      },
+      '古今真旦暮，天地且浮沉': { 
+        author: '清末至民国·郭象升《将游京师出城有作 其二》', 
+        english: 'Past and present are truly morning and evening, Heaven and earth moreover rise and fall.',
+        german: 'Vergangenheit und Gegenwart sind wahrlich Morgen und Abend, Himmel und Erde steigen und fallen zudem.',
+        french: 'Le passé et le présent sont vraiment matin et soir, Le ciel et la terre montent et descendent de plus.'
+      },
+      '却看天地在，未觉古今殊': { 
+        author: '清末至民国·杨圻《感怀诗示同志 其三》', 
+        english: 'Yet seeing heaven and earth remain, Not feeling past and present differ.',
+        german: 'Doch sehend, dass Himmel und Erde bleiben, Nicht fühlend, dass Vergangenheit und Gegenwart sich unterscheiden.',
+        french: 'Pourtant voyant que le ciel et la terre demeurent, Ne sentant pas que le passé et le présent diffèrent.'
+      },
+      '放眼古今事，侧身天地间': { 
+        author: '现当代·萧劳《日暮》', 
+        english: 'Surveying past and present affairs, Standing between heaven and earth.',
+        german: 'Vergangenheits- und Gegenwartsangelegenheiten überblickend, Zwischen Himmel und Erde stehend.',
+        french: 'Examinant les affaires du passé et du présent, Se tenant entre ciel et terre.'
+      },
+      '众妙参天地，予怀自古今': { 
+        author: '近现代·朱帆《题宝峰寺》', 
+        english: 'All mysteries participate in heaven and earth, My feelings come from past and present.',
+        german: 'Alle Mysterien nehmen teil an Himmel und Erde, Meine Gefühle kommen aus Vergangenheit und Gegenwart.',
+        french: 'Tous les mystères participent au ciel et à la terre, Mes sentiments viennent du passé et du présent.'
+      },
+      '缒险开天地，逃空无古今': { 
+        author: '清末至现当代·王蘧常《海日楼呈沈子培师》', 
+        english: 'Descending dangers opens heaven and earth, Escaping emptiness knows no past or present.',
+        german: 'Absteigende Gefahren öffnen Himmel und Erde, Der Leere entfliehend kennt keine Vergangenheit oder Gegenwart.',
+        french: 'Descendre les dangers ouvre ciel et terre, Échapper au vide ne connaît ni passé ni présent.'
+      },
+      '独溯古今聊闭阁，尚馀天地孰争棋': { 
+        author: '当代·陈永正《刘逸老寄诗见怀奉和》', 
+        english: 'Alone tracing past and present to close the pavilion, Still remaining between heaven and earth, who competes in chess?',
+        german: 'Allein Vergangenheit und Gegenwart verfolgend, um den Pavillon zu schließen, Noch zwischen Himmel und Erde verbleibend, wer wettstreitet im Schach?',
+        french: 'Retraçant seul le passé et le présent pour fermer le pavillon, Restant encore entre ciel et terre, qui rivalise aux échecs?'
+      },
+      '胸罗星斗开天地，笔起波澜撼古今': { 
+        author: '现当代·林恭祖《蟠桃会二首 其一》', 
+        english: 'Chest containing stars opens heaven and earth, Brush raising waves shakes past and present.',
+        german: 'Brust, die Sterne enthält, öffnet Himmel und Erde, Pinsel, der Wellen erhebt, erschüttert Vergangenheit und Gegenwart.',
+        french: 'La poitrine contenant des étoiles ouvre ciel et terre, Le pinceau soulevant des vagues secoue le passé et le présent.'
+      },
+      '回首忽惊天地坼，观棋不了古今愁': { 
+        author: '当代·潘乐乐《蜀游方归数日，惊闻大地震，更北川诗社五十余同志集体遇难，恸次杨启宇先生韵》', 
+        english: 'Turning head suddenly shocked by heaven and earth splitting, Watching chess cannot resolve past and present sorrows.',
+        german: 'Kopf drehend plötzlich schockiert von Himmel-und-Erde-Spaltung, Schach beobachtend kann Vergangenheits- und Gegenwartssorgen nicht lösen.',
+        french: 'Tournant la tête soudain choqué par la division du ciel et de la terre, Regarder les échecs ne peut résoudre les chagrins du passé et du présent.'
+      },
+      '古今自变春随在，天地俱空我独来': { 
+        author: '当代·卢青山《梦至君山》', 
+        english: 'Past and present change themselves, spring follows existence, Heaven and earth both empty, I alone come.',
+        german: 'Vergangenheit und Gegenwart verändern sich selbst, Frühling folgt der Existenz, Himmel und Erde beide leer, ich allein komme.',
+        french: 'Le passé et le présent se changent eux-mêmes, le printemps suit l\'existence, Le ciel et la terre tous deux vides, je viens seul.'
+      },
+      '不尽古今月，更生天地秋': { 
+        author: '当代·姚佳《泰州 其一》', 
+        english: 'Endless moon of past and present, Renewed autumn of heaven and earth.',
+        german: 'Endloser Mond von Vergangenheit und Gegenwart, Erneuerter Herbst von Himmel und Erde.',
+        french: 'Lune sans fin du passé et du présent, Automne renouvelé du ciel et de la terre.'
+      },
+      '黑白尤天地，玄黄更古今': { 
+        author: '当代·姚佳《留白 其一》', 
+        english: 'Black and white especially heaven and earth, Mysterious yellow moreover past and present.',
+        german: 'Schwarz und weiß besonders Himmel und Erde, Geheimnisvolles Gelb zudem Vergangenheit und Gegenwart.',
+        french: 'Noir et blanc surtout ciel et terre, Jaune mystérieux de plus passé et présent.'
+      },
+      '春醒天地梦，雪掩古今愁': { 
+        author: '当代·姚佳《留白 其二》', 
+        english: 'Spring awakens heaven and earth dreams, Snow covers past and present sorrows.',
+        german: 'Frühling erweckt Himmel-und-Erde-Träume, Schnee bedeckt Vergangenheits- und Gegenwartssorgen.',
+        french: 'Le printemps réveille les rêves du ciel et de la terre, La neige couvre les chagrins du passé et du présent.'
+      },
+      '古今同寂寞，天地自悠扬': { 
+        author: '当代·姚佳《柳州马鞍山》', 
+        english: 'Past and present share the same solitude, Heaven and earth naturally float freely.',
+        german: 'Vergangenheit und Gegenwart teilen die gleiche Einsamkeit, Himmel und Erde schweben natürlich frei.',
+        french: 'Le passé et le présent partagent la même solitude, Le ciel et la terre flottent naturellement librement.'
+      }
+    };
+
+    // 从词汇库中提取所有诗句
+    const allVerses = Object.keys(wordVocabulary);
+    
+    let currentVerseIndex = 0;
+    let isAutoPlaying = false;
+    let autoPlayInterval;
+    let isSpeaking = false;
+
+    function useCustomChars() {
+      const input = document.getElementById('charInput').value.trim();
+      if (input) {
+        // 将输入转换为词汇列表
+        const customWords = input.split(' ').filter(word => word.length > 0);
+        activeWords = [...new Set(customWords)];
+      }
+    }
+
+    function resetToDefault() {
+      activeWords = [...allVerses]; // 重置为只显示诗句
+      document.getElementById('charInput').value = '';
+    }
+
+    function useDefaultChars() {
+      // 使用默认字库
+    }
+
+    function showWordDetail(verse) {
+      const detail = wordVocabulary[verse];
+      if (!detail) return;
+      
+      document.getElementById('detailVerse').textContent = verse;
+      document.getElementById('detailAuthor').textContent = detail.author;
+      document.getElementById('detailEnglish').textContent = detail.english;
+      document.getElementById('detailGerman').textContent = detail.german;
+      document.getElementById('detailFrench').textContent = detail.french;
+      
+      document.getElementById('wordDetail').style.display = 'block';
+      
+      // 朗读诗句和多语言解释
+      speakContent(verse, detail);
+    }
+
+    function speakContent(verse, detail) {
+      if ('speechSynthesis' in window) {
+        // 停止当前正在朗读的内容
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        
+        // 朗读诗句
+        const verseUtterance = new SpeechSynthesisUtterance(verse);
+        verseUtterance.lang = 'zh-CN';
+        verseUtterance.rate = 0.8;
+        
+        // 诗句朗读完成后朗读英文解释
+        verseUtterance.onend = function() {
+          const englishUtterance = new SpeechSynthesisUtterance(detail.english);
+          englishUtterance.lang = 'en-US';
+          englishUtterance.rate = 0.9;
+          window.speechSynthesis.speak(englishUtterance);
+          
+          // 英文朗读完成后朗读德语解释
+          englishUtterance.onend = function() {
+            const germanUtterance = new SpeechSynthesisUtterance(detail.german);
+            germanUtterance.lang = 'de-DE';
+            germanUtterance.rate = 0.9;
+            window.speechSynthesis.speak(germanUtterance);
+            
+            // 德语朗读完成后朗读法语解释
+            germanUtterance.onend = function() {
+              const frenchUtterance = new SpeechSynthesisUtterance(detail.french);
+              frenchUtterance.lang = 'fr-FR';
+              frenchUtterance.rate = 0.9;
+              window.speechSynthesis.speak(frenchUtterance);
+              
+              frenchUtterance.onend = function() {
+                isSpeaking = false;
+                // 如果是自动播放模式，继续下一首诗
+                if (isAutoPlaying) {
+                  setTimeout(showRandomVerse, 3000); // 3秒间隔
+                }
+              };
+            };
+          };
+        };
+        
+        isSpeaking = true;
+        window.speechSynthesis.speak(verseUtterance);
+      } else {
+        alert('您的浏览器不支持语音合成功能');
+        // 如果是自动播放模式，继续下一首诗
+        if (isAutoPlaying) {
+          setTimeout(showRandomVerse, 3000); // 3秒间隔
+        }
+      }
+    }
+
+    document.getElementById('closeDetail').addEventListener('click', () => {
+      document.getElementById('wordDetail').style.display = 'none';
+      // 停止朗读
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+      }
+    });
+
+    function autoResize(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = (textarea.scrollHeight) + "px";
+    }
+
+    function showRandomVerse() {
+      if (!isAutoPlaying) return;
+      
+      // 随机选择诗句
+      const randomIndex = Math.floor(Math.random() * allVerses.length);
+      const verse = allVerses[randomIndex];
+      
+      // 显示诗句详情
+      showWordDetail(verse);
+    }
+
+    function startAutoPlay() {
+      if (!isAutoPlaying) {
+        isAutoPlaying = true;
+        document.getElementById('autoPlayBtn').disabled = true;
+        document.getElementById('stopPlayBtn').disabled = false;
+        showRandomVerse();
+      }
+    }
+
+    function stopAutoPlay() {
+      isAutoPlaying = false;
+      document.getElementById('autoPlayBtn').disabled = false;
+      document.getElementById('stopPlayBtn').disabled = true;
+      
+      // 停止朗读
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+      }
+    }
+
+    // 页面加载后初始化
+    window.onload = function() {
+      // 初始化按钮状态
+      document.getElementById('autoPlayBtn').onclick = startAutoPlay;
+      document.getElementById('stopPlayBtn').onclick = stopAutoPlay;
+      document.getElementById('stopPlayBtn').disabled = true;
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教室物品汉语学习</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            overflow: auto;
+            user-select: none;
+        }
+        
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #4682b4;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        
+        #header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-start;
+            padding: 100px 20px 20px;
+            box-sizing: border-box;
+            background-color: #e6f7ff;
+            gap: 15px;
+        }
+        
+        .item {
+            width: 150px;
+            height: 180px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            padding: 15px;
+            box-sizing: border-box;
+        }
+        
+        .item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        
+        .item-image {
+            width: 120px;
+            height: 120px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        #score-display {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+        }
+        
+        #character-display {
+            position: fixed;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0;
+            color: #e74c3c;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.3s;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            z-index: 10;
+            border: 2px solid #3498db;
+            min-width: 250px;
+        }
+        
+        #character-display.show {
+            opacity: 1;
+            font-size: 80px;
+        }
+        
+        #pinyin-display {
+            font-size: 28px;
+            margin-top: 10px;
+            color: #3498db;
+        }
+        
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 200;
+        }
+        
+        #start-button {
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        
+        #start-button:hover {
+            background-color: #27ae60;
+            transform: scale(1.05);
+        }
+        
+        h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+        
+        .highlight {
+            color: #f1c40f;
+            font-weight: bold;
+        }
+        
+        .category-title {
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            margin: 30px 0 15px;
+            color: #2c3e50;
+            font-weight: bold;
+            background-color: rgba(255,255,255,0.7);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        #voice-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .voice-btn {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .voice-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        @media (max-width: 768px) {
+            .item {
+                width: 120px;
+                height: 150px;
+            }
+            
+            .item-image {
+                width: 90px;
+                height: 90px;
+            }
+            
+            #character-display {
+                min-width: 180px;
+                padding: 15px 30px;
+            }
+            
+            #character-display.show {
+                font-size: 60px;
+            }
+            
+            #pinyin-display {
+                font-size: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>教室物品汉语学习</h1>
+    </div>
+    
+    <div id="game-container">
+        <div id="score-display">得分: <span id="score">0</span></div>
+        
+        <!-- 教室物品 -->
+        <div class="category-title">📚 教室物品</div>
+        <div class="item" data-char="书" data-pinyin="shū">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/book.png')"></div>
+        </div>
+        <div class="item" data-char="桌子" data-pinyin="zhuō zi">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/desk.png')"></div>
+        </div>
+        <div class="item" data-char="椅子" data-pinyin="yǐ zi">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/chair.png')"></div>
+        </div>
+        <div class="item" data-char="黑板" data-pinyin="hēi bǎn">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/blackboard.png')"></div>
+        </div>
+        <div class="item" data-char="粉笔" data-pinyin="fěn bǐ">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/chalk.png')"></div>
+        </div>
+        <div class="item" data-char="书包" data-pinyin="shū bāo">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/school-backpack.png')"></div>
+        </div>
+        <div class="item" data-char="窗户" data-pinyin="chuāng hu">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/window.png')"></div>
+        </div>
+        <div class="item" data-char="电脑" data-pinyin="diàn nǎo">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/laptop.png')"></div>
+        </div>
+        <div class="item" data-char="铅笔" data-pinyin="qiān bǐ">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/pencil.png')"></div>
+        </div>
+        <div class="item" data-char="门" data-pinyin="mén">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/door.png')"></div>
+        </div>
+        <div class="item" data-char="橡皮" data-pinyin="xiàng pí">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/eraser.png')"></div>
+        </div>
+        <div class="item" data-char="尺子" data-pinyin="chǐ zi">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/ruler.png')"></div>
+        </div>
+        <div class="item" data-char="笔记本" data-pinyin="bǐ jì běn">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/notebook.png')"></div>
+        </div>
+        <div class="item" data-char="文具盒" data-pinyin="wén jù hé">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/pencil-case.png')"></div>
+        </div>
+        <div class="item" data-char="台灯" data-pinyin="tái dēng">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/desk-lamp.png')"></div>
+        </div>
+        <div class="item" data-char="投影仪" data-pinyin="tóu yǐng yí">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/projector.png')"></div>
+        </div>
+        <div class="item" data-char="白板" data-pinyin="bái bǎn">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/whiteboard.png')"></div>
+        </div>
+        <div class="item" data-char="文件夹" data-pinyin="wén jiàn jiá">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/folder.png')"></div>
+        </div>
+        <div class="item" data-char="订书机" data-pinyin="dìng shū jī">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/stapler.png')"></div>
+        </div>
+        <div class="item" data-char="计算器" data-pinyin="jì suàn qì">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/calculator.png')"></div>
+        </div>
+        
+        <!-- 教室人物 -->
+        <div class="category-title">👥 教室人物</div>
+        <div class="item" data-char="老师" data-pinyin="lǎo shī">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/teacher.png')"></div>
+        </div>
+        <div class="item" data-char="学生" data-pinyin="xué shēng">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/student.png')"></div>
+        </div>
+        <div class="item" data-char="男孩" data-pinyin="nán hái">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/boy.png')"></div>
+        </div>
+        <div class="item" data-char="女孩" data-pinyin="nǚ hái">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/girl.png')"></div>
+        </div>
+        <div class="item" data-char="校长" data-pinyin="xiào zhǎng">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/principal.png')"></div>
+        </div>
+        <div class="item" data-char="班长" data-pinyin="bān zhǎng">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/class-president.png')"></div>
+        </div>
+        <div class="item" data-char="图书管理员" data-pinyin="tú shū guǎn lǐ yuán">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/librarian.png')"></div>
+        </div>
+        <div class="item" data-char="助教" data-pinyin="zhù jiào">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/assistant.png')"></div>
+        </div>
+        
+        <!-- 新增物品 -->
+        <div class="category-title">🛠️ 其他物品</div>
+        <div class="item" data-char="时钟" data-pinyin="shí zhōng">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/clock.png')"></div>
+        </div>
+        <div class="item" data-char="地图" data-pinyin="dì tú">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/map.png')"></div>
+        </div>
+        <div class="item" data-char="垃圾桶" data-pinyin="lā jī tǒng">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/trash-can.png')"></div>
+        </div>
+        <div class="item" data-char="水杯" data-pinyin="shuǐ bēi">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/water-bottle.png')"></div>
+        </div>
+        <div class="item" data-char="空调" data-pinyin="kōng tiáo">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/air-conditioner.png')"></div>
+        </div>
+        <div class="item" data-char="电扇" data-pinyin="diàn shàn">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/electric-fan.png')"></div>
+        </div>
+        <div class="item" data-char="插座" data-pinyin="chā zuò">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/power-plug.png')"></div>
+        </div>
+        <div class="item" data-char="窗帘" data-pinyin="chuāng lián">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/curtains.png')"></div>
+        </div>
+        <div class="item" data-char="地球仪" data-pinyin="dì qiú yí">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/globe.png')"></div>
+        </div>
+        <div class="item" data-char="显微镜" data-pinyin="xiǎn wēi jìng">
+            <div class="item-image" style="background-image: url('https://img.icons8.com/color/96/microscope.png')"></div>
+        </div>
+        
+        <div id="character-display">
+            <div id="char"></div>
+            <div id="pinyin-display"></div>
+        </div>
+    </div>
+    
+    <div id="voice-controls">
+        <button class="voice-btn" id="repeat-btn">🔊 重复</button>
+        <button class="voice-btn" id="slow-btn">🐢 慢速</button>
+    </div>
+    
+    <div id="start-screen">
+        <h1>教室物品<span class="highlight">汉语学习</span></h1>
+        <p>点击图片学习汉语词汇<br>每次点击都会显示汉字、拼音并朗读发音<br><span class="highlight">现在包含超过40个教室相关词汇！</span></p>
+        <button id="start-button">开始学习</button>
+    </div>
+
+    <script>
+        // 游戏状态
+        let score = 0;
+        let gameRunning = false;
+        let lastChar = '';
+        let lastPinyin = '';
+        
+        // 检测语音支持
+        function checkVoiceSupport() {
+            if (!('speechSynthesis' in window)) {
+                console.warn("您的浏览器不支持语音功能，将无法听到发音");
+                return false;
+            }
+            return true;
+        }
+        
+        // 朗读文本
+        function speakText(text, rate = 0.8) {
+            if (!('speechSynthesis' in window)) return;
+            
+            window.speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = rate;
+            
+            const voices = window.speechSynthesis.getVoices();
+            const chineseVoice = voices.find(v => v.lang.includes('zh'));
+            if (chineseVoice) {
+                utterance.voice = chineseVoice;
+            }
+            
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 显示汉字
+        function showCharacter(char, pinyin) {
+            const charDisplay = document.getElementById('char');
+            const pinyinDisplay = document.getElementById('pinyin-display');
+            const display = document.getElementById('character-display');
+            
+            charDisplay.textContent = char;
+            pinyinDisplay.textContent = pinyin;
+            
+            display.classList.add('show');
+            
+            lastChar = char;
+            lastPinyin = pinyin;
+            
+            speakText(char);
+            
+            // 修改这里：将3000改为8000，延长显示时间到8秒
+            setTimeout(() => {
+                display.classList.remove('show');
+            }, 8000);
+        }
+        
+        // 更新分数
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+        
+        // 处理物品点击
+        function handleItemClick(event) {
+            if (!gameRunning) return;
+            
+            const item = event.currentTarget;
+            const char = item.dataset.char;
+            const pinyin = item.dataset.pinyin;
+            
+            score += 10;
+            updateScore();
+            showCharacter(char, pinyin);
+            
+            item.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                item.style.transform = 'scale(1)';
+            }, 200);
+        }
+        
+        // 初始化游戏
+        function initGame() {
+            score = 0;
+            gameRunning = true;
+            updateScore();
+            
+            document.getElementById('start-screen').style.display = 'none';
+            
+            document.querySelectorAll('.item').forEach(item => {
+                item.addEventListener('click', handleItemClick);
+            });
+            
+            if (window.speechSynthesis && window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = checkVoiceSupport;
+            }
+        }
+        
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', () => {
+            checkVoiceSupport();
+            
+            if (window.speechSynthesis && window.speechSynthesis.getVoices().length === 0) {
+                window.speechSynthesis.addEventListener('voiceschanged', checkVoiceSupport);
+            }
+            
+            document.getElementById('start-button').addEventListener('click', initGame);
+            
+            // 添加语音控制按钮事件
+            document.getElementById('repeat-btn').addEventListener('click', () => {
+                if (lastChar) {
+                    speakText(lastChar);
+                }
+            });
+            
+            document.getElementById('slow-btn').addEventListener('click', () => {
+                if (lastChar) {
+                    speakText(lastChar, 0.6); // 更慢的语速
+                }
+            });
+        });
+    </script>
+</body>
+</html>

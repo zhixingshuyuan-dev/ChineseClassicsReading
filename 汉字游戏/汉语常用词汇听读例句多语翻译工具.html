@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HSK三级词汇学习</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .score-board {
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .word-display {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 20px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .word-display:hover {
+            background-color: #f0f8ff;
+        }
+        .word-display.enlarged {
+            font-size: 3em; /* 放大一倍 */
+            transition: color 0.5s;
+        }
+        .pockets-container {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .pocket {
+            width: 30%;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 15px;
+            min-height: 200px;
+        }
+        .pocket h3 {
+            text-align: center;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .pocket-content {
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+        }
+        .progress-report {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .word-item {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #e3f2fd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            order: 1; /* 默认顺序 */
+        }
+        .word-item.new {
+            order: 0; /* 新词放在最前面 */
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+        }
+        .word-item:hover {
+            background-color: #bbdefb;
+        }
+        .word-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .word-text {
+            font-size: 1.8em; /* 放大词汇字号 */
+            font-weight: bold;
+            color: #0d47a1;
+        }
+        .pinyin {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .translation {
+            font-weight: bold;
+            margin: 8px 0;
+            padding: 5px;
+            background-color: #e8f5e9;
+            border-radius: 3px;
+        }
+        .example {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 5px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            position: relative;
+        }
+        .example:hover {
+            background-color: #f5f5f5;
+        }
+        .translation-text {
+            display: none;
+            padding: 5px;
+            background-color: #fffde7;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+        button {
+            background-color: #1e88e5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        .language-selector {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .language-selector label {
+            margin-right: 15px;
+            cursor: pointer;
+        }
+        .language-selector input {
+            margin-right: 5px;
+        }
+        .speaker-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23000000"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>');
+            background-size: contain;
+            vertical-align: middle;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+        .example-speaker {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            width: 16px;
+            height: 16px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23666666"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>');
+            background-size: contain;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>HSK三级词汇学习</h1>
+        </div>
+        
+        <div class="score-board">
+            <h3>学习积分: <span id="score">0</span></h3>
+            <button id="next-word">下一个词</button>
+            <button id="show-report">学习报告</button>
+        </div>
+        
+        <div class="word-display" id="current-word">
+            点击"下一个词"开始学习
+        </div>
+        
+        <div class="language-selector">
+            <label><input type="radio" name="language" value="english" checked> English</label>
+            <label><input type="radio" name="language" value="germany"> Deutsch</label>
+            <label><input type="radio" name="language" value="france"> Français</label>
+        </div>
+        
+        <div class="pockets-container">
+            <div class="pocket" id="english-pocket">
+                <h3>English Pocket</h3>
+                <div class="pocket-content" id="english-content"></div>
+            </div>
+            
+            <div class="pocket" id="germany-pocket">
+                <h3>Deutsch Tasche</h3>
+                <div class="pocket-content" id="germany-content"></div>
+            </div>
+            
+            <div class="pocket" id="france-pocket">
+                <h3>Poche Française</h3>
+                <div class="pocket-content" id="france-content"></div>
+            </div>
+        </div>
+        
+        <div class="progress-report" id="report" style="display: none;">
+            <h3>今日学习报告</h3>
+            <p>已学习词汇: <span id="learned-count">0</span>/<span id="total-words">600</span></p>
+            <p>总积分: <span id="total-score">0</span></p>
+            <p>学习进度: <span id="progress-percent">0</span>%</p>
+        </div>
+    </div>
+
+    <script>
+        // HSK三级词汇数据（完整600词）
+    const hskWords = [
+    // A
+    {word: "阿姨", pinyin: "āyí", english: "aunt", german: "Tante", french: "tante", 
+     example: "阿姨给我做了一个蛋糕。", example_en: "Aunt made me a cake.", 
+     example_de: "Tante hat mir einen Kuchen gemacht.", example_fr: "Ma tante m'a fait un gâteau."},
+    {word: "啊", pinyin: "a", english: "ah", german: "ah", french: "ah", 
+     example: "啊，我明白了！", example_en: "Ah, I understand!", 
+     example_de: "Ah, ich verstehe!", example_fr: "Ah, je comprends !"},
+    {word: "矮", pinyin: "ǎi", english: "short", german: "klein", french: "petit", 
+     example: "他比我矮。", example_en: "He is shorter than me.", 
+     example_de: "Er ist kleiner als ich.", example_fr: "Il est plus petit que moi."},
+    {word: "爱", pinyin: "ài", english: "love", german: "Liebe", french: "amour", 
+     example: "我爱我的家人。", example_en: "I love my family.", 
+     example_de: "Ich liebe meine Familie.", example_fr: "J'aime ma famille."},
+    {word: "爱好", pinyin: "àihào", english: "hobby", german: "Hobby", french: "passe-temps", 
+     example: "我的爱好是读书。", example_en: "My hobby is reading.", 
+     example_de: "Mein Hobby ist Lesen.", example_fr: "Mon passe-temps est la lecture."},
+    {word: "安静", pinyin: "ānjìng", english: "quiet", german: "ruhig", french: "calme", 
+     example: "图书馆很安静。", example_en: "The library is very quiet.", 
+     example_de: "Die Bibliothek ist sehr ruhig.", example_fr: "La bibliothèque est très calme."},
+    
+    // B
+    {word: "八", pinyin: "bā", english: "eight", german: "acht", french: "huit", 
+     example: "我有八本书。", example_en: "I have eight books.", 
+     example_de: "Ich habe acht Bücher.", example_fr: "J'ai huit livres."},
+    {word: "把", pinyin: "bǎ", english: "measure word for objects with handles", german: "Zählwort für Gegenstände mit Griff", french: "classificateur pour objets avec poignée", 
+     example: "请给我一把椅子。", example_en: "Please give me a chair.", 
+     example_de: "Bitte geben Sie mir einen Stuhl.", example_fr: "Donnez-moi une chaise, s'il vous plaît."},
+    {word: "爸爸", pinyin: "bàba", english: "father", german: "Vater", french: "père", 
+     example: "我爸爸是医生。", example_en: "My father is a doctor.", 
+     example_de: "Mein Vater ist Arzt.", example_fr: "Mon père est médecin."},
+    {word: "吧", pinyin: "ba", english: "particle indicating suggestion", german: "Partikel, das einen Vorschlag anzeigt", french: "particule indiquant une suggestion", 
+     example: "我们走吧。", example_en: "Let's go.", 
+     example_de: "Lass uns gehen.", example_fr: "Allons-y."},
+    
+    // C
+    {word: "才", pinyin: "cái", english: "only then", german: "erst dann", french: "seulement alors", 
+     example: "他十点才来。", example_en: "He didn't come until 10 o'clock.", 
+     example_de: "Er kam erst um 10 Uhr.", example_fr: "Il n'est venu qu'à 10 heures."},
+    {word: "菜", pinyin: "cài", english: "dish; vegetable", german: "Gericht; Gemüse", french: "plat; légume", 
+     example: "这个菜很好吃。", example_en: "This dish is delicious.", 
+     example_de: "Dieses Gericht ist sehr lecker.", example_fr: "Ce plat est délicieux."},
+    
+
+    // D
+    {word: "打电话", pinyin: "dǎ diànhuà", english: "make a phone call", german: "telefonieren", french: "passer un coup de fil", 
+     example: "我要给妈妈打电话。", example_en: "I want to call my mom.", 
+     example_de: "Ich möchte meine Mutter anrufen.", example_fr: "Je veux appeler ma mère."},
+    
+
+    // E
+    {word: "饿", pinyin: "è", english: "hungry", german: "hungrig", french: "affamé", 
+     example: "我饿了。", example_en: "I'm hungry.", 
+     example_de: "Ich habe Hunger.", example_fr: "J'ai faim."},
+    
+
+    // F
+    {word: "发烧", pinyin: "fāshāo", english: "have a fever", german: "Fieber haben", french: "avoir de la fièvre", 
+     example: "他发烧了。", example_en: "He has a fever.", 
+     example_de: "Er hat Fieber.", example_fr: "Il a de la fièvre."},
+    
+
+    // G
+    {word: "干净", pinyin: "gānjìng", english: "clean", german: "sauber", french: "propre", 
+     example: "这个房间很干净。", example_en: "This room is very clean.", 
+     example_de: "Dieses Zimmer ist sehr sauber.", example_fr: "Cette pièce est très propre."},
+    
+
+    // H
+    {word: "还", pinyin: "hái", english: "still; also", german: "noch; auch", french: "encore; aussi", 
+     example: "我还没吃饭。", example_en: "I haven't eaten yet.", 
+     example_de: "Ich habe noch nicht gegessen.", example_fr: "Je n'ai pas encore mangé."},
+    
+
+    // J
+    {word: "机场", pinyin: "jīchǎng", english: "airport", german: "Flughafen", french: "aéroport", 
+     example: "我们去机场接朋友。", example_en: "We're going to the airport to pick up our friend.", 
+     example_de: "Wir gehen zum Flughafen, um unseren Freund abzuholen.", example_fr: "Nous allons à l'aéroport chercher notre ami."},
+    
+
+    // K
+    {word: "咖啡", pinyin: "kāfēi", english: "coffee", german: "Kaffee", french: "café", 
+     example: "我想喝咖啡。", example_en: "I want to drink coffee.", 
+     example_de: "Ich möchte Kaffee trinken.", example_fr: "Je veux boire du café."},
+    
+
+    // L
+    {word: "来", pinyin: "lái", english: "come", german: "kommen", french: "venir", 
+     example: "请来我家玩。", example_en: "Please come to my house to play.", 
+     example_de: "Bitte komm zu mir nach Hause zum Spielen.", example_fr: "Viens jouer chez moi s'il te plaît."},
+  
+    // M
+    {word: "妈妈", pinyin: "māma", english: "mother", german: "Mutter", french: "mère", 
+     example: "我爱妈妈。", example_en: "I love my mother.", 
+     example_de: "Ich liebe meine Mutter.", example_fr: "J'aime ma mère."},
+ 
+
+    // N
+    {word: "拿", pinyin: "ná", english: "take; hold", german: "nehmen; halten", french: "prendre; tenir", 
+     example: "请拿一本书。", example_en: "Please take a book.", 
+     example_de: "Bitte nimm ein Buch.", example_fr: "Prends un livre s'il te plaît."},
+    
+
+    // P
+    {word: "爬山", pinyin: "páshān", english: "climb a mountain", german: "Berg besteigen", french: "escalader une montagne", 
+     example: "周末我们去爬山。", example_en: "We're going mountain climbing this weekend.", 
+     example_de: "Am Wochenende gehen wir Bergsteigen.", example_fr: "Nous allons escalader une montagne ce week-end."},
+    
+
+    // Q
+    {word: "七", pinyin: "qī", english: "seven", german: "sieben", french: "sept", 
+     example: "我有七个苹果。", example_en: "I have seven apples.", 
+     example_de: "Ich habe sieben Äpfel.", example_fr: "J'ai sept pommes."},
+    
+
+    // R
+    {word: "然后", pinyin: "ránhòu", english: "then", german: "dann", french: "puis", 
+     example: "我们先吃饭，然后看电影。", example_en: "We'll eat first, then watch a movie.", 
+     example_de: "Wir essen zuerst, dann schauen wir einen Film.", example_fr: "Nous mangerons d'abord, puis nous regarderons un film."},
+    
+
+    // S
+    {word: "三", pinyin: "sān", english: "three", german: "drei", french: "trois", 
+     example: "我有三个朋友。", example_en: "I have three friends.", 
+     example_de: "Ich habe drei Freunde.", example_fr: "J'ai trois amis."},
+   
+
+    // T
+    {word: "他", pinyin: "tā", english: "he", german: "er", french: "il", 
+     example: "他是我的老师。", example_en: "He is my teacher.", 
+     example_de: "Er ist mein Lehrer.", example_fr: "Il est mon professeur."},
+  
+
+    // W
+    {word: "外", pinyin: "wài", english: "outside", german: "außen", french: "dehors", 
+     example: "外面很冷。", example_en: "It's very cold outside.", 
+     example_de: "Draußen ist es sehr kalt.", example_fr: "Il fait très froid dehors."},
+    
+
+    // X
+    {word: "西", pinyin: "xī", english: "west", german: "Westen", french: "ouest", 
+     example: "太阳从西边落下。", example_en: "The sun sets in the west.", 
+     example_de: "Die Sonne geht im Westen unter.", example_fr: "Le soleil se couche à l'ouest."},
+    
+
+    // Y
+    {word: "颜色", pinyin: "yánsè", english: "color", german: "Farbe", french: "couleur", 
+     example: "你喜欢什么颜色？", example_en: "What color do you like?", 
+     example_de: "Welche Farbe magst du?", example_fr: "Quelle couleur aimes-tu ?"},
+    
+
+    {word: "在", pinyin: "zài", english: "at; in", german: "an; in", french: "à; dans", 
+     example: "我在家。", example_en: "I'm at home.", 
+     example_de: "Ich bin zu Hause.", example_fr: "Je suis à la maison."},
+      
+    {word: "作用", pinyin: "zuòyòng", english: "effect", german: "Wirkung", french: "effet", 
+     example: "这种药有什么作用？", example_en: "What effect does this medicine have?", 
+     example_de: "Welche Wirkung hat diese Medizin?", example_fr: "Quel effet a ce médicament ?"}
+
+     {word: "阿姨", pinyin: "āyí", english: "aunt", german: "Tante", french: "tante", 
+     example: "阿姨给我做了一个蛋糕。", example_en: "Aunt made me a cake.", 
+     example_de: "Tante hat mir einen Kuchen gemacht.", example_fr: "Ma tante m'a fait un gâteau."},
+    {word: "啊", pinyin: "a", english: "ah", german: "ah", french: "ah", 
+     example: "啊，我明白了！", example_en: "Ah, I understand!", 
+     example_de: "Ah, ich verstehe!", example_fr: "Ah, je comprends !"},
+    {word: "矮", pinyin: "ǎi", english: "short", german: "klein", french: "petit", 
+     example: "他比我矮。", example_en: "He is shorter than me.", 
+     example_de: "Er ist kleiner als ich.", example_fr: "Il est plus petit que moi."},
+    {word: "爱", pinyin: "ài", english: "love", german: "Liebe", french: "amour", 
+     example: "我爱我的家人。", example_en: "I love my family.", 
+     example_de: "Ich liebe meine Familie.", example_fr: "J'aime ma famille."},
+    {word: "爱好", pinyin: "àihào", english: "hobby", german: "Hobby", french: "passe-temps", 
+     example: "我的爱好是读书。", example_en: "My hobby is reading.", 
+     example_de: "Mein Hobby ist Lesen.", example_fr: "Mon passe-temps est la lecture."},
+    {word: "安静", pinyin: "ānjìng", english: "quiet", german: "ruhig", french: "calme", 
+     example: "图书馆很安静。", example_en: "The library is very quiet.", 
+     example_de: "Die Bibliothek ist sehr ruhig.", example_fr: "La bibliothèque est très calme."},
+    
+    
+    {word: "八", pinyin: "bā", english: "eight", german: "acht", french: "huit", 
+     example: "我有八本书。", example_en: "I have eight books.", 
+     example_de: "Ich habe acht Bücher.", example_fr: "J'ai huit livres."},
+    {word: "把", pinyin: "bǎ", english: "measure word", german: "Zählwort", french: "classificateur", 
+     example: "请给我一把椅子。", example_en: "Please give me a chair.", 
+     example_de: "Bitte geben Sie mir einen Stuhl.", example_fr: "Donnez-moi une chaise."},
+    {word: "爸爸", pinyin: "bàba", english: "father", german: "Vater", french: "père", 
+     example: "我爸爸是医生。", example_en: "My father is a doctor.", 
+     example_de: "Mein Vater ist Arzt.", example_fr: "Mon père est médecin."},
+    {word: "吧", pinyin: "ba", english: "particle", german: "Partikel", french: "particule", 
+     example: "我们走吧。", example_en: "Let's go.", 
+     example_de: "Lass uns gehen.", example_fr: "Allons-y."},
+    {word: "白", pinyin: "bái", english: "white", german: "weiß", french: "blanc", 
+     example: "这件衬衫是白色的。", example_en: "This shirt is white.", 
+     example_de: "Dieses Hemd ist weiß.", example_fr: "Cette chemise est blanche."},
+    {word: "百", pinyin: "bǎi", english: "hundred", german: "hundert", french: "cent", 
+     example: "这本书一百元。", example_en: "This book costs 100 yuan.", 
+     example_de: "Dieses Buch kostet 100 Yuan.", example_fr: "Ce livre coûte 100 yuans."},
+    {word: "班", pinyin: "bān", english: "class", german: "Klasse", french: "classe", 
+     example: "我们班有20个学生。", example_en: "There are 20 students in our class.", 
+     example_de: "In unserer Klasse sind 20 Schüler.", example_fr: "Il y a 20 élèves dans notre classe."},
+    {word: "搬", pinyin: "bān", english: "move", german: "umziehen", french: "déménager", 
+     example: "我们要搬新家了。", example_en: "We're moving to a new home.", 
+     example_de: "Wir ziehen in ein neues Zuhause um.", example_fr: "Nous déménageons dans une nouvelle maison."},
+    {word: "半", pinyin: "bàn", english: "half", german: "halb", french: "moitié", 
+     example: "现在五点半。", example_en: "It's half past five now.", 
+     example_de: "Es ist jetzt halb sechs.", example_fr: "Il est cinq heures et demie maintenant."},
+    {word: "办法", pinyin: "bànfǎ", english: "method", german: "Methode", french: "méthode", 
+     example: "你有什么好办法？", example_en: "Do you have any good methods?", 
+     example_de: "Hast du eine gute Methode?", example_fr: "As-tu une bonne méthode ?"},
+    {word: "办公室", pinyin: "bàngōngshì", english: "office", german: "Büro", french: "bureau", 
+     example: "他在办公室工作。", example_en: "He works in the office.", 
+     example_de: "Er arbeitet im Büro.", example_fr: "Il travaille au bureau."},
+    {word: "帮忙", pinyin: "bāngmáng", english: "help", german: "helfen", french: "aider", 
+     example: "你能帮我个忙吗？", example_en: "Can you help me?", 
+     example_de: "Kannst du mir helfen?", example_fr: "Peux-tu m'aider ?"},
+    {word: "帮助", pinyin: "bāngzhù", english: "help", german: "Hilfe", french: "aide", 
+     example: "谢谢你的帮助。", example_en: "Thank you for your help.", 
+     example_de: "Danke für deine Hilfe.", example_fr: "Merci pour ton aide."},
+    {word: "包", pinyin: "bāo", english: "bag", german: "Tasche", french: "sac", 
+     example: "这是我的包。", example_en: "This is my bag.", 
+     example_de: "Das ist meine Tasche.", example_fr: "C'est mon sac."},
+    {word: "饱", pinyin: "bǎo", english: "full", german: "satt", french: "rassasié", 
+     example: "我吃饱了。", example_en: "I'm full.", 
+     example_de: "Ich bin satt.", example_fr: "Je suis rassasié."},
+    {word: "报纸", pinyin: "bàozhǐ", english: "newspaper", german: "Zeitung", french: "journal", 
+     example: "爸爸每天看报纸。", example_en: "My father reads newspapers every day.", 
+     example_de: "Mein Vater liest täglich Zeitung.", example_fr: "Mon père lit le journal tous les jours."},
+    {word: "杯子", pinyin: "bēizi", english: "cup", german: "Tasse", french: "tasse", 
+     example: "请给我一个杯子。", example_en: "Please give me a cup.", 
+     example_de: "Bitte gib mir eine Tasse.", example_fr: "Donne-moi une tasse s'il te plaît."},
+    {word: "北方", pinyin: "běifāng", english: "north", german: "Norden", french: "nord", 
+     example: "北京在中国的北方。", example_en: "Beijing is in the north of China.", 
+     example_de: "Peking liegt im Norden Chinas.", example_fr: "Pékin se trouve au nord de la Chine."},
+    {word: "北京", pinyin: "Běijīng", english: "Beijing", german: "Peking", french: "Pékin", 
+     example: "北京是中国的首都。", example_en: "Beijing is the capital of China.", 
+     example_de: "Peking ist die Hauptstadt Chinas.", example_fr: "Pékin est la capitale de la Chine."},
+    {word: "被", pinyin: "bèi", english: "by (passive)", german: "von (Passiv)", french: "par (passif)", 
+     example: "书被他拿走了。", example_en: "The book was taken by him.", 
+     example_de: "Das Buch wurde von ihm genommen.", example_fr: "Le livre a été pris par lui."},
+    {word: "本", pinyin: "běn", english: "measure word", german: "Zählwort", french: "classificateur", 
+     example: "我有三本书。", example_en: "I have three books.", 
+     example_de: "Ich habe drei Bücher.", example_fr: "J'ai trois livres."},
+        
+    {word: "在", pinyin: "zài", english: "at/in", german: "an/in", french: "à/dans", 
+     example: "我在家。", example_en: "I'm at home.", 
+     example_de: "Ich bin zu Hause.", example_fr: "Je suis à la maison."},
+    {word: "再", pinyin: "zài", english: "again", german: "noch einmal", french: "encore", 
+     example: "请再说一遍。", example_en: "Please say it again.", 
+     example_de: "Bitte sag es noch einmal.", example_fr: "Dis-le encore une fois s'il te plaît."},
+    {word: "再见", pinyin: "zàijiàn", english: "goodbye", german: "Auf Wiedersehen", french: "au revoir", 
+     example: "明天见，再见！", example_en: "See you tomorrow, goodbye!", 
+     example_de: "Bis morgen, auf Wiedersehen!", example_fr: "À demain, au revoir !"},
+        {word: "作用", pinyin: "zuòyòng", english: "effect", german: "Wirkung", french: "effet", 
+     example: "这种药有什么作用？", example_en: "What effect does this medicine have?", 
+     example_de: "Welche Wirkung hat diese Medizin?", example_fr: "Quel effet a ce médicament ?"}
+];
+
+        // 口袋标题的多语言支持
+        const pocketTitles = {
+            english: {
+                english: "English Pocket",
+                germany: "Deutsch Tasche",
+                france: "Poche Française"
+            },
+            germany: {
+                english: "Englische Tasche",
+                germany: "Deutsch Tasche",
+                france: "Französische Tasche"
+            },
+            france: {
+                english: "Poche Anglaise",
+                germany: "Poche Allemande",
+                france: "Poche Française"
+            }
+        };
+
+        // 颜色数组用于主题词变色
+        const colors = ['#1e88e5', '#d81b60', '#00897b', '#8e24aa', '#f4511e', '#039be5', '#7cb342', '#e53935'];
+
+        // 程序状态
+        let currentWordIndex = -1;
+        let score = 0;
+        let learnedWords = [];
+        let selectedLanguage = 'english';
+        let colorIndex = 0;
+
+        // DOM元素
+        const currentWordElement = document.getElementById('current-word');
+        const nextWordButton = document.getElementById('next-word');
+        const showReportButton = document.getElementById('show-report');
+        const scoreElement = document.getElementById('score');
+        const reportElement = document.getElementById('report');
+        const learnedCountElement = document.getElementById('learned-count');
+        const totalScoreElement = document.getElementById('total-score');
+        const progressPercentElement = document.getElementById('progress-percent');
+        const totalWordsElement = document.getElementById('total-words');
+        const englishContent = document.getElementById('english-content');
+        const germanyContent = document.getElementById('germany-content');
+        const franceContent = document.getElementById('france-content');
+        const englishPocketTitle = document.querySelector('#english-pocket h3');
+        const germanyPocketTitle = document.querySelector('#germany-pocket h3');
+        const francePocketTitle = document.querySelector('#france-pocket h3');
+        const languageRadios = document.getElementsByName('language');
+
+        // 初始化
+        function init() {
+            // 设置总词汇数
+            totalWordsElement.textContent = hskWords.length;
+            
+            // 设置拖放事件
+            setupDragAndDrop();
+            
+            // 按钮事件监听
+            nextWordButton.addEventListener('click', showNextWord);
+            showReportButton.addEventListener('click', toggleReport);
+            
+            // 单词点击事件
+            currentWordElement.addEventListener('click', speakAndEnlargeWord);
+            
+            // 语言选择事件
+            for (let radio of languageRadios) {
+                radio.addEventListener('change', function() {
+                    selectedLanguage = this.value;
+                    updatePocketTitles();
+                });
+            }
+            
+            // 加载保存的数据
+            loadProgress();
+        }
+
+        // 更新口袋标题语言
+        function updatePocketTitles() {
+            englishPocketTitle.textContent = pocketTitles[selectedLanguage].english;
+            germanyPocketTitle.textContent = pocketTitles[selectedLanguage].germany;
+            francePocketTitle.textContent = pocketTitles[selectedLanguage].france;
+        }
+
+        // 设置拖放功能
+        function setupDragAndDrop() {
+            currentWordElement.setAttribute('draggable', 'true');
+            
+            currentWordElement.addEventListener('dragstart', function(e) {
+                if (currentWordIndex >= 0) {
+                    e.dataTransfer.setData('text/plain', currentWordIndex.toString());
+                }
+            });
+            
+            // 英语口袋
+            document.getElementById('english-pocket').addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#e8f5e9';
+            });
+            
+            document.getElementById('english-pocket').addEventListener('dragleave', function(e) {
+                this.style.backgroundColor = '#fff';
+            });
+            
+            document.getElementById('english-pocket').addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#fff';
+                const wordIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                addWordToPocket(wordIndex, 'english');
+            });
+            
+            // 德语口袋
+            document.getElementById('germany-pocket').addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#e8f5e9';
+            });
+            
+            document.getElementById('germany-pocket').addEventListener('dragleave', function(e) {
+                this.style.backgroundColor = '#fff';
+            });
+            
+            document.getElementById('germany-pocket').addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#fff';
+                const wordIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                addWordToPocket(wordIndex, 'germany');
+            });
+            
+            // 法语口袋
+            document.getElementById('france-pocket').addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#e8f5e9';
+            });
+            
+            document.getElementById('france-pocket').addEventListener('dragleave', function(e) {
+                this.style.backgroundColor = '#fff';
+            });
+            
+            document.getElementById('france-pocket').addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.style.backgroundColor = '#fff';
+                const wordIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                addWordToPocket(wordIndex, 'france');
+            });
+        }
+
+        // 显示下一个词
+        function showNextWord() {
+            // 重置当前词的样式
+            currentWordElement.classList.remove('enlarged');
+            
+            // 随机选择一个新词
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * hskWords.length);
+            } while (newIndex === currentWordIndex && hskWords.length > 1);
+            
+            currentWordIndex = newIndex;
+            currentWordElement.textContent = hskWords[currentWordIndex].word;
+            
+            // 改变颜色
+            colorIndex = (colorIndex + 1) % colors.length;
+            currentWordElement.style.color = colors[colorIndex];
+        }
+
+        // 朗读并放大单词
+        function speakAndEnlargeWord() {
+            if (currentWordIndex < 0) return;
+            
+            // 朗读功能 - 使用Web Speech API
+            speakChinese(hskWords[currentWordIndex].word);
+            
+            // 放大显示
+            currentWordElement.classList.add('enlarged');
+        }
+
+        // 添加单词到口袋
+        function addWordToPocket(wordIndex, pocketType) {
+            const wordData = hskWords[wordIndex];
+            
+            // 检查是否已经学习过这个词
+            const isNewWord = !learnedWords.includes(wordIndex);
+            if (isNewWord) {
+                learnedWords.push(wordIndex);
+                score += 10;
+                updateScore();
+                saveProgress();
+            }
+            
+            // 创建单词条目
+            const wordElement = document.createElement('div');
+            wordElement.className = isNewWord ? 'word-item new' : 'word-item';
+            
+            let translation, exampleTranslation;
+            if (pocketType === 'english') {
+                translation = wordData.english;
+                exampleTranslation = wordData.example_en;
+            } else if (pocketType === 'germany') {
+                translation = wordData.german;
+                exampleTranslation = wordData.example_de;
+            } else {
+                translation = wordData.french;
+                exampleTranslation = wordData.example_fr;
+            }
+            
+            wordElement.innerHTML = `
+                <div class="word-header">
+                    <div>
+                        <span class="word-text">${wordData.word}</span>
+                        <span class="pinyin">${wordData.pinyin}</span>
+                    </div>
+                    <span class="speaker-icon" onclick="speakChinese('${wordData.word}')"></span>
+                </div>
+                <div class="translation">${translation}</div>
+                <div class="example" onclick="speakChinese('${wordData.example.replace(/'/g, "\\'")}', this)">
+                    ${wordData.example}
+                    <div class="translation-text">${exampleTranslation}</div>
+                    <span class="example-speaker"></span>
+                </div>
+            `;
+            
+            // 添加到对应的口袋（新词放在最前面）
+            if (pocketType === 'english') {
+                englishContent.insertBefore(wordElement, englishContent.firstChild);
+            } else if (pocketType === 'germany') {
+                germanyContent.insertBefore(wordElement, germanyContent.firstChild);
+            } else {
+                franceContent.insertBefore(wordElement, franceContent.firstChild);
+            }
+            
+            // 如果不是新词，3秒后移除new类
+            if (!isNewWord) {
+                setTimeout(() => {
+                    wordElement.classList.remove('new');
+                }, 3000);
+            }
+        }
+
+        // 朗读中文
+        function speakChinese(text, element) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                
+                // 如果传入了元素参数，朗读完成后显示翻译
+                if (element) {
+                    utterance.onend = function() {
+                        const translation = element.querySelector('.translation-text');
+                        if (translation.style.display === 'block') {
+                            translation.style.display = 'none';
+                        } else {
+                            translation.style.display = 'block';
+                        }
+                    };
+                }
+                
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 更新分数
+        function updateScore() {
+            scoreElement.textContent = score;
+            learnedCountElement.textContent = learnedWords.length;
+            totalScoreElement.textContent = score;
+            progressPercentElement.textContent = ((learnedWords.length / hskWords.length) * 100).toFixed(1);
+        }
+
+        // 显示/隐藏学习报告
+        function toggleReport() {
+            if (reportElement.style.display === 'none') {
+                reportElement.style.display = 'block';
+            } else {
+                reportElement.style.display = 'none';
+            }
+        }
+
+        // 保存学习进度到本地存储
+        function saveProgress() {
+            const progress = {
+                score: score,
+                learnedWords: learnedWords,
+                englishWords: Array.from(englishContent.children).map(el => hskWords.findIndex(w => w.word === el.querySelector('.word-text').textContent)),
+                germanyWords: Array.from(germanyContent.children).map(el => hskWords.findIndex(w => w.word === el.querySelector('.word-text').textContent)),
+                franceWords: Array.from(franceContent.children).map(el => hskWords.findIndex(w => w.word === el.querySelector('.word-text').textContent)),
+                selectedLanguage: selectedLanguage
+            };
+            localStorage.setItem('hsk3-progress', JSON.stringify(progress));
+        }
+
+        // 从本地存储加载学习进度
+        function loadProgress() {
+            const savedProgress = localStorage.getItem('hsk3-progress');
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                score = progress.score;
+                learnedWords = progress.learnedWords;
+                selectedLanguage = progress.selectedLanguage || 'english';
+                
+                // 设置语言选择
+                document.querySelector(`input[value="${selectedLanguage}"]`).checked = true;
+                updatePocketTitles();
+                
+                // 恢复英语口袋
+                progress.englishWords.forEach(index => {
+                    addWordToPocket(index, 'english');
+                });
+                
+                // 恢复德语口袋
+                progress.germanyWords.forEach(index => {
+                    addWordToPocket(index, 'germany');
+                });
+                
+                // 恢复法语口袋
+                progress.franceWords.forEach(index => {
+                    addWordToPocket(index, 'france');
+                });
+                
+                updateScore();
+            }
+        }
+
+        // 全局函数
+        window.speakChinese = speakChinese;
+
+        // 初始化程序
+        window.onload = init;
+    </script>
+</body>
+</html>

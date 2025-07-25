@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>汉字雨游戏</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      font-family: "微软雅黑", sans-serif;
+      color: #fff;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+      background-size: auto;
+    }
+
+    .fallingChar {
+      position: absolute;
+      font-size: 20px;
+      color: #00fff7;
+      user-select: none;
+      animation-name: fallGrow;
+      animation-timing-function: linear;
+      cursor: pointer;
+      text-shadow: 0 0 8px #00fff7;
+    }
+
+    @keyframes fallGrow {
+      from {
+        top: -50px;
+        font-size: 40px;
+        opacity: 1;
+      }
+      to {
+        top: calc(100vh - 80px);
+        font-size: 60px;
+        opacity: 0.6;
+      }
+    }
+
+    #scoreBoard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #basket {
+      position: absolute;
+      bottom: 0;
+      height: auto;
+      min-height: 60px;
+      width: 100%;
+      background-color: rgba(44, 62, 80, 0.85);
+      text-align: center;
+      line-height: 60px;
+      font-size: 18px;
+      color: #ccc;
+      padding: 10px 0;
+    }
+
+    #appleReward {
+      position: absolute;
+      font-size: 5rem;
+      animation: popUp 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes popUp {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0;
+        top: -30px;
+      }
+    }
+
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #charInput {
+      width: 200px;
+      min-height: 32px;
+      max-height: 180px;
+      font-size: 16px;
+      resize: none;
+      overflow: hidden;
+      padding: 8px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 6px;
+      background-color: #e0f7fa;
+      color: #000;
+      line-height: 1.4;
+      font-family: "微软雅黑", sans-serif;
+      transition: height 0.2s ease;
+    }
+    #charInput:focus {
+      outline: none;
+      box-shadow: 0 0 6px #0ff;
+    }
+
+    button {
+      margin-top: 6px;
+      margin-left: 4px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background: #00bcd4;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0097a7;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="scoreBoard">分数：0</div>
+    <div id="controls">
+        <textarea id="charInput" placeholder="输入汉字（如：战利胜）" oninput="autoResize(this)"></textarea>
+        <br>
+        <button onclick="useCustomChars()">使用</button>
+        <button onclick="useDefaultChars()">字库</button>
+        <button onclick="reset()">分数清零</button>
+        <button onclick="resetToDefault()">清除字庫</button>
+    </div>
+    <div id="basket">⬇ 生字纸篓 ⬇</div>
+  </div>
+
+  <script>
+    const defaultChars = [];
+    let activeChars = [...defaultChars];
+    let score = 0;
+    let missedChars = {};
+
+    function useCustomChars() {
+      const input = document.getElementById('charInput').value.trim();
+      if (input) {
+        activeChars = [...new Set(input.split(''))];
+        score = 0;
+        missedChars = {};
+        updateScore();
+        renderMissedChars();
+        // renderActiveCharList();
+      }
+    }
+
+    function resetToDefault() {
+      activeChars = [...defaultChars];
+      document.getElementById('charInput').value = '';
+      score = 0;
+      missedChars = {};
+      updateScore();
+      renderMissedChars();
+      renderActiveCharList();
+    }
+
+    function renderActiveCharList() {
+      const existing = document.getElementById("charListDisplay");
+      if (existing) existing.remove();
+
+      const container = document.createElement("div");
+      container.id = "charListDisplay";
+      container.style.position = "absolute";
+      container.style.bottom = "70px";
+      container.style.right = "10px";
+      container.style.background = "#222";
+      container.style.color = "#0ff";
+      container.style.padding = "10px 15px 15px 15px";
+      container.style.borderRadius = "8px";
+      container.style.fontSize = "20px";
+      container.style.zIndex = 1000;
+      container.style.minWidth = "200px";
+      container.style.boxShadow = "0 0 10px #0ff";
+
+      const closeBtn = document.createElement("div");
+      closeBtn.textContent = "✖";
+      closeBtn.style.position = "absolute";
+      closeBtn.style.bottom = "6px";
+      closeBtn.style.right = "10px";
+      closeBtn.style.cursor = "pointer";
+      closeBtn.style.color = "#0ff";
+      closeBtn.style.fontSize = "16px";
+      closeBtn.title = "关闭列表";
+      closeBtn.onclick = () => container.remove();
+      container.appendChild(closeBtn);
+
+      const title = document.createElement("div");
+      title.textContent = "当前汉字：";
+      title.style.marginBottom = "6px";
+      title.style.fontWeight = "bold";
+      title.style.paddingRight = "24px";
+      container.appendChild(title);
+
+      if (activeChars.length === 0) {
+        const empty = document.createElement("div");
+        empty.textContent = "(无)";
+        container.appendChild(empty);
+      } else {
+        const grid = document.createElement("div");
+        grid.style.display = "flex";
+        grid.style.flexWrap = "wrap";
+        grid.style.gap = "8px";
+
+        activeChars.forEach(char => {
+          const span = document.createElement("span");
+          span.textContent = char;
+          span.style.padding = "4px 6px";
+          span.style.background = "#333";
+          span.style.borderRadius = "4px";
+          grid.appendChild(span);
+        });
+
+        container.appendChild(grid);
+      }
+
+      document.getElementById("gameContainer").appendChild(container);
+    }
+
+    function reset() {
+      score = 0;
+      missedChars = {};
+      updateScore();
+      renderMissedChars();
+    }
+
+    function useDefaultChars() {
+      updateScore();
+      renderActiveCharList();
+    }
+
+    function updateScore() {
+      document.getElementById("scoreBoard").textContent = `分数：${score}`;
+    }
+
+    function createFallingChar() {
+      if (activeChars.length === 0) return;
+      const char = activeChars[Math.floor(Math.random() * activeChars.length)];
+      const charElem = document.createElement('div');
+      charElem.className = 'fallingChar';
+      charElem.textContent = char;
+
+      const fallDuration = (Math.random() + 1) * 15;
+      charElem.style.animationDuration = `${fallDuration}s`;
+      charElem.style.left = `${Math.random() * (window.innerWidth - 40)}px`;
+
+      charElem.addEventListener('click', () => {
+        score++;
+        updateScore();
+        showApple(charElem.offsetLeft, charElem.offsetTop);
+        charElem.remove();
+      });
+
+      document.getElementById('gameContainer').appendChild(charElem);
+
+      setTimeout(() => {
+        if (charElem.parentElement) {
+          charElem.remove();
+          if (char in missedChars) {
+            missedChars[char]++;
+          } else {
+            missedChars[char] = 1;
+          }
+          renderMissedChars();
+        }
+      }, fallDuration * 1000);
+    }
+
+    function renderMissedChars() {
+      const basket = document.getElementById("basket");
+      basket.innerHTML = "⬇ 生字纸篓 ⬇";
+
+      const list = document.createElement("div");
+      list.style.marginTop = "6px";
+      list.style.fontSize = "16px";
+      list.style.display = "flex";
+      list.style.flexWrap = "wrap";
+      list.style.gap = "12px";
+      list.style.justifyContent = "center";
+
+      for (const char in missedChars) {
+        const count = missedChars[char];
+        const entry = document.createElement("div");
+        entry.textContent = `${count}× ${char}`;
+        entry.style.background = "#1a1a1a";
+        entry.style.padding = "4px 8px";
+        entry.style.borderRadius = "6px";
+        entry.style.color = "#fff";
+        list.appendChild(entry);
+      }
+
+      basket.appendChild(list);
+    }
+
+    function autoResize(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = (textarea.scrollHeight) + "px";
+    }
+
+    function showApple(x, y) {
+      const apple = document.createElement('div');
+      apple.id = 'appleReward';
+      apple.textContent = '🍎';
+      apple.style.left = `${x}px`;
+      apple.style.top = `${y}px`;
+      document.getElementById('gameContainer').appendChild(apple);
+      setTimeout(() => apple.remove(), 600);
+    }
+
+    setInterval(() => {
+      createFallingChar();
+    }, 1800);
+  </script>
+</body>
+</html>

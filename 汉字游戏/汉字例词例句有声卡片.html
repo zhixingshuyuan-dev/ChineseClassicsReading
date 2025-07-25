@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字学习游戏</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 70vh;
+            margin: 20px auto;
+            border: 2px solid #4682b4;
+            border-radius: 10px;
+            background-color: #e6f2ff;
+            overflow: hidden;
+        }
+        .character {
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s;
+            user-select: none;
+            font-weight: bold;
+        }
+        #controls {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4682b4;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        #voice-info {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: white;
+            border: 2px solid #4682b4;
+            border-radius: 10px;
+            padding: 15px;
+            z-index: 100;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            min-width: 220px;
+            text-align: left;
+            font-size: 16px;
+        }
+        .tooltip div {
+            margin: 8px 0;
+        }
+        .tooltip .char {
+            font-size: 36px;
+            text-align: center;
+            font-weight: bold;
+            color: #4682b4;
+        }
+        .tooltip .pinyin {
+            font-size: 24px;
+            color: #e74c3c;
+            text-align: center;
+            padding: 8px;
+            background-color: #fff9f9;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+            border: 1px dashed #e74c3c;
+        }
+        .tooltip .words, .tooltip .sentence {
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .tooltip .words-title, .tooltip .sentence-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 15px;
+        }
+        .speak-btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin: 5px 5px 5px 0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .speak-btn:hover {
+            background-color: #27ae60;
+        }
+        .close-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: #666;
+        }
+        .close-btn:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>汉字学习游戏</h1>
+    <div>得分: <span id="score">0</span></div>
+    
+    <div id="controls">
+        <button id="start-btn">开始游戏</button>
+        <button id="pause-btn" disabled>暂停</button>
+        <button id="speak-all-btn" disabled>朗读全部</button>
+    </div>
+    <div id="voice-info"></div>
+    
+    <div id="game-container"></div>
+
+    <script>
+        // 完整1500汉字数组（示例前100个）
+        const characters = [
+            '的','一','是','不','了','在','有','和','人','这',
+            '中','大','为','上','个','国','我','以','要','他',
+            '时','来','用','们','生','到','作','地','于','出',
+            '就','分','对','成','会','可','主','发','年','动',
+            '同','工','也','能','下','过','子','说','产','种',
+            '面','而','方','后','多','定','行','学','法','所',
+            '民','得','经','十','三','之','进','着','等','部',
+            '度','家','电','力','里','如','水','化','高','自',
+            '二','理','起','小','物','现','实','加','量','都',
+            '两','体','制','机','当','使','点','从','业','本'
+        ];
+
+        // 完整的拼音数据（包含拼音、例词和例句）
+        const pinyinData = {
+            '的': { pinyin: 'de', words: ['好的','目的','真的','的确'], sentences: ['这是我的书。', '他是一个好学生。', '今天的天气真好。', '你说的是对的。'] },
+            '一': { pinyin: 'yī', words: ['一个','统一','第一','一切'], sentences: ['我有一个苹果。', '我们是一个团队。', '这是一本好书。', '他考了第一名。'] },
+            '是': { pinyin: 'shì', words: ['是否','但是','于是','是非'], sentences: ['这是你的书包吗？', '他是一个医生。', '是不是明天考试？', '这是很重要的事情。'] },
+            '不': { pinyin: 'bù', words: ['不要','不同','不错','不得不'], sentences: ['我不喜欢吃辣。', '这个问题不难。', '不要大声说话。', '这个答案不对。'] },
+            '了': { pinyin: 'le', words: ['了解','完了','除了','了不起'], sentences: ['我吃完了饭。', '他已经回家了。', '我了解了这个问题。', '这本书我看完了。'] },
+            '在': { pinyin: 'zài', words: ['现在','存在','正在','在乎'], sentences: ['我在学校学习。', '书在桌子上。', '他现在在家吗？', '我一直在这里等你。'] },
+            '有': { pinyin: 'yǒu', words: ['没有','所有','有趣','有关'], sentences: ['我有一个弟弟。', '教室里有很多学生。', '你有没有时间？', '这个问题有答案吗？'] },
+            '和': { pinyin: 'hé', words: ['和平','和谐','温和','和蔼'], sentences: ['我和你一起去。', '猫和狗是常见的宠物。', '老师和学生都很友好。', '这个颜色和那个很配。'] },
+            '人': { pinyin: 'rén', words: ['人民','人类','个人','人才'], sentences: ['中国人很友好。', '这个房间里有五个人。', '他是一个好人。', '人人都喜欢这里。'] },
+            '这': { pinyin: 'zhè', words: ['这个','这里','这样','这边'], sentences: ['这是我的家。', '这里很安静。', '这个问题很难。', '这样做不对。'] },
+            '中': { pinyin: 'zhōng', words: ['中国','中间','中学','中医'], sentences: ['我在中国学习中文。', '桌子在房间中间。', '中午我们吃什么？', '中文很有意思。'] },
+            '大': { pinyin: 'dà', words: ['大家','大学','大约','大方'], sentences: ['大家都很高兴。', '他在北京大学读书。', '这个房间很大。', '明天大约会下雨。'] },
+            '为': { pinyin: 'wèi', words: ['为了','因为','作为','行为'], sentences: ['为了学习中文，我来到了中国。', '因为下雨，我们没去公园。', '你为什么迟到？', '作为学生应该努力学习。'] },
+            '上': { pinyin: 'shàng', words: ['上面','上学','上班','上网'], sentences: ['书在桌子上。', '我每天八点上学。', '请把书放在上面。', '他上楼去了。'] },
+            '个': { pinyin: 'gè', words: ['个人','个体','整个','个别'], sentences: ['这是一个人的问题。', '每个学生都有自己的书。', '请给我一个苹果。', '这个房间很干净。'] },
+            '国': { pinyin: 'guó', words: ['国家','国际','中国','爱国'], sentences: ['中国是一个大国。', '这是一个国际会议。', '我爱我的国家。', '国庆节快到了。'] },
+            '我': { pinyin: 'wǒ', words: ['我们','自我','我家','我方'], sentences: ['我是学生。', '我们都喜欢学习。', '我的书在哪里？', '我们一起去吧。'] },
+            '以': { pinyin: 'yǐ', words: ['以后','可以','所以','以为'], sentences: ['以后我要好好学习。', '你可以进来。', '因为下雨，所以我们没去。', '我以为你知道。'] },
+            '要': { pinyin: 'yào', words: ['要求','需要','重要','必要'], sentences: ['我要一杯咖啡。', '你需要帮助吗？', '这个很重要。', '我要去学校了。'] },
+            '他': { pinyin: 'tā', words: ['他们','其他','他人','他乡'], sentences: ['他是我的老师。', '他们都很友好。', '他的书在这里。', '其他人呢？'] },
+            '时': { pinyin: 'shí', words: ['时间','时候','同时','时代'], sentences: ['现在是什么时间？', '有时候我会来这里。', '我们同时到达。', '这是一个新时代。'] },
+            '来': { pinyin: 'lái', words: ['来到','未来','起来','来源'], sentences: ['他来到了北京。', '未来会更好。', '请站起来。', '这个消息来自哪里？'] },
+            '用': { pinyin: 'yòng', words: ['使用','利用','有用','用品'], sentences: ['我会用电脑。', '这个工具很有用。', '请用笔写字。', '不要浪费资源。'] },
+            '们': { pinyin: 'men', words: ['我们','你们','他们','人们'], sentences: ['我们都是学生。', '你们好吗？', '他们来了。', '人们都喜欢这里。'] },
+            '生': { pinyin: 'shēng', words: ['生活','学生','生日','生命'], sentences: ['我的生活很幸福。', '他是一名学生。', '生日快乐！', '生命很宝贵。'] },
+            '到': { pinyin: 'dào', words: ['到达','看到','到处','周到'], sentences: ['我到了学校。', '我看到了一只猫。', '到处都很干净。', '他考虑得很周到。'] },
+            '作': { pinyin: 'zuò', words: ['工作','作业','作用','作家'], sentences: ['我的工作很忙。', '请完成作业。', '这个药很有作用。', '他是一位著名作家。'] },
+            '地': { pinyin: 'dì', words: ['地方','地球','土地','地址'], sentences: ['这个地方很美。', '我们生活在地球上。', '请告诉我你的地址。', '中国的土地很广阔。'] },
+            '于': { pinyin: 'yú', words: ['于是','关于','对于','终于'], sentences: ['于是我们决定离开。', '这是一本关于历史的书。', '对于这个问题你怎么看？', '我终于完成了作业。'] },
+            '出': { pinyin: 'chū', words: ['出现','出发','出口','出色'], sentences: ['太阳出来了。', '我们明天出发。', '这个表演很出色。', '请从出口离开。'] },
+            '就': { pinyin: 'jiù', words: ['就是','成就','就业','就近'], sentences: ['这就是我的家。', '他取得了很大成就。', '大学生就业问题很重要。', '我们就近找家餐厅吧。'] },
+            '分': { pinyin: 'fēn', words: ['分开','分数','分钟','分别'], sentences: ['我们把蛋糕分开吧。', '我考试得了高分。', '请等五分钟。', '我们明天分别出发。'] },
+            '对': { pinyin: 'duì', words: ['对于','对方','对面','对话'], sentences: ['对于这个问题你怎么看？', '请和对面的老师说话。', '我们进行了一次对话。', '这个答案是对的。'] },
+            '成': { pinyin: 'chéng', words: ['成功','成为','完成','成长'], sentences: ['他成功了。', '我想成为一名医生。', '我完成了作业。', '孩子们在健康成长。'] },
+            '会': { pinyin: 'huì', words: ['会议','学会','机会','晚会'], sentences: ['我们有一个重要会议。', '我学会了游泳。', '这是一个好机会。', '新年晚会很精彩。'] },
+            '可': { pinyin: 'kě', words: ['可以','可能','可爱','可靠'], sentences: ['你可以进来。', '明天可能会下雨。', '这个小狗很可爱。', '他是一个可靠的人。'] },
+            '主': { pinyin: 'zhǔ', words: ['主要','主人','主题','主持'], sentences: ['这是主要问题。', '他是这栋房子的主人。', '今天的主题是什么？', '会议由他主持。'] },
+            '发': { pinyin: 'fā', words: ['发展','发现','发明','发表'], sentences: ['经济在快速发展。', '我发现了一个秘密。', '他发明了新工具。', '他在杂志上发表了文章。'] },
+            '年': { pinyin: 'nián', words: ['年龄','新年','年轻','年代'], sentences: ['你今年多大年龄？', '新年快乐！', '他是一个年轻人。', '这是上个年代的事情。'] },
+            '动': { pinyin: 'dòng', words: ['动作','动物','运动','活动'], sentences: ['请做这个动作。', '动物园有很多动物。', '我喜欢运动。', '学校有课外活动。'] },
+            '同': { pinyin: 'tóng', words: ['同学','共同','相同','同意'], sentences: ['他是我的同学。', '我们有共同爱好。', '这两本书相同。', '我同意你的意见。'] },
+            '工': { pinyin: 'gōng', words: ['工作','工人','工厂','工具'], sentences: ['我的工作很忙。', '他是一名工人。', '这个工厂很大。', '请给我那个工具。'] },
+            '也': { pinyin: 'yě', words: ['也许','也好','也是','也有'], sentences: ['也许明天会下雨。', '这样也好。', '他也是学生。', '我也有这本书。'] },
+            '能': { pinyin: 'néng', words: ['能力','能够','功能','才能'], sentences: ['他有很强的能力。', '我能帮助你吗？', '这个手机功能很多。', '他很有音乐才能。'] },
+            '下': { pinyin: 'xià', words: ['下面','下午','下雨','下班'], sentences: ['书在桌子下面。', '我们下午见面。', '今天下雨了。', '我五点下班。'] },
+            '过': { pinyin: 'guò', words: ['过去','经过','过程','超过'], sentences: ['过去的就让它过去吧。', '我每天经过这里。', '这个过程很重要。', '人数不能超过十个。'] },
+            '子': { pinyin: 'zi', words: ['孩子','儿子','女子','电子'], sentences: ['孩子们在玩耍。', '他有一个儿子。', '这位女子很优雅。', '我买了一个电子书。'] },
+            '说': { pinyin: 'shuō', words: ['说话','说明','小说','传说'], sentences: ['请大声说话。', '这个说明很清楚。', '我喜欢看小说。', '这是一个古老的传说。'] },
+            '产': { pinyin: 'chǎn', words: ['产品','生产','产业','农产品'], sentences: ['这个产品质量很好。', '工厂正在生产新产品。', '农业发展很重要。', '这是本地农产品。'] },
+            '种': { pinyin: 'zhǒng', words: ['种类','种子','各种','种植'], sentences: ['这里有很多种类。', '农民在播种种子。', '各种颜色都有。', '我们种植了很多蔬菜。'] },
+            '面': { pinyin: 'miàn', words: ['面包','面积','面条','见面'], sentences: ['我买了新鲜面包。', '这个房间面积很大。', '中午吃面条吧。', '我们明天见面。'] },
+            '而': { pinyin: 'ér', words: ['而且','然而','反而','从而'], sentences: ['这个房间大而且明亮。', '然而他不同意。', '结果反而更好了。', '我们从而得出结论。'] },
+            '方': { pinyin: 'fāng', words: ['方法','方向','方面','地方'], sentences: ['这个方法很好。', '请朝那个方向走。', '这个问题的很多方面。', '这是个好地方。'] },
+            '后': { pinyin: 'hòu', words: ['后面','以后','然后','最后'], sentences: ['请坐在后面。', '我以后会注意。', '我们先吃饭，然后学习。', '最后他同意了。'] },
+            '多': { pinyin: 'duō', words: ['多少','多数','很多','多么'], sentences: ['这里有多少人？', '多数人同意了。', '我有很多朋友。', '多么美丽的风景啊！'] },
+            '定': { pinyin: 'dìng', words: ['一定','决定','规定','定期'], sentences: ['我一定会来。', '我们决定明天出发。', '学校有规定。', '我们需要定期检查。'] },
+            '行': { pinyin: 'xíng', words: ['行为','行动','进行','自行车'], sentences: ['这种行为不好。', '我们需要立即行动。', '会议正在进行。', '我骑自行车上学。'] },
+            '学': { pinyin: 'xué', words: ['学习','学生','学校','科学'], sentences: ['我喜欢学习中文。', '他是一名学生。', '学校八点上课。', '科学发展很快。'] },
+            '法': { pinyin: 'fǎ', words: ['法律','方法','法国','语法'], sentences: ['我们要遵守法律。', '这个方法很有效。', '他去了法国。', '中文语法不难。'] },
+            '所': { pinyin: 'suǒ', words: ['所以','所有','场所','研究所'], sentences: ['因为下雨，所以我们没去。', '这些都是我的书。', '这是个安静场所。', '他在研究所工作。'] },
+            '民': { pinyin: 'mín', words: ['人民','农民','民族','居民'], sentences: ['为人民服务。', '农民在田里工作。', '中国有56个民族。', '这里的居民很友好。'] },
+            '得': { pinyin: 'dé', words: ['得到','获得','得意','记得'], sentences: ['我得到了礼物。', '他获得了奖励。', '不要得意忘形。', '你还记得我吗？'] },
+            '经': { pinyin: 'jīng', words: ['经过','经济','已经','经常'], sentences: ['我每天经过这里。', '经济发展很重要。', '我已经完成了。', '他经常锻炼。'] },
+            '十': { pinyin: 'shí', words: ['十分','十月','十字','第十'], sentences: ['我十分同意。', '十月是秋天。', '这是个十字路口。', '他得了第十名。'] },
+            '三': { pinyin: 'sān', words: ['三个','三月','第三','三角形'], sentences: ['我有三个苹果。', '三月是春天。', '他得了第三名。', '这是个三角形。'] },
+            '之': { pinyin: 'zhī', words: ['之前','之后','之一','之间'], sentences: ['三天之前。', '从那之后。', '这是原因之一。', '我们之间没问题。'] },
+            '进': { pinyin: 'jìn', words: ['进步','进入','前进','进口'], sentences: ['他进步很快。', '请进入教室。', '我们继续前进。', '这是进口商品。'] },
+            '着': { pinyin: 'zhe', words: ['看着','沿着','接着','意味着'], sentences: ['他看着窗外。', '沿着这条路走。', '接着我们讨论。', '这意味什么？'] },
+            '等': { pinyin: 'děng', words: ['等待','等级','等于','高等'], sentences: ['请等待一会儿。', '这是最高等级。', '一加一等于二。', '这是高等数学。'] },
+            '部': { pinyin: 'bù', words: ['部分','部门','全部','内部'], sentences: ['这只是部分内容。', '他在销售部门。', '我全部完成了。', '这是内部消息。'] },
+            '度': { pinyin: 'dù', words: ['度过','温度','速度','态度'], sentences: ['我度过了假期。', '今天温度很高。', '请控制速度。', '他的态度很好。'] },
+            '家': { pinyin: 'jiā', words: ['家庭','家人','国家','科学家'], sentences: ['我有个幸福家庭。', '我和家人住一起。', '我爱我的国家。', '他是个著名科学家。'] },
+            '电': { pinyin: 'diàn', words: ['电话','电视','电脑','电梯'], sentences: ['请接电话。', '我在看电视。', '这是我的电脑。', '请坐电梯上楼。'] },
+            '力': { pinyin: 'lì', words: ['力量','能力','努力','电力'], sentences: ['他很有力量。', '这是我的能力。', '请继续努力。', '电力供应恢复了。'] },
+            '里': { pinyin: 'lǐ', words: ['里面','公里','家里','这里'], sentences: ['请到里面坐。', '距离有五公里。', '我在家里学习。', '这里很安静。'] },
+            '如': { pinyin: 'rú', words: ['如果','如何','比如','如今'], sentences: ['如果下雨就不去。', '我该如何做？', '比如这个例子。', '如今变化很大。'] },
+            '水': { pinyin: 'shuǐ', words: ['水果','水平','海水','喝水'], sentences: ['请吃些水果。', '他水平很高。', '海水很蓝。', '记得多喝水。'] },
+            '化': { pinyin: 'huà', words: ['文化','化学','变化','现代化'], sentences: ['中国文化很深奥。', '我们在学化学。', '这里变化很大。', '现代化城市建设。'] },
+            '高': { pinyin: 'gāo', words: ['高兴','高度','高中','高级'], sentences: ['我很高兴。', '这座山高度很高。', '他在读高中。', '这是高级产品。'] },
+            '自': { pinyin: 'zì', words: ['自己','自然','来自','自行车'], sentences: ['我自己能完成。', '大自然很美。', '我来自中国。', '我骑自行车上学。'] },
+            '二': { pinyin: 'èr', words: ['第二','二月','二手','二氧化碳'], sentences: ['他得了第二名。', '二月很短。', '这是二手商品。', '减少二氧化碳排放。'] },
+            '理': { pinyin: 'lǐ', words: ['理解','理论','理由','管理'], sentences: ['我理解你的想法。', '这个理论很复杂。', '你有什么理由？', '他负责管理工作。'] },
+            '起': { pinyin: 'qǐ', words: ['起来','起床','一起','起点'], sentences: ['请站起来。', '我七点起床。', '我们一起学习。', '这是新的起点。'] },
+            '小': { pinyin: 'xiǎo', words: ['小孩','小学','小时','小心'], sentences: ['小孩在玩耍。', '我上小学。', '我等了一小时。', '请小心台阶。'] },
+            '物': { pinyin: 'wù', words: ['物品','动物','植物','礼物'], sentences: ['请保管好物品。', '动物园有很多动物。', '这些植物很漂亮。', '这是给你的礼物。'] },
+            '现': { pinyin: 'xiàn', words: ['现在','发现','表现','现象'], sentences: ['现在几点了？', '我发现了个秘密。', '他表现很好。', '这是个有趣现象。'] },
+            '实': { pinyin: 'shí', words: ['实际','实现','事实','实践'], sentences: ['实际情况如何？', '我实现了梦想。', '这是事实。', '实践出真知。'] },
+            '加': { pinyin: 'jiā', words: ['参加','增加','加班','加拿大'], sentences: ['我参加了比赛。', '人数增加了。', '他经常加班。', '我去了加拿大。'] },
+            '量': { pinyin: 'liàng', words: ['数量','质量','力量','大量'], sentences: ['数量有多少？', '质量很重要。', '他很有力量。', '这里有大量书籍。'] },
+            '都': { pinyin: 'dōu', words: ['都是','首都','全都','都市'], sentences: ['我们都是学生。', '北京是中国的首都。', '我全都完成了。', '这是个繁华都市。'] },
+            '两': { pinyin: 'liǎng', words: ['两个','两样','两岸','两岁'], sentences: ['我有两个苹果。', '这是两样东西。', '海峡两岸。', '我孩子两岁了。'] },
+            '体': { pinyin: 'tǐ', words: ['体育','身体','体重','体现'], sentences: ['我喜欢体育。', '请照顾身体。', '我的体重正常。', '这体现了精神。'] },
+            '制': { pinyin: 'zhì', words: ['制度','制造','控制','制定'], sentences: ['遵守学校制度。', '这个工厂制造汽车。', '请控制音量。', '我们制定了计划。'] },
+            '机': { pinyin: 'jī', words: ['机会','机器','飞机','手机'], sentences: ['这是个好机会。', '这台机器很先进。', '我坐飞机去。', '这是我的手机。'] },
+            '当': { pinyin: 'dāng', words: ['当时','当然','当地','当中'], sentences: ['当时我在家。', '我当然同意。', '当地风俗。', '他在人群当中。'] },
+            '使': { pinyin: 'shǐ', words: ['使用','使命','大使','使劲'], sentences: ['我会使用电脑。', '这是我的使命。', '他是中国大使。', '请使劲推。'] },
+            '点': { pinyin: 'diǎn', words: ['点头','重点','几点','点心'], sentences: ['他点头同意。', '这是重点内容。', '现在几点了？', '请吃些点心。'] },
+            '从': { pinyin: 'cóng', words: ['从前','从来','从此','从小'], sentences: ['从前有座山。', '我从来不说谎。', '从此我们成了朋友。', '我从小喜欢读书。'] },
+            '业': { pinyin: 'yè', words: ['业务','职业','工业','作业'], sentences: ['他负责这个业务。', '我的职业是教师。', '工业发展很快。', '请完成作业。'] },
+            '本': { pinyin: 'běn', words: ['本来','日本','笔记本','基本'], sentences: ['我本来想去的。', '他去了日本。', '这是我的笔记本。', '这是基本要求。'] }
+        };
+
+        // 游戏状态
+        let score = 0;
+        let gameRunning = false;
+        let spawnInterval = 2000;
+        let activeChars = [];
+        let gameTimer = null;
+        let currentTooltip = null;
+
+        // 检测语音支持
+        function checkVoiceSupport() {
+            const info = document.getElementById('voice-info');
+            if (!('speechSynthesis' in window)) {
+                info.textContent = "⚠️ 您的浏览器不支持语音功能，将无法听到发音";
+                info.style.color = 'red';
+                return false;
+            }
+            
+            // 测试中文语音是否可用
+            const voices = speechSynthesis.getVoices();
+            const hasChinese = voices.some(v => v.lang.includes('zh'));
+            
+            if (!hasChinese) {
+                info.textContent = "⚠️ 未检测到中文语音引擎，发音可能不准确";
+                info.style.color = 'orange';
+            } else {
+                info.textContent = "✓ 语音功能已就绪";
+                info.style.color = 'green';
+            }
+            return true;
+        }
+
+        // 初始化游戏
+        function initGame() {
+            document.getElementById('game-container').innerHTML = '';
+            score = 0;
+            activeChars = [];
+            updateScore();
+            gameRunning = true;
+            
+            document.getElementById('start-btn').disabled = true;
+            document.getElementById('pause-btn').disabled = false;
+            document.getElementById('speak-all-btn').disabled = false;
+            
+            // 立即生成一个汉字
+            spawnCharacter();
+            
+            // 设置定时器
+            gameTimer = setInterval(() => {
+                if (!gameRunning) return;
+                if (activeChars.length < 15) {
+                    spawnCharacter();
+                }
+            }, spawnInterval);
+        }
+
+        // 生成汉字（优先在上半部分）
+        function spawnCharacter() {
+            const container = document.getElementById('game-container');
+            const char = characters[Math.floor(Math.random() * characters.length)];
+            
+            const charElement = document.createElement('div');
+            charElement.className = 'character';
+            charElement.textContent = char;
+            charElement.dataset.char = char;
+            
+            // 随机位置和大小（70%概率出现在上半部分）
+            const size = 30 + Math.random() * 30;
+            const containerHeight = container.offsetHeight;
+            const preferTop = Math.random() < 0.7; // 70%概率在上半部分
+            
+            let x, y;
+            if (preferTop) {
+                x = Math.random() * (container.offsetWidth - size);
+                y = Math.random() * (containerHeight * 0.6); // 上半部分60%区域
+            } else {
+                x = Math.random() * (container.offsetWidth - size);
+                y = containerHeight * 0.4 + Math.random() * (containerHeight * 0.6 - size); // 下半部分
+            }
+            
+            // 确保不会超出边界
+            x = Math.max(0, Math.min(x, container.offsetWidth - size));
+            y = Math.max(0, Math.min(y, containerHeight - size));
+            
+            charElement.style.fontSize = `${size}px`;
+            charElement.style.left = `${x}px`;
+            charElement.style.top = `${y}px`;
+            charElement.style.color = `hsl(${Math.random() * 360}, 70%, 50%)`;
+            
+            // 点击事件
+            charElement.addEventListener('click', handleCharClick);
+            
+            container.appendChild(charElement);
+            activeChars.push({
+                element: charElement,
+                size: size,
+                timer: setTimeout(() => {
+                    removeChar(charElement);
+                }, 10000) // 10秒后自动消失
+            });
+        }
+
+        // 处理点击
+        function handleCharClick(e) {
+            if (!gameRunning) return;
+            
+            const charElement = e.target;
+            const char = charElement.dataset.char;
+            
+            // 计算得分（越大分越高）
+            const charObj = activeChars.find(c => c.element === charElement);
+            const points = Math.floor(charObj.size / 10);
+            score += points;
+            updateScore();
+            
+            // 显示信息
+            showCharInfo(char, charElement);
+            
+            // 朗读汉字
+            speakCharacter(char);
+            
+            // 移除字符
+            removeChar(charElement);
+        }
+
+        function removeChar(element) {
+            const index = activeChars.findIndex(c => c.element === element);
+            if (index !== -1) {
+                clearTimeout(activeChars[index].timer);
+                element.remove();
+                activeChars.splice(index, 1);
+            }
+        }
+
+        function showCharInfo(char, element) {
+            // 移除现有的工具提示
+            if (currentTooltip) {
+                currentTooltip.remove();
+                currentTooltip = null;
+            }
+            
+            const info = pinyinData[char];
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.innerHTML = `
+                <button class="close-btn">×</button>
+                <div class="char">${char}</div>
+                <div class="pinyin">${info.pinyin}</div>
+                
+                <div class="words-title">常用词语 (${info.words.length}个):</div>
+                <div class="words">
+                    ${info.words.join('、')}
+                    <button class="speak-btn" data-text="${info.words.join('，')}">朗读词语</button>
+                </div>
+                
+                <div class="sentence-title">例句:</div>
+                <div class="sentence">
+                    ${info.sentences[0]}
+                    <button class="speak-btn" data-text="${info.sentences[0]}">朗读例句</button>
+                </div>
+                ${info.sentences.length > 1 ? `
+                <div class="sentence">
+                    ${info.sentences[1]}
+                    <button class="speak-btn" data-text="${info.sentences[1]}">朗读例句</button>
+                </div>` : ''}
+            `;
+            
+            // 定位工具提示
+            const rect = element.getBoundingClientRect();
+            const containerRect = document.getElementById('game-container').getBoundingClientRect();
+            
+            let left = rect.left - containerRect.left;
+            let top = rect.top - containerRect.top + rect.height + 5;
+            
+            // 确保工具提示不会超出容器
+            if (left + 250 > containerRect.width) {
+                left = containerRect.width - 250;
+            }
+            if (top + 350 > containerRect.height) {
+                top = rect.top - containerRect.top - 350;
+                if (top < 0) top = 10;
+            }
+            
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+            
+            document.getElementById('game-container').appendChild(tooltip);
+            currentTooltip = tooltip;
+            
+            // 添加关闭按钮事件
+            tooltip.querySelector('.close-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                tooltip.remove();
+                currentTooltip = null;
+            });
+            
+            // 添加按钮事件
+            tooltip.querySelectorAll('.speak-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    speakText(btn.dataset.text, 0.8); // 更慢的语速
+                });
+            });
+            
+            // 点击容器其他位置关闭工具提示
+            document.getElementById('game-container').addEventListener('click', function closeTooltip(e) {
+                if (!tooltip.contains(e.target) && e.target.className !== 'character') {
+                    tooltip.remove();
+                    currentTooltip = null;
+                    this.removeEventListener('click', closeTooltip);
+                }
+            });
+        }
+
+        // 朗读文本（带慢速和停顿）
+        function speakText(text, rate = 0.8) {
+            if (!('speechSynthesis' in window)) return;
+            
+            // 停止当前正在朗读的内容
+            speechSynthesis.cancel();
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = rate; // 更慢的语速
+            utterance.pitch = 1;
+            
+            // 尝试找到中文语音
+            const voices = speechSynthesis.getVoices();
+            const chineseVoice = voices.find(v => v.lang.includes('zh'));
+            if (chineseVoice) {
+                utterance.voice = chineseVoice;
+            }
+            
+            // 在词语间添加停顿（替换逗号为停顿）
+            utterance.text = utterance.text.replace(/，/g, '，...');
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // 朗读单个汉字
+        function speakCharacter(char) {
+            speakText(char, 0.7); // 最慢的语速读单个字
+        }
+
+        // 朗读所有显示的汉字
+        function speakAllCharacters() {
+            if (!gameRunning) return;
+            
+            const chars = activeChars.map(c => c.element.textContent).join('，');
+            if (chars) {
+                speakText(chars, 0.8); // 慢速朗读
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            checkVoiceSupport();
+            
+            // 如果语音列表为空，等待voiceschanged事件
+            if (speechSynthesis.getVoices().length === 0) {
+                speechSynthesis.addEventListener('voiceschanged', checkVoiceSupport);
+            }
+            
+            // 开始按钮
+            document.getElementById('start-btn').addEventListener('click', initGame);
+            
+            // 暂停按钮
+            document.getElementById('pause-btn').addEventListener('click', () => {
+                gameRunning = !gameRunning;
+                document.getElementById('pause-btn').textContent = gameRunning ? '暂停' : '继续';
+            });
+            
+            // 朗读全部按钮
+            document.getElementById('speak-all-btn').addEventListener('click', speakAllCharacters);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字探秘</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 1200px; /* 扩大1.5倍 */
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            position: relative;
+            min-height: 600px; /* 扩大高度 */
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a6ea9;
+        }
+        
+        .treasure-box-btn {
+            background-color: #ffd700;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .game-area {
+            position: relative;
+            width: 100%;
+            height: 600px; /* 扩大高度 */
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .character {
+            position: absolute;
+            font-size: 40px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+        
+        .character.highlight {
+            transform: scale(5);
+            z-index: 10;
+        }
+        
+        .components {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            cursor: move; /* 可拖动光标 */
+            user-select: none; /* 防止文字被选中 */
+        }
+        
+        .component-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+        }
+        
+        .component {
+            font-size: 30px;
+            margin: 5px;
+        }
+        
+        .component-label {
+            font-size: 16px;
+            color: #666;
+            text-align: center;
+            max-width: 150px;
+        }
+        
+        .pinyin {
+            color: #4a6ea9;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .english {
+            color: #e74c3c;
+            font-style: italic;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .treasure-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+        }
+        
+        .treasure-item {
+            font-size: 30px;
+            text-align: center;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .treasure-item:hover {
+            transform: scale(1.1);
+            background-color: #e0e0e0;
+        }
+        
+        .treasure-pinyin {
+            font-size: 14px;
+            color: #4a6ea9;
+            margin-top: 5px;
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .control-btn {
+            padding: 10px 20px;
+            background-color: #4a6ea9;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+        }
+        
+        .control-btn:hover {
+            background-color: #3a5a8f;
+        }
+        
+        .control-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                max-width: 95%;
+            }
+            
+            .character {
+                font-size: 30px;
+            }
+            
+            .character.highlight {
+                transform: scale(3);
+            }
+            
+            .components {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px;
+                max-width: 90%;
+            }
+            
+            .component-label {
+                font-size: 14px;
+            }
+            
+            .treasure-grid {
+                grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>汉字探秘</h1>
+            <div>
+                <span class="score">积分: 0</span>
+                <button class="treasure-box-btn" id="treasureBoxBtn">
+                    <span>百宝箱</span>
+                    <span id="collectedCount">0</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="game-area" id="gameArea">
+            <!-- 汉字将在这里动态生成 -->
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" id="startBtn">开始游戏</button>
+            <button class="control-btn" id="pauseBtn" disabled>暂停</button>
+        </div>
+    </div>
+    
+    <!-- 百宝箱模态框 -->
+    <div class="modal" id="treasureBoxModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>我的百宝箱</h2>
+                <button class="close-btn" id="closeTreasureBox">&times;</button>
+            </div>
+            <div class="treasure-grid" id="treasureGrid">
+                <!-- 收集的字词将在这里显示 -->
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 扩展的字词库 (共100组)
+        const characters = [
+            // 单字 (60个)
+            { char: "人", pinyin: "rén", components: ["亻", "𠂉"], componentNames: ["单人旁 (Person radical)", "捺 (Right-falling stroke)"] },
+            { char: "口", pinyin: "kǒu", components: [], componentNames: [] },
+            { char: "日", pinyin: "rì", components: [], componentNames: [] },
+            { char: "月", pinyin: "yuè", components: [], componentNames: [] },
+            { char: "山", pinyin: "shān", components: [], componentNames: [] },
+            { char: "水", pinyin: "shuǐ", components: [], componentNames: [] },
+            { char: "火", pinyin: "huǒ", components: [], componentNames: [] },
+            { char: "木", pinyin: "mù", components: [], componentNames: [] },
+            { char: "金", pinyin: "jīn", components: [], componentNames: [] },
+            { char: "土", pinyin: "tǔ", components: [], componentNames: [] },
+            { char: "好", pinyin: "hǎo", components: ["女", "子"], componentNames: ["女字旁 (Woman radical)", "子字边 (Child)"] },
+            { char: "明", pinyin: "míng", components: ["日", "月"], componentNames: ["日字旁 (Sun radical)", "月字边 (Moon)"] },
+            { char: "林", pinyin: "lín", components: ["木", "木"], componentNames: ["木字旁 (Tree radical)", "木字边 (Tree)"] },
+            { char: "休", pinyin: "xiū", components: ["亻", "木"], componentNames: ["单人旁 (Person radical)", "木字底 (Tree bottom)"] },
+            { char: "妈", pinyin: "mā", components: ["女", "马"], componentNames: ["女字旁 (Woman radical)", "马字边 (Horse)"] },
+            { char: "吃", pinyin: "chī", components: ["口", "乞"], componentNames: ["口字旁 (Mouth radical)", "乞字边 (Beg)"] },
+            { char: "喝", pinyin: "hē", components: ["口", "曷"], componentNames: ["口字旁 (Mouth radical)", "曷字边 (Why)"] },
+            { char: "唱", pinyin: "chàng", components: ["口", "昌"], componentNames: ["口字旁 (Mouth radical)", "昌字边 (Prosperous)"] },
+            { char: "叫", pinyin: "jiào", components: ["口", "丩"], componentNames: ["口字旁 (Mouth radical)", "丩字边 (Connect)"] },
+            { char: "和", pinyin: "hé", components: ["禾", "口"], componentNames: ["禾木旁 (Grain radical)", "口字边 (Mouth)"] },
+            { char: "河", pinyin: "hé", components: ["氵", "可"], componentNames: ["三点水 (Water radical)", "可字边 (Can)"] },
+            { char: "海", pinyin: "hǎi", components: ["氵", "每"], componentNames: ["三点水 (Water radical)", "每字边 (Every)"] },
+            { char: "湖", pinyin: "hú", components: ["氵", "胡"], componentNames: ["三点水 (Water radical)", "胡字边 (Foreign)"] },
+            { char: "江", pinyin: "jiāng", components: ["氵", "工"], componentNames: ["三点水 (Water radical)", "工字边 (Work)"] },
+            { char: "洗", pinyin: "xǐ", components: ["氵", "先"], componentNames: ["三点水 (Water radical)", "先字边 (First)"] },
+            { char: "沐", pinyin: "mù", components: ["氵", "木"], componentNames: ["三点水 (Water radical)", "木字边 (Tree)"] },
+            { char: "泪", pinyin: "lèi", components: ["氵", "目"], componentNames: ["三点水 (Water radical)", "目字边 (Eye)"] },
+            { char: "泳", pinyin: "yǒng", components: ["氵", "永"], componentNames: ["三点水 (Water radical)", "永字边 (Forever)"] },
+            { char: "清", pinyin: "qīng", components: ["氵", "青"], componentNames: ["三点水 (Water radical)", "青字边 (Blue)"] },
+            { char: "波", pinyin: "bō", components: ["氵", "皮"], componentNames: ["三点水 (Water radical)", "皮字边 (Skin)"] },
+            { char: "打", pinyin: "dǎ", components: ["扌", "丁"], componentNames: ["提手旁 (Hand radical)", "丁字边 (Nail)"] },
+            { char: "拍", pinyin: "pāi", components: ["扌", "白"], componentNames: ["提手旁 (Hand radical)", "白字边 (White)"] },
+            { char: "拉", pinyin: "lā", components: ["扌", "立"], componentNames: ["提手旁 (Hand radical)", "立字边 (Stand)"] },
+            { char: "推", pinyin: "tuī", components: ["扌", "隹"], componentNames: ["提手旁 (Hand radical)", "隹字边 (Short-tailed bird)"] },
+            { char: "提", pinyin: "tí", components: ["扌", "是"], componentNames: ["提手旁 (Hand radical)", "是字边 (Yes)"] },
+            { char: "抱", pinyin: "bào", components: ["扌", "包"], componentNames: ["提手旁 (Hand radical)", "包字边 (Wrap)"] },
+            { char: "抓", pinyin: "zhuā", components: ["扌", "爪"], componentNames: ["提手旁 (Hand radical)", "爪字边 (Claw)"] },
+            { char: "把", pinyin: "bǎ", components: ["扌", "巴"], componentNames: ["提手旁 (Hand radical)", "巴字边 (Hope)"] },
+            { char: "操", pinyin: "cāo", components: ["扌", "喿"], componentNames: ["提手旁 (Hand radical)", "喿字边 (Noisy)"] },
+            { char: "摸", pinyin: "mō", components: ["扌", "莫"], componentNames: ["提手旁 (Hand radical)", "莫字边 (Do not)"] },
+            { char: "树", pinyin: "shù", components: ["木", "对"], componentNames: ["木字旁 (Tree radical)", "对字边 (Correct)"] },
+            { char: "松", pinyin: "sōng", components: ["木", "公"], componentNames: ["木字旁 (Tree radical)", "公字边 (Public)"] },
+            { char: "柏", pinyin: "bǎi", components: ["木", "白"], componentNames: ["木字旁 (Tree radical)", "白字边 (White)"] },
+            { char: "桃", pinyin: "táo", components: ["木", "兆"], componentNames: ["木字旁 (Tree radical)", "兆字边 (Omen)"] },
+            { char: "梅", pinyin: "méi", components: ["木", "每"], componentNames: ["木字旁 (Tree radical)", "每字边 (Every)"] },
+            { char: "桥", pinyin: "qiáo", components: ["木", "乔"], componentNames: ["木字旁 (Tree radical)", "乔字边 (Tall)"] },
+            { char: "楼", pinyin: "lóu", components: ["木", "娄"], componentNames: ["木字旁 (Tree radical)", "娄字边 (Surname)"] },
+            { char: "椅", pinyin: "yǐ", components: ["木", "奇"], componentNames: ["木字旁 (Tree radical)", "奇字边 (Strange)"] },
+            { char: "桌", pinyin: "zhuō", components: ["木", "卓"], componentNames: ["木字旁 (Tree radical)", "卓字边 (Excellent)"] },
+            { char: "森", pinyin: "sēn", components: ["木", "木", "木"], componentNames: ["木字旁 (Tree radical)", "木字中 (Middle tree)", "木字边 (Tree)"] },
+            { char: "想", pinyin: "xiǎng", components: ["相", "心"], componentNames: ["相字旁 (Mutual)", "心字底 (Heart bottom)"] },
+            { char: "您", pinyin: "nín", components: ["你", "心"], componentNames: ["你字旁 (You)", "心字底 (Heart bottom)"] },
+            { char: "意", pinyin: "yì", components: ["音", "心"], componentNames: ["音字旁 (Sound)", "心字底 (Heart bottom)"] },
+            { char: "忘", pinyin: "wàng", components: ["亡", "心"], componentNames: ["亡字旁 (Death)", "心字底 (Heart bottom)"] },
+            { char: "忙", pinyin: "máng", components: ["忄", "亡"], componentNames: ["竖心旁 (Heart radical)", "亡字边 (Death)"] },
+            { char: "怕", pinyin: "pà", components: ["忄", "白"], componentNames: ["竖心旁 (Heart radical)", "白字边 (White)"] },
+            { char: "情", pinyin: "qíng", components: ["忄", "青"], componentNames: ["竖心旁 (Heart radical)", "青字边 (Blue)"] },
+            { char: "快", pinyin: "kuài", components: ["忄", "夬"], componentNames: ["竖心旁 (Heart radical)", "夬字边 (Decisive)"] },
+            { char: "性", pinyin: "xìng", components: ["忄", "生"], componentNames: ["竖心旁 (Heart radical)", "生字边 (Life)"] },
+            
+            // 双音词 (40个)
+            { char: "学习", pinyin: "xué xí", components: ["子", "⺍", "⺈", "习"], componentNames: ["子字头 (Child top)", "小字底 (Small bottom)", "刀字头 (Knife top)", "习字 (Practice)"] },
+            { char: "朋友", pinyin: "péng you", components: ["月", "月", "⺈", "又"], componentNames: ["月字旁 (Moon radical)", "月字边 (Moon)", "刀字头 (Knife top)", "又字底 (Again bottom)"] },
+            { char: "老师", pinyin: "lǎo shī", components: ["耂", "匕", "丨", "帀"], componentNames: ["老字头 (Old top)", "匕字底 (Spoon bottom)", "竖旁 (Vertical)", "巾字底 (Towel bottom)"] },
+            { char: "学生", pinyin: "xué shēng", components: ["子", "⺍", "⺈", "生"], componentNames: ["子字头 (Child top)", "小字底 (Small bottom)", "刀字头 (Knife top)", "生字 (Life)"] },
+            { char: "学校", pinyin: "xué xiào", components: ["子", "⺍", "⺈", "交"], componentNames: ["子字头 (Child top)", "小字底 (Small bottom)", "刀字头 (Knife top)", "交字 (Exchange)"] },
+            { char: "汉语", pinyin: "hàn yǔ", components: ["氵", "又", "讠", "吾"], componentNames: ["三点水 (Water radical)", "又字边 (Again)", "言字旁 (Speech radical)", "吾字 (I)"] },
+            { char: "中文", pinyin: "zhōng wén", components: ["口", "丨", "文"], componentNames: ["口字旁 (Mouth radical)", "竖旁 (Vertical)", "文字 (Writing)"] },
+            { char: "汉字", pinyin: "hàn zì", components: ["氵", "又", "宀", "子"], componentNames: ["三点水 (Water radical)", "又字边 (Again)", "宝盖头 (Roof top)", "子字 (Child)"] },
+            { char: "中国", pinyin: "zhōng guó", components: ["口", "丨", "囗", "玉"], componentNames: ["口字旁 (Mouth radical)", "竖旁 (Vertical)", "国字框 (Country frame)", "玉字 (Jade)"] },
+            { char: "北京", pinyin: "běi jīng", components: ["丨", "口", "亠", "口", "小"], componentNames: ["竖旁 (Vertical)", "口字边 (Mouth)", "京字头 (Capital top)", "口字 (Mouth)", "小字 (Small)"] },
+            { char: "上海", pinyin: "shàng hǎi", components: ["丨", "口", "氵", "每"], componentNames: ["竖旁 (Vertical)", "口字边 (Mouth)", "三点水 (Water radical)", "每字 (Every)"] },
+            { char: "广州", pinyin: "guǎng zhōu", components: ["广", "丶", "丶", "丿", "州"], componentNames: ["广字旁 (Wide radical)", "点 (Dot)", "点 (Dot)", "撇 (Left-falling stroke)", "州字 (State)"] },
+            { char: "深圳", pinyin: "shēn zhèn", components: ["氵", "申", "氵", "川"], componentNames: ["三点水 (Water radical)", "申字 (Extend)", "三点水 (Water radical)", "川字 (River)"] },
+            { char: "武汉", pinyin: "wǔ hàn", components: ["氵", "武", "氵", "又"], componentNames: ["三点水 (Water radical)", "武字 (Military)", "三点水 (Water radical)", "又字 (Again)"] },
+            { char: "成都", pinyin: "chéng dū", components: ["戊", "丨", "⺈", "日"], componentNames: ["戊字旁 (5th heavenly stem)", "竖旁 (Vertical)", "刀字头 (Knife top)", "日字 (Sun)"] },
+            { char: "重庆", pinyin: "chóng qìng", components: ["丿", "一", "大", "广", "丶"], componentNames: ["撇 (Left-falling stroke)", "横 (Horizontal stroke)", "大字 (Big)", "广字旁 (Wide radical)", "点 (Dot)"] },
+            { char: "西安", pinyin: "xī ān", components: ["西", "一", "宀", "女"], componentNames: ["西字旁 (West)", "横 (Horizontal stroke)", "宝盖头 (Roof top)", "女字 (Woman)"] },
+            { char: "南京", pinyin: "nán jīng", components: ["十", "冂", "亠", "口", "小"], componentNames: ["十字旁 (Ten)", "同字框 (Same frame)", "京字头 (Capital top)", "口字 (Mouth)", "小字 (Small)"] },
+            { char: "杭州", pinyin: "háng zhōu", components: ["木", "亢", "氵", "工"], componentNames: ["木字旁 (Tree radical)", "亢字 (High)", "三点水 (Water radical)", "工字 (Work)"] }
+        ];
+        
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            collected: [],
+            activeCharacters: [],
+            isPlaying: false,
+            currentLevel: 1,
+            timer: null,
+            activeComponents: null,
+            dragData: null
+        };
+        
+        // DOM元素
+        const gameArea = document.getElementById('gameArea');
+        const scoreElement = document.querySelector('.score');
+        const collectedCountElement = document.getElementById('collectedCount');
+        const treasureBoxBtn = document.getElementById('treasureBoxBtn');
+        const treasureBoxModal = document.getElementById('treasureBoxModal');
+        const closeTreasureBox = document.getElementById('closeTreasureBox');
+        const treasureGrid = document.getElementById('treasureGrid');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        
+        // 初始化游戏
+        function initGame() {
+            // 清除现有字符
+            gameArea.innerHTML = '';
+            gameState.activeCharacters = [];
+            
+            // 重置分数和收集
+            gameState.score = 0;
+            gameState.collected = [];
+            updateScore();
+            updateCollectedCount();
+            
+            // 设置事件监听器
+            treasureBoxBtn.addEventListener('click', openTreasureBox);
+            closeTreasureBox.addEventListener('click', closeTreasureBoxModal);
+            startBtn.addEventListener('click', startGame);
+            pauseBtn.addEventListener('click', pauseGame);
+            
+            // 初始化拖动功能
+            initDrag();
+        }
+        
+        // 初始化拖动功能
+        function initDrag() {
+            gameArea.addEventListener('mousedown', handleDragStart);
+            gameArea.addEventListener('touchstart', handleDragStart, { passive: false });
+            
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('touchmove', handleDragMove, { passive: false });
+            
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchend', handleDragEnd);
+        }
+        
+        // 处理拖动开始
+        function handleDragStart(e) {
+            if (!gameState.activeComponents) return;
+            
+            const target = e.target.closest('.components');
+            if (!target) return;
+            
+            e.preventDefault();
+            
+            gameState.dragData = {
+                element: target,
+                startX: e.clientX || e.touches[0].clientX,
+                startY: e.clientY || e.touches[0].clientY,
+                startLeft: parseInt(target.style.left),
+                startTop: parseInt(target.style.top)
+            };
+        }
+        
+        // 处理拖动移动
+        function handleDragMove(e) {
+            if (!gameState.dragData) return;
+            
+            e.preventDefault();
+            
+            const currentX = e.clientX || e.touches[0].clientX;
+            const currentY = e.clientY || e.touches[0].clientY;
+            
+            const dx = currentX - gameState.dragData.startX;
+            const dy = currentY - gameState.dragData.startY;
+            
+            gameState.dragData.element.style.left = `${gameState.dragData.startLeft + dx}px`;
+            gameState.dragData.element.style.top = `${gameState.dragData.startTop + dy}px`;
+        }
+        
+        // 处理拖动结束
+        function handleDragEnd() {
+            gameState.dragData = null;
+        }
+        
+        // 开始游戏
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState.isPlaying = true;
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            
+            // 开始生成字符
+            generateCharacter();
+            
+            // 设置定时器，每3秒生成一个新字符
+            gameState.timer = setInterval(() => {
+                if (gameState.activeCharacters.length < 5) { // 限制屏幕上最多5个字符
+                    generateCharacter();
+                }
+            }, 3000);
+        }
+        
+        // 暂停游戏
+        function pauseGame() {
+            gameState.isPlaying = false;
+            clearInterval(gameState.timer);
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            
+            // 移除所有活动字符
+            gameState.activeCharacters.forEach(char => {
+                if (char.element && char.element.parentNode) {
+                    char.element.remove();
+                }
+            });
+            gameState.activeCharacters = [];
+            
+            // 移除组件解释
+            if (gameState.activeComponents) {
+                gameState.activeComponents.remove();
+                gameState.activeComponents = null;
+            }
+        }
+        
+        // 生成随机字符
+        function generateCharacter() {
+            if (!gameState.isPlaying) return;
+            
+            // 随机选择一个字符
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            const charData = characters[randomIndex];
+            
+            // 创建字符元素
+            const charElement = document.createElement('div');
+            charElement.className = 'character';
+            charElement.textContent = charData.char;
+            
+            // 随机位置
+            const maxX = gameArea.clientWidth - 40;
+            const maxY = gameArea.clientHeight - 40;
+            const randomX = Math.floor(Math.random() * maxX);
+            const randomY = Math.floor(Math.random() * maxY);
+            
+            charElement.style.left = `${randomX}px`;
+            charElement.style.top = `${randomY}px`;
+            
+            // 添加到游戏区域
+            gameArea.appendChild(charElement);
+            
+            // 设置点击事件
+            charElement.addEventListener('click', () => handleCharacterClick(charData, charElement));
+            
+            // 添加到活动字符列表
+            const charObj = {
+                data: charData,
+                element: charElement,
+                timer: setTimeout(() => {
+                    removeCharacter(charObj);
+                }, 3000) // 3秒后消失
+            };
+            
+            gameState.activeCharacters.push(charObj);
+        }
+        
+        // 处理字符点击
+        function handleCharacterClick(charData, charElement) {
+            // 移除自动消失的定时器
+            const charObj = gameState.activeCharacters.find(c => c.element === charElement);
+            if (charObj && charObj.timer) {
+                clearTimeout(charObj.timer);
+            }
+            
+            // 高亮显示
+            charElement.classList.add('highlight');
+            
+            // 检查是否已经收集过
+            const isCollected = gameState.collected.some(c => c.char === charData.char);
+            
+            // 如果没有收集过，添加到百宝箱
+            if (!isCollected) {
+                gameState.collected.push(charData);
+                gameState.score += 10;
+                updateScore();
+                updateCollectedCount();
+            } else {
+                gameState.score += 5; // 重复收集得分较少
+                updateScore();
+            }
+            
+            // 显示结构分解
+            setTimeout(() => {
+                showCharacterComponents(charData, charElement);
+                
+                // 8秒后移除字符
+                setTimeout(() => {
+                    removeCharacter(charObj);
+                }, 8000);
+            }, 1500);
+        }
+        
+        // 显示字符组件（偏旁部首）
+        function showCharacterComponents(charData, charElement) {
+            // 移除高亮
+            charElement.classList.remove('highlight');
+            
+            // 隐藏原字符
+            charElement.style.visibility = 'hidden';
+            
+            // 如果已有解释窗口，先移除
+            if (gameState.activeComponents) {
+                gameState.activeComponents.remove();
+            }
+            
+            // 创建详情容器
+            const componentsContainer = document.createElement('div');
+            componentsContainer.className = 'components';
+            componentsContainer.style.left = charElement.style.left;
+            componentsContainer.style.top = charElement.style.top;
+            gameState.activeComponents = componentsContainer;
+            
+            // 添加拼音显示
+            const pinyinDiv = document.createElement('div');
+            pinyinDiv.className = 'pinyin';
+            pinyinDiv.textContent = `拼音: ${charData.pinyin}`;
+            componentsContainer.appendChild(pinyinDiv);
+            
+            // 处理单字
+            if (charData.char.length === 1) {
+                if (charData.components.length > 0) {
+                    // 显示偏旁部首
+                    for (let i = 0; i < charData.components.length; i++) {
+                        const componentDiv = document.createElement('div');
+                        componentDiv.className = 'component-item';
+                        
+                        const charDiv = document.createElement('div');
+                        charDiv.className = 'component';
+                        charDiv.textContent = charData.components[i];
+                        componentDiv.appendChild(charDiv);
+                        
+                        const labelDiv = document.createElement('div');
+                        labelDiv.className = 'component-label';
+                        labelDiv.innerHTML = `${charData.componentNames[i].split(' (')[0]}<br><span class="english">${charData.componentNames[i].split(' (')[1].replace(')', '')}</span>`;
+                        componentDiv.appendChild(labelDiv);
+                        
+                        componentsContainer.appendChild(componentDiv);
+                    }
+                } else {
+                    // 独体字
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component-item';
+                    
+                    const charDiv = document.createElement('div');
+                    charDiv.className = 'component';
+                    charDiv.textContent = charData.char;
+                    componentDiv.appendChild(charDiv);
+                    
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'component-label';
+                    labelDiv.innerHTML = "独体字<br><span class='english'>Single-component character</span>";
+                    componentDiv.appendChild(labelDiv);
+                    
+                    componentsContainer.appendChild(componentDiv);
+                }
+            } 
+            // 处理双音词
+            else if (charData.char.length === 2) {
+                // 第一个字
+                const firstChar = charData.char[0];
+                const firstCharData = characters.find(c => c.char === firstChar) || 
+                                    { char: firstChar, components: [], componentNames: [], pinyin: charData.pinyin.split(' ')[0] };
+                
+                const firstCharDiv = document.createElement('div');
+                firstCharDiv.className = 'component-item';
+                
+                const firstCharLabel = document.createElement('div');
+                firstCharLabel.className = 'component-label';
+                firstCharLabel.innerHTML = `第一个字: ${firstChar}<br><span class="pinyin">${firstCharData.pinyin}</span>`;
+                firstCharDiv.appendChild(firstCharLabel);
+                
+                if (firstCharData.components.length > 0) {
+                    for (let i = 0; i < firstCharData.components.length; i++) {
+                        const componentDiv = document.createElement('div');
+                        componentDiv.className = 'component';
+                        componentDiv.textContent = firstCharData.components[i];
+                        firstCharDiv.appendChild(componentDiv);
+                        
+                        const labelDiv = document.createElement('div');
+                        labelDiv.className = 'component-label';
+                        labelDiv.innerHTML = `${firstCharData.componentNames[i].split(' (')[0]}<br><span class="english">${firstCharData.componentNames[i].split(' (')[1].replace(')', '')}</span>`;
+                        firstCharDiv.appendChild(labelDiv);
+                    }
+                } else {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component';
+                    componentDiv.textContent = firstChar;
+                    firstCharDiv.appendChild(componentDiv);
+                    
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'component-label';
+                    labelDiv.innerHTML = "独体字<br><span class='english'>Single-component character</span>";
+                    firstCharDiv.appendChild(labelDiv);
+                }
+                
+                componentsContainer.appendChild(firstCharDiv);
+                
+                // 第二个字
+                const secondChar = charData.char[1];
+                const secondCharData = characters.find(c => c.char === secondChar) || 
+                                     { char: secondChar, components: [], componentNames: [], pinyin: charData.pinyin.split(' ')[1] };
+                
+                const secondCharDiv = document.createElement('div');
+                secondCharDiv.className = 'component-item';
+                
+                const secondCharLabel = document.createElement('div');
+                secondCharLabel.className = 'component-label';
+                secondCharLabel.innerHTML = `第二个字: ${secondChar}<br><span class="pinyin">${secondCharData.pinyin}</span>`;
+                secondCharDiv.appendChild(secondCharLabel);
+                
+                if (secondCharData.components.length > 0) {
+                    for (let i = 0; i < secondCharData.components.length; i++) {
+                        const componentDiv = document.createElement('div');
+                        componentDiv.className = 'component';
+                        componentDiv.textContent = secondCharData.components[i];
+                        secondCharDiv.appendChild(componentDiv);
+                        
+                        const labelDiv = document.createElement('div');
+                        labelDiv.className = 'component-label';
+                        labelDiv.innerHTML = `${secondCharData.componentNames[i].split(' (')[0]}<br><span class="english">${secondCharData.componentNames[i].split(' (')[1].replace(')', '')}</span>`;
+                        secondCharDiv.appendChild(labelDiv);
+                    }
+                } else {
+                    const componentDiv = document.createElement('div');
+                    componentDiv.className = 'component';
+                    componentDiv.textContent = secondChar;
+                    secondCharDiv.appendChild(componentDiv);
+                    
+                    const labelDiv = document.createElement('div');
+                    labelDiv.className = 'component-label';
+                    labelDiv.innerHTML = "独体字<br><span class='english'>Single-component character</span>";
+                    secondCharDiv.appendChild(labelDiv);
+                }
+                
+                componentsContainer.appendChild(secondCharDiv);
+            }
+            
+            gameArea.appendChild(componentsContainer);
+            
+            // 8秒后移除详情
+            setTimeout(() => {
+                if (componentsContainer.parentNode) {
+                    componentsContainer.remove();
+                    gameState.activeComponents = null;
+                }
+            }, 8000);
+        }
+        
+        // 移除字符
+        function removeCharacter(charObj) {
+            if (!charObj) return;
+            
+            // 从DOM中移除
+            if (charObj.element && charObj.element.parentNode) {
+                charObj.element.remove();
+            }
+            
+            // 从活动字符列表中移除
+            gameState.activeCharacters = gameState.activeCharacters.filter(c => c !== charObj);
+        }
+        
+        // 更新分数显示
+        function updateScore() {
+            scoreElement.textContent = `积分: ${gameState.score}`;
+        }
+        
+        // 更新收集计数
+        function updateCollectedCount() {
+            collectedCountElement.textContent = gameState.collected.length;
+        }
+        
+        // 打开百宝箱
+        function openTreasureBox() {
+            treasureGrid.innerHTML = '';
+            
+            gameState.collected.forEach(char => {
+                const item = document.createElement('div');
+                item.className = 'treasure-item';
+                item.innerHTML = `
+                    ${char.char}
+                    <div class="treasure-pinyin">${char.pinyin}</div>
+                `;
+                treasureGrid.appendChild(item);
+            });
+            
+            treasureBoxModal.style.display = 'flex';
+        }
+        
+        // 关闭百宝箱
+        function closeTreasureBoxModal() {
+            treasureBoxModal.style.display = 'none';
+        }
+        
+        // 初始化游戏
+        window.onload = initGame;
+    </script>
+</body>
+</html>

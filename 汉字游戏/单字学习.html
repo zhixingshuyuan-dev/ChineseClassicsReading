@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字学习小程序</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .title {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .character-display {
+            font-size: 80px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 30px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 20px;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .character-display:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .info-display {
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+
+        .pinyin {
+            font-size: 24px;
+            color: #007bff;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .translation {
+            font-size: 18px;
+            color: #6c757d;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background: white;
+        }
+
+        .controls {
+            margin-top: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .status {
+            margin-top: 20px;
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">汉字学习小程序</h1>
+        
+        <div class="character-display" id="character" onclick="handleCharacterClick()">
+            点击开始学习
+        </div>
+        
+        <div class="info-display" id="info" style="display: none;">
+            <div class="pinyin" id="pinyin"></div>
+            <div id="translations"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="showRandomCharacter()">随机汉字</button>
+            <button class="btn" onclick="speakChinese()">朗读中文</button>
+        </div>
+        
+        <div class="status" id="status">点击汉字开始学习拼音和翻译</div>
+    </div>
+
+    <script>
+        const characters = "春集丈木研班普导顿睡展跳获艺六波察群皇段急庭创区奥器谢弟店否害草排背止组州朝封睛板角况曲馆育忙质河续哥呼若推境遇雨标姐充围案伦护冷警贝著雪索剧啊船险烟依斗值帮汉慢佛肯闻唱沙局伯族低玩资屋击速顾泪洲团圣旁堂兵七露园牛哭旅街劳型烈姑陈莫鱼异抱宝权鲁简态级票怪寻杀律胜份汽右洋范床舞秘午登楼贵吸责例追较职属渐左录丝牙党继托赶章智冲叶胡吉卖坚喝肉遗救修松临藏担戏善卫药悲敢靠伊村戴词森耳差短祖云规窗散迷油旧适乡架恩投弹铁博雷府压超负勒杂酲洗采毫嘴毕九冰既状乱景席珍童顶派素脱农疑练野按犯拍征坏骨余承置臓彩灯巨琴免环姆暗换技翻束增忍餐洛塞缺忆判欧层付阵玛批岛项狗休懂武革良恶恋委拥娜妙探呀营退摇弄桌熟诺宣银势奖宫忽套康供优课鸟喊降夏困刘罪亡鞋健模败伴守挥鲜财孤枪禁恐伙杰迹妹莸遍盖副坦牌江顺秋萨菜划授归浪听凡预奶雄升碃编典袋莱含盛济蒙棋端腿招释介烧误";
+        
+        // 汉字数据库（包含拼音和多语翻译）
+        const characterData = {
+            "春": { pinyin: "chūn", en: "spring", jp: "はる", kr: "봄", de: "Frühling", fr: "printemps" },
+            "木": { pinyin: "mù", en: "tree", jp: "き", kr: "나무", de: "Baum", fr: "arbre" },
+            "水": { pinyin: "shuǐ", en: "water", jp: "みず", kr: "물", de: "Wasser", fr: "eau" },
+            "火": { pinyin: "huǒ", en: "fire", jp: "ひ", kr: "불", de: "Feuer", fr: "feu" },
+            "土": { pinyin: "tǔ", en: "earth", jp: "つち", kr: "흙", de: "Erde", fr: "terre" },
+            "山": { pinyin: "shān", en: "mountain", jp: "やま", kr: "산", de: "Berg", fr: "montagne" },
+            "河": { pinyin: "hé", en: "river", jp: "かわ", kr: "강", de: "Fluss", fr: "rivière" },
+            "花": { pinyin: "huā", en: "flower", jp: "はな", kr: "꽃", de: "Blume", fr: "fleur" },
+            "鸟": { pinyin: "niǎo", en: "bird", jp: "とり", kr: "새", de: "Vogel", fr: "oiseau" },
+            "鱼": { pinyin: "yú", en: "fish", jp: "さかな", kr: "물고기", de: "Fisch", fr: "poisson" }
+        };
+
+        let currentCharacter = '';
+        let clickState = 0; // 0: 显示汉字, 1: 显示拼音, 2: 显示翻译
+        let currentTranslationIndex = 0;
+        let translations = [];
+
+        function showRandomCharacter() {
+            const randomIndex = Math.floor(Math.random() * characters.length);
+            currentCharacter = characters[randomIndex];
+            
+            document.getElementById('character').textContent = currentCharacter;
+            document.getElementById('info').style.display = 'none';
+            document.getElementById('status').textContent = '点击汉字查看拼音和翻译';
+            
+            clickState = 0;
+            currentTranslationIndex = 0;
+            
+            // 准备翻译数据
+            const data = getCharacterData(currentCharacter);
+            translations = [
+                { lang: 'English', text: data.en },
+                { lang: 'Japanese', text: data.jp },
+                { lang: 'Korean', text: data.kr },
+                { lang: 'German', text: data.de },
+                { lang: 'French', text: data.fr }
+            ];
+        }
+
+        function getCharacterData(char) {
+            // 如果有预定义数据就使用，否则返回默认数据
+            if (characterData[char]) {
+                return characterData[char];
+            }
+            
+            // 为其他字符提供基本的拼音（这里简化处理）
+            const basicPinyin = generateBasicPinyin(char);
+            return {
+                pinyin: basicPinyin,
+                en: `Chinese character: ${char}`,
+                jp: `漢字：${char}`,
+                kr: `한자: ${char}`,
+                de: `Chinesisches Zeichen: ${char}`,
+                fr: `Caractère chinois: ${char}`
+            };
+        }
+
+        function generateBasicPinyin(char) {
+            // 简化的拼音生成（实际应用中需要完整的拼音数据库）
+            const charCode = char.charCodeAt(0);
+            const pinyinSamples = ['bā', 'dá', 'fā', 'gā', 'hā', 'jī', 'kě', 'lì', 'mǎ', 'nǐ', 'pà', 'qì', 'rú', 'sì', 'tā', 'wǒ', 'xī', 'yǒu', 'zhī'];
+            return pinyinSamples[charCode % pinyinSamples.length];
+        }
+
+        function handleCharacterClick() {
+            if (currentCharacter === '' || currentCharacter === '点击开始学习') {
+                showRandomCharacter();
+                return;
+            }
+
+            const infoDiv = document.getElementById('info');
+            const pinyinDiv = document.getElementById('pinyin');
+            const translationsDiv = document.getElementById('translations');
+            
+            if (clickState === 0) {
+                // 显示拼音
+                const data = getCharacterData(currentCharacter);
+                pinyinDiv.textContent = `拼音: ${data.pinyin}`;
+                translationsDiv.innerHTML = '';
+                infoDiv.style.display = 'block';
+                infoDiv.classList.add('fade-in');
+                
+                document.getElementById('status').textContent = '再次点击查看多语翻译';
+                clickState = 1;
+                
+                // 朗读中文
+                speakChinese();
+                
+            } else if (clickState === 1) {
+                // 开始显示翻译
+                showNextTranslation();
+                clickState = 2;
+                
+            } else if (clickState === 2) {
+                // 继续显示下一个翻译
+                showNextTranslation();
+            }
+        }
+
+        function showNextTranslation() {
+            if (currentTranslationIndex >= translations.length) {
+                document.getElementById('status').textContent = '所有翻译已显示完毕，点击"随机汉字"继续学习';
+                return;
+            }
+
+            const translationsDiv = document.getElementById('translations');
+            const translation = translations[currentTranslationIndex];
+            
+            const translationElement = document.createElement('div');
+            translationElement.className = 'translation fade-in';
+            translationElement.innerHTML = `<strong>${translation.lang}:</strong> ${translation.text}`;
+            translationsDiv.appendChild(translationElement);
+            
+            // 朗读翻译
+            speakTranslation(translation.text, translation.lang);
+            
+            currentTranslationIndex++;
+            
+            if (currentTranslationIndex < translations.length) {
+                document.getElementById('status').textContent = `继续点击查看更多翻译 (${currentTranslationIndex}/${translations.length})`;
+            } else {
+                document.getElementById('status').textContent = '所有翻译已显示完毕';
+            }
+        }
+
+        function speakChinese() {
+            if (currentCharacter && currentCharacter !== '点击开始学习') {
+                const utterance = new SpeechSynthesisUtterance(currentCharacter);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function speakTranslation(text, lang) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // 设置语言
+            switch(lang) {
+                case 'English':
+                    utterance.lang = 'en-US';
+                    break;
+                case 'Japanese':
+                    utterance.lang = 'ja-JP';
+                    break;
+                case 'Korean':
+                    utterance.lang = 'ko-KR';
+                    break;
+                case 'German':
+                    utterance.lang = 'de-DE';
+                    break;
+                case 'French':
+                    utterance.lang = 'fr-FR';
+                    break;
+                default:
+                    utterance.lang = 'en-US';
+            }
+            
+            utterance.rate = 0.8;
+            speechSynthesis.speak(utterance);
+        }
+
+        // 初始显示
+        document.addEventListener('DOMContentLoaded', function() {
+            showRandomCharacter();
+        });
+    </script>
+</body>
+</html>

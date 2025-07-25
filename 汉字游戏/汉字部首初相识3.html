@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字部首识字课</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* 左侧菜单 */
+        .sidebar {
+            width: 250px;
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .category {
+            margin-bottom: 20px;
+        }
+        
+        .category-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #34495e;
+            display: flex;
+            align-items: center;
+        }
+        
+        .category-title .emoji {
+            margin-right: 8px;
+            font-size: 20px;
+        }
+        
+        .radicals-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .radical-item {
+            background-color: #34495e;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
+        }
+        
+        .radical-item:hover {
+            background-color: #3d566e;
+        }
+        
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 学习模式 */
+        .learning-mode {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .radicals-display {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .radical-card {
+            width: 120px;
+            height: 120px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .radical-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .radical-oracle {
+            font-size: 48px;
+            margin-bottom: 5px;
+        }
+        
+        .radical-name {
+            font-size: 16px;
+            color: #333;
+        }
+        
+        /* 弹窗 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 600px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .radical-info {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .radical-big {
+            font-size: 96px;
+            margin: 15px 0;
+            cursor: pointer;
+            transition: transform 0.2s;
+            line-height: 1;
+        }
+        
+        .radical-big:hover {
+            transform: scale(1.1);
+        }
+        
+        .radical-pinyin {
+            font-size: 28px;
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+        
+        .radical-meaning {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+        
+        .radical-meaning-en {
+            font-size: 18px;
+            color: #555;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+        
+        .radical-origin {
+            font-size: 18px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .example-words {
+            margin-top: 30px;
+        }
+        
+        .example-title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .words-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .word-item {
+            font-size: 48px;
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            text-align: center;
+            min-width: 80px;
+        }
+        
+        .word-item:hover {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .word-pinyin {
+            position: absolute;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+            font-size: 18px;
+            color: #e74c3c;
+            display: none;
+            font-weight: bold;
+        }
+        
+        .word-item:hover .word-pinyin {
+            display: block;
+        }
+        
+        /* 练习模式 */
+        .practice-mode {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .practice-area {
+            width: 100%;
+            max-width: 900px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+        
+        .target-areas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .target-area {
+            flex: 1;
+            min-width: 180px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            min-height: 120px;
+        }
+        
+        .target-radical {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .target-name {
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .words-to-sort {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 150px;
+        }
+        
+        .word-to-sort {
+            font-size: 36px;
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 8px;
+            cursor: move;
+            user-select: none;
+        }
+        
+        .word-to-sort:hover {
+            background-color: #2980b9;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d35400;
+        }
+        
+        /* 反馈效果 */
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 96px;
+            z-index: 1001;
+            display: none;
+        }
+        
+        .correct-feedback {
+            color: #2ecc71;
+        }
+        
+        .wrong-feedback {
+            color: #e74c3c;
+        }
+        
+        .sun-animation {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            z-index: 1001;
+            display: none;
+            animation: sunPulse 1s ease-out;
+        }
+        
+        @keyframes sunPulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        /* 进度条 */
+        .progress-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            height: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 10px;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        /* 开始学习按钮 */
+        .start-learning-btn {
+            margin: 25px 0;
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .start-learning-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+            
+            .radical-card {
+                width: 90px;
+                height: 90px;
+            }
+            
+            .radical-oracle {
+                font-size: 40px;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .radical-big {
+                font-size: 72px;
+            }
+            
+            .word-item {
+                font-size: 36px;
+            }
+            
+            .word-pinyin {
+                bottom: -25px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧菜单 -->
+        <div class="sidebar">
+            <div class="category">
+                <div class="category-title"><span class="emoji">🌿</span>自然类</div>
+                <div class="radicals-list">
+                    <div class="radical-item" data-radical="日">日</div>
+                    <div class="radical-item" data-radical="月">月</div>
+                    <div class="radical-item" data-radical="氵">氵(水)</div>
+                    <div class="radical-item" data-radical="灬">灬(火)</div>
+                    <div class="radical-item" data-radical="土">土</div>
+                    <div class="radical-item" data-radical="山">山</div>
+                    <div class="radical-item" data-radical="石">石</div>
+                    <div class="radical-item" data-radical="木">木</div>
+                    <div class="radical-item" data-radical="田">田</div>
+                    <div class="radical-item" data-radical="禾">禾</div>
+                    <div class="radical-item" data-radical="竹">竹</div>
+                    <div class="radical-item" data-radical="犭">犭(犬)</div>
+                    <div class="radical-item" data-radical="虫">虫</div>
+                    <div class="radical-item" data-radical="马">马</div>
+                    <div class="radical-item" data-radical="艹">艹(草)</div>
+                    <div class="radical-item" data-radical="雨">雨</div>
+                    <div class="radical-item" data-radical="风">风</div>
+                    <div class="radical-item" data-radical="火">火</div>
+                    <div class="radical-item" data-radical="水">水</div>
+                    <div class="radical-item" data-radical="金">金</div>
+                </div>
+            </div>
+            
+            <div class="category">
+                <div class="category-title"><span class="emoji">🧑</span>人体类</div>
+                <div class="radicals-list">
+                    <div class="radical-item" data-radical="亻">亻(人)</div>
+                    <div class="radical-item" data-radical="目">目</div>
+                    <div class="radical-item" data-radical="忄">忄(心)</div>
+                    <div class="radical-item" data-radical="心">心</div>
+                    <div class="radical-item" data-radical="身">身</div>
+                    <div class="radical-item" data-radical="足">足</div>
+                    <div class="radical-item" data-radical="女">女</div>
+                    <div class="radical-item" data-radical="子">子</div>
+                    <div class="radical-item" data-radical="口">口</div>
+                    <div class="radical-item" data-radical="耳">耳</div>
+                    <div class="radical-item" data-radical="手">手</div>
+                    <div class="radical-item" data-radical="骨">骨</div>
+                    <div class="radical-item" data-radical="齿">齿</div>
+                </div>
+            </div>
+            
+            <div class="category">
+                <div class="category-title"><span class="emoji">🛠️</span>器物类</div>
+                <div class="radicals-list">
+                    <div class="radical-item" data-radical="门">门</div>
+                    <div class="radical-item" data-radical="巾">巾</div>
+                    <div class="radical-item" data-radical="车">车</div>
+                    <div class="radical-item" data-radical="钅">钅(金)</div>
+                    <div class="radical-item" data-radical="纟">纟(丝)</div>
+                    <div class="radical-item" data-radical="玉">玉</div>
+                    <div class="radical-item" data-radical="刀">刀</div>
+                    <div class="radical-item" data-radical="皿">皿</div>
+                    <div class="radical-item" data-radical="瓦">瓦</div>
+                    <div class="radical-item" data-radical="弓">弓</div>
+                    <div class="radical-item" data-radical="贝">贝</div>
+                    <div class="radical-item" data-radical="革">革</div>
+                    <div class="radical-item" data-radical="韦">韦</div>
+                    <div class="radical-item" data-radical="衣">衣</div>
+                    <div class="radical-item" data-radical="示">示</div>
+                </div>
+            </div>
+            
+            <div class="category">
+                <div class="category-title"><span class="emoji">✋</span>动作类</div>
+                <div class="radicals-list">
+                    <div class="radical-item" data-radical="扌">扌(手)</div>
+                    <div class="radical-item" data-radical="又">又(手)</div>
+                    <div class="radical-item" data-radical="彳">彳(行)</div>
+                    <div class="radical-item" data-radical="走">走</div>
+                    <div class="radical-item" data-radical="辶">辶</div>
+                    <div class="radical-item" data-radical="攵">攵(攴)</div>
+                    <div class="radical-item" data-radical="刂">刂(刀)</div>
+                    <div class="radical-item" data-radical="讠">讠(言)</div>
+                    <div class="radical-item" data-radical="欠">欠</div>
+                    <div class="radical-item" data-radical="力">力</div>
+                    <div class="radical-item" data-radical="食">食</div>
+                </div>
+            </div>
+            
+            <div class="category">
+                <div class="category-title"><span class="emoji">🏠</span>空间类</div>
+                <div class="radicals-list">
+                    <div class="radical-item" data-radical="广">广</div>
+                    <div class="radical-item" data-radical="宀">宀(屋)</div>
+                    <div class="radical-item" data-radical="阝">阝(邑)</div>
+                    <div class="radical-item" data-radical="户">户</div>
+                    <div class="radical-item" data-radical="穴">穴</div>
+                    <div class="radical-item" data-radical="厂">厂</div>
+                    <div class="radical-item" data-radical="囗">囗</div>
+                    <div class="radical-item" data-radical="冂">冂</div>
+                    <div class="radical-item" data-radical="冖">冖</div>
+                    <div class="radical-item" data-radical="勹">勹</div>
+                    <div class="radical-item" data-radical="匚">匚</div>
+                    <div class="radical-item" data-radical="凵">凵</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 学习模式 -->
+            <div class="learning-mode">
+                <h1>汉字部首识字课</h1>
+                <p>点击"开始学习"按钮或左侧菜单中的部首开始学习</p>
+                
+                <button class="start-learning-btn" id="startLearningBtn">开始学习</button>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                
+                <div class="radicals-display" id="radicalsDisplay">
+                    <!-- 部首卡片将通过JavaScript动态生成 -->
+                </div>
+                
+                <button class="btn btn-primary" id="practiceBtn" disabled>开始练习</button>
+                <button class="btn btn-success" id="nextBtn" style="display: none;">下一步</button>
+            </div>
+            
+            <!-- 练习模式 -->
+            <div class="practice-mode" id="practiceMode">
+                <h2>归类练习</h2>
+                <p>将汉字拖拽到对应的部首区域</p>
+                
+                <div class="practice-area">
+                    <div class="target-areas" id="targetAreas">
+                        <!-- 目标区域将通过JavaScript动态生成 -->
+                    </div>
+                    
+                    <div class="words-to-sort" id="wordsToSort">
+                        <!-- 待分类汉字将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-warning" id="resetBtn">重置</button>
+                    <button class="btn btn-primary" id="checkBtn">检查</button>
+                    <button class="btn btn-success" id="continueBtn">继续学习</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 部首信息弹窗 -->
+    <div class="modal" id="radicalModal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeModal">&times;</span>
+            <div class="radical-info" id="radicalInfo">
+                <!-- 部首信息将通过JavaScript动态生成 -->
+            </div>
+            <div class="example-words">
+                <div class="example-title">包含该部首的例字：</div>
+                <div class="words-list" id="exampleWords">
+                    <!-- 例字将通过JavaScript动态生成 -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 反馈效果 -->
+    <div class="feedback correct-feedback" id="correctFeedback">✓</div>
+    <div class="feedback wrong-feedback" id="wrongFeedback">✗</div>
+    <div class="sun-animation" id="sunAnimation">☀️</div>
+    
+    <script>
+        // 部首数据 - 完整版 (60个常用部首)
+        const radicalsData = {
+            // 自然类 (20个)
+            "日": {
+                oracle: "☀️",
+                pinyin: "rì",
+                meaning: "与太阳、时间相关",
+                meaningEn: "Related to sun or time",
+                origin: "象形字，像太阳的形状",
+                examples: ["晴", "明", "晒", "晨", "晚", "暖", "昨", "时", "晶", "映", "早", "春"]
+            },
+            "月": {
+                oracle: "🌙",
+                pinyin: "yuè",
+                meaning: "与月亮相关",
+                meaningEn: "Related to moon",
+                origin: "象形字，像月亮的形状",
+                examples: ["明", "朋", "期", "朗", "朝", "望", "朦胧", "有", "服", "背"]
+            },
+            "氵": {
+                oracle: "💧💧💧",
+                pinyin: "shuǐ",
+                meaning: "与水相关",
+                meaningEn: "Related to water",
+                origin: "由'水'字演变而来，表示液体",
+                examples: ["河", "湖", "海", "流", "泪", "汗", "洗", "澡", "泳", "漂", "江", "洋"]
+            },
+            "灬": {
+                oracle: "🔥🔥🔥🔥",
+                pinyin: "huǒ",
+                meaning: "与火相关",
+                meaningEn: "Related to fire",
+                origin: "由'火'字演变而来，表示火焰",
+                examples: ["热", "煮", "煎", "照", "熊", "熏", "熟", "焦", "烈", "烹", "蒸", "煮"]
+            },
+            "木": {
+                oracle: "🌳",
+                pinyin: "mù",
+                meaning: "与树木、植物相关",
+                meaningEn: "Related to trees or plants",
+                origin: "象形字，像树木的形状",
+                examples: ["林", "森", "树", "枝", "根", "植", "椅", "桌", "床", "桥", "松", "柳"]
+            },
+            "山": {
+                oracle: "⛰️",
+                pinyin: "shān",
+                meaning: "与山相关",
+                meaningEn: "Related to mountains",
+                origin: "象形字，像山峰的形状",
+                examples: ["峰", "岭", "岩", "岸", "岛", "峡", "岳", "崖", "岗", "崇", "崎", "岖"]
+            },
+            "田": {
+                oracle: "🟩",
+                pinyin: "tián",
+                meaning: "与田地相关",
+                meaningEn: "Related to fields",
+                origin: "象形字，像分割的田地",
+                examples: ["男", "界", "留", "畜", "畔", "畴", "甸", "畦", "畛", "畎"]
+            },
+            "禾": {
+                oracle: "🌾",
+                pinyin: "hé",
+                meaning: "与谷物相关",
+                meaningEn: "Related to crops",
+                origin: "象形字，像谷穗下垂的禾苗",
+                examples: ["秋", "秀", "种", "稻", "稼", "秽", "颖", "秒", "科", "秦"]
+            },
+            "竹": {
+                oracle: "🎋",
+                pinyin: "zhú",
+                meaning: "与竹子相关",
+                meaningEn: "Related to bamboo",
+                origin: "象形字，像竹叶的形状",
+                examples: ["竿", "笋", "笛", "箫", "笔", "筒", "筐", "篮", "筷", "符"]
+            },
+            "犭": {
+                oracle: "🐕",
+                pinyin: "quǎn",
+                meaning: "与犬类动物相关",
+                meaningEn: "Related to canines",
+                origin: "由'犬'字演变而来",
+                examples: ["狗", "猫", "狼", "狐", "狸", "猪", "猴", "狮", "猛", "猎"]
+            },
+            "虫": {
+                oracle: "🐛",
+                pinyin: "chóng",
+                meaning: "与昆虫相关",
+                meaningEn: "Related to insects",
+                origin: "象形字，像蛇的形状",
+                examples: ["蛇", "蚊", "蝇", "蜂", "蜜", "蝶", "蜻", "蜓", "蚂", "蚁"]
+            },
+            "马": {
+                oracle: "🐎",
+                pinyin: "mǎ",
+                meaning: "与马相关",
+                meaningEn: "Related to horses",
+                origin: "象形字，像马的形状",
+                examples: ["骑", "驾", "驶", "骄", "驴", "骆", "驼", "驻", "骏", "驰"]
+            },
+            "艹": {
+                oracle: "🌿",
+                pinyin: "cǎo",
+                meaning: "与草本植物相关",
+                meaningEn: "Related to plants",
+                origin: "由'艸'字演变而来",
+                examples: ["花", "草", "茶", "菜", "药", "荷", "菊", "莲", "莓", "苗"]
+            },
+            "雨": {
+                oracle: "🌧️",
+                pinyin: "yǔ",
+                meaning: "与天气现象相关",
+                meaningEn: "Related to weather",
+                origin: "象形字，像下雨的样子",
+                examples: ["雪", "雷", "霜", "雾", "露", "霞", "雹", "霓", "雳", "霁"]
+            },
+            "风": {
+                oracle: "🌬️",
+                pinyin: "fēng",
+                meaning: "与风相关",
+                meaningEn: "Related to wind",
+                origin: "象形字，像风吹动的样子",
+                examples: ["飘", "飙", "飒", "飓", "飕", "飏", "飐", "飑", "飔", "飗"]
+            },
+            "火": {
+                oracle: "🔥",
+                pinyin: "huǒ",
+                meaning: "与火相关",
+                meaningEn: "Related to fire",
+                origin: "象形字，像火焰的形状",
+                examples: ["炎", "炉", "灶", "烤", "烧", "烟", "煤", "炸", "炮", "烛"]
+            },
+            "水": {
+                oracle: "💧",
+                pinyin: "shuǐ",
+                meaning: "与水相关",
+                meaningEn: "Related to water",
+                origin: "象形字，像水流的形状",
+                examples: ["泉", "冰", "永", "泰", "浆", "泵", "汞", "淼", "沝", "沯"]
+            },
+            "金": {
+                oracle: "⛓️",
+                pinyin: "jīn",
+                meaning: "与金属相关",
+                meaningEn: "Related to metals",
+                origin: "象形字，像金属矿石的形状",
+                examples: ["钢", "铁", "铜", "银", "钱", "针", "钉", "钟", "铃", "锁"]
+            },
+            "石": {
+                oracle: "🪨",
+                pinyin: "shí",
+                meaning: "与石头相关",
+                meaningEn: "Related to stones",
+                origin: "象形字，像山崖下有石块",
+                examples: ["矿", "码", "研", "破", "硬", "碰", "砍", "砖", "砂", "磊"]
+            },
+            "土": {
+                oracle: "⛰️",
+                pinyin: "tǔ",
+                meaning: "与土地相关",
+                meaningEn: "Related to earth",
+                origin: "象形字，像地面上有土块",
+                examples: ["地", "场", "坡", "坪", "坦", "坝", "垃", "圾", "城", "墙"]
+            },
+            
+            // 人体类 (13个)
+            "亻": {
+                oracle: "🧍",
+                pinyin: "rén",
+                meaning: "与人相关",
+                meaningEn: "Related to people",
+                origin: "由'人'字演变而来",
+                examples: ["你", "他", "们", "休", "作", "做", "位", "住", "借", "体", "代", "化"]
+            },
+            "目": {
+                oracle: "👁️",
+                pinyin: "mù",
+                meaning: "与眼睛相关",
+                meaningEn: "Related to eyes",
+                origin: "象形字，像眼睛的形状",
+                examples: ["看", "睛", "眼", "睡", "睁", "眨", "眉", "盼", "盯", "盲", "相", "省"]
+            },
+            "忄": {
+                oracle: "❤️",
+                pinyin: "xīn",
+                meaning: "与心理活动相关",
+                meaningEn: "Related to emotions",
+                origin: "由'心'字演变而来",
+                examples: ["情", "怕", "忙", "快", "慢", "性", "恨", "悔", "惯", "惊", "懂", "慌"]
+            },
+            "心": {
+                oracle: "💓",
+                pinyin: "xīn",
+                meaning: "与心脏、心理相关",
+                meaningEn: "Related to heart or mind",
+                origin: "象形字，像心脏的形状",
+                examples: ["想", "念", "思", "忘", "忍", "怒", "悲", "愁", "感", "态", "必", "志"]
+            },
+            "身": {
+                oracle: "🧍‍♂️",
+                pinyin: "shēn",
+                meaning: "与身体相关",
+                meaningEn: "Related to body",
+                origin: "象形字，像人怀孕的形状",
+                examples: ["躯", "躲", "躺", "躬", "射", "谢", "躯", "躹", "軎", "軓"]
+            },
+            "足": {
+                oracle: "🦶",
+                pinyin: "zú",
+                meaning: "与脚相关",
+                meaningEn: "Related to feet",
+                origin: "象形字，像膝盖和脚的形状",
+                examples: ["跑", "跳", "踢", "蹈", "踏", "踩", "跃", "跪", "跟", "距", "趴", "趵"]
+            },
+            "女": {
+                oracle: "👩",
+                pinyin: "nǚ",
+                meaning: "与女性相关",
+                meaningEn: "Related to female",
+                origin: "象形字，像跪坐的女子",
+                examples: ["妈", "姐", "妹", "好", "她", "姑", "娘", "婚", "妻", "婆", "嫁", "妇"]
+            },
+            "子": {
+                oracle: "👶",
+                pinyin: "zǐ",
+                meaning: "与孩子相关",
+                meaningEn: "Related to children",
+                origin: "象形字，像婴儿的形状",
+                examples: ["孩", "孙", "孝", "学", "孔", "孕", "孤", "存", "季", "孟", "孺", "孪"]
+            },
+            "口": {
+                oracle: "👄",
+                pinyin: "kǒu",
+                meaning: "与口相关",
+                meaningEn: "Related to mouth",
+                origin: "象形字，像嘴巴的形状",
+                examples: ["吃", "喝", "唱", "叫", "呼", "吸", "味", "咬", "吞", "吐", "吵", "喊"]
+            },
+            "耳": {
+                oracle: "👂",
+                pinyin: "ěr",
+                meaning: "与耳朵相关",
+                meaningEn: "Related to ears",
+                origin: "象形字，像耳朵的形状",
+                examples: ["听", "闻", "聪", "聋", "取", "聊", "职", "联", "聘", "耻", "耿", "聒"]
+            },
+            "手": {
+                oracle: "✋",
+                pinyin: "shǒu",
+                meaning: "与手相关",
+                meaningEn: "Related to hands",
+                origin: "象形字，像手的形状",
+                examples: ["拿", "打", "拍", "拉", "推", "找", "把", "提", "抓", "扔", "拳", "掌"]
+            },
+            "骨": {
+                oracle: "🦴",
+                pinyin: "gǔ",
+                meaning: "与骨骼相关",
+                meaningEn: "Related to bones",
+                origin: "象形字，像骨架的形状",
+                examples: ["骼", "骸", "髋", "髌", "髓", "髎", "髀", "髁", "髂", "髅", "髑", "髌"]
+            },
+            "齿": {
+                oracle: "🦷",
+                pinyin: "chǐ",
+                meaning: "与牙齿相关",
+                meaningEn: "Related to teeth",
+                origin: "象形字，像牙齿排列的形状",
+                examples: ["龄", "龈", "龋", "龀", "龅", "龆", "龇", "龈", "龉", "龊"]
+            },
+            
+            // 器物类 (15个)
+            "门": {
+                oracle: "🚪",
+                pinyin: "mén",
+                meaning: "与门户相关",
+                meaningEn: "Related to doors or gates",
+                origin: "象形字，像双扇门的形状",
+                examples: ["闭", "闲", "间", "闹", "阁", "阔", "阀", "闪", "闯", "闻", "问", "闰"]
+            },
+            "巾": {
+                oracle: "🧣",
+                pinyin: "jīn",
+                meaning: "与织物相关",
+                meaningEn: "Related to textiles",
+                origin: "象形字，像布巾的形状",
+                examples: ["布", "帅", "帆", "帐", "帜", "带", "帮", "帽", "幅", "幕", "帕", "帘"]
+            },
+            "车": {
+                oracle: "🚗",
+                pinyin: "chē",
+                meaning: "与车辆相关",
+                meaningEn: "Related to vehicles",
+                origin: "象形字，像古代马车的形状",
+                examples: ["轮", "转", "轻", "辆", "军", "轨", "软", "较", "轰", "输", "载", "轿"]
+            },
+            "钅": {
+                oracle: "⛓️",
+                pinyin: "jīn",
+                meaning: "与金属相关",
+                meaningEn: "Related to metals",
+                origin: "由'金'字演变而来",
+                examples: ["铁", "铜", "银", "钢", "钱", "针", "钉", "钟", "铃", "锁", "锅", "铲"]
+            },
+            "纟": {
+                oracle: "🧵",
+                pinyin: "sī",
+                meaning: "与丝线相关",
+                meaningEn: "Related to silk or threads",
+                origin: "由'糸'字演变而来",
+                examples: ["线", "绳", "织", "纺", "纱", "经", "纬", "绣", "缝", "编", "细", "红"]
+            },
+            "玉": {
+                oracle: "💎",
+                pinyin: "yù",
+                meaning: "与玉石相关",
+                meaningEn: "Related to jade",
+                origin: "象形字，像串起来的玉片",
+                examples: ["玩", "弄", "珍", "珠", "玻", "璃", "斑", "球", "理", "瑞", "瑕", "琢"]
+            },
+            "刀": {
+                oracle: "🔪",
+                pinyin: "dāo",
+                meaning: "与刀具相关",
+                meaningEn: "Related to knives",
+                origin: "象形字，像刀的形狀",
+                examples: ["切", "分", "剪", "刮", "削", "劈", "利", "初", "券", "剑", "刨", "刎"]
+            },
+            "皿": {
+                oracle: "🍶",
+                pinyin: "mǐn",
+                meaning: "与器皿相关",
+                meaningEn: "Related to vessels",
+                origin: "象形字，像容器的形状",
+                examples: ["盆", "盘", "盏", "盒", "盛", "盖", "盐", "监", "盗", "盟", "盅", "盍"]
+            },
+            "瓦": {
+                oracle: "🏺",
+                pinyin: "wǎ",
+                meaning: "与陶器相关",
+                meaningEn: "Related to pottery",
+                origin: "象形字，像瓦片的形状",
+                examples: ["瓶", "瓷", "瓯", "瓴", "瓿", "瓻", "瓸", "瓹", "瓺", "瓼"]
+            },
+            "弓": {
+                oracle: "🏹",
+                pinyin: "gōng",
+                meaning: "与弓箭相关",
+                meaningEn: "Related to bows",
+                origin: "象形字，像弓的形状",
+                examples: ["引", "张", "弹", "强", "弱", "弯", "弦", "弩", "弛", "弭"]
+            },
+            "贝": {
+                oracle: "🐚",
+                pinyin: "bèi",
+                meaning: "与贝壳、货币相关",
+                meaningEn: "Related to shells or currency",
+                origin: "象形字，像贝壳的形状",
+                examples: ["财", "货", "贵", "贱", "费", "资", "购", "贩", "贪", "贫", "账", "赌"]
+            },
+            "革": {
+                oracle: "🧵",
+                pinyin: "gé",
+                meaning: "与皮革相关",
+                meaningEn: "Related to leather",
+                origin: "象形字，像加工过的兽皮",
+                examples: ["鞋", "靴", "鞍", "鞭", "鞠", "靶", "鞘", "靼", "靺", "靿"]
+            },
+            "韦": {
+                oracle: "🟤",
+                pinyin: "wéi",
+                meaning: "与熟皮相关",
+                meaningEn: "Related to tanned leather",
+                origin: "象形字，像加工兽皮",
+                examples: ["韧", "韩", "韬", "韨", "韪", "韫", "韥", "韦", "韦", "韦"]
+            },
+            "衣": {
+                oracle: "👕",
+                pinyin: "yī",
+                meaning: "与衣服相关",
+                meaningEn: "Related to clothing",
+                origin: "象形字，像上衣的形状",
+                examples: ["装", "袋", "袖", "被", "补", "衬", "衫", "袜", "裤", "裙", "裁", "裂"]
+            },
+            "示": {
+                oracle: "🙏",
+                pinyin: "shì",
+                meaning: "与祭祀相关",
+                meaningEn: "Related to worship",
+                origin: "象形字，像祭台的形状",
+                examples: ["礼", "社", "祖", "神", "祝", "福", "祥", "祷", "祭", "禁", "祟", "禄"]
+            },
+            
+            // 动作类 (11个)
+            "扌": {
+                oracle: "✋",
+                pinyin: "shǒu",
+                meaning: "与手部动作相关",
+                meaningEn: "Related to hand actions",
+                origin: "由'手'字演变而来",
+                examples: ["打", "拍", "拉", "推", "找", "把", "提", "抓", "扔", "接", "按", "摸"]
+            },
+            "又": {
+                oracle: "✌️",
+                pinyin: "yòu",
+                meaning: "与手部动作相关",
+                meaningEn: "Related to hand actions",
+                origin: "象形字，像右手的形状",
+                examples: ["取", "友", "反", "双", "受", "叔", "变", "叙", "叛", "叠", "难", "戏"]
+            },
+            "彳": {
+                oracle: "🚶‍♂️",
+                pinyin: "chì",
+                meaning: "与行走相关",
+                meaningEn: "Related to walking",
+                origin: "由'行'字演变而来",
+                examples: ["行", "往", "待", "得", "街", "征", "徒", "徐", "循", "徘", "徊", "徜"]
+            },
+            "走": {
+                oracle: "🏃",
+                pinyin: "zǒu",
+                meaning: "与行走相关",
+                meaningEn: "Related to walking",
+                origin: "象形字，像人奔跑的样子",
+                examples: ["起", "赶", "超", "越", "趣", "趟", "趁", "趋", "赴", "赵", "赶", "赶"]
+            },
+            "辶": {
+                oracle: "🚶‍♂️",
+                pinyin: "chuò",
+                meaning: "与行走相关",
+                meaningEn: "Related to walking or movement",
+                origin: "由'辵'字演变而来",
+                examples: ["过", "这", "还", "进", "远", "近", "边", "连", "逃", "送", "道", "通"]
+            },
+            "攵": {
+                oracle: "✍️",
+                pinyin: "pū",
+                meaning: "与敲击动作相关",
+                meaningEn: "Related to striking actions",
+                origin: "由'攴'字演变而来",
+                examples: ["教", "收", "改", "放", "攻", "效", "救", "敌", "散", "敬", "数", "整"]
+            },
+            "刂": {
+                oracle: "🔪",
+                pinyin: "dāo",
+                meaning: "与切割动作相关",
+                meaningEn: "Related to cutting actions",
+                origin: "由'刀'字演变而来",
+                examples: ["割", "刻", "划", "创", "削", "别", "判", "利", "刚", "到", "列", "前"]
+            },
+            "讠": {
+                oracle: "💬",
+                pinyin: "yán",
+                meaning: "与言语相关",
+                meaningEn: "Related to speech",
+                origin: "由'言'字演变而来",
+                examples: ["说", "话", "讲", "谈", "议", "论", "记", "识", "词", "诗", "请", "谢"]
+            },
+            "欠": {
+                oracle: "😮",
+                pinyin: "qiàn",
+                meaning: "与张口动作相关",
+                meaningEn: "Related to mouth opening",
+                origin: "象形字，像人张口的样子",
+                examples: ["欢", "欣", "歌", "歇", "欺", "歉", "欲", "款", "欧", "次", "欢", "欣"]
+            },
+            "力": {
+                oracle: "💪",
+                pinyin: "lì",
+                meaning: "与力量相关",
+                meaningEn: "Related to strength",
+                origin: "象形字，像手臂用力的形状",
+                examples: ["动", "功", "加", "助", "劲", "劳", "勇", "勉", "勤", "劣", "务", "劫"]
+            },
+            "食": {
+                oracle: "🍽️",
+                pinyin: "shí",
+                meaning: "与饮食相关",
+                meaningEn: "Related to eating",
+                origin: "象形字，像食物在器皿中",
+                examples: ["饭", "饮", "餐", "饱", "饿", "饲", "饼", "饺", "馅", "馆", "饥", "馁"]
+            },
+            
+            // 空间类 (12个)
+            "广": {
+                oracle: "🏛️",
+                pinyin: "guǎng",
+                meaning: "与建筑相关",
+                meaningEn: "Related to buildings",
+                origin: "象形字，像有屋顶的建筑",
+                examples: ["店", "府", "庙", "库", "庭", "廊", "庐", "庑", "庖", "庠", "庥", "庳"]
+            },
+            "宀": {
+                oracle: "🏠",
+                pinyin: "mián",
+                meaning: "与房屋相关",
+                meaningEn: "Related to houses or roofs",
+                origin: "象形字，像房屋的屋顶",
+                examples: ["家", "安", "室", "宅", "宫", "宿", "宇", "宙", "宽", "实", "守", "宝"]
+            },
+            "阝": {
+                oracle: "🗺️",
+                pinyin: "fù",
+                meaning: "与地方、区域相关",
+                meaningEn: "Related to places or regions",
+                origin: "由'邑'字演变而来，表示城市",
+                examples: ["都", "部", "邻", "郊", "邮", "郑", "那", "郎", "郭", "邓", "邱", "邹"]
+            },
+            "户": {
+                oracle: "🚪",
+                pinyin: "hù",
+                meaning: "与门户相关",
+                meaningEn: "Related to doors",
+                origin: "象形字，像单扇门的形状",
+                examples: ["房", "扇", "扉", "雇", "扈", "扃", "戽", "所", "扁", "戾", "扂", "扅"]
+            },
+            "穴": {
+                oracle: "🕳️",
+                pinyin: "xué",
+                meaning: "与洞穴相关",
+                meaningEn: "Related to caves",
+                origin: "象形字，像岩洞的形状",
+                examples: ["空", "穿", "突", "窗", "窍", "窖", "窟", "窿", "穷", "窥", "窈", "窕"]
+            },
+            "厂": {
+                oracle: "🏭",
+                pinyin: "hǎn",
+                meaning: "与山崖相关",
+                meaningEn: "Related to cliffs",
+                origin: "象形字，像山崖的形状",
+                examples: ["厅", "历", "压", "厚", "原", "厕", "厢", "厦", "厨", "厥", "厩", "厮"]
+            },
+            "囗": {
+                oracle: "🟦",
+                pinyin: "wéi",
+                meaning: "与围起来的地方相关",
+                meaningEn: "Related to enclosures",
+                origin: "象形字，像围起来的形状",
+                examples: ["国", "园", "图", "圈", "围", "困", "囚", "四", "回", "因", "团", "固"]
+            },
+            "冂": {
+                oracle: "🟫",
+                pinyin: "jiōng",
+                meaning: "与边界相关",
+                meaningEn: "Related to boundaries",
+                origin: "象形字，像远界的形状",
+                examples: ["内", "冉", "再", "网", "冈", "同", "周", "用", "甩", "甫", "甬", "胄"]
+            },
+            "冖": {
+                oracle: "⛱️",
+                pinyin: "mì",
+                meaning: "与覆盖相关",
+                meaningEn: "Related to covering",
+                origin: "象形字，像覆盖的形状",
+                examples: ["军", "冠", "冤", "冥", "幂", "写", "农", "罕", "冢", "冘", "冚", "冞"]
+            },
+            "勹": {
+                oracle: "🫂",
+                pinyin: "bāo",
+                meaning: "与包裹相关",
+                meaningEn: "Related to wrapping",
+                origin: "象形字，像人弯腰包裹东西",
+                examples: ["包", "勾", "句", "匆", "匈", "匍", "匐", "匏", "匎", "匓", "匘", "匛"]
+            },
+            "匚": {
+                oracle: "📦",
+                pinyin: "fāng",
+                meaning: "与容器相关",
+                meaningEn: "Related to containers",
+                origin: "象形字，像盛物的器具",
+                examples: ["区", "医", "匹", "匾", "匿", "匪", "匮", "匦", "匜", "匢", "匤", "匥"]
+            },
+            "凵": {
+                oracle: "🕳️",
+                pinyin: "kǎn",
+                meaning: "与凹陷相关",
+                meaningEn: "Related to concavity",
+                origin: "象形字，像凹陷的形状",
+                examples: ["凶", "击", "凸", "凹", "函", "出", "画", "凿", "凼", "凾", "刌", "刍"]
+            }
+        };
+        
+        // 部首与例字对应关系
+        const radicalExamples = {};
+        for (const radical in radicalsData) {
+            radicalExamples[radical] = radicalsData[radical].examples;
+        }
+        
+        // 拼音数据
+        const pinyinData = {
+            "晴": "qíng", "明": "míng", "晒": "shài", "晨": "chén", "晚": "wǎn",
+            "河": "hé", "湖": "hú", "海": "hǎi", "流": "liú", "泪": "lèi",
+            "情": "qíng", "怕": "pà", "忙": "máng", "快": "kuài", "慢": "màn",
+            "打": "dǎ", "拍": "pāi", "拉": "lā", "推": "tuī", "找": "zhǎo",
+            "家": "jiā", "安": "ān", "室": "shì", "宅": "zhái", "宫": "gōng",
+            "都": "dū", "部": "bù", "邻": "lín", "郊": "jiāo", "邮": "yóu",
+            "热": "rè", "煮": "zhǔ", "煎": "jiān", "照": "zhào", "熊": "xióng",
+            "林": "lín", "森": "sēn", "树": "shù", "枝": "zhī", "根": "gēn",
+            "看": "kàn", "睛": "jīng", "眼": "yǎn", "睡": "shuì", "睁": "zhēng",
+            "你": "nǐ", "他": "tā", "们": "men", "休": "xiū", "作": "zuò",
+            "轮": "lún", "转": "zhuǎn", "轻": "qīng", "辆": "liàng", "军": "jūn",
+            "铁": "tiě", "铜": "tóng", "银": "yín", "钢": "gāng", "钱": "qián",
+            "闭": "bì", "闲": "xián", "间": "jiān", "闹": "nào", "阁": "gé",
+            "起": "qǐ", "赶": "gǎn", "超": "chāo", "越": "yuè", "趣": "qù",
+            "过": "guò", "这": "zhè", "还": "hái", "进": "jìn", "远": "yuǎn",
+            "峰": "fēng", "岭": "lǐng", "岩": "yán", "岸": "àn", "岛": "dǎo",
+            "妈": "mā", "姐": "jiě", "妹": "mèi", "好": "hǎo", "她": "tā",
+            "腿": "tuǐ", "脚": "jiǎo", "膀": "bǎng", "臂": "bì", "腰": "yāo",
+            "说": "shuō", "话": "huà", "讲": "jiǎng", "谈": "tán", "议": "yì",
+            "割": "gē", "刻": "kè", "划": "huá", "创": "chuàng", "削": "xiāo",
+            "饭": "fàn", "饮": "yǐn", "餐": "cān", "饱": "bǎo", "饿": "è",
+            "动": "dòng", "功": "gōng", "加": "jiā", "助": "zhù", "劲": "jìn",
+            "店": "diàn", "府": "fǔ", "庙": "miào", "库": "kù", "庭": "tíng",
+            "家": "jiā", "安": "ān", "室": "shì", "宅": "zhái", "宫": "gōng",
+            "都": "dū", "部": "bù", "邻": "lín", "郊": "jiāo", "邮": "yóu",
+            "房": "fáng", "扇": "shàn", "扉": "fēi", "雇": "gù", "扈": "hù",
+            "空": "kōng", "穿": "chuān", "突": "tū", "窗": "chuāng", "窍": "qiào",
+            "厅": "tīng", "历": "lì", "压": "yā", "厚": "hòu", "原": "yuán",
+            "国": "guó", "园": "yuán", "图": "tú", "圈": "quān", "围": "wéi",
+            "内": "nèi", "冉": "rǎn", "再": "zài", "网": "wǎng", "冈": "gāng",
+            "军": "jūn", "冠": "guān", "冤": "yuān", "冥": "míng", "幂": "mì",
+            "包": "bāo", "勾": "gōu", "句": "jù", "匆": "cōng", "匈": "xiōng",
+            "区": "qū", "医": "yī", "匹": "pǐ", "匾": "biǎn", "匿": "nì",
+            "凶": "xiōng", "击": "jī", "凸": "tū", "凹": "āo", "函": "hán"
+        };
+        
+        // 当前学习的部首
+        let currentRadicals = [];
+        let learnedRadicals = [];
+        let totalRadicals = Object.keys(radicalsData).length;
+        
+        // DOM元素
+        const radicalsDisplay = document.getElementById('radicalsDisplay');
+        const practiceBtn = document.getElementById('practiceBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const practiceMode = document.getElementById('practiceMode');
+        const targetAreas = document.getElementById('targetAreas');
+        const wordsToSort = document.getElementById('wordsToSort');
+        const resetBtn = document.getElementById('resetBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const continueBtn = document.getElementById('continueBtn');
+        const radicalModal = document.getElementById('radicalModal');
+        const closeModal = document.getElementById('closeModal');
+        const radicalInfo = document.getElementById('radicalInfo');
+        const exampleWords = document.getElementById('exampleWords');
+        const correctFeedback = document.getElementById('correctFeedback');
+        const wrongFeedback = document.getElementById('wrongFeedback');
+        const sunAnimation = document.getElementById('sunAnimation');
+        const progressBar = document.getElementById('progressBar');
+        const startLearningBtn = document.getElementById('startLearningBtn');
+        const radicalItems = document.querySelectorAll('.radical-item');
+        
+        // 初始化
+        function init() {
+            // 设置事件监听器
+            startLearningBtn.addEventListener('click', () => {
+                // 随机选择5个部首开始学习
+                selectRandomRadicals(5);
+            });
+            
+            practiceBtn.addEventListener('click', startPractice);
+            nextBtn.addEventListener('click', nextStep);
+            resetBtn.addEventListener('click', resetPractice);
+            checkBtn.addEventListener('click', checkAnswers);
+            continueBtn.addEventListener('click', continueLearning);
+            closeModal.addEventListener('click', () => {
+                radicalModal.style.display = 'none';
+            });
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', (e) => {
+                if (e.target === radicalModal) {
+                    radicalModal.style.display = 'none';
+                }
+            });
+            
+            // 点击左侧菜单中的部首
+            radicalItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    const radical = item.dataset.radical;
+                    showRadicalInfo(radical);
+                    
+                    // 如果这个部首还没学过，添加到已学列表
+                    if (!learnedRadicals.includes(radical)) {
+                        learnedRadicals.push(radical);
+                        updateProgress();
+                        
+                        // 显示学习区域
+                        displayRadicals();
+                    }
+                });
+            });
+            
+            // 更新进度条
+            updateProgress();
+        }
+        
+        // 随机选择部首
+        function selectRandomRadicals(count) {
+            const allRadicals = Object.keys(radicalsData);
+            const availableRadicals = allRadicals.filter(r => !learnedRadicals.includes(r));
+            
+            // 如果已经学完所有部首，重置
+            if (availableRadicals.length === 0) {
+                learnedRadicals = [];
+                return selectRandomRadicals(count);
+            }
+            
+            // 选择不超过剩余部首数量的随机部首
+            const selectCount = Math.min(count, availableRadicals.length);
+            currentRadicals = [];
+            
+            for (let i = 0; i < selectCount; i++) {
+                const randomIndex = Math.floor(Math.random() * availableRadicals.length);
+                currentRadicals.push(availableRadicals[randomIndex]);
+                availableRadicals.splice(randomIndex, 1);
+            }
+            
+            displayRadicals();
+        }
+        
+        // 显示部首卡片
+        function displayRadicals() {
+            radicalsDisplay.innerHTML = '';
+            
+            currentRadicals.forEach(radical => {
+                const card = document.createElement('div');
+                card.className = 'radical-card';
+                card.innerHTML = `
+                    <div class="radical-oracle">${radicalsData[radical].oracle}</div>
+                    <div class="radical-name">${radical}</div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    showRadicalInfo(radical);
+                });
+                
+                radicalsDisplay.appendChild(card);
+            });
+            
+            // 如果已经学习了3个或更多部首，启用练习按钮
+            if (learnedRadicals.length >= 3) {
+                practiceBtn.disabled = false;
+            }
+        }
+        
+        // 显示部首详细信息
+        function showRadicalInfo(radical) {
+            const data = radicalsData[radical];
+            
+            radicalInfo.innerHTML = `
+                <div class="radical-big" onclick="speak('${radical}')">${radical}</div>
+                <div class="radical-pinyin">${data.pinyin}</div>
+                <div class="radical-meaning">${data.meaning}</div>
+                <div class="radical-meaning-en">${data.meaningEn}</div>
+                <div class="radical-origin">${data.origin}</div>
+            `;
+            
+            // 显示例字
+            exampleWords.innerHTML = '';
+            data.examples.forEach(word => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.innerHTML = `
+                    ${word}
+                    <div class="word-pinyin">${pinyinData[word] || ''}</div>
+                `;
+                
+                wordItem.addEventListener('click', () => {
+                    speak(word);
+                });
+                
+                exampleWords.appendChild(wordItem);
+            });
+            
+            radicalModal.style.display = 'flex';
+            
+            // 如果这个部首还没学过，添加到已学列表
+            if (!learnedRadicals.includes(radical)) {
+                learnedRadicals.push(radical);
+                updateProgress();
+            }
+        }
+        
+        // 文本转语音
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('您的浏览器不支持语音合成功能');
+            }
+        }
+        
+        // 开始练习
+        function startPractice() {
+            // 切换到练习模式
+            document.querySelector('.learning-mode').style.display = 'none';
+            practiceMode.style.display = 'flex';
+            
+            // 设置练习内容
+            setupPractice();
+        }
+        
+        // 设置练习内容
+        function setupPractice() {
+            // 清空目标区域和待分类字
+            targetAreas.innerHTML = '';
+            wordsToSort.innerHTML = '';
+            
+            // 选择3-5个已学部首进行练习
+            const practiceRadicals = learnedRadicals.slice(-5);
+            
+            // 创建目标区域
+            practiceRadicals.forEach(radical => {
+                const area = document.createElement('div');
+                area.className = 'target-area';
+                area.dataset.radical = radical;
+                area.innerHTML = `
+                    <div class="target-radical">${radical}</div>
+                    <div class="target-name">${radicalsData[radical].meaning}</div>
+                `;
+                
+                // 设置拖放目标
+                area.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+                
+                area.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    const word = e.dataTransfer.getData('text/plain');
+                    const radical = e.dataTransfer.getData('radical');
+                    
+                    // 检查是否正确
+                    if (radical === area.dataset.radical) {
+                        // 正确
+                        area.appendChild(document.getElementById(word));
+                        showFeedback(true);
+                    } else {
+                        // 错误
+                        showFeedback(false);
+                    }
+                });
+                
+                targetAreas.appendChild(area);
+            });
+            
+            // 收集所有例字
+            let allExamples = [];
+            practiceRadicals.forEach(radical => {
+                const examples = radicalExamples[radical] || [];
+                examples.forEach(word => {
+                    allExamples.push({ word, radical });
+                });
+            });
+            
+            // 随机选择10-15个字进行练习
+            const practiceWords = shuffleArray(allExamples).slice(0, 15);
+            
+            // 创建可拖拽的字
+            practiceWords.forEach(item => {
+                const wordElement = document.createElement('div');
+                wordElement.className = 'word-to-sort';
+                wordElement.textContent = item.word;
+                wordElement.id = `word-${item.word}`;
+                wordElement.draggable = true;
+                wordElement.dataset.radical = item.radical;
+                
+                // 设置拖拽数据
+                wordElement.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', wordElement.id);
+                    e.dataTransfer.setData('radical', item.radical);
+                });
+                
+                wordsToSort.appendChild(wordElement);
+            });
+        }
+        
+        // 显示反馈
+        function showFeedback(isCorrect) {
+            if (isCorrect) {
+                correctFeedback.style.display = 'block';
+                sunAnimation.style.display = 'block';
+                
+                setTimeout(() => {
+                    correctFeedback.style.display = 'none';
+                    sunAnimation.style.display = 'none';
+                }, 1000);
+            } else {
+                wrongFeedback.style.display = 'block';
+                
+                setTimeout(() => {
+                    wrongFeedback.style.display = 'none';
+                }, 1000);
+            }
+        }
+        
+        // 重置练习
+        function resetPractice() {
+            setupPractice();
+        }
+        
+        // 检查答案
+        function checkAnswers() {
+            // 检查是否所有字都已分类
+            if (wordsToSort.children.length > 0) {
+                alert('请将所有汉字分类到相应的部首区域！');
+                return;
+            }
+            
+            // 检查分类是否正确
+            let allCorrect = true;
+            const targetAreas = document.querySelectorAll('.target-area');
+            
+            targetAreas.forEach(area => {
+                const radical = area.dataset.radical;
+                const words = area.querySelectorAll('.word-to-sort');
+                
+                words.forEach(word => {
+                    const correctRadical = word.dataset.radical;
+                    if (correctRadical !== radical) {
+                        allCorrect = false;
+                        word.style.backgroundColor = '#e74c3c';
+                    }
+                });
+            });
+            
+            if (allCorrect) {
+                alert('恭喜！所有分类都正确！');
+            } else {
+                alert('有些分类不正确，请检查红色标记的字！');
+            }
+        }
+        
+        // 继续学习
+        function continueLearning() {
+            // 切换回学习模式
+            practiceMode.style.display = 'none';
+            document.querySelector('.learning-mode').style.display = 'flex';
+            
+            // 如果已经学完所有部首，显示完成消息
+            if (learnedRadicals.length >= totalRadicals) {
+                radicalsDisplay.innerHTML = `
+                    <div style="text-align: center; width: 100%;">
+                        <h2>恭喜！</h2>
+                        <p>您已经完成了所有部首的学习！</p>
+                        <div style="font-size: 72px;">🎉</div>
+                        <button class="btn btn-primary" onclick="location.reload()">重新开始</button>
+                    </div>
+                `;
+                practiceBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+            } else {
+                // 选择新的部首学习
+                selectRandomRadicals(5);
+                nextBtn.style.display = 'none';
+            }
+        }
+        
+        // 下一步
+        function nextStep() {
+            selectRandomRadicals(5);
+            nextBtn.style.display = 'none';
+        }
+        
+        // 更新进度条
+        function updateProgress() {
+            const progress = (learnedRadicals.length / totalRadicals) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // 如果学习了足够多的部首，显示下一步按钮
+            if (learnedRadicals.length >= 5) {
+                nextBtn.style.display = 'block';
+            }
+        }
+        
+        // 打乱数组顺序
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+        
+        // 初始化应用
+        init();
+        
+        // 使speak函数全局可用
+        window.speak = speak;
+    </script>
+</body>
+</html>

@@ -1,0 +1,4599 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hanzi Master Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2c3e50;
+            --background-light: #f5f5f5;
+            --background-dark: #222;
+            --text-light: #333;
+            --text-dark: #eee;
+            --drawer-width: 120px;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--background-light);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        body.dark-mode {
+            background: var(--background-dark);
+            color: var(--text-dark);
+        }
+        
+        #app {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .characters-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            min-height: 120px;
+        }
+        
+        .character {
+            font-size: 3em;
+            cursor: grab;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            user-select: none;
+        }
+        
+        .dark-mode .character {
+            background: #333;
+            color: white;
+        }
+        
+        .character:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .character.dragging {
+            opacity: 0.7;
+            transform: scale(1.05);
+        }
+        
+        .drawers-container {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            padding: 2px;
+            justify-content: center;
+        }
+        
+        .drawer {
+            background: #e0e0e0;
+            border-radius: 8px;
+            font-size: 2rem;
+            padding: 8px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            overflow: hidden;
+            height: 3rem;
+            width: 8rem;
+        }
+        
+        .dark-mode .drawer {
+            background: #444;
+        }
+        
+        .drawer.expanded {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+        
+        .dark-mode .drawer.expanded {
+            background: #333;
+        }
+        
+        .drawer-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 5px;
+            background: var(--secondary-color);
+            color: white;
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+        
+        .drawer-character {
+            font-size: 2em;
+            margin: 5px 0;
+        }
+        
+        .drawer-pinyin {
+            font-size: 0.9em;
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        
+        .drawer-meaning {
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+        
+        .example-sentence {
+            font-size: 1em;
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin-top: 8px;
+            display: none;
+        }
+        
+        .dark-mode .example-sentence {
+            background: #555;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            filter: brightness(1.1);
+        }
+        
+        select {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        
+        .dark-mode select {
+            background: #555;
+            color: white;
+            border-color: #777;
+        }
+        
+        .phonetic-hint {
+            color: #666;
+            font-size: 0.7em;
+            margin-top: 3px;
+        }
+        
+        .dark-mode .phonetic-hint {
+            color: #aaa;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        .stats {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+        
+        .dark-mode .stats {
+            color: #aaa;
+        }
+        
+        .category-controls {
+            margin: 15px 0;
+            text-align: center;
+        }
+        
+        .category-btn {
+            margin: 5px;
+            padding: 8px 12px;
+            background: #2196F3;
+        }
+
+        /* Feedback styles */
+        .feedback {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 200;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+            animation: fadeInOut 1.5s;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        .correct-feedback {
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+        }
+        
+        .wrong-feedback {
+            background: rgba(211, 47, 47, 0.9);
+            color: white;
+        }
+        
+        .feedback-image {
+            max-width: 150px;
+            max-height: 150px;
+            margin: 10px auto;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .drawers-container {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .character {
+                font-size: 2.5em;
+            }
+            
+            .controls, .category-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>Hanzi Master Pro</h1>
+            <div class="score">Punkte: {{ score }} | Highscore: {{ highscore }}</div>
+            <div class="stats">Richtig: {{ correct }} | Falsch: {{ wrong }} | Gesammelt: {{ collectedChars.length }}</div>
+        </div>
+
+        <div class="controls">
+            <button @click="newGame">Neue Runde/New Round</button>
+            <button @click="toggleDarkMode">{{ darkMode ? 'Hellmodus/Light Mode' : 'Dunkelmodus/Dark Mode' }}</button>
+            <button @click="clearDrawers">清除汉字/Clear Characters</button>
+            <button @click="refreshDrawers" class="category-btn">Schubladen erneuern/Refresh Drawers</button>
+        </div>
+
+        <div class="category-controls">
+            <button @click="setCategory('all')" class="category-btn">Alle/All</button>
+            <button @click="setCategory('nature')" class="category-btn">Natur/Nature</button>
+            <button @click="setCategory('animals')" class="category-btn">Tiere/Animals</button>
+            <button @click="setCategory('plants')" class="category-btn">Pflanzen/Plants</button>
+            <button @click="setCategory('human')" class="category-btn">Mensch/Human</button>
+            <button @click="setCategory('actions')" class="category-btn">Aktionen/Actions</button>
+            <button @click="setCategory('objects')" class="category-btn">Objekte/Objects</button>
+            <button @click="setCategory('buildings')" class="category-btn">Bauten/Buildings</button>
+        </div>
+
+        <div class="characters-container">
+            <div v-for="char in currentCharacters" 
+                 :key="char.id"
+                 class="character"
+                 draggable="true"
+                 @dragstart="startDrag($event, char)"
+                 @click="showCharacterInfo(char)">
+                {{ char.char }}
+                <div class="phonetic-hint">{{ char.phonetic }} ({{ char.pinyinRoot }})</div>
+            </div>
+        </div>
+
+        <div class="overlay" :class="{ active: expandedDrawer }" @click.self="closeExpandedDrawer"></div>
+        
+        <!-- Feedback elements -->
+        <div class="feedback correct-feedback" ref="correctFeedback">
+            <h2>Richtig! / Correct!</h2>
+            <img class="feedback-image" src="https://cdn.pixabay.com/photo/2016/04/01/09/04/amazing-1300627_640.png" alt="Correct">
+            <audio ref="correctSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3" preload="auto"></audio>
+        </div>
+        
+        <div class="feedback wrong-feedback" ref="wrongFeedback">
+            <h2>再考虑一下 / Think again</h2>
+            <img class="feedback-image" src="https://cdn.pixabay.com/photo/2013/07/13/11/44/egg-157514_640.png" alt="Wrong">
+            <audio ref="wrongSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
+        </div>
+        
+        <div class="drawers-container">
+            <div v-for="drawer in visibleDrawers" 
+                 :key="drawer.radical"
+                 class="drawer"
+                 :class="{ expanded: drawer.expanded }"
+                 :style="drawer.expanded ? expandedDrawerStyle(drawer) : {}"
+                 @dragover.prevent
+                 @drop="dropOnDrawer($event, drawer)"
+                 @click="toggleDrawer(drawer)"
+                 @dblclick="drawer.expanded = false">
+                <div class="drawer-header">{{ drawer.radical }} - {{ drawer.meaning }} ({{ drawer.items.length }})</div>
+                <div v-for="item in drawer.items" 
+                     :key="item.id"
+                     @click.stop="showCharacterInfo(item)">
+                    <div class="drawer-character">{{ item.char }}</div>
+                    <div class="drawer-pinyin">{{ item.pinyin }}</div>
+                    <div class="drawer-meaning">{{ item.meaning }}</div>
+                    <div class="example-sentence">{{ item.example }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed, onMounted } = Vue;
+
+        // Extended database with phonetic groups
+        const hanziDatabase = [
+            {
+                phonetic: "青",
+                pinyinRoot: "qing",
+                characters: [
+                    { char: "清", pinyin: "qīng", radical: "氵", meaning: "klar, rein", example: "清水 (qīngshuǐ) - klares Wasser" },
+                    { char: "晴", pinyin: "qíng", radical: "日", meaning: "sonnig", example: "晴天 (qíngtiān) - sonniger Tag" },
+                    { char: "请", pinyin: "qǐng", radical: "讠", meaning: "bitten", example: "请进 (qǐng jìn) - bitte eintreten" },
+                    { char: "情", pinyin: "qíng", radical: "忄", meaning: "Gefühl", example: "心情 (xīnqíng) - Gemütszustand" },
+                    { char: "蜻", pinyin: "qīng", radical: "虫", meaning: "Libelle", example: "蜻蜓 (qīngtíng) - Libelle" }
+                ]
+            },
+            {
+                phonetic: "马",
+                pinyinRoot: "ma",
+                characters: [
+                    { char: "妈", pinyin: "mā", radical: "女", meaning: "Mutter", example: "妈妈 (māma) - Mama" },
+                    { char: "吗", pinyin: "ma", radical: "口", meaning: "Fragepartikel", example: "你好吗？(nǐ hǎo ma?) - Wie geht's?" },
+                    { char: "码", pinyin: "mǎ", radical: "石", meaning: "Nummer, Code", example: "密码 (mìmǎ) - Passwort" },
+                    { char: "骂", pinyin: "mà", radical: "口", meaning: "beschimpfen", example: "骂人 (mà rén) - jemanden beschimpfen" },
+                    { char: "蚂", pinyin: "mǎ", radical: "虫", meaning: "Ameise", example: "蚂蚁 (mǎyǐ) - Ameise" }
+                ]
+            },
+            {
+                phonetic: "可",
+                pinyinRoot: "ke",
+                characters: [
+                    { char: "河", pinyin: "hé", radical: "氵", meaning: "Fluss", example: "黄河 (Huáng Hé) - Gelber Fluss" },
+                    { char: "何", pinyin: "hé", radical: "亻", meaning: "was, wie", example: "任何 (rènhé) - irgendein" },
+                    { char: "呵", pinyin: "hē", radical: "口", meaning: "ausatmen", example: "呵气 (hē qì) - hauchen" },
+                    { char: "柯", pinyin: "kē", radical: "木", meaning: "Stamm", example: "柯枝 (kēzhī) - Baumstamm" }
+                ]
+            },
+            {
+                phonetic: "包",
+                pinyinRoot: "bao",
+                characters: [
+                    { char: "抱", pinyin: "bào", radical: "扌", meaning: "umarmen", example: "拥抱 (yōngbào) - Umarmung" },
+                    { char: "饱", pinyin: "bǎo", radical: "饣", meaning: "satt", example: "吃饱 (chī bǎo) - satt essen" },
+                    { char: "跑", pinyin: "pǎo", radical: "足", meaning: "rennen", example: "跑步 (pǎobù) - laufen" },
+                    { char: "泡", pinyin: "pào", radical: "氵", meaning: "Blase", example: "气泡 (qìpào) - Luftblase" }
+                ]
+            },
+            {
+                phonetic: "方",
+                pinyinRoot: "fang",
+                characters: [
+                    { char: "放", pinyin: "fàng", radical: "攵", meaning: "loslassen", example: "放心 (fàngxīn) - beruhigt sein" },
+                    { char: "房", pinyin: "fáng", radical: "户", meaning: "Haus", example: "房间 (fángjiān) - Zimmer" },
+                    { char: "防", pinyin: "fáng", radical: "阝", meaning: "verteidigen", example: "防止 (fángzhǐ) - verhindern" },
+                    { char: "访", pinyin: "fǎng", radical: "讠", meaning: "besuchen", example: "访问 (fǎngwèn) - Besuch" }
+                ]
+            },
+            {
+                phonetic: "交",
+                pinyinRoot: "jiao",
+                characters: [
+                    { char: "校", pinyin: "xiào", radical: "木", meaning: "Schule", example: "学校 (xuéxiào) - Schule" },
+                    { char: "较", pinyin: "jiào", radical: "车", meaning: "vergleichen", example: "比较 (bǐjiào) - vergleichen" },
+                    { char: "饺", pinyin: "jiǎo", radical: "饣", meaning: "Jiaozi", example: "饺子 (jiǎozi) - Jiaozi" },
+                    { char: "效", pinyin: "xiào", radical: "攵", meaning: "Wirkung", example: "效果 (xiàoguǒ) - Effekt" }
+                ]
+            },
+            {
+                phonetic: "古",
+                pinyinRoot: "gu",
+                characters: [
+                    { char: "姑", pinyin: "gū", radical: "女", meaning: "Tante", example: "姑姑 (gūgu) - Tante" },
+                    { char: "故", pinyin: "gù", radical: "攵", meaning: "Grund", example: "故事 (gùshi) - Geschichte" },
+                    { char: "固", pinyin: "gù", radical: "囗", meaning: "fest", example: "固定 (gùdìng) - fixieren" },
+                    { char: "估", pinyin: "gū", radical: "亻", meaning: "schätzen", example: "估计 (gūjì) - Schätzung" }
+                ]
+            },
+            {
+                phonetic: "羊",
+                pinyinRoot: "yang",
+                characters: [
+                    { char: "样", pinyin: "yàng", radical: "木", meaning: "Art", example: "样子 (yàngzi) - Aussehen" },
+                    { char: "洋", pinyin: "yáng", radical: "氵", meaning: "Ozean", example: "海洋 (hǎiyáng) - Ozean" },
+                    { char: "祥", pinyin: "xiáng", radical: "礻", meaning: "glückverheißend", example: "吉祥 (jíxiáng) - Glück" },
+                    { char: "痒", pinyin: "yǎng", radical: "疒", meaning: "jucken", example: "发痒 (fāyǎng) - jucken" }
+                ]
+            },
+            {
+                phonetic: "中",
+                pinyinRoot: "zhong",
+                characters: [
+                    { char: "种", pinyin: "zhǒng", radical: "禾", meaning: "Art", example: "种类 (zhǒnglèi) - Sorte" },
+                    { char: "钟", pinyin: "zhōng", radical: "钅", meaning: "Uhr", example: "钟表 (zhōngbiǎo) - Uhr" },
+                    { char: "忠", pinyin: "zhōng", radical: "心", meaning: "loyal", example: "忠诚 (zhōngchéng) - Loyalität" },
+                    { char: "肿", pinyin: "zhǒng", radical: "月", meaning: "Schwellung", example: "肿胀 (zhǒngzhàng) - geschwollen" }
+                ]
+            },
+            {
+                phonetic: "少",
+                pinyinRoot: "shao",
+                characters: [
+                    { char: "沙", pinyin: "shā", radical: "氵", meaning: "Sand", example: "沙漠 (shāmò) - Wüste" },
+                    { char: "纱", pinyin: "shā", radical: "纟", meaning: "Gaze", example: "纱布 (shābù) - Mullbinde" },
+                    { char: "吵", pinyin: "chǎo", radical: "口", meaning: "streiten", example: "吵架 (chǎojià) - sich streiten" },
+                    { char: "妙", pinyin: "miào", radical: "女", meaning: "wunderbar", example: "奇妙 (qímiào) - wunderbar" }
+                ]
+            },
+            {
+                phonetic: "兆",
+                pinyinRoot: "zhao",
+                characters: [
+                    { char: "桃", pinyin: "táo", radical: "木", meaning: "Pfirsich", example: "桃子 (táozi) - Pfirsich" },
+                    { char: "逃", pinyin: "táo", radical: "辶", meaning: "fliehen", example: "逃跑 (táopǎo) - fliehen" },
+                    { char: "挑", pinyin: "tiāo", radical: "扌", meaning: "auswählen", example: "挑选 (tiāoxuǎn) - auswählen" },
+                    { char: "跳", pinyin: "tiào", radical: "足", meaning: "springen", example: "跳舞 (tiàowǔ) - tanzen" }
+                ]
+            },
+            {
+                phonetic: "生",
+                pinyinRoot: "sheng",
+                characters: [
+                    { char: "星", pinyin: "xīng", radical: "日", meaning: "Stern", example: "星星 (xīngxing) - Stern" },
+                    { char: "姓", pinyin: "xìng", radical: "女", meaning: "Nachname", example: "姓名 (xìngmíng) - voller Name" },
+                    { char: "性", pinyin: "xìng", radical: "忄", meaning: "Natur", example: "性格 (xìnggé) - Charakter" },
+                    { char: "牲", pinyin: "shēng", radical: "牛", meaning: "Opfertier", example: "牺牲 (xīshēng) - Opfer" }
+                ]
+            },
+            {
+                phonetic: "工",
+                pinyinRoot: "gong",
+                characters: [
+                    { char: "功", pinyin: "gōng", radical: "力", meaning: "Leistung", example: "功夫 (gōngfu) - Kung Fu" },
+                    { char: "红", pinyin: "hóng", radical: "纟", meaning: "rot", example: "红色 (hóngsè) - rote Farbe" },
+                    { char: "江", pinyin: "jiāng", radical: "氵", meaning: "Fluss", example: "长江 (Cháng Jiāng) - Jangtse" },
+                    { char: "贡", pinyin: "gòng", radical: "贝", meaning: "Tribut", example: "贡献 (gòngxiàn) - Beitrag" }
+                ]
+            },
+
+                {
+  "列裂烈": {
+    "phonetic": "列",
+    "pinyinRoot": "lie",
+    "characters": [
+      {
+        "char": "列",
+        "pinyin": "liè",
+        "radical": "刂",
+        "meaning": "arrange, list",
+        "example": "列表 (lièbiǎo) - list",
+        "example2": "列车 (lièchē) - train"
+      },
+
+      {
+        "char": "裂",
+        "pinyin": "liè",
+        "radical": "衣",
+        "meaning": "split, crack",
+        "example": "破裂 (pòliè) - rupture",
+        "example2": "分裂 (fēnliè) - divide"
+      },
+
+      {
+        "char": "烈",
+        "pinyin": "liè",
+        "radical": "灬",
+        "meaning": "intense, fiery",
+        "example": "激烈 (jīliè) - fierce",
+        "example2": "烈士 (lièshì) - martyr"
+      }
+    ]
+  },
+ 
+  "料斜": {
+    "phonetic": "料",
+    "pinyinRoot": "liao/xie",
+    "characters": [
+      {
+        "char": "料",
+        "pinyin": "liào",
+        "radical": "米",
+        "meaning": "material, expect",
+        "example": "材料 (cáiliào) - material",
+        "example2": "预料 (yùliào) - anticipate"
+      },
+      {
+        "char": "斜",
+        "pinyin": "xié",
+        "radical": "斗",
+        "meaning": "slanting",
+        "example": "倾斜 (qīngxié) - tilt",
+        "example2": "斜阳 (xiéyáng) - setting sun"
+      }
+    ]
+  },
+
+
+
+  "撩僚燎镣潦":    {
+    "phonetic": "撩",
+    "pinyinRoot": "liao",
+    "characters": [
+      {
+        "char": "撩",
+        "pinyin": "liāo",
+        "radical": "扌",
+        "meaning": "tease, provoke",
+        "example": "撩拨 (liāobō) - provoke",
+        "example2": "撩人 (liāorén) - tantalizing"
+      },
+      {
+        "char": "僚",
+        "pinyin": "liáo",
+        "radical": "亻",
+        "meaning": "colleague, official",
+        "example": "官僚 (guānliáo) - bureaucracy",
+        "example2": "同僚 (tóngliáo) - coworker"
+      },
+      {
+        "char": "燎",
+        "pinyin": "liáo",
+        "radical": "火",
+        "meaning": "blaze, burn",
+        "example": "燎原 (liáoyuán) - prairie fire",
+        "example2": "火燎 (huǒliáo) - scorch"
+      },
+      {
+        "char": "镣",
+        "pinyin": "liào",
+        "radical": "钅",
+        "meaning": "shackles",
+        "example": "镣铐 (liàokào) - handcuffs",
+        "example2": "脚镣 (jiǎoliào) - leg irons"
+      },
+      {
+        "char": "潦",
+        "pinyin": "liáo",
+        "radical": "氵",
+        "meaning": "flood, sloppy",
+        "example": "潦草 (liáocǎo) - hasty (writing)",
+        "example2": "潦倒 (liáodǎo) - down and out"
+      }
+    ]
+  },
+
+
+  "寥廖": {
+    "phonetic": "寥",
+    "pinyinRoot": "liao",
+    "characters": [
+      {
+        "char": "寥",
+        "pinyin": "liáo",
+        "radical": "宀",
+        "meaning": "few, lonely",
+        "example": "寥寥 (liáoliáo) - very few",
+        "example2": "寥落 (liáoluò) - desolate"
+      },
+      {
+        "char": "廖",
+        "pinyin": "Liào",
+        "radical": "广",
+        "meaning": "surname",
+        "example": "廖先生 (Liào xiānsheng) - Mr. Liao",
+        "example2": "廖化 (Liào Huà) - historical figure"
+      }
+    ]
+  }
+},
+
+{
+  "疗辽了": {
+    "phonetic": "疗",
+    "pinyinRoot": "liao",
+    "characters": [
+      {
+        "char": "疗",
+        "pinyin": "liáo",
+        "radical": "疒",
+        "meaning": "heal, treat",
+        "example": "治疗 (zhìliáo) - medical treatment",
+        "example2": "疗养 (liáoyǎng) - recuperate"
+      },
+      {
+        "char": "辽",
+        "pinyin": "liáo",
+        "radical": "辶",
+        "meaning": "distant, Liaoning",
+        "example": "辽阔 (liáokuò) - vast",
+        "example2": "辽宁 (Liáoníng) - Liaoning Province"
+      },
+      {
+        "char": "了",
+        "pinyin": "liǎo",
+        "radical": "亅",
+        "meaning": "finish, understand",
+        "example": "了解 (liǎojiě) - understand",
+        "example2": "了结 (liǎojié) - settle"
+      }
+    ]
+  }
+},
+
+
+{
+  "撩僚燎镣潦": {
+    "phonetic": "撩",
+    "pinyinRoot": "liao",
+    "characters": [
+      {
+        "char": "撩",
+        "pinyin": "liāo",
+        "radical": "扌",
+        "meaning": "tease, provoke",
+        "example": "撩拨 (liāobō) - provoke",
+        "example2": "撩人 (liāorén) - tantalizing"
+      },
+      {
+        "char": "僚",
+        "pinyin": "liáo",
+        "radical": "亻",
+        "meaning": "colleague, official",
+        "example": "官僚 (guānliáo) - bureaucracy",
+        "example2": "同僚 (tóngliáo) - coworker"
+      },
+      {
+        "char": "燎",
+        "pinyin": "liáo",
+        "radical": "火",
+        "meaning": "blaze, burn",
+        "example": "燎原 (liáoyuán) - prairie fire",
+        "example2": "火燎 (huǒliáo) - scorch"
+      },
+      {
+        "char": "镣",
+        "pinyin": "liào",
+        "radical": "钅",
+        "meaning": "shackles",
+        "example": "镣铐 (liàokào) - handcuffs",
+        "example2": "脚镣 (jiǎoliào) - leg irons"
+      },
+      {
+        "char": "潦",
+        "pinyin": "liáo",
+        "radical": "氵",
+        "meaning": "flood, sloppy",
+        "example": "潦草 (liáocǎo) - hasty (writing)",
+        "example2": "潦倒 (liáodǎo) - down and out"
+      }
+    ]
+  },
+
+
+  "铆聊卯柳": {
+    "phonetic": "铆",
+    "pinyinRoot": "mao/liao/liu",
+    "characters": [
+      {
+        "char": "铆",
+        "pinyin": "mǎo",
+        "radical": "钅",
+        "meaning": "rivet",
+        "example": "铆钉 (mǎodīng) - rivet",
+        "example2": "铆接 (mǎojiē) - riveting",
+        "etymology": "钅(metal) + 卯 (mǎo, phonetic). The 卯 component also resembles two joined pieces, fitting the 'rivet' meaning."
+      },
+      {
+        "char": "聊",
+        "pinyin": "liáo",
+        "radical": "耳",
+        "meaning": "chat, rely on",
+        "example": "聊天 (liáotiān) - chat",
+        "example2": "无聊 (wúliáo) - bored (lit. 'nothing to rely on')",
+        "etymology": "耳 (ear) + 卯 (mǎo). Originally meant 'to listen attentively', later extended to social interaction."
+      },
+      {
+        "char": "卯",
+        "pinyin": "mǎo",
+        "radical": "卩",
+        "meaning": "4th Earthly Branch, mortise",
+        "example": "卯时 (mǎoshí) - 5–7 AM (in traditional timekeeping)",
+        "example2": "卯榫 (mǎosǔn) - mortise and tenon joint",
+        "etymology": "Pictograph of a mortise (slot in woodworking). The character's shape mirrors the interlocking joints in carpentry."
+      },
+      {
+        "char": "柳",
+        "pinyin": "liǔ",
+        "radical": "木",
+        "meaning": "willow",
+        "example": "柳树 (liǔshù) - willow tree",
+        "example2": "柳条 (liǔtiáo) - willow branch",
+        "etymology": "木 (tree) + 卯 (mǎo). The willow's flexible branches resemble the interlocking 卯 joints."
+      }
+    ]
+  },
+       
+
+
+            
+  "两辆": {
+    "phonetic": "两",
+    "pinyinRoot": "liang",
+    "characters": [
+      {
+        "char": "两",
+        "pinyin": "liǎng",
+        "radical": "一",
+        "meaning": "two, a unit of weight",
+        "example": "两个 (liǎng gè) - two (objects)",
+        "example2": "斤两 (jīnliǎng) - weight measurement",
+        "etymology": "Simplified from 兩, which depicted a pair of balanced objects on a scale. The character originally represented duality and balance."
+      },
+      {
+        "char": "辆",
+        "pinyin": "liàng",
+        "radical": "车",
+        "meaning": "classifier for vehicles",
+        "example": "一辆车 (yī liàng chē) - one vehicle",
+        "example2": "车辆 (chēliàng) - vehicles",
+        "etymology": "车 (cart) + 两 (two). Refers to the two wheels of early carts, later generalized to all vehicles."
+      }
+    ]
+  },
+            
+
+
+        
+  "梁粱": {
+    "phonetic": "梁",
+    "pinyinRoot": "liang",
+    "characters": [
+      {
+        "char": "梁",
+        "pinyin": "liáng",
+        "radical": "木",
+        "meaning": "bridge, beam",
+        "example": "桥梁 (qiáoliáng) - bridge",
+        "example2": "房梁 (fángliáng) - roof beam",
+        "etymology": "木 (wood) + 氵(water) + 刅 (ancient form). Depicted wooden structures over water (early bridges)."
+      },
+      {
+        "char": "粱",
+        "pinyin": "liáng",
+        "radical": "米",
+        "meaning": "millet, fine grain",
+        "example": "高粱 (gāoliáng) - sorghum",
+        "example2": "黄粱美梦 (huángliáng měimèng) - 'Golden Millet Dream' (idiom for fleeting illusions)",
+        "etymology": "米 (rice) + 梁 (bridge). The 'bridge' component hints at the plant's tall, bridging stalks."
+      }
+    ]
+  },
+    
+
+
+
+            
+  "凉晾谅掠": {
+    "phonetic": "凉",
+    "pinyinRoot": "liang/lüe",
+    "characters": [
+      {
+        "char": "凉",
+        "pinyin": "liáng",
+        "radical": "冫",
+        "meaning": "cool",
+        "example": "凉快 (liángkuài) - pleasantly cool",
+        "example2": "凉水 (liángshuǐ) - cold water",
+        "etymology": "冫 (ice) + 京 (capital). Originally meant 'cold as the north capital', later generalized to mean coolness."
+      },
+      {
+        "char": "晾",
+        "pinyin": "liàng",
+        "radical": "日",
+        "meaning": "air-dry",
+        "example": "晾衣服 (liàng yīfu) - hang clothes to dry",
+        "example2": "晾干 (liànggān) - dry in the air",
+        "etymology": "日 (sun) + 京 (capital). Implies 'exposing to the sun in an open space'."
+      },
+      {
+        "char": "谅",
+        "pinyin": "liàng",
+        "radical": "讠",
+        "meaning": "forgive, understand",
+        "example": "原谅 (yuánliàng) - forgive",
+        "example2": "谅解 (liàngjiě) - mutual understanding",
+        "etymology": "讠(speech) + 京 (capital). Suggests 'noble speech' or diplomatic understanding."
+      },
+      {
+        "char": "掠",
+        "pinyin": "lüè",
+        "radical": "扌",
+        "meaning": "plunder, sweep past",
+        "example": "掠夺 (lüèduó) - plunder",
+        "example2": "掠过 (lüèguò) - sweep past",
+        "etymology": "扌(hand) + 京 (capital). Originally depicted 'hands seizing resources from the capital', later extended to mean swift movement."
+      }
+    ]
+  },
+
+
+    
+  "炼练": {
+    "phonetic": "炼",
+    "pinyinRoot": "lian",
+    "characters": [
+      {
+        "char": "炼",
+        "pinyin": "liàn",
+        "radical": "火",
+        "meaning": "smelt, refine",
+        "example": "锻炼 (duànliàn) - exercise (lit. 'forge and smelt')",
+        "example2": "炼金术 (liànjīnshù) - alchemy",
+        "etymology": "火 (fire) + 柬 (select). Originally depicted the process of purifying metals by fire to 'select' the purest elements."
+      },
+      {
+        "char": "练",
+        "pinyin": "liàn",
+        "radical": "纟",
+        "meaning": "practice, train",
+        "example": "练习 (liànxí) - practice",
+        "example2": "训练 (xùnliàn) - training",
+        "etymology": "纟 (silk) + 柬 (select). Derived from the process of boiling and treating silk to make it pure and strong, later extended to mean 'mental refinement'."
+      }
+    ]
+  },
+  "恋弈峦挛孪滦蛮": {
+    "phonetic": "恋",
+    "pinyinRoot": "lian/luan/man",
+    "characters": [
+      {
+        "char": "恋",
+        "pinyin": "liàn",
+        "radical": "心",
+        "meaning": "love, long for",
+        "example": "恋爱 (liàn’ài) - romantic love",
+        "example2": "留恋 (liúliàn) - reluctant to leave",
+        "etymology": "心 (heart) + 亦 (also). The heart 'also' feels attachment."
+      },
+      {
+        "char": "弈",
+        "pinyin": "yì",
+        "radical": "廾",
+        "meaning": "chess, game",
+        "example": "博弈 (bóyì) - game theory",
+        "example2": "弈棋 (yìqí) - play chess",
+        "etymology": "廾 (two hands) + 亦 (also). Depicts two hands engaged in a game."
+      },
+      {
+        "char": "峦",
+        "pinyin": "luán",
+        "radical": "山",
+        "meaning": "mountain range",
+        "example": "山峦 (shānluán) - mountain peaks",
+        "example2": "峰峦 (fēngluán) - rugged peaks",
+        "etymology": "山 (mountain) + 恋 (love). Poetically, mountains 'in love' with each other (interconnected)."
+      },
+      {
+        "char": "挛",
+        "pinyin": "luán",
+        "radical": "手",
+        "meaning": "twist, cramp",
+        "example": "痉挛 (jìngluán) - spasm",
+        "example2": "挛缩 (luánsuō) - contracture",
+        "etymology": "手 (hand) + 恋 (love). A hand 'in love' with its own tension (cramped state)."
+      },
+      {
+        "char": "孪",
+        "pinyin": "luán",
+        "radical": "子",
+        "meaning": "twin",
+        "example": "孪生 (luánshēng) - twins",
+        "example2": "孪生子 (luánshēngzǐ) - twin children",
+        "etymology": "子 (child) + 恋 (love). Twins as 'children who love each other' (born together)."
+      },
+      {
+        "char": "滦",
+        "pinyin": "luán",
+        "radical": "氵",
+        "meaning": "Luan River",
+        "example": "滦河 (Luán Hé) - Luan River (Hebei)",
+        "example2": "滦县 (Luán Xiàn) - Luan County",
+        "etymology": "氵 (water) + 栾 (luán, phonetic). Named after the twisting path of the river."
+      },
+      {
+        "char": "蛮",
+        "pinyin": "mán",
+        "radical": "虫",
+        "meaning": "barbarian, rude",
+        "example": "野蛮 (yěmán) - savage",
+        "example2": "蛮横 (mánhèng) - rude and unreasonable",
+        "etymology": "虫 (insect) + 恋 (love). Ancient derogatory term for tribes 'who loved insects' (stereotyped as uncivilized)."
+      }
+    ]
+  },
+
+
+
+  "敛脸潋捡签检": {
+    "phonetic": "敛",
+    "pinyinRoot": "lian/jian",
+    "characters": [
+      {
+        "char": "敛",
+        "pinyin": "liǎn",
+        "radical": "攵",
+        "meaning": "restrain, collect",
+        "example": "收敛 (shōuliǎn) - restrain",
+        "example2": "敛财 (liǎncái) - amass wealth",
+        "etymology": "攵 (strike) + 佥 (all). The character implied 'gathering by force' in ancient contexts, later softened to mean 'collect'."
+      },
+      {
+        "char": "脸",
+        "pinyin": "liǎn",
+        "radical": "月",
+        "meaning": "face",
+        "example": "洗脸 (xǐliǎn) - wash face",
+        "example2": "脸色 (liǎnsè) - facial expression",
+        "etymology": "月 (flesh) + 佥 (collect). The face is where emotions 'collect' visibly. Earlier forms depicted a face with prominent cheeks."
+      },
+      {
+        "char": "潋",
+        "pinyin": "liàn",
+        "radical": "氵",
+        "meaning": "rippling water",
+        "example": "潋滟 (liànyàn) - glistening waves",
+        "example2": "水光潋滟 (shuǐguāng liànyàn) - sparkling water",
+        "etymology": "氵 (water) + 敛 (restrain). The character suggests water 'restrained' in gentle waves, not turbulent."
+      },
+      {
+        "char": "捡",
+        "pinyin": "jiǎn",
+        "radical": "扌",
+        "meaning": "pick up",
+        "example": "捡起 (jiǎnqǐ) - pick up",
+        "example2": "捡垃圾 (jiǎn lājī) - collect trash",
+        "etymology": "扌 (hand) + 佥 (all). The action of 'gathering all things by hand'."
+      },
+      {
+        "char": "签",
+        "pinyin": "qiān",
+        "radical": "竹",
+        "meaning": "sign, label",
+        "example": "签名 (qiānmíng) - signature",
+        "example2": "标签 (biāoqiān) - tag",
+        "etymology": "竹 (bamboo) + 佥 (all). Derived from bamboo slips used for labeling in ancient record-keeping."
+      },
+      {
+        "char": "检",
+        "pinyin": "jiǎn",
+        "radical": "木",
+        "meaning": "inspect",
+        "example": "检查 (jiǎnchá) - inspect",
+        "example2": "体检 (tǐjiǎn) - physical exam",
+        "etymology": "木 (wood) + 佥 (all). Originally referred to inspecting wooden documents (e.g., contracts)."
+      }
+    ]
+  },
+
+
+                
+  "敛脸潋捡签检": {
+    "phonetic": "敛",
+    "pinyinRoot": "lian/jian",
+    "characters": [
+      {
+        "char": "敛",
+        "pinyin": "liǎn",
+        "radical": "攵",
+        "meaning": "restrain, collect",
+        "example": "收敛 (shōuliǎn) - restrain",
+        "example2": "敛财 (liǎncái) - amass wealth",
+        "etymology": "攵 (strike) + 佥 (all). The character implied 'gathering by force' in ancient contexts, later softened to mean 'collect'."
+      },
+      {
+        "char": "脸",
+        "pinyin": "liǎn",
+        "radical": "月",
+        "meaning": "face",
+        "example": "洗脸 (xǐliǎn) - wash face",
+        "example2": "脸色 (liǎnsè) - facial expression",
+        "etymology": "月 (flesh) + 佥 (collect). The face is where emotions 'collect' visibly. Earlier forms depicted a face with prominent cheeks."
+      },
+      {
+        "char": "潋",
+        "pinyin": "liàn",
+        "radical": "氵",
+        "meaning": "rippling water",
+        "example": "潋滟 (liànyàn) - glistening waves",
+        "example2": "水光潋滟 (shuǐguāng liànyàn) - sparkling water",
+        "etymology": "氵 (water) + 敛 (restrain). The character suggests water 'restrained' in gentle waves, not turbulent."
+      },
+      {
+        "char": "捡",
+        "pinyin": "jiǎn",
+        "radical": "扌",
+        "meaning": "pick up",
+        "example": "捡起 (jiǎnqǐ) - pick up",
+        "example2": "捡垃圾 (jiǎn lājī) - collect trash",
+        "etymology": "扌 (hand) + 佥 (all). The action of 'gathering all things by hand'."
+      },
+      {
+        "char": "签",
+        "pinyin": "qiān",
+        "radical": "竹",
+        "meaning": "sign, label",
+        "example": "签名 (qiānmíng) - signature",
+        "example2": "标签 (biāoqiān) - tag",
+        "etymology": "竹 (bamboo) + 佥 (all). Derived from bamboo slips used for labeling in ancient record-keeping."
+      },
+      {
+        "char": "检",
+        "pinyin": "jiǎn",
+        "radical": "木",
+        "meaning": "inspect",
+        "example": "检查 (jiǎnchá) - inspect",
+        "example2": "体检 (tǐjiǎn) - physical exam",
+        "etymology": "木 (wood) + 佥 (all). Originally referred to inspecting wooden documents (e.g., contracts)."
+      }
+    ]
+  },                        
+
+         
+  "镰廉": {
+    "phonetic": "镰",
+    "pinyinRoot": "lian",
+    "characters": [
+      {
+        "char": "镰",
+        "pinyin": "lián",
+        "radical": "钅",
+        "meaning": "sickle",
+        "example": "镰刀 (liándāo) - sickle",
+        "example2": "开镰 (kāilián) - start harvesting (with a sickle)",
+        "etymology": "钅 (metal) + 廉 (lián, phonetic). The character evolved from ancient farming tools, where the 廉 component hints at its sharp, precise edge."
+      },
+      {
+        "char": "廉",
+        "pinyin": "lián",
+        "radical": "广",
+        "meaning": "honest, inexpensive",
+        "example": "廉洁 (liánjié) - incorruptible",
+        "example2": "廉价 (liánjià) - cheap",
+        "etymology": "广 (shelter) + 兼 (combine). Originally depicted a humble house (广) where resources were 'combined justly' (兼), later extended to mean moral integrity."
+      }
+    ]
+  },
+
+
+
+  "莲连": {
+    "phonetic": "莲",
+    "pinyinRoot": "lian",
+    "characters": [
+      {
+        "char": "莲",
+        "pinyin": "lián",
+        "radical": "艹",
+        "meaning": "lotus",
+        "example": "莲花 (liánhuā) - lotus flower",
+        "example2": "莲子 (liánzǐ) - lotus seed",
+        "etymology": "艹 (plant) + 连 (connect), referencing the lotus's interconnected roots and stems."
+      },
+      {
+        "char": "连",
+        "pinyin": "lián",
+        "radical": "辶",
+        "meaning": "connect, continuous",
+        "example": "连接 (liánjiē) - connect",
+        "example2": "连续 (liánxù) - continuous",
+        "etymology": "辶 (movement) + 车 (cart), originally depicting 'carts linked in a convoy'."
+      }
+    ]
+  },
+
+               
+  "立粒": {
+    "phonetic": "立",
+    "pinyinRoot": "li",
+    "characters": [
+      {
+        "char": "立",
+        "pinyin": "lì",
+        "radical": "立",
+        "meaning": "stand, establish",
+        "example": "站立 (zhànlì) - stand",
+        "example2": "立刻 (lìkè) - immediately",
+        "etymology": "Pictograph of a person standing upright. One of the oldest characters, unchanged since oracle bone script (甲骨文)."
+      },
+      {
+        "char": "粒",
+        "pinyin": "lì",
+        "radical": "米",
+        "meaning": "grain, particle",
+        "example": "颗粒 (kēlì) - granule",
+        "example2": "米粒 (mǐlì) - grain of rice",
+        "etymology": "米 (rice) + 立 (stand), referring to tiny grains that 'stand apart'."
+      }
+    ]
+  },
+
+
+                            
+  "俐痢": {
+    "phonetic": "俐",
+    "pinyinRoot": "li",
+    "characters": [
+      {
+        "char": "俐",
+        "pinyin": "lì",
+        "radical": "亻",
+        "meaning": "clever",
+        "example": "伶俐 (línglì) - clever",
+        "example2": "聪明伶俐 (cōngmíng línglì) - quick-witted",
+        "etymology": "亻 (human) + 利 (sharp), implying 'sharp-mindedness'."
+      },
+      {
+        "char": "痢",
+        "pinyin": "lì",
+        "radical": "疒",
+        "meaning": "dysentery",
+        "example": "痢疾 (lìjí) - dysentery",
+        "example2": "赤痢 (chìlì) - bloody diarrhea",
+        "etymology": "疒 (illness) + 利 (sharp), describing the 'sharp, sudden' onset of the disease."
+      }
+    ]
+  },
+
+
+                    
+  "例列": {
+    "phonetic": "例",
+    "pinyinRoot": "li",
+    "characters": [
+      {
+        "char": "例",
+        "pinyin": "lì",
+        "radical": "亻",
+        "meaning": "example, precedent",
+        "example": "例子 (lìzi) - example",
+        "example2": "例外 (lìwài) - exception",
+        "etymology": "Derived from 亻 (human) + 列 (arrange), implying 'arranged patterns of human behavior'."
+      },
+      {
+        "char": "列",
+        "pinyin": "liè",
+        "radical": "刂",
+        "meaning": "arrange, list",
+        "example": "列表 (lièbiǎo) - list",
+        "example2": "列车 (lièchē) - train (lit. 'lined-up vehicles')",
+        "etymology": "The 刂 (knife) radical suggests 'cutting into order', reflecting ancient record-keeping on bamboo strips."}
+    ]
+  },
+  "铄砾": {
+    "phonetic": "铄",
+    "pinyinRoot": "shuo/li",
+    "characters": [
+      {
+        "char": "铄",
+        "pinyin": "shuò",
+        "radical": "钅",
+        "meaning": "melt, brilliant",
+        "example": "铄金 (shuòjīn) - to melt gold",
+        "example2": "众口铄金 (zhòngkǒu shuòjīn) - public opinion can melt metals (idiom)",
+        "etymology": "Originally depicted metal (钅) being heated (乐) to a glowing state. The 乐 component hints at both sound and transformation."
+      },
+      {
+        "char": "砾",
+        "pinyin": "lì",
+        "radical": "石",
+        "meaning": "gravel",
+        "example": "砂砾 (shālì) - sand and gravel",
+        "example2": "砾石 (lìshí) - pebble",
+        "etymology": "Combines 石 (stone) with 乐 (sound), suggesting small stones that make noise when stepped on."   }
+    ]
+  },
+
+  "厉励粝": {
+    "phonetic": "厉",
+    "pinyinRoot": "li",
+    "characters": [
+      {"char": "厉", "pinyin": "lì", "radical": "厂", "meaning": "strict", "example": "严厉 (yánlì) - severe", "example2": "厉害 (lìhài) - awesome"},
+      {"char": "励", "pinyin": "lì", "radical": "力", "meaning": "encourage", "example": "鼓励 (gǔlì) - encourage", "example2": "励志 (lìzhì) - motivational"},
+      {"char": "粝", "pinyin": "lì", "radical": "米", "meaning": "coarse rice", "example": "粗粝 (cūlì) - rough (texture)"}
+    ]
+  },
+  "哩狸理里鲤": {
+    "phonetic": "哩",
+    "pinyinRoot": "li",
+    "characters": [
+      {"char": "哩", "pinyin": "lǐ", "radical": "口", "meaning": "mile (unit)", "example": "英里 (yīnglǐ) - mile", "example2": "公里 (gōnglǐ) - kilometer"},
+      {"char": "狸", "pinyin": "lí", "radical": "犭", "meaning": "raccoon", "example": "狐狸 (húli) - fox", "example2": "狸猫 (límāo) - leopard cat"},
+      {"char": "理", "pinyin": "lǐ", "radical": "王", "meaning": "reason", "example": "道理 (dàolǐ) - principle", "example2": "理发 (lǐfà) - haircut"},
+      {"char": "里", "pinyin": "lǐ", "radical": "里", "meaning": "inside", "example": "里面 (lǐmiàn) - inside", "example2": "公里 (gōnglǐ) - kilometer"},
+      {"char": "鲤", "pinyin": "lǐ", "radical": "鱼", "meaning": "carp", "example": "鲤鱼 (lǐyú) - carp", "example2": "锦鲤 (jǐnlǐ) - koi fish"}
+    ]
+  },
+  "篱离漓": {
+    "phonetic": "篱",
+    "pinyinRoot": "li",
+    "characters": [
+      {"char": "篱", "pinyin": "lí", "radical": "竹", "meaning": "fence", "example": "篱笆 (líba) - bamboo fence", "example2": "绿篱 (lǜlí) - hedge"},
+      {"char": "离", "pinyin": "lí", "radical": "隹", "meaning": "leave", "example": "离开 (líkāi) - depart", "example2": "距离 (jùlí) - distance"},
+      {"char": "漓", "pinyin": "lí", "radical": "氵", "meaning": "dripping", "example": "漓江 (Lí Jiāng) - Li River (Guilin)", "example2": "淋漓 (línlí) - dripping wet"}
+    ]
+  },
+  "梨犁": {
+    "phonetic": "梨",
+    "pinyinRoot": "li",
+    "characters": [
+      {"char": "梨", "pinyin": "lí", "radical": "木", "meaning": "pear", "example": "梨子 (lízi) - pear", "example2": "梨花 (líhuā) - pear blossom"},
+      {"char": "犁", "pinyin": "lí", "radical": "牛", "meaning": "plow", "example": "犁地 (lí dì) - plow the land", "example2": "铁犁 (tiělí) - iron plow"}
+    ]
+  },
+  "雷镭蕾": {
+    "phonetic": "雷",
+    "pinyinRoot": "lei",
+    "characters": [
+      {"char": "雷", "pinyin": "léi", "radical": "雨", "meaning": "thunder", "example": "雷电 (léidiàn) - thunderbolt", "example2": "雷达 (léidá) - radar"},
+      {"char": "镭", "pinyin": "léi", "radical": "钅", "meaning": "radium", "example": "镭射 (léishè) - laser (loanword)"},
+      {"char": "蕾", "pinyin": "lěi", "radical": "艹", "meaning": "bud", "example": "花蕾 (huālěi) - flower bud", "example2": "芭蕾 (bālěi) - ballet"}
+    ]
+  },
+
+  "酪烙": {
+    "phonetic": "酪",
+    "pinyinRoot": "lao/luo",
+    "characters": [
+      {"char": "酪", "pinyin": "lào", "radical": "酉", "meaning": "cheese", "example": "奶酪 (nǎilào) - cheese", "example2": "酸奶酪 (suānnǎilào) - yogurt"},
+      {"char": "烙", "pinyin": "lào", "radical": "火", "meaning": "brand", "example": "烙印 (làoyìn) - brand mark", "example2": "烙饼 (làobǐng) - griddle cake"}
+    ]
+  },
+  "老佬姥": {
+    "phonetic": "老",
+    "pinyinRoot": "lao",
+    "characters": [
+      {"char": "老", "pinyin": "lǎo", "radical": "耂", "meaning": "old", "example": "老人 (lǎorén) - elderly", "example2": "老师 (lǎoshī) - teacher"},
+      {"char": "佬", "pinyin": "lǎo", "radical": "亻", "meaning": "guy (colloquial)", "example": "阔佬 (kuòlǎo) - rich guy", "example2": "美国佬 (Měiguó lǎo) - American dude"},
+      {"char": "姥", "pinyin": "lǎo", "radical": "女", "meaning": "grandmother", "example": "姥姥 (lǎolao) - maternal grandma", "example2": "姥爷 (lǎoye) - maternal grandpa"}
+    ]
+  },
+  "捞劳涝": {
+    "phonetic": "捞",
+    "pinyinRoot": "lao",
+    "characters": [
+      {"char": "捞", "pinyin": "lāo", "radical": "扌", "meaning": "fish out", "example": "捞鱼 (lāo yú) - catch fish", "example2": "打捞 (dǎlāo) - salvage"},
+      {"char": "劳", "pinyin": "láo", "radical": "力", "meaning": "labor", "example": "劳动 (láodòng) - work", "example2": "疲劳 (píláo) - fatigue"},
+      {"char": "涝", "pinyin": "lào", "radical": "氵", "meaning": "flood", "example": "涝灾 (làozāi) - flood disaster", "example2": "防涝 (fánglào) - flood prevention"}
+    ]
+  },
+  "垃拉": {
+    "phonetic": "垃",
+    "pinyinRoot": "la",
+    "characters": [
+      {"char": "垃", "pinyin": "lā", "radical": "土", "meaning": "garbage", "example": "垃圾 (lājī) - trash"},
+      {"char": "拉", "pinyin": "lā", "radical": "扌", "meaning": "pull", "example": "拉手 (lāshǒu) - handshake"}
+    ]
+  },
+  "蜡腊": {
+    "phonetic": "蜡",
+    "pinyinRoot": "la",
+    "characters": [
+      {"char": "蜡", "pinyin": "là", "radical": "虫", "meaning": "wax", "example": "蜡烛 (làzhú) - candle"},
+      {"char": "腊", "pinyin": "là", "radical": "月", "meaning": "dried meat", "example": "腊肉 (làròu) - cured meat"}
+    ]
+  },
+  "莱来": {
+    "phonetic": "莱",
+    "pinyinRoot": "lai",
+    "characters": [
+      {"char": "莱", "pinyin": "lái", "radical": "艹", "meaning": "goosefoot (plant)", "example": "蓬莱 (Pénglái) - mythical island"},
+      {"char": "来", "pinyin": "lái", "radical": "木", "meaning": "come", "example": "回来 (huílái) - return"}
+    ]
+  },
+  "癞赖濑": {
+    "phonetic": "癞",
+    "pinyinRoot": "lai",
+    "characters": [
+      {"char": "癞", "pinyin": "lài", "radical": "疒", "meaning": "scabies", "example": "癞蛤蟆 (làiháma) - toad"},
+      {"char": "赖", "pinyin": "lài", "radical": "贝", "meaning": "rely", "example": "依赖 (yīlài) - depend on"},
+      {"char": "濑", "pinyin": "lài", "radical": "氵", "meaning": "rapids", "example": "濑户 (Làihù) - place name"}
+    ]
+  },
+  "蓝篮监槛滥": {
+    "phonetic": "蓝",
+    "pinyinRoot": "lan/jian",
+    "characters": [
+      {"char": "蓝", "pinyin": "lán", "radical": "艹", "meaning": "blue", "example": "蓝色 (lánsè) - blue color"},
+      {"char": "篮", "pinyin": "lán", "radical": "竹", "meaning": "basket", "example": "篮球 (lánqiú) - basketball"},
+      {"char": "监", "pinyin": "jiān", "radical": "皿", "meaning": "supervise", "example": "监狱 (jiānyù) - prison"},
+      {"char": "槛", "pinyin": "kǎn", "radical": "木", "meaning": "threshold", "example": "门槛 (ménkǎn) - doorstep"},
+      {"char": "滥", "pinyin": "làn", "radical": "氵", "meaning": "excessive", "example": "泛滥 (fànlàn) - flood"}
+    ]
+  },
+  "婪梦森彬郴": {
+    "phonetic": "婪",
+    "pinyinRoot": "lan/sen",
+    "characters": [
+      {"char": "婪", "pinyin": "lán", "radical": "女", "meaning": "greedy", "example": "贪婪 (tānlán) - avaricious"},
+      {"char": "梦", "pinyin": "mèng", "radical": "夕", "meaning": "dream", "example": "梦想 (mèngxiǎng) - dream"},
+      {"char": "森", "pinyin": "sēn", "radical": "木", "meaning": "forest", "example": "森林 (sēnlín) - forest"},
+      {"char": "彬", "pinyin": "bīn", "radical": "彡", "meaning": "refined", "example": "彬彬有礼 (bīnbīn yǒulǐ) - polite"},
+      {"char": "郴", "pinyin": "chēn", "radical": "阝", "meaning": "place name", "example": "郴州 (Chēnzhōu) - city in Hunan"}
+    ]
+  },
+  "栏拦兰烂": {
+    "phonetic": "栏",
+    "pinyinRoot": "lan",
+    "characters": [
+      {"char": "栏", "pinyin": "lán", "radical": "木", "meaning": "fence", "example": "栏杆 (lángān) - railing"},
+      {"char": "拦", "pinyin": "lán", "radical": "扌", "meaning": "block", "example": "拦住 (lánzhù) - stop"},
+      {"char": "兰", "pinyin": "lán", "radical": "艹", "meaning": "orchid", "example": "兰花 (lánhuā) - orchid"},
+      {"char": "烂", "pinyin": "làn", "radical": "火", "meaning": "rotten", "example": "腐烂 (fǔlàn) - decay"}
+    ]
+  },
+  "阑澜谰": {
+    "phonetic": "阑",
+    "pinyinRoot": "lan",
+    "characters": [
+      {"char": "阑", "pinyin": "lán", "radical": "门", "meaning": "late", "example": "夜阑 (yèlán) - late night"},
+      {"char": "澜", "pinyin": "lán", "radical": "氵", "meaning": "waves", "example": "波澜 (bōlán) - billows"},
+      {"char": "谰", "pinyin": "lán", "radical": "讠", "meaning": "slander", "example": "谰言 (lányán) - calumny"}
+    ]
+  },
+  "揽览缆": {
+    "phonetic": "揽",
+    "pinyinRoot": "lan",
+    "characters": [
+      {"char": "揽", "pinyin": "lǎn", "radical": "扌", "meaning": "embrace", "example": "揽客 (lǎnkè) - solicit customers"},
+      {"char": "览", "pinyin": "lǎn", "radical": "见", "meaning": "view", "example": "浏览 (liúlǎn) - browse"},
+      {"char": "缆", "pinyin": "lǎn", "radical": "纟", "meaning": "cable", "example": "电缆 (diànlǎn) - electric cable"}
+    ]
+  },
+  "榔廊郎朗琅狼浪良粮": {
+    "phonetic": "榔",
+    "pinyinRoot": "lang/liang",
+    "characters": [
+      {"char": "榔", "pinyin": "láng", "radical": "木", "meaning": "betel nut", "example": "榔头 (lángtou) - hammer"},
+      {"char": "廊", "pinyin": "láng", "radical": "广", "meaning": "corridor", "example": "走廊 (zǒuláng) - hallway"},
+      {"char": "郎", "pinyin": "láng", "radical": "阝", "meaning": "young man", "example": "新郎 (xīnláng) - groom"},
+      {"char": "朗", "pinyin": "lǎng", "radical": "月", "meaning": "bright", "example": "朗读 (lǎngdú) - read aloud"},
+      {"char": "琅", "pinyin": "láng", "radical": "王", "meaning": "gem", "example": "琳琅 (línláng) - beautiful jade"},
+      {"char": "狼", "pinyin": "láng", "radical": "犭", "meaning": "wolf", "example": "狼狈 (lángbèi) - in a sorry state"},
+      {"char": "浪", "pinyin": "làng", "radical": "氵", "meaning": "wave", "example": "浪漫 (làngmàn) - romantic"},
+      {"char": "良", "pinyin": "liáng", "radical": "艮", "meaning": "good", "example": "良好 (liánghǎo) - good"},
+      {"char": "粮", "pinyin": "liáng", "radical": "米", "meaning": "grain", "example": "粮食 (liángshi) - food"}
+    ]
+  },
+  "恢盔": {
+    "phonetic": "恢",
+    "pinyinRoot": "hui/kui",
+    "characters": [
+      {"char": "恢", "pinyin": "huī", "radical": "忄", "meaning": "restore", "example": "恢复 (huīfù) - recover"},
+      {"char": "盔", "pinyin": "kuī", "radical": "皿", "meaning": "helmet", "example": "头盔 (tóukuī) - helmet"}
+    ]
+  },
+  "归岿": {
+    "phonetic": "归",
+    "pinyinRoot": "gui/kui",
+    "characters": [
+      {"char": "归", "pinyin": "guī", "radical": "彐", "meaning": "return", "example": "归还 (guīhuán) - return (something)"},
+      {"char": "岿", "pinyin": "kuī", "radical": "山", "meaning": "lofty", "example": "岿然 (kuīrán) - towering"}
+    ]
+  },
+  "规窥": {
+    "phonetic": "规",
+    "pinyinRoot": "gui/kui",
+    "characters": [
+      {"char": "规", "pinyin": "guī", "radical": "见", "meaning": "rule", "example": "规定 (guīdìng) - regulation"},
+      {"char": "窥", "pinyin": "kuī", "radical": "穴", "meaning": "peek", "example": "窥视 (kuīshì) - spy on"}
+    ]
+  },
+  "葵癸": {
+    "phonetic": "葵",
+    "pinyinRoot": "kui/gui",
+    "characters": [
+      {"char": "葵", "pinyin": "kuí", "radical": "艹", "meaning": "sunflower", "example": "向日葵 (xiàngrìkuí) - sunflower"},
+      {"char": "癸", "pinyin": "guǐ", "radical": "癶", "meaning": "10th Heavenly Stem", "example": "癸卯 (guǐmǎo) - year in the Chinese zodiac"}
+    ]
+  },
+  "桂奎硅挂卦": {
+    "phonetic": "桂",
+    "pinyinRoot": "gui/kui",
+    "characters": [
+      {"char": "桂", "pinyin": "guì", "radical": "木", "meaning": "osmanthus", "example": "桂花 (guìhuā) - osmanthus flower"},
+      {"char": "奎", "pinyin": "kuí", "radical": "大", "meaning": "constellation", "example": "奎宁 (kuíníng) - quinine"},
+      {"char": "硅", "pinyin": "guī", "radical": "石", "meaning": "silicon", "example": "硅谷 (guīgǔ) - Silicon Valley"},
+      {"char": "挂", "pinyin": "guà", "radical": "扌", "meaning": "hang", "example": "挂念 (guàniàn) - worry about"},
+      {"char": "卦", "pinyin": "guà", "radical": "卜", "meaning": "divination", "example": "八卦 (bāguà) - gossip"}
+    ]
+  },
+  "馈遗贵溃": {
+    "phonetic": "馈",
+    "pinyinRoot": "kui/gui",
+    "characters": [
+      {"char": "馈", "pinyin": "kuì", "radical": "饣", "meaning": "gift", "example": "反馈 (fǎnkuì) - feedback"},
+      {"char": "遗", "pinyin": "yí", "radical": "辶", "meaning": "leave behind", "example": "遗产 (yíchǎn) - heritage"},
+      {"char": "贵", "pinyin": "guì", "radical": "贝", "meaning": "expensive", "example": "贵重 (guìzhòng) - valuable"},
+      {"char": "溃", "pinyin": "kuì", "radical": "氵", "meaning": "collapse", "example": "崩溃 (bēngkuì) - collapse"}
+    ]
+  },
+  "魁傀愧": {
+    "phonetic": "魁",
+    "pinyinRoot": "kui",
+    "characters": [
+      {"char": "魁", "pinyin": "kuí", "radical": "鬼", "meaning": "chief", "example": "魁梧 (kuíwú) - burly"},
+      {"char": "傀", "pinyin": "kuǐ", "radical": "亻", "meaning": "puppet", "example": "傀儡 (kuǐlěi) - puppet"},
+      {"char": "愧", "pinyin": "kuì", "radical": "忄", "meaning": "ashamed", "example": "惭愧 (cánkuì) - ashamed"}
+    ]
+  },
+  "坤昆": {
+    "phonetic": "坤",
+    "pinyinRoot": "kun",
+    "characters": [
+      {"char": "坤", "pinyin": "kūn", "radical": "土", "meaning": "earth (feminine)", "example": "乾坤 (qiánkūn) - universe"},
+      {"char": "昆", "pinyin": "kūn", "radical": "日", "meaning": "elder brother", "example": "昆虫 (kūnchóng) - insect"}
+    ]
+  },
+  "捆困": {
+    "phonetic": "捆",
+    "pinyinRoot": "kun",
+    "characters": [
+      {"char": "捆", "pinyin": "kǔn", "radical": "扌", "meaning": "bundle", "example": "捆绑 (kǔnbǎng) - tie up"},
+      {"char": "困", "pinyin": "kùn", "radical": "囗", "meaning": "tired", "example": "困难 (kùnnán) - difficulty"}
+    ]
+  },
+  "括阔": {
+    "phonetic": "括",
+    "pinyinRoot": "kuo",
+    "characters": [
+      {"char": "括", "pinyin": "kuò", "radical": "扌", "meaning": "include", "example": "包括 (bāokuò) - include"},
+      {"char": "阔", "pinyin": "kuò", "radical": "门", "meaning": "wide", "example": "广阔 (guǎngkuò) - vast"}
+    ]
+  },
+  "廓郭鹑": {
+    "phonetic": "廓",
+    "pinyinRoot": "kuo/guo",
+    "characters": [
+      {"char": "廓", "pinyin": "kuò", "radical": "广", "meaning": "wide", "example": "轮廓 (lúnkuò) - outline"},
+      {"char": "郭", "pinyin": "guō", "radical": "阝", "meaning": "outer wall", "example": "城郭 (chéngguō) - city walls"},
+      {"char": "鹑", "pinyin": "chún", "radical": "鸟", "meaning": "quail", "example": "鹌鹑 (ānchún) - quail"}
+    ]
+  },
+    "phonetic": "肖",
+    "pinyinRoot": "xiao",
+    "characters": [
+      {"char": "峭", "pinyin": "qiào", "radical": "山", "meaning": "steil", "example": "陡峭 (dǒuqiào) - steil"},
+      {"char": "俏", "pinyin": "qiào", "radical": "亻", "meaning": "hübsch", "example": "俏丽 (qiàolì) - hübsch"}
+    ]
+  },
+  {
+    "phonetic": "亲",
+    "pinyinRoot": "qin",
+    "characters": [
+      {"char": "親", "pinyin": "qīn", "radical": "见", "meaning": "Eltern", "example": "父亲 (fùqīn) - Vater"}
+    ]
+  },
+  {
+    "phonetic": "新",
+    "pinyinRoot": "xin",
+    "characters": [
+      {"char": "薪", "pinyin": "xīn", "radical": "艹", "meaning": "Lohn", "example": "薪水 (xīnshuǐ) - Gehalt"}
+    ]
+  },
+  {
+    "phonetic": "秦",
+    "pinyinRoot": "qin",
+    "characters": [
+      {"char": "泰", "pinyin": "tài", "radical": "水", "meaning": "Frieden", "example": "泰国 (Tàiguó) - Thailand"}
+    ]
+  },
+  {
+    "phonetic": "勤",
+    "pinyinRoot": "qin",
+    "characters": [
+      {"char": "谨", "pinyin": "jǐn", "radical": "讠", "meaning": "vorsichtig", "example": "谨慎 (jǐnshèn) - vorsichtig"},
+      {"char": "瑾", "pinyin": "jǐn", "radical": "王", "meaning": "Jade", "example": "瑾瑜 (jǐnyú) - Jade"}
+    ]
+  },
+  {
+    "phonetic": "擒",
+    "pinyinRoot": "qin",
+    "characters": [
+      {"char": "禽", "pinyin": "qín", "radical": "人", "meaning": "Vogel", "example": "家禽 (jiāqín) - Geflügel"}
+    ]
+  },
+  {
+    "phonetic": "轻",
+    "pinyinRoot": "qing",
+    "characters": [
+      {"char": "氢", "pinyin": "qīng", "radical": "气", "meaning": "Wasserstoff", "example": "氢气 (qīngqì) - Wasserstoff"}
+    ]
+  },
+  {
+    "phonetic": "倾",
+    "pinyinRoot": "qing",
+    "characters": [
+      {"char": "顷", "pinyin": "qǐng", "radical": "页", "meaning": "Moment", "example": "顷刻 (qǐngkè) - Augenblick"}
+    ]
+  },
+  {
+    "phonetic": "青",
+    "pinyinRoot": "qing",
+    "characters": [
+      {"char": "清", "pinyin": "qīng", "radical": "氵", "meaning": "klar", "example": "清水 (qīngshuǐ) - klares Wasser"},
+      {"char": "晴", "pinyin": "qíng", "radical": "日", "meaning": "sonnig", "example": "晴天 (qíngtiān) - sonniger Tag"},
+      {"char": "氰", "pinyin": "qíng", "radical": "气", "meaning": "Cyan", "example": "氰化物 (qínghuàwù) - Cyanid"},
+      {"char": "情", "pinyin": "qíng", "radical": "忄", "meaning": "Gefühl", "example": "感情 (gǎnqíng) - Gefühl"},
+      {"char": "请", "pinyin": "qǐng", "radical": "讠", "meaning": "bitten", "example": "请求 (qǐngqiú) - bitten"},
+      {"char": "猜", "pinyin": "cāi", "radical": "犭", "meaning": "raten", "example": "猜测 (cāicè) - vermuten"}
+    ]
+  },
+  {
+    "phonetic": "丘",
+    "pinyinRoot": "qiu",
+    "characters": [
+      {"char": "邱", "pinyin": "qiū", "radical": "阝", "meaning": "Hügel", "example": "姓邱 (xìng Qiū) - Familienname Qiu"}
+    ]
+  },
+  {
+    "phonetic": "球",
+    "pinyinRoot": "qiu",
+    "characters": [
+      {"char": "求", "pinyin": "qiú", "radical": "水", "meaning": "bitten", "example": "要求 (yāoqiú) - verlangen"}
+    ]
+  },
+  {
+    "phonetic": "囚",
+    "pinyinRoot": "qiu",
+    "characters": [
+      {"char": "泅", "pinyin": "qiú", "radical": "氵", "meaning": "schwimmen", "example": "泅渡 (qiúdù) - durchschwimmen"}
+    ]
+  },
+  {
+    "phonetic": "猶",
+    "pinyinRoot": "you",
+    "characters": [
+      {"char": "酋", "pinyin": "qiú", "radical": "酉", "meaning": "Häuptling", "example": "酋长 (qiúzhǎng) - Häuptling"}
+    ]
+  },
+  {
+    "phonetic": "区",
+    "pinyinRoot": "qu",
+    "characters": [
+      {"char": "躯", "pinyin": "qū", "radical": "身", "meaning": "Körper", "example": "身躯 (shēnqū) - Körper"},
+      {"char": "驱", "pinyin": "qū", "radical": "马", "meaning": "antreiben", "example": "驱动 (qūdòng) - antreiben"}
+    ]
+  },
+  {
+    "phonetic": "巨",
+    "pinyinRoot": "ju",
+    "characters": [
+      {"char": "渠", "pinyin": "qú", "radical": "氵", "meaning": "Kanal", "example": "渠道 (qúdào) - Kanal"}
+    ]
+  },
+  {
+    "phonetic": "取",
+    "pinyinRoot": "qu",
+    "characters": [
+      {"char": "娶", "pinyin": "qǔ", "radical": "女", "meaning": "heiraten", "example": "娶妻 (qǔqī) - eine Frau heiraten"}
+    ]
+  },
+  {
+    "phonetic": "颧",
+    "pinyinRoot": "quan",
+    "characters": [
+      {"char": "灌", "pinyin": "guàn", "radical": "氵", "meaning": "gießen", "example": "灌溉 (guàngài) - bewässern"},
+      {"char": "懽", "pinyin": "huān", "radical": "忄", "meaning": "fröhlich", "example": "懽乐 (huānlè) - fröhlich"},
+      {"char": "獾", "pinyin": "huān", "radical": "犭", "meaning": "Dachs", "example": "狗獾 (gǒuhuān) - Dachs"}
+    ]
+  },
+  {
+    "phonetic": "全",
+    "pinyinRoot": "quan",
+    "characters": [
+      {"char": "痊", "pinyin": "quán", "radical": "疒", "meaning": "genesen", "example": "痊愈 (quányù) - genesen"}
+    ]
+  },
+  {
+    "phonetic": "拳",
+    "pinyinRoot": "quan",
+    "characters": [
+      {"char": "券", "pinyin": "quàn", "radical": "刀", "meaning": "Gutschein", "example": "优惠券 (yōuhuìquàn) - Rabattcoupon"}
+    ]
+  },
+  {
+    "phonetic": "缺",
+    "pinyinRoot": "que",
+    "characters": [
+      {"char": "炔", "pinyin": "quē", "radical": "火", "meaning": "Alkin", "example": "乙炔 (yǐquē) - Ethin"},
+      {"char": "决", "pinyin": "jué", "radical": "冫", "meaning": "entscheiden", "example": "决定 (juédìng) - entscheiden"}
+    ]
+  },
+  {
+    "phonetic": "瘸",
+    "pinyinRoot": "que",
+    "characters": [
+      {"char": "肉", "pinyin": "ròu", "radical": "肉", "meaning": "Fleisch", "example": "牛肉 (niúròu) - Rindfleisch"}
+    ]
+  },
+  {
+    "phonetic": "确",
+    "pinyinRoot": "que",
+    "characters": [
+      {"char": "解", "pinyin": "jiě", "radical": "角", "meaning": "lösen", "example": "解决 (jiějué) - lösen"}
+    ]
+  },
+  {
+    "phonetic": "裙",
+    "pinyinRoot": "qun",
+    "characters": [
+      {"char": "群", "pinyin": "qún", "radical": "羊", "meaning": "Gruppe", "example": "群众 (qúnzhòng) - Massen"}
+    ]
+  },
+  {
+    "phonetic": "然",
+    "pinyinRoot": "ran",
+    "characters": [
+      {"char": "燃", "pinyin": "rán", "radical": "火", "meaning": "brennen", "example": "燃烧 (ránshāo) - brennen"}
+    ]
+  },
+  {
+    "phonetic": "瓤",
+    "pinyinRoot": "rang",
+    "characters": [
+      {"char": "壤", "pinyin": "rǎng", "radical": "土", "meaning": "Boden", "example": "土壤 (tǔrǎng) - Boden"},
+      {"char": "攘", "pinyin": "rǎng", "radical": "扌", "meaning": "abwehren", "example": "攘外 (rǎngwài) - äußere Feinde abwehren"},
+      {"char": "嚷", "pinyin": "rǎng", "radical": "口", "meaning": "schreien", "example": "叫嚷 (jiàorǎng) - schreien"}
+    ]
+  },
+  {
+    "phonetic": "饶",
+    "pinyinRoot": "rao",
+    "characters": [
+      {"char": "晓", "pinyin": "xiǎo", "radical": "日", "meaning": "Morgendämmerung", "example": "拂晓 (fúxiǎo) - Morgendämmerung"},
+      {"char": "烧", "pinyin": "shāo", "radical": "火", "meaning": "brennen", "example": "燃烧 (ránshāo) - brennen"},
+      {"char": "浇", "pinyin": "jiāo", "radical": "氵", "meaning": "gießen", "example": "浇水 (jiāoshuǐ) - gießen"},
+      {"char": "绕", "pinyin": "rào", "radical": "纟", "meaning": "umwickeln", "example": "围绕 (wéirào) - umgeben"}
+    ]
+  },
+  {
+    "phonetic": "惹",
+    "pinyinRoot": "re",
+    "characters": [
+      {"char": "若", "pinyin": "ruò", "radical": "艹", "meaning": "wenn", "example": "倘若 (tǎngruò) - falls"}
+    ]
+  },
+  {
+    "phonetic": "壬",
+    "pinyinRoot": "ren",
+    "characters": [
+      {"char": "任", "pinyin": "rèn", "radical": "亻", "meaning": "verantwortlich", "example": "任务 (rènwu) - Aufgabe"},
+      {"char": "妊", "pinyin": "rèn", "radical": "女", "meaning": "schwanger", "example": "妊娠 (rènshēn) - Schwangerschaft"}
+    ]
+  },
+  {
+    "phonetic": "人",
+    "pinyinRoot": "ren",
+    "characters": [
+      {"char": "认", "pinyin": "rèn", "radical": "讠", "meaning": "erkennen", "example": "认识 (rènshi) - kennen"}
+    ]
+  },
+  {
+    "phonetic": "韧",
+    "pinyinRoot": "ren",
+    "characters": [
+      {"char": "纫", "pinyin": "rèn", "radical": "纟", "meaning": "nähen", "example": "缝纫 (féngrèn) - nähen"},
+      {"char": "刃", "pinyin": "rèn", "radical": "刀", "meaning": "Klinge", "example": "刀刃 (dāorèn) - Klinge"},
+      {"char": "忍", "pinyin": "rěn", "radical": "心", "meaning": "ertragen", "example": "忍耐 (rěnnài) - Geduld"}
+    ]
+  },
+  {
+    "phonetic": "扔",
+    "pinyinRoot": "reng",
+    "characters": [
+      {"char": "仍", "pinyin": "réng", "radical": "亻", "meaning": "noch", "example": "仍然 (réngrán) - immer noch"},
+      {"char": "奶", "pinyin": "nǎi", "radical": "女", "meaning": "Milch", "example": "牛奶 (niúnǎi) - Kuhmilch"}
+    ]
+  },
+  {
+    "phonetic": "耳",
+    "pinyinRoot": "er",
+    "characters": [
+      {"char": "茸", "pinyin": "róng", "radical": "艹", "meaning": "flaumig", "example": "鹿茸 (lùróng) - Geweihsprosse"},
+      {"char": "耶", "pinyin": "yē", "radical": "耳", "meaning": "Fragepartikel", "example": "是耶 (shì yē) - ist das so?"}
+    ]
+  },
+  {
+    "phonetic": "熔",
+    "pinyinRoot": "rong",
+    "characters": [
+      {"char": "溶", "pinyin": "róng", "radical": "氵", "meaning": "auflösen", "example": "溶解 (róngjiě) - auflösen"},
+      {"char": "容", "pinyin": "róng", "radical": "宀", "meaning": "Toleranz", "example": "容易 (róngyì) - einfach"},
+      {"char": "蓉", "pinyin": "róng", "radical": "艹", "meaning": "Lotus", "example": "芙蓉 (fúróng) - Lotus"}
+    ]
+  },
+  {
+    "phonetic": "绒",
+    "pinyinRoot": "rong",
+    "characters": [
+      {"char": "戎", "pinyin": "róng", "radical": "戈", "meaning": "Militär", "example": "戎装 (róngzhuāng) - Militäruniform"},
+      {"char": "贼", "pinyin": "zéi", "radical": "贝", "meaning": "Dieb", "example": "盗贼 (dàozéi) - Dieb"}
+    ]
+  },
+  {
+    "phonetic": "冗",
+    "pinyinRoot": "rong",
+    "characters": [
+      {"char": "沉", "pinyin": "chén", "radical": "氵", "meaning": "sinken", "example": "沉重 (chénzhòng) - schwer"}
+    ]
+  },
+  {
+    "phonetic": "揉",
+    "pinyinRoot": "rou",
+    "characters": [
+      {"char": "柔", "pinyin": "róu", "radical": "木", "meaning": "sanft", "example": "柔软 (róuruǎn) - weich"}
+    ]
+  },
+  {
+    "phonetic": "茹",
+    "pinyinRoot": "ru",
+    "characters": [
+      {"char": "如", "pinyin": "rú", "radical": "女", "meaning": "wie", "example": "如果 (rúguǒ) - wenn"}
+    ]
+  },
+  {
+    "phonetic": "蠕",
+    "pinyinRoot": "ru",
+    "characters": [
+      {"char": "儒", "pinyin": "rú", "radical": "亻", "meaning": "Gelehrter", "example": "儒家 (rújiā) - Konfuzianismus"},
+      {"char": "孺", "pinyin": "rú", "radical": "子", "meaning": "Kind", "example": "孺子 (rúzǐ) - Kind"}
+    ]
+  },
+  {
+    "phonetic": "辱",
+    "pinyinRoot": "ru",
+    "characters": [
+      {"char": "褥", "pinyin": "rù", "radical": "衤", "meaning": "Matratze", "example": "被褥 (bèirù) - Bettzeug"},
+      {"char": "耨", "pinyin": "nòu", "radical": "耒", "meaning": "jäten", "example": "耕耨 (gēngnòu) - jäten"},
+      {"char": "搙", "pinyin": "nù", "radical": "扌", "meaning": "reiben", "example": "搙破 (nùpò) - durch Reiben beschädigen"}
+    ]
+  },
+  {
+    "phonetic": "锐",
+    "pinyinRoot": "rui",
+    "characters": [
+      {"char": "说", "pinyin": "shuō", "radical": "讠", "meaning": "sprechen", "example": "说话 (shuōhuà) - sprechen"},
+      {"char": "悦", "pinyin": "yuè", "radical": "忄", "meaning": "freudig", "example": "喜悦 (xǐyuè) - Freude"},
+      {"char": "脱", "pinyin": "tuō", "radical": "月", "meaning": "entfernen", "example": "脱衣服 (tuō yīfu) - Kleidung ausziehen"}
+    ]
+  },
+  {
+    "phonetic": "闰",
+    "pinyinRoot": "run",
+    "characters": [
+      {"char": "润", "pinyin": "rùn", "radical": "氵", "meaning": "feucht", "example": "湿润 (shīrùn) - feucht"}
+    ]
+  },
+  {
+    "phonetic": "散",
+    "pinyinRoot": "san",
+    "characters": [
+      {"char": "撒", "pinyin": "sā", "radical": "扌", "meaning": "streuen", "example": "撒种 (sǎzhǒng) - Samen streuen"}
+    ]
+  },
+  {
+    "phonetic": "腮",
+    "pinyinRoot": "sai",
+    "characters": [
+      {"char": "鳃", "pinyin": "sāi", "radical": "鱼", "meaning": "Kieme", "example": "鱼鳃 (yúsāi) - Fischkieme"},
+      {"char": "思", "pinyin": "sī", "radical": "心", "meaning": "denken", "example": "思考 (sīkǎo) - nachdenken"}
+    ]
+  },
+  {
+    "phonetic": "塞",
+    "pinyinRoot": "sai",
+    "characters": [
+      {"char": "赛", "pinyin": "sài", "radical": "贝", "meaning": "Wettkampf", "example": "比赛 (bǐsài) - Wettkampf"}
+    ]
+  },
+  {
+    "phonetic": "三",
+    "pinyinRoot": "san",
+    "characters": [
+      {"char": "叁", "pinyin": "sān", "radical": "厶", "meaning": "drei (finanziell)", "example": "叁佰元 (sānbǎi yuán) - 300 Yuan"}
+    ]
+  },
+  {
+    "phonetic": "桑",
+    "pinyinRoot": "sang",
+    "characters": [
+      {"char": "嗓", "pinyin": "sǎng", "radical": "口", "meaning": "Stimme", "example": "嗓子 (sǎngzi) - Stimme"}
+    ]
+  },
+  {
+    "phonetic": "搔",
+    "pinyinRoot": "sao",
+    "characters": [
+      {"char": "骚", "pinyin": "sāo", "radical": "马", "meaning": "unruhig", "example": "骚扰 (sāorǎo) - belästigen"}
+    ]
+  },
+  {
+    "phonetic": "莎",
+    "pinyinRoot": "sha",
+    "characters": [
+      {"char": "砂", "pinyin": "shā", "radical": "石", "meaning": "Sand", "example": "砂石 (shāshí) - Sand und Stein"},
+      {"char": "沙", "pinyin": "shā", "radical": "氵", "meaning": "Sand", "example": "沙漠 (shāmò) - Wüste"},
+      {"char": "纱", "pinyin": "shā", "radical": "纟", "meaning": "Gaze", "example": "纱布 (shābù) - Mullbinde"}
+    ]
+  },
+  {
+    "phonetic": "杀",
+    "pinyinRoot": "sha",
+    "characters": [
+      {"char": "刹", "pinyin": "shā", "radical": "刂", "meaning": "bremsen", "example": "刹车 (shāchē) - bremsen"},
+      {"char": "殺", "pinyin": "shā", "radical": "殳", "meaning": "töten", "example": "殺人 (shārén) - töten"}
+    ]
+  },
+  {
+    "phonetic": "杉",
+    "pinyinRoot": "shan",
+    "characters": [
+      {"char": "衫", "pinyin": "shān", "radical": "衤", "meaning": "Kleidung", "example": "衬衫 (chènshān) - Hemd"},
+      {"char": "须", "pinyin": "xū", "radical": "页", "meaning": "müssen", "example": "必须 (bìxū) - müssen"},
+      {"char": "鬚", "pinyin": "xū", "radical": "髟", "meaning": "Bart", "example": "胡鬚 (húxū) - Bart"},
+      {"char": "髮", "pinyin": "fà", "radical": "髟", "meaning": "Haar", "example": "頭髮 (tóufa) - Haare"},
+      {"char": "彬", "pinyin": "bīn", "radical": "彡", "meaning": "höflich", "example": "彬彬有礼 (bīnbīn yǒulǐ) - höflich"}
+    ]
+  },
+  {
+    "phonetic": "删",
+    "pinyinRoot": "shan",
+    "characters": [
+      {"char": "珊", "pinyin": "shān", "radical": "王", "meaning": "Koralle", "example": "珊瑚 (shānhú) - Koralle"},
+      {"char": "柵", "pinyin": "zhà", "radical": "木", "meaning": "Zaun", "example": "柵栏 (zhàlán) - Zaun"}
+    ]
+  },
+  {
+    "phonetic": "扇",
+    "pinyinRoot": "shan",
+    "characters": [
+      {"char": "煽", "pinyin": "shān", "radical": "火", "meaning": "anstacheln", "example": "煽动 (shāndòng) - anstacheln"}
+    ]
+  },
+  {
+    "phonetic": "闪",
+    "pinyinRoot": "shan",
+    "characters": [
+      {"char": "陕", "pinyin": "shǎn", "radical": "阝", "meaning": "Provinzname", "example": "陕西 (Shǎnxī) - Shaanxi"},
+      {"char": "擅", "pinyin": "shàn", "radical": "扌", "meaning": "sich anmaßen", "example": "擅自 (shànzì) - eigenmächtig"},
+      {"char": "赡", "pinyin": "shàn", "radical": "贝", "meaning": "unterhalten", "example": "赡养 (shànyǎng) - unterhalten"}
+    ]
+  },
+  {
+    "phonetic": "膳",
+    "pinyinRoot": "shan",
+    "characters": [
+      {"char": "善", "pinyin": "shàn", "radical": "口", "meaning": "gut", "example": "善良 (shànliáng) - gutherzig"},
+      {"char": "缮", "pinyin": "shàn", "radical": "纟", "meaning": "reparieren", "example": "修缮 (xiūshàn) - reparieren"}
+    ]
+  },
+  {
+    "phonetic": "汕",
+    "pinyinRoot": "shan",
+    "characters": [
+      {"char": "山", "pinyin": "shān", "radical": "山", "meaning": "Berg", "example": "高山 (gāoshān) - hoher Berg"}
+    ]
+  },
+  {
+    "phonetic": "墒",
+    "pinyinRoot": "shang",
+    "characters": [
+      {"char": "商", "pinyin": "shāng", "radical": "口", "meaning": "Handel", "example": "商业 (shāngyè) - Handel"}
+    ]
+  },
+  {
+    "phonetic": "尚",
+    "pinyinRoot": "shang",
+    "characters": [
+      {"char": "裳", "pinyin": "shang", "radical": "衣", "meaning": "Kleidung", "example": "衣裳 (yīshang) - Kleidung"},
+      {"char": "赏", "pinyin": "shǎng", "radical": "贝", "meaning": "belohnen", "example": "欣赏 (xīnshǎng) - genießen"},
+      {"char": "常", "pinyin": "cháng", "radical": "巾", "meaning": "oft", "example": "经常 (jīngcháng) - oft"},
+      {"char": "嘗", "pinyin": "cháng", "radical": "口", "meaning": "probieren", "example": "尝试 (chángshì) - versuchen"}
+    ]
+  },
+  {
+    "phonetic": "梢",
+    "pinyinRoot": "shao",
+    "characters": [
+      {"char": "捎", "pinyin": "shāo", "radical": "扌", "meaning": "mitnehmen", "example": "捎带 (shāodài) - mitnehmen"},
+      {"char": "稍", "pinyin": "shāo", "radical": "禾", "meaning": "etwas", "example": "稍微 (shāowēi) - ein wenig"}
+    ]
+  },
+  {
+    "phonetic": "芍",
+    "pinyinRoot": "shao",
+    "characters": [
+      {"char": "勺", "pinyin": "sháo", "radical": "勹", "meaning": "Löffel", "example": "勺子 (sháozi) - Löffel"}
+    ]
+  },
+  {
+    "phonetic": "召",
+    "pinyinRoot": "zhao",
+    "characters": [
+      {"char": "韶", "pinyin": "sháo", "radical": "音", "meaning": "schön", "example": "韶光 (sháoguāng) - schöne Zeit"},
+      {"char": "绍", "pinyin": "shào", "radical": "纟", "meaning": "einführen", "example": "介绍 (jièshào) - vorstellen"},
+      {"char": "邵", "pinyin": "shào", "radical": "阝", "meaning": "Nachname", "example": "姓邵 (xìng Shào) - Familienname Shao"},
+      {"char": "沼", "pinyin": "zhǎo", "radical": "氵", "meaning": "Sumpf", "example": "沼泽 (zhǎozé) - Sumpf"},
+      {"char": "招", "pinyin": "zhāo", "radical": "扌", "meaning": "einladen", "example": "招聘 (zhāopìn) - einstellen"},
+      {"char": "昭", "pinyin": "zhāo", "radical": "日", "meaning": "klar", "example": "昭示 (zhāoshì) - deutlich zeigen"},
+      {"char": "照", "pinyin": "zhào", "radical": "灬", "meaning": "beleuchten", "example": "照片 (zhàopiàn) - Foto"}
+    ]
+  },
+  {
+    "phonetic": "赦",
+    "pinyinRoot": "she",
+    "characters": [
+      {"char": "赧", "pinyin": "nǎn", "radical": "赤", "meaning": "erröten", "example": "赧颜 (nǎnyán) - erröten"},
+      {"char": "赫", "pinyin": "hè", "radical": "赤", "meaning": "herrlich", "example": "赫赫有名 (hèhè yǒumíng) - berühmt"}
+    ]
+  },
+  {
+    "phonetic": "舌",
+    "pinyinRoot": "she",
+    "characters": [
+      {"char": "舍", "pinyin": "shě", "radical": "舌", "meaning": "aufgeben", "example": "舍得 (shěde) - bereit sein aufzugeben"},
+      {"char": "啥", "pinyin": "shá", "radical": "口", "meaning": "was", "example": "干啥 (gànshá) - was tun"},
+      {"char": "舒", "pinyin": "shū", "radical": "舌", "meaning": "bequem", "example": "舒服 (shūfu) - bequem"}
+    ]
+  },
+  {
+    "phonetic": "摄",
+    "pinyinRoot": "she",
+    "characters": [
+      {"char": "慑", "pinyin": "shè", "radical": "忄", "meaning": "einschüchtern", "example": "威慑 (wēishè) - abschrecken"}
+    ]
+  },
+  {
+    "phonetic": "身",
+    "pinyinRoot": "shen",
+    "characters": [
+      {"char": "射", "pinyin": "shè", "radical": "寸", "meaning": "schießen", "example": "射击 (shèjī) - schießen"},
+      {"char": "谢", "pinyin": "xiè", "radical": "讠", "meaning": "danken", "example": "谢谢 (xièxie) - danke"}
+    ]
+  },
+  {
+    "phonetic": "砷",
+    "pinyinRoot": "shen",
+    "characters": [
+      {"char": "申", "pinyin": "shēn", "radical": "田", "meaning": "erklären", "example": "申请 (shēnqǐng) - beantragen"},
+      {"char": "呻", "pinyin": "shēn", "radical": "口", "meaning": "stöhnen", "example": "呻吟 (shēnyín) - stöhnen"},
+      {"char": "伸", "pinyin": "shēn", "radical": "亻", "meaning": "strecken", "example": "伸展 (shēnzhǎn) - ausstrecken"},
+      {"char": "绅", "pinyin": "shēn", "radical": "纟", "meaning": "Gentleman", "example": "绅士 (shēnshì) - Gentleman"},
+      {"char": "神", "pinyin": "shén", "radical": "示", "meaning": "Gott", "example": "神秘 (shénmì) - mysteriös"},
+      {"char": "审", "pinyin": "shěn", "radical": "宀", "meaning": "prüfen", "example": "审查 (shěnchá) - prüfen"},
+      {"char": "婶", "pinyin": "shěn", "radical": "女", "meaning": "Tante", "example": "婶婶 (shěnshen) - Tante"}
+    ]
+  },
+  {
+    "phonetic": "肾",
+    "pinyinRoot": "shen",
+    "characters": [
+      {"char": "竖", "pinyin": "shù", "radical": "立", "meaning": "senkrecht", "example": "竖立 (shùlì) - aufrichten"}
+    ]
+  },
+  {
+    "phonetic": "镇",
+    "pinyinRoot": "zhen",
+    "characters": [
+      {"char": "慎", "pinyin": "shèn", "radical": "忄", "meaning": "vorsichtig", "example": "谨慎 (jǐnshèn) - vorsichtig"},
+      {"char": "滇", "pinyin": "diān", "radical": "氵", "meaning": "Yunnan", "example": "滇池 (Diānchí) - Dian-See"}
+    ]
+  },
+  {
+    "phonetic": "渗",
+    "pinyinRoot": "shen",
+    "characters": [
+      {"char": "参", "pinyin": "cān", "radical": "厶", "meaning": "teilnehmen", "example": "参加 (cānjiā) - teilnehmen"},
+      {"char": "惨", "pinyin": "cǎn", "radical": "忄", "meaning": "tragisch", "example": "悲惨 (bēicǎn) - tragisch"}
+    ]
+  },
+
+  [
+  {
+    "phonetic": "司",
+    "pinyinRoot": "si",
+    "characters": [
+      {"char": "伺", "pinyin": "cì", "radical": "亻", "meaning": "auflauern", "example": "伺候 (cìhou) - aufwarten"},
+      {"char": "饲", "pinyin": "sì", "radical": "饣", "meaning": "füttern", "example": "饲料 (sìliào) - Futter"},
+      {"char": "嗣", "pinyin": "sì", "radical": "口", "meaning": "Nachfolger", "example": "子嗣 (zǐsì) - Nachkomme"}
+    ]
+  },
+  {
+    "phonetic": "松",
+    "pinyinRoot": "song",
+    "characters": [
+      {"char": "耸", "pinyin": "sǒng", "radical": "耳", "meaning": "emporragen", "example": "耸立 (sǒnglì) - emporragen"},
+      {"char": "怂", "pinyin": "sǒng", "radical": "心", "meaning": "anstiften", "example": "怂恿 (sǒngyǒng) - aufhetzen"}
+    ]
+  },
+  {
+    "phonetic": "颂",
+    "pinyinRoot": "song",
+    "characters": [
+      {"char": "讼", "pinyin": "sòng", "radical": "讠", "meaning": "klagen", "example": "诉讼 (sùsòng) - Rechtsstreit"}
+    ]
+  },
+  {
+    "phonetic": "诵",
+    "pinyinRoot": "song",
+    "characters": [
+      {"char": "桶", "pinyin": "tǒng", "radical": "木", "meaning": "Eimer", "example": "水桶 (shuǐtǒng) - Wassereimer"},
+      {"char": "涌", "pinyin": "yǒng", "radical": "氵", "meaning": "strömen", "example": "涌现 (yǒngxiàn) - auftauchen"},
+      {"char": "勇", "pinyin": "yǒng", "radical": "力", "meaning": "mutig", "example": "勇敢 (yǒnggǎn) - mutig"},
+      {"char": "俑", "pinyin": "yǒng", "radical": "亻", "meaning": "Figur", "example": "兵马俑 (bīngmǎyǒng) - Terrakottaarmee"},
+      {"char": "甬", "pinyin": "yǒng", "radical": "用", "meaning": "Pfad", "example": "甬道 (yǒngdào) - Korridor"}
+    ]
+  },
+  {
+    "phonetic": "搜",
+    "pinyinRoot": "sou",
+    "characters": [
+      {"char": "艘", "pinyin": "sōu", "radical": "舟", "meaning": "Schiff", "example": "一艘 (yìsōu) - ein Schiff"},
+      {"char": "嗖", "pinyin": "sōu", "radical": "口", "meaning": "zischen", "example": "嗖的一声 (sōu de yìshēng) - zischend"},
+      {"char": "飕", "pinyin": "sōu", "radical": "风", "meaning": "pfeifen", "example": "凉飕飕 (liángsōusōu) - eiskalt"},
+      {"char": "馊", "pinyin": "sōu", "radical": "饣", "meaning": "ranzig", "example": "馊主意 (sōu zhǔyi) - dumme Idee"}
+    ]
+  },
+  {
+    "phonetic": "粟",
+    "pinyinRoot": "su",
+    "characters": [
+      {"char": "僳", "pinyin": "sù", "radical": "亻", "meaning": "Ethnie", "example": "傈僳族 (Lìsùzú) - Lisu-Volk"}
+    ]
+  },
+  {
+    "phonetic": "塑",
+    "pinyinRoot": "su",
+    "characters": [
+      {"char": "溯", "pinyin": "sù", "radical": "氵", "meaning": "zurückverfolgen", "example": "追溯 (zhuīsù) - zurückverfolgen"},
+      {"char": "朔", "pinyin": "shuò", "radical": "月", "meaning": "Neumond", "example": "朔月 (shuòyuè) - Neumond"}
+    ]
+  },
+  {
+    "phonetic": "随",
+    "pinyinRoot": "sui",
+    "characters": [
+      {"char": "髓", "pinyin": "suǐ", "radical": "骨", "meaning": "Mark", "example": "骨髓 (gǔsuǐ) - Knochenmark"},
+      {"char": "隋", "pinyin": "Suí", "radical": "阝", "meaning": "Dynastie", "example": "隋朝 (Suícháo) - Sui-Dynastie"}
+    ]
+  },
+  {
+    "phonetic": "绥",
+    "pinyinRoot": "sui",
+    "characters": [
+      {"char": "妥", "pinyin": "tuǒ", "radical": "女", "meaning": "angemessen", "example": "妥当 (tuǒdang) - angemessen"}
+    ]
+  },
+  {
+    "phonetic": "遂",
+    "pinyinRoot": "sui",
+    "characters": [
+      {"char": "隧", "pinyin": "suì", "radical": "阝", "meaning": "Tunnel", "example": "隧道 (suìdào) - Tunnel"}
+    ]
+  },
+  {
+    "phonetic": "梭",
+    "pinyinRoot": "suo",
+    "characters": [
+      {"char": "唆", "pinyin": "suō", "radical": "口", "meaning": "anstiften", "example": "教唆 (jiàosuō) - anstiften"}
+    ]
+  },
+  {
+    "phonetic": "琐",
+    "pinyinRoot": "suo",
+    "characters": [
+      {"char": "锁", "pinyin": "suǒ", "radical": "钅", "meaning": "Schloss", "example": "锁门 (suǒmén) - abschließen"}
+    ]
+  },
+  {
+    "phonetic": "塔",
+    "pinyinRoot": "ta",
+    "characters": [
+      {"char": "搭", "pinyin": "dā", "radical": "扌", "meaning": "mitfahren", "example": "搭车 (dāchē) - per Anhalter fahren"},
+      {"char": "褡", "pinyin": "dā", "radical": "衤", "meaning": "Tasche", "example": "褡裢 (dālián) - Tragetasche"}
+    ]
+  },
+  {
+    "phonetic": "獭",
+    "pinyinRoot": "ta",
+    "characters": [
+      {"char": "懒", "pinyin": "lǎn", "radical": "忄", "meaning": "faul", "example": "懒惰 (lǎnduò) - faul"},
+      {"char": "赖", "pinyin": "lài", "radical": "贝", "meaning": "sich verlassen", "example": "依赖 (yīlài) - abhängig"},
+      {"char": "癞", "pinyin": "lài", "radical": "疒", "meaning": "Aussatz", "example": "癞蛤蟆 (làiháma) - Kröte"},
+      {"char": "濑", "pinyin": "lài", "radical": "氵", "meaning": "Stromschnelle", "example": "浅濑 (qiǎnlài) - seichte Stromschnelle"}
+    ]
+  },
+  {
+    "phonetic": "大",
+    "pinyinRoot": "da",
+    "characters": [
+      {"char": "达", "pinyin": "dá", "radical": "辶", "meaning": "erreichen", "example": "到达 (dàodá) - ankommen"},
+      {"char": "挞", "pinyin": "tà", "radical": "扌", "meaning": "peitschen", "example": "鞭挞 (biāntà) - geißeln"}
+    ]
+  },
+  {
+    "phonetic": "榻",
+    "pinyinRoot": "ta",
+    "characters": [
+      {"char": "蹋", "pinyin": "tà", "radical": "⻊", "meaning": "treten", "example": "糟蹋 (zāotà) - verschwenden"},
+      {"char": "塌", "pinyin": "tā", "radical": "土", "meaning": "einstürzen", "example": "倒塌 (dǎotā) - einstürzen"}
+    ]
+  },
+  {
+    "phonetic": "踏",
+    "pinyinRoot": "ta",
+    "characters": [
+      {"char": "沓", "pinyin": "tà", "radical": "水", "meaning": "Stapel", "example": "纷至沓来 (fēnzhìtàlái) - scharenweise kommen"}
+    ]
+  },
+  {
+    "phonetic": "胎",
+    "pinyinRoot": "tai",
+    "characters": [
+      {"char": "苔", "pinyin": "tái", "radical": "艹", "meaning": "Moos", "example": "青苔 (qīngtái) - Moos"},
+      {"char": "抬", "pinyin": "tái", "radical": "扌", "meaning": "heben", "example": "抬头 (táitóu) - den Kopf heben"},
+      {"char": "台", "pinyin": "tái", "radical": "口", "meaning": "Plattform", "example": "舞台 (wǔtái) - Bühne"}
+    ]
+  },
+  {
+    "phonetic": "酞",
+    "pinyinRoot": "tai",
+    "characters": [
+      {"char": "太", "pinyin": "tài", "radical": "大", "meaning": "zu sehr", "example": "太阳 (tàiyáng) - Sonne"},
+      {"char": "态", "pinyin": "tài", "radical": "心", "meaning": "Zustand", "example": "态度 (tàidu) - Haltung"},
+      {"char": "汰", "pinyin": "tài", "radical": "氵", "meaning": "ausmustern", "example": "淘汰 (táotài) - aussieben"}
+    ]
+  },
+  {
+    "phonetic": "摊",
+    "pinyinRoot": "tan",
+    "characters": [
+      {"char": "瘫", "pinyin": "tān", "radical": "疒", "meaning": "gelähmt", "example": "瘫痪 (tānhuàn) - Lähmung"},
+      {"char": "滩", "pinyin": "tān", "radical": "氵", "meaning": "Strand", "example": "沙滩 (shātān) - Sandstrand"}
+    ]
+  },
+  {
+    "phonetic": "檀",
+    "pinyinRoot": "tan",
+    "characters": [
+      {"char": "潭", "pinyin": "tán", "radical": "氵", "meaning": "Tümpel", "example": "泥潭 (nítán) - Sumpf"},
+      {"char": "谭", "pinyin": "tán", "radical": "讠", "meaning": "Nachname", "example": "姓谭 (xìng Tán) - Familienname Tan"}
+    ]
+  },
+  {
+    "phonetic": "痰",
+    "pinyinRoot": "tan",
+    "characters": [
+      {"char": "谈", "pinyin": "tán", "radical": "讠", "meaning": "sprechen", "example": "谈话 (tánhuà) - Gespräch"},
+      {"char": "毯", "pinyin": "tǎn", "radical": "毛", "meaning": "Decke", "example": "地毯 (dìtǎn) - Teppich"},
+      {"char": "炎", "pinyin": "yán", "radical": "火", "meaning": "Entzündung", "example": "发炎 (fāyán) - entzündet"},
+      {"char": "淡", "pinyin": "dàn", "radical": "氵", "meaning": "fade", "example": "清淡 (qīngdàn) - mild"}
+    ]
+  },
+  {
+    "phonetic": "坦",
+    "pinyinRoot": "tan",
+    "characters": [
+      {"char": "袒", "pinyin": "tǎn", "radical": "衤", "meaning": "entblößen", "example": "袒护 (tǎnhù) - in Schutz nehmen"},
+      {"char": "胆", "pinyin": "dǎn", "radical": "月", "meaning": "Mut", "example": "大胆 (dàdǎn) - mutig"}
+    ]
+  },
+  {
+    "phonetic": "碳",
+    "pinyinRoot": "tan",
+    "characters": [
+      {"char": "炭", "pinyin": "tàn", "radical": "火", "meaning": "Holzkohle", "example": "木炭 (mùtàn) - Holzkohle"}
+    ]
+  },
+  {
+    "phonetic": "探",
+    "pinyinRoot": "tan",
+    "characters": [
+      {"char": "深", "pinyin": "shēn", "radical": "氵", "meaning": "tief", "example": "深度 (shēndù) - Tiefe"},
+      {"char": "琛", "pinyin": "chēn", "radical": "王", "meaning": "Juwel", "example": "琛宝 (chēnbǎo) - Schatz"}
+    ]
+  },
+  {
+    "phonetic": "唐",
+    "pinyinRoot": "tang",
+    "characters": [
+      {"char": "糖", "pinyin": "táng", "radical": "米", "meaning": "Zucker", "example": "糖果 (tángguǒ) - Süßigkeit"},
+      {"char": "塘", "pinyin": "táng", "radical": "土", "meaning": "Teich", "example": "池塘 (chítáng) - Teich"},
+      {"char": "搪", "pinyin": "táng", "radical": "扌", "meaning": "abwehren", "example": "搪塞 (tángsè) - ausweichen"}
+    ]
+  },
+  {
+    "phonetic": "堂",
+    "pinyinRoot": "tang",
+    "characters": [
+      {"char": "棠", "pinyin": "táng", "radical": "木", "meaning": "Wildapfel", "example": "海棠 (hǎitáng) - Zierapfel"},
+      {"char": "膛", "pinyin": "táng", "radical": "月", "meaning": "Brustkorb", "example": "胸膛 (xiōngtáng) - Brustkorb"}
+    ]
+  },
+  {
+    "phonetic": "倘",
+    "pinyinRoot": "tang",
+    "characters": [
+      {"char": "躺", "pinyin": "tǎng", "radical": "身", "meaning": "liegen", "example": "躺下 (tǎngxià) - sich hinlegen"},
+      {"char": "淌", "pinyin": "tǎng", "radical": "氵", "meaning": "tröpfeln", "example": "流淌 (liútǎng) - fließen"},
+      {"char": "趟", "pinyin": "tàng", "radical": "走", "meaning": "Mal", "example": "一趟 (yítàng) - ein Mal"}
+    ]
+  },
+  {
+    "phonetic": "汤",
+    "pinyinRoot": "tang",
+    "characters": [
+      {"char": "烫", "pinyin": "tàng", "radical": "火", "meaning": "heiß", "example": "烫伤 (tàngshāng) - Verbrennung"},
+      {"char": "荡", "pinyin": "dàng", "radical": "艹", "meaning": "schwingen", "example": "荡漾 (dàngyàng) - schwingen"}
+    ]
+  },
+  {
+    "phonetic": "涛",
+    "pinyinRoot": "tao",
+    "characters": [
+      {"char": "焘", "pinyin": "tāo", "radical": "灬", "meaning": "bedecken", "example": "焘育 (tāoyù) - bedecken und nähren"}
+    ]
+  },
+  {
+    "phonetic": "滔",
+    "pinyinRoot": "tao",
+    "characters": [
+      {"char": "舀", "pinyin": "yǎo", "radical": "臼", "meaning": "schöpfen", "example": "舀水 (yǎoshuǐ) - Wasser schöpfen"}
+    ]
+  },
+  {
+    "phonetic": "条",
+    "pinyinRoot": "tiao",
+    "characters": [
+      {"char": "绦", "pinyin": "tāo", "radical": "纟", "meaning": "Band", "example": "丝绦 (sītāo) - Seidenband"}
+    ]
+  },
+  {
+    "phonetic": "淘",
+    "pinyinRoot": "tao",
+    "characters": [
+      {"char": "陶", "pinyin": "táo", "radical": "阝", "meaning": "Keramik", "example": "陶瓷 (táocí) - Keramik"},
+      {"char": "萄", "pinyin": "táo", "radical": "艹", "meaning": "Traube", "example": "葡萄 (pútáo) - Traube"},
+      {"char": "掏", "pinyin": "tāo", "radical": "扌", "meaning": "ausgraben", "example": "掏钱 (tāoqián) - Geld ausgeben"}
+    ]
+  },
+  {
+    "phonetic": "桃",
+    "pinyinRoot": "tao",
+    "characters": [
+      {"char": "逃", "pinyin": "táo", "radical": "辶", "meaning": "fliehen", "example": "逃跑 (táopǎo) - fliehen"},
+      {"char": "挑", "pinyin": "tiāo", "radical": "扌", "meaning": "auswählen", "example": "挑选 (tiāoxuǎn) - auswählen"},
+      {"char": "眺", "pinyin": "tiào", "radical": "目", "meaning": "blicken", "example": "眺望 (tiàowàng) - in die Ferne blicken"},
+      {"char": "跳", "pinyin": "tiào", "radical": "⻊", "meaning": "springen", "example": "跳舞 (tiàowǔ) - tanzen"}
+    ]
+  },
+  {
+    "phonetic": "藤",
+    "pinyinRoot": "teng",
+    "characters": [
+      {"char": "腾", "pinyin": "téng", "radical": "月", "meaning": "aufsteigen", "example": "沸腾 (fèiténg) - kochen"}
+    ]
+  },
+  {
+    "phonetic": "梯",
+    "pinyinRoot": "ti",
+    "characters": [
+      {"char": "锑", "pinyin": "tī", "radical": "钅", "meaning": "Antimon", "example": "锑矿 (tīkuàng) - Antimonerz"},
+      {"char": "涕", "pinyin": "tì", "radical": "氵", "meaning": "Träne", "example": "鼻涕 (bítì) - Nasenschleim"},
+      {"char": "剃", "pinyin": "tì", "radical": "刂", "meaning": "rasieren", "example": "剃刀 (tìdāo) - Rasiermesser"}
+    ]
+  },
+  {
+    "phonetic": "剔",
+    "pinyinRoot": "ti",
+    "characters": [
+      {"char": "踢", "pinyin": "tī", "radical": "⻊", "meaning": "treten", "example": "踢球 (tīqiú) - Fußball spielen"},
+      {"char": "惕", "pinyin": "tì", "radical": "忄", "meaning": "wachsam", "example": "警惕 (jǐngtì) - wachsam"}
+    ]
+  },
+  {
+    "phonetic": "提",
+    "pinyinRoot": "ti",
+    "characters": [
+      {"char": "题", "pinyin": "tí", "radical": "页", "meaning": "Thema", "example": "题目 (tímù) - Titel"}
+    ]
+  },
+  {
+    "phonetic": "帝",
+    "pinyinRoot": "di",
+    "characters": [
+      {"char": "蹄", "pinyin": "tí", "radical": "⻊", "meaning": "Huf", "example": "马蹄 (mǎtí) - Pferdehuf"},
+      {"char": "啼", "pinyin": "tí", "radical": "口", "meaning": "weinen", "example": "啼哭 (tíkū) - weinen"}
+    ]
+  },
+  {
+    "phonetic": "恬",
+    "pinyinRoot": "tian",
+    "characters": [
+      {"char": "甜", "pinyin": "tián", "radical": "甘", "meaning": "süß", "example": "甜蜜 (tiánmì) - süß"},
+      {"char": "舔", "pinyin": "tiǎn", "radical": "舌", "meaning": "lecken", "example": "舔舐 (tiǎnshì) - lecken"}
+    ]
+  },
+  {
+    "phonetic": "腆",
+    "pinyinRoot": "tian",
+    "characters": [
+      {"char": "典", "pinyin": "diǎn", "radical": "八", "meaning": "Klassiker", "example": "字典 (zìdiǎn) - Wörterbuch"},
+      {"char": "碘", "pinyin": "diǎn", "radical": "石", "meaning": "Jod", "example": "碘酒 (diǎnjiǔ) - Jodtinktur"}
+    ]
+  },
+  {
+    "phonetic": "贴",
+    "pinyinRoot": "tie",
+    "characters": [
+      {"char": "帖", "pinyin": "tiē", "radical": "巾", "meaning": "angebracht", "example": "妥帖 (tuǒtiē) - angemessen"}
+    ]
+  },
+  {
+    "phonetic": "汀",
+    "pinyinRoot": "ting",
+    "characters": [
+      {"char": "钉", "pinyin": "dīng", "radical": "钅", "meaning": "Nagel", "example": "钉子 (dīngzi) - Nagel"},
+      {"char": "盯", "pinyin": "dīng", "radical": "目", "meaning": "anstarren", "example": "盯着 (dīngzhe) - anstarren"}
+    ]
+  },
+  {
+    "phonetic": "廷",
+    "pinyinRoot": "ting",
+    "characters": [
+      {"char": "挺", "pinyin": "tǐng", "radical": "扌", "meaning": "gerade", "example": "挺立 (tǐnglì) - aufrecht stehen"},
+      {"char": "庭", "pinyin": "tíng", "radical": "广", "meaning": "Hof", "example": "家庭 (jiātíng) - Familie"},
+      {"char": "艇", "pinyin": "tǐng", "radical": "舟", "meaning": "Boot", "example": "潜艇 (qiántǐng) - U-Boot"}
+    ]
+  },
+  {
+    "phonetic": "停",
+    "pinyinRoot": "ting",
+    "characters": [
+      {"char": "亭", "pinyin": "tíng", "radical": "亠", "meaning": "Pavillon", "example": "亭子 (tíngzi) - Pavillon"}
+    ]
+  },
+  {
+    "phonetic": "通",
+    "pinyinRoot": "tong",
+    "characters": [
+      {"char": "桶", "pinyin": "tǒng", "radical": "木", "meaning": "Eimer", "example": "水桶 (shuǐtǒng) - Wassereimer"},
+      {"char": "捅", "pinyin": "tǒng", "radical": "扌", "meaning": "stochern", "example": "捅破 (tǒngpò) - durchstechen"},
+      {"char": "痛", "pinyin": "tòng", "radical": "疒", "meaning": "Schmerz", "example": "痛苦 (tòngkǔ) - Schmerz"}
+    ]
+  },
+  {
+    "phonetic": "桐",
+    "pinyinRoot": "tong",
+    "characters": [
+      {"char": "酮", "pinyin": "tóng", "radical": "酉", "meaning": "Keton", "example": "丙酮 (bǐngtóng) - Aceton"},
+      {"char": "同", "pinyin": "tóng", "radical": "口", "meaning": "gleich", "example": "同学 (tóngxué) - Mitschüler"},
+      {"char": "铜", "pinyin": "tóng", "radical": "钅", "meaning": "Kupfer", "example": "铜钱 (tóngqián) - Kupfermünze"}
+    ]
+  },
+  {
+    "phonetic": "瞳",
+    "pinyinRoot": "tong",
+    "characters": [
+      {"char": "童", "pinyin": "tóng", "radical": "立", "meaning": "Kind", "example": "儿童 (értóng) - Kind"},
+      {"char": "潼", "pinyin": "tóng", "radical": "氵", "meaning": "Ortsname", "example": "潼关 (Tóngguān) - Tong-Pass"},
+      {"char": "撞", "pinyin": "zhuàng", "radical": "扌", "meaning": "stoßen", "example": "撞击 (zhuàngjī) - zusammenstoßen"},
+      {"char": "幢", "pinyin": "chuáng", "radical": "巾", "meaning": "Gebäude", "example": "一幢 (yíchuáng) - ein Gebäude"}
+    ]
+  },
+  {
+    "phonetic": "途",
+    "pinyinRoot": "tu",
+    "characters": [
+      {"char": "涂", "pinyin": "tú", "radical": "氵", "meaning": "streichen", "example": "涂料 (túliào) - Farbe"},
+      {"char": "荼", "pinyin": "tú", "radical": "艹", "meaning": "bitter", "example": "荼毒 (túdú) - vergiften"},
+      {"char": "茶", "pinyin": "chá", "radical": "艹", "meaning": "Tee", "example": "茶叶 (cháyè) - Teeblätter"}
+    ]
+  },
+  {
+    "phonetic": "赊",
+    "pinyinRoot": "she",
+    "characters": [
+      {"char": "佘", "pinyin": "Shé", "radical": "人", "meaning": "Nachname", "example": "姓佘 (xìng Shé) - Familienname She"}
+    ]
+  },
+  {
+    "phonetic": "土",
+    "pinyinRoot": "tu",
+    "characters": [
+      {"char": "吐", "pinyin": "tǔ", "radical": "口", "meaning": "spucken", "example": "吐痰 (tǔtán) - spucken"}
+    ]
+  },
+  {
+    "phonetic": "褪",
+    "pinyinRoot": "tui",
+    "characters": [
+      {"char": "退", "pinyin": "tuì", "radical": "辶", "meaning": "zurücktreten", "example": "退休 (tuìxiū) - in Rente gehen"}
+    ]
+  },
+  {
+    "phonetic": "鸵",
+    "pinyinRoot": "tuo",
+    "characters": [
+      {"char": "陀", "pinyin": "tuó", "radical": "阝", "meaning": "schief", "example": "陀螺 (tuóluó) - Kreisel"},
+      {"char": "驼", "pinyin": "tuó", "radical": "马", "meaning": "Kamel", "example": "骆驼 (luòtuo) - Kamel"}
+    ]
+  },
+  {
+    "phonetic": "睡",
+    "pinyinRoot": "shui",
+    "characters": [
+      {"char": "唾", "pinyin": "tuò", "radical": "口", "meaning": "Speichel", "example": "唾沫 (tuòmo) - Speichel"},
+      {"char": "捶", "pinyin": "chuí", "radical": "扌", "meaning": "schlagen", "example": "捶打 (chuídǎ) - schlagen"},
+      {"char": "垂", "pinyin": "chuí", "radical": "土", "meaning": "hängen", "example": "垂直 (chuízhí) - senkrecht"}
+    ]
+  },
+  {
+    "phonetic": "哇",
+    "pinyinRoot": "wa",
+    "characters": [
+      {"char": "蛙", "pinyin": "wā", "radical": "虫", "meaning": "Frosch", "example": "青蛙 (qīngwā) - Frosch"},
+      {"char": "洼", "pinyin": "wā", "radical": "氵", "meaning": "Senke", "example": "水洼 (shuǐwā) - Pfütze"},
+      {"char": "娃", "pinyin": "wá", "radical": "女", "meaning": "Baby", "example": "娃娃 (wáwa) - Puppe"},
+      {"char": "桂", "pinyin": "guì", "radical": "木", "meaning": "Lorbeer", "example": "桂花 (guìhuā) - Duftblüte"},
+      {"char": "硅", "pinyin": "guī", "radical": "石", "meaning": "Silizium", "example": "硅谷 (guīgǔ) - Silicon Valley"}
+    ]
+  },
+  {
+    "phonetic": "弯",
+    "pinyinRoot": "wan",
+    "characters": [
+      {"char": "湾", "pinyin": "wān", "radical": "氵", "meaning": "Bucht", "example": "台湾 (Táiwān) - Taiwan"}
+    ]
+  },
+  {
+    "phonetic": "玩",
+    "pinyinRoot": "wan",
+    "characters": [
+      {"char": "顽", "pinyin": "wán", "radical": "页", "meaning": "hartnäckig", "example": "顽固 (wángù) - stur"},
+      {"char": "烷", "pinyin": "wán", "radical": "火", "meaning": "Alkan", "example": "甲烷 (jiǎwán) - Methan"},
+      {"char": "完", "pinyin": "wán", "radical": "宀", "meaning": "fertig", "example": "完成 (wánchéng) - fertigstellen"},
+      {"char": "皖", "pinyin": "wǎn", "radical": "白", "meaning": "Anhui", "example": "安徽省 (Ānhuī Shěng) - Provinz Anhui"}
+    ]
+  },
+  {
+    "phonetic": "挽",
+    "pinyinRoot": "wan",
+    "characters": [
+      {"char": "晚", "pinyin": "wǎn", "radical": "日", "meaning": "Abend", "example": "晚上 (wǎnshang) - Abend"}
+    ]
+  },
+  {
+    "phonetic": "冤",
+    "pinyinRoot": "yuan",
+    "characters": [
+      {"char": "兔", "pinyin": "tù", "radical": "⺈", "meaning": "Hase", "example": "兔子 (tùzi) - Hase"}
+    ]
+  },
+  {
+    "phonetic": "碗",
+    "pinyinRoot": "wan",
+    "characters": [
+      {"char": "惋", "pinyin": "wǎn", "radical": "忄", "meaning": "bedauern", "example": "惋惜 (wǎnxī) - bedauern"},
+      {"char": "宛", "pinyin": "wǎn", "radical": "宀", "meaning": "wie", "example": "宛如 (wǎnrú) - als ob"},
+      {"char": "婉", "pinyin": "wǎn", "radical": "女", "meaning": "sanft", "example": "委婉 (wěiwǎn) - taktvoll"},
+      {"char": "腕", "pinyin": "wàn", "radical": "月", "meaning": "Handgelenk", "example": "手腕 (shǒuwàn) - Handgelenk"}
+    ]
+  },
+  {
+    "phonetic": "汪",
+    "pinyinRoot": "wang",
+    "characters": [
+      {"char": "王", "pinyin": "wáng", "radical": "王", "meaning": "König", "example": "国王 (guówáng) - König"},
+      {"char": "枉", "pinyin": "wǎng", "radical": "木", "meaning": "ungerecht", "example": "冤枉 (yuānwǎng) - Unrecht"},
+      {"char": "旺", "pinyin": "wàng", "radical": "日", "meaning": "blühend", "example": "旺盛 (wàngshèng) - üppig"},
+      {"char": "往", "pinyin": "wǎng", "radical": "彳", "meaning": "gehen", "example": "往来 (wǎnglái) - Verkehr"},
+      {"char": "逛", "pinyin": "guàng", "radical": "辶", "meaning": "bummeln", "example": "逛街 (guàngjiē) - bummeln"}
+    ]
+  },
+  {
+    "phonetic": "望",
+    "pinyinRoot": "wang",
+    "characters": [
+      {"char": "忘", "pinyin": "wàng", "radical": "心", "meaning": "vergessen", "example": "忘记 (wàngjì) - vergessen"},
+      {"char": "妄", "pinyin": "wàng", "radical": "女", "meaning": "absurd", "example": "妄想 (wàngxiǎng) - Wahn"},
+      {"char": "亡", "pinyin": "wáng", "radical": "亠", "meaning": "sterben", "example": "死亡 (sǐwáng) - Tod"}
+    ]
+  },
+  {
+    "phonetic": "韦",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "违", "pinyin": "wéi", "radical": "辶", "meaning": "verletzen", "example": "违反 (wéifǎn) - verletzen"},
+      {"char": "围", "pinyin": "wéi", "radical": "囗", "meaning": "umgeben", "example": "围绕 (wéirào) - umkreisen"},
+      {"char": "苇", "pinyin": "wěi", "radical": "艹", "meaning": "Schilf", "example": "芦苇 (lúwěi) - Schilf"},
+      {"char": "伟", "pinyin": "wěi", "radical": "亻", "meaning": "groß", "example": "伟大 (wěidà) - großartig"},
+      {"char": "纬", "pinyin": "wěi", "radical": "纟", "meaning": "Breitengrad", "example": "纬度 (wěidù) - Breitengrad"}
+    ]
+  },
+  {
+    "phonetic": "桅",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "脆", "pinyin": "cuì", "radical": "月", "meaning": "knusprig", "example": "脆弱 (cuìruò) - zerbrechlich"},
+      {"char": "危", "pinyin": "wēi", "radical": "⺈", "meaning": "gefährlich", "example": "危险 (wēixiǎn) - gefährlich"}
+    ]
+  },
+  {
+    "phonetic": "唯",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "惟", "pinyin": "wéi", "radical": "忄", "meaning": "nur", "example": "惟独 (wéidú) - ausschließlich"},
+      {"char": "潍", "pinyin": "wéi", "radical": "氵", "meaning": "Flussname", "example": "潍坊 (Wéifāng) - Weifang (Stadt)"},
+      {"char": "维", "pinyin": "wéi", "radical": "纟", "meaning": "erhalten", "example": "维持 (wéichí) - aufrechterhalten"}
+    ]
+  },
+  {
+    "phonetic": "萎",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "委", "pinyin": "wěi", "radical": "女", "meaning": "komitee", "example": "委员 (wěiyuán) - Komiteemitglied"},
+      {"char": "魏", "pinyin": "wèi", "radical": "鬼", "meaning": "Dynastie", "example": "魏国 (Wèiguó) - Wei-Staat"}
+    ]
+  },
+  {
+    "phonetic": "伪",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "为", "pinyin": "wèi", "radical": "丶", "meaning": "tun", "example": "因为 (yīnwèi) - weil"}
+    ]
+  },
+  {
+    "phonetic": "未",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "味", "pinyin": "wèi", "radical": "口", "meaning": "Geschmack", "example": "味道 (wèidào) - Geschmack"},
+      {"char": "昧", "pinyin": "mèi", "radical": "日", "meaning": "dunkel", "example": "暧昧 (àimèi) - zweideutig"},
+      {"char": "沫", "pinyin": "mò", "radical": "氵", "meaning": "Schaum", "example": "泡沫 (pàomò) - Schaum"}
+    ]
+  },
+  {
+    "phonetic": "畏",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "喂", "pinyin": "wèi", "radical": "口", "meaning": "füttern", "example": "喂养 (wèiyǎng) - füttern"},
+      {"char": "偎", "pinyin": "wēi", "radical": "亻", "meaning": "kuscheln", "example": "依偎 (yīwēi) - kuscheln"}
+    ]
+  },
+  {
+    "phonetic": "胃",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "渭", "pinyin": "wèi", "radical": "氵", "meaning": "Flussname", "example": "渭河 (Wèi Hé) - Wei-Fluss"},
+      {"char": "谓", "pinyin": "wèi", "radical": "讠", "meaning": "sagen", "example": "所谓 (suǒwèi) - sogenannt"}
+    ]
+  },
+  {
+    "phonetic": "尉",
+    "pinyinRoot": "wei",
+    "characters": [
+      {"char": "慰", "pinyin": "wèi", "radical": "心", "meaning": "trösten", "example": "安慰 (ānwèi) - trösten"}
+    ]
+  },
+  {
+    "phonetic": "瘟",
+    "pinyinRoot": "wen",
+    "characters": [
+      {"char": "温", "pinyin": "wēn", "radical": "氵", "meaning": "warm", "example": "温度 (wēndù) - Temperatur"}
+    ]
+  },
+  {
+    "phonetic": "蚊",
+    "pinyinRoot": "wen",
+    "characters": [
+      {"char": "文", "pinyin": "wén", "radical": "文", "meaning": "Text", "example": "文化 (wénhuà) - Kultur"},
+      {"char": "纹", "pinyin": "wén", "radical": "纟", "meaning": "Muster", "example": "花纹 (huāwén) - Muster"},
+      {"char": "紊", "pinyin": "wěn", "radical": "糸", "meaning": "durcheinander", "example": "紊乱 (wěnluàn) - Chaos"}
+    ]
+  },
+  {
+    "phonetic": "问",
+    "pinyinRoot": "wen",
+    "characters": [
+      {"char": "闻", "pinyin": "wén", "radical": "门", "meaning": "riechen", "example": "新闻 (xīnwén) - Nachrichten"},
+      {"char": "门", "pinyin": "mén", "radical": "门", "meaning": "Tür", "example": "门口 (ménkǒu) - Eingang"},
+      {"char": "们", "pinyin": "men", "radical": "亻", "meaning": "Plural", "example": "我们 (wǒmen) - wir"}
+    ]
+  },
+  {
+    "phonetic": "吻",
+    "pinyinRoot": "wen",
+    "characters": [
+      {"char": "物", "pinyin": "wù", "radical": "牛", "meaning": "Ding", "example": "动物 (dòngwù) - Tier"},
+      {"char": "勿", "pinyin": "wù", "radical": "勹", "meaning": "nicht", "example": "请勿 (qǐngwù) - bitte nicht"}
+    ]
+  },
+  {
+    "phonetic": "稳",
+    "pinyinRoot": "wen",
+    "characters": [
+      {"char": "急", "pinyin": "jí", "radical": "心", "meaning": "eilig", "example": "着急 (zháojí) - besorgt"}
+    ]
+  },
+  {
+    "phonetic": "嗡",
+    "pinyinRoot": "weng",
+    "characters": [
+      {"char": "翁", "pinyin": "wēng", "radical": "羽", "meaning": "alter Mann", "example": "老翁 (lǎowēng) - alter Mann"},
+      {"char": "瓮", "pinyin": "wèng", "radical": "瓦", "meaning": "Krug", "example": "瓮城 (wèngchéng) - Vorstadt"}
+    ]
+  },
+  {
+    "phonetic": "蜗",
+    "pinyinRoot": "wo",
+    "characters": [
+      {"char": "涡", "pinyin": "wō", "radical": "氵", "meaning": "Wirbel", "example": "漩涡 (xuánwō) - Strudel"},
+      {"char": "窝", "pinyin": "wō", "radical": "穴", "meaning": "Nest", "example": "鸟窝 (niǎowō) - Vogelnest"}
+    ]
+  },
+  {
+    "phonetic": "跃",
+    "pinyinRoot": "yue",
+    "characters": [
+      {"char": "沃", "pinyin": "wò", "radical": "氵", "meaning": "fruchtbar", "example": "肥沃 (féiwò) - fruchtbar"},
+      {"char": "妖", "pinyin": "yāo", "radical": "女", "meaning": "Dämon", "example": "妖怪 (yāoguài) - Monster"},
+      {"char": "夭", "pinyin": "yāo", "radical": "大", "meaning": "sterben", "example": "夭折 (yāozhé) - jung sterben"}
+    ]
+  },
+  {
+    "phonetic": "呜",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "钨", "pinyin": "wū", "radical": "钅", "meaning": "Wolfram", "example": "钨丝 (wūsī) - Wolframfaden"},
+      {"char": "乌", "pinyin": "wū", "radical": "丿", "meaning": "Rabe", "example": "乌鸦 (wūyā) - Rabe"}
+    ]
+  },
+  {
+    "phonetic": "无",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "芜", "pinyin": "wú", "radical": "艹", "meaning": "verwildert", "example": "荒芜 (huāngwú) - verwildert"}
+    ]
+  },
+  {
+    "phonetic": "梧",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "吾", "pinyin": "wú", "radical": "口", "meaning": "ich", "example": "支吾 (zhīwu) - ausweichen"},
+      {"char": "五", "pinyin": "wǔ", "radical": "二", "meaning": "fünf", "example": "五月 (wǔyuè) - Mai"},
+      {"char": "捂", "pinyin": "wǔ", "radical": "扌", "meaning": "bedecken", "example": "捂住 (wǔzhù) - zuhalten"},
+      {"char": "晤", "pinyin": "wù", "radical": "日", "meaning": "treffen", "example": "会晤 (huìwù) - Treffen"},
+      {"char": "悟", "pinyin": "wù", "radical": "忄", "meaning": "verstehen", "example": "觉悟 (juéwù) - Bewusstsein"},
+      {"char": "伍", "pinyin": "wǔ", "radical": "亻", "meaning": "fünf", "example": "队伍 (duìwu) - Truppe"}
+    ]
+  },
+  {
+    "phonetic": "武",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "式", "pinyin": "shì", "radical": "弋", "meaning": "Stil", "example": "方式 (fāngshì) - Methode"}
+    ]
+  },
+  {
+    "phonetic": "戊",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "茂", "pinyin": "mào", "radical": "艹", "meaning": "üppig", "example": "茂盛 (màoshèng) - üppig"},
+      {"char": "戈", "pinyin": "gē", "radical": "戈", "meaning": "Hellebarde", "example": "干戈 (gāngē) - Waffen"}
+    ]
+  },
+  {
+    "phonetic": "舞",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "無", "pinyin": "wú", "radical": "灬", "meaning": "kein", "example": "无法 (wúfǎ) - unmöglich"}
+    ]
+  },
+  {
+    "phonetic": "坞",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "呜", "pinyin": "wū", "radical": "口", "meaning": "weinen", "example": "呜咽 (wūyè) - schluchzen"}
+    ]
+  },
+  {
+    "phonetic": "雾",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "务", "pinyin": "wù", "radical": "力", "meaning": "Aufgabe", "example": "任务 (rènwu) - Aufgabe"}
+    ]
+  },
+  {
+    "phonetic": "吴",
+    "pinyinRoot": "wu",
+    "characters": [
+      {"char": "误", "pinyin": "wù", "radical": "讠", "meaning": "Fehler", "example": "错误 (cuòwù) - Fehler"},
+      {"char": "娱", "pinyin": "yú", "radical": "女", "meaning": "unterhalten", "example": "娱乐 (yúlè) - Unterhaltung"}
+    ]
+  },
+  {
+    "phonetic": "西",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "硒", "pinyin": "xī", "radical": "石", "meaning": "Selen", "example": "硒元素 (xī yuánsù) - Selen"},
+      {"char": "牺", "pinyin": "xī", "radical": "牛", "meaning": "opfern", "example": "牺牲 (xīshēng) - Opfer"}
+    ]
+  },
+  {
+    "phonetic": "夕",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "矽", "pinyin": "xī", "radical": "石", "meaning": "Silizium", "example": "矽肺 (xīfèi) - Silikose"},
+      {"char": "汐", "pinyin": "xī", "radical": "氵", "meaning": "Gezeiten", "example": "潮汐 (cháoxī) - Gezeiten"}
+    ]
+  },
+  {
+    "phonetic": "嘻",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "喜", "pinyin": "xǐ", "radical": "口", "meaning": "Freude", "example": "喜欢 (xǐhuan) - mögen"}
+    ]
+  },
+  {
+    "phonetic": "极",
+    "pinyinRoot": "ji",
+    "characters": [
+      {"char": "吸", "pinyin": "xī", "radical": "口", "meaning": "einatmen", "example": "呼吸 (hūxī) - atmen"},
+      {"char": "圾", "pinyin": "jī", "radical": "土", "meaning": "Müll", "example": "垃圾 (lājī) - Müll"},
+      {"char": "級", "pinyin": "jí", "radical": "糸", "meaning": "Stufe", "example": "等级 (děngjí) - Rang"}
+    ]
+  },
+  {
+    "phonetic": "易",
+    "pinyinRoot": "yi",
+    "characters": [
+      {"char": "锡", "pinyin": "xī", "radical": "钅", "meaning": "Zinn", "example": "锡矿 (xīkuàng) - Zinnerz"},
+      {"char": "剔", "pinyin": "tī", "radical": "刂", "meaning": "ausschneiden", "example": "剔除 (tīchú) - entfernen"},
+      {"char": "惕", "pinyin": "tì", "radical": "忄", "meaning": "wachsam", "example": "警惕 (jǐngtì) - wachsam"}
+    ]
+  },
+  {
+    "phonetic": "希",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "稀", "pinyin": "xī", "radical": "禾", "meaning": "selten", "example": "稀少 (xīshǎo) - selten"}
+    ]
+  },
+  {
+    "phonetic": "息",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "熄", "pinyin": "xī", "radical": "火", "meaning": "löschen", "example": "熄灭 (xīmiè) - erlöschen"},
+      {"char": "媳", "pinyin": "xí", "radical": "女", "meaning": "Schwiegertochter", "example": "媳妇 (xífu) - Schwiegertochter"}
+    ]
+  },
+  {
+    "phonetic": "悉",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "蟋", "pinyin": "xī", "radical": "虫", "meaning": "Grille", "example": "蟋蟀 (xīshuài) - Grille"}
+    ]
+  },
+  {
+    "phonetic": "膝",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "漆", "pinyin": "qī", "radical": "氵", "meaning": "Lack", "example": "油漆 (yóuqī) - Farbe"}
+    ]
+  },
+  {
+    "phonetic": "惜",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "昔", "pinyin": "xī", "radical": "日", "meaning": "früher", "example": "昔日 (xīrì) - früher"},
+      {"char": "借", "pinyin": "jiè", "radical": "亻", "meaning": "borgen", "example": "借钱 (jièqián) - Geld leihen"},
+      {"char": "醋", "pinyin": "cù", "radical": "酉", "meaning": "Essig", "example": "吃醋 (chīcù) - eifersüchtig"}
+    ]
+  },
+  {
+    "phonetic": "烯",
+    "pinyinRoot": "xi",
+    "characters": [
+      {"char": "稀", "pinyin": "xī", "radical": "禾", "meaning": "selten", "example": "稀少 (xīshǎo) - selten"},
+      {"char": "希", "pinyin": "xī", "radical": "巾", "meaning": "hoffen", "example": "希望 (xīwàng) - hoffen"}
+    ]
+  },
+
+{
+  "phonetic": "犀",
+  "pinyinRoot": "xi",
+  "characters": [
+    {"char": "墀", "pinyin": "chí", "radical": "土", "meaning": "Stufe", "example": "丹墀 (dānchí) - rote Stufe"},
+    {"char": "溪", "pinyin": "xī", "radical": "氵", "meaning": "Bach", "example": "小溪 (xiǎoxī) - kleiner Bach"},
+    {"char": "奚", "pinyin": "xī", "radical": "大", "meaning": "warum", "example": "奚落 (xīluò) - verspotten"},
+    {"char": "蹊", "pinyin": "xī", "radical": "⻊", "meaning": "Pfad", "example": "蹊径 (xījìng) - Weg"}
+  ]
+},
+
+{
+  "phonetic": "洗",
+  "pinyinRoot": "xi",
+  "characters": [
+    {"char": "铣", "pinyin": "xǐ", "radical": "钅", "meaning": "fräsen", "example": "铣床 (xǐchuáng) - Fräsmaschine"},
+    {"char": "冼", "pinyin": "xiǎn", "radical": "冫", "meaning": "spülen", "example": "冼涤 (xiǎndí) - waschen"},
+    {"char": "先", "pinyin": "xiān", "radical": "儿", "meaning": "zuerst", "example": "先生 (xiānsheng) - Herr"},
+    {"char": "选", "pinyin": "xuǎn", "radical": "辶", "meaning": "wählen", "example": "选择 (xuǎnzé) - auswählen"},
+    {"char": "宪", "pinyin": "xiàn", "radical": "宀", "meaning": "Verfassung", "example": "宪法 (xiànfǎ) - Verfassung"}
+  ]
+},
+{
+  "phonetic": "暇",
+  "pinyinRoot": "xia",
+  "characters": [
+    {"char": "假", "pinyin": "jiǎ", "radical": "亻", "meaning": "urlauben", "example": "假期 (jiǎqī) - Ferien"},
+    {"char": "霞", "pinyin": "xiá", "radical": "雨", "meaning": "Abendrot", "example": "晚霞 (wǎnxiá) - Abenddämmerung"},
+    {"char": "葭", "pinyin": "jiā", "radical": "艹", "meaning": "Schilf", "example": "葭莩 (jiāfú) - Schilfrohr"}
+  ]
+},
+{
+  "phonetic": "峡",
+  "pinyinRoot": "xia",
+  "characters": [
+    {"char": "侠", "pinyin": "xiá", "radical": "亻", "meaning": "Held", "example": "武侠 (wǔxiá) - Ritter"},
+    {"char": "狭", "pinyin": "xiá", "radical": "犭", "meaning": "eng", "example": "狭窄 (xiázhǎi) - schmal"},
+    {"char": "挟", "pinyin": "xié", "radical": "扌", "meaning": "erpressen", "example": "挟持 (xiéchí) - entführen"},
+    {"char": "夹", "pinyin": "jiā", "radical": "大", "meaning": "klemmen", "example": "夹子 (jiāzi) - Klammer"}
+  ]
+},
+{
+  "phonetic": "下",
+  "pinyinRoot": "xia",
+  "characters": [
+    {"char": "吓", "pinyin": "xià", "radical": "口", "meaning": "erschrecken", "example": "吓唬 (xiàhu) - erschrecken"},
+    {"char": "卡", "pinyin": "kǎ", "radical": "丨", "meaning": "Karte", "example": "卡片 (kǎpiàn) - Karte"},
+    {"char": "汴", "pinyin": "biàn", "radical": "氵", "meaning": "Flussname", "example": "汴京 (Biànjīng) - alter Name für Kaifeng"},
+    {"char": "卞", "pinyin": "biàn", "radical": "卜", "meaning": "eilig", "example": "卞急 (biànjí) - hitzig"}
+  ]
+},
+{
+  "phonetic": "厦",
+  "pinyinRoot": "xia",
+  "characters": [
+    {"char": "夏", "pinyin": "xià", "radical": "夂", "meaning": "Sommer", "example": "夏天 (xiàtiān) - Sommer"}
+  ]
+},
+{
+  "phonetic": "掀",
+  "pinyinRoot": "xian",
+  "characters": [
+    {"char": "锨", "pinyin": "xiān", "radical": "钅", "meaning": "Schaufel", "example": "铁锨 (tiěxiān) - Eisenschaufel"}
+  ]
+},
+{
+  "phonetic": "山",
+  "pinyinRoot": "shan",
+  "characters": [
+    {"char": "仙", "pinyin": "xiān", "radical": "亻", "meaning": "Unsterblicher", "example": "神仙 (shénxiān) - Gottheit"},
+    {"char": "岩", "pinyin": "yán", "radical": "山", "meaning": "Felsen", "example": "岩石 (yánshí) - Gestein"},
+    {"char": "舢", "pinyin": "shān", "radical": "舟", "meaning": "Sampan", "example": "舢板 (shānbǎn) - kleines Boot"},
+    {"char": "汕", "pinyin": "shàn", "radical": "氵", "meaning": "Fischernetz", "example": "汕头 (Shàntóu) - Stadt in Guangdong"}
+  ]
+},
+{
+  "phonetic": "衔",
+  "pinyinRoot": "xian",
+  "characters": [
+    {"char": "街", "pinyin": "jiē", "radical": "行", "meaning": "Straße", "example": "街道 (jiēdào) - Straße"},
+    {"char": "衙", "pinyin": "yá", "radical": "行", "meaning": "Amt", "example": "衙门 (yámen) - Amt"},
+    {"char": "衢", "pinyin": "qú", "radical": "行", "meaning": "Hauptstraße", "example": "通衢 (tōngqú) - Hauptverkehrsstraße"}
+  ]
+},
+{
+  "phonetic": "舷",
+  "pinyinRoot": "xian",
+  "characters": [
+    {"char": "弦", "pinyin": "xián", "radical": "弓", "meaning": "Saite", "example": "琴弦 (qínxián) - Saiten"},
+    {"char": "炫", "pinyin": "xuàn", "radical": "火", "meaning": "blenden", "example": "炫耀 (xuànyào) - prahlen"}
+  ]
+},
+{
+  "phonetic": "涎",
+  "pinyinRoot": "xian",
+  "characters": [
+    {"char": "筵", "pinyin": "yán", "radical": "⺮", "meaning": "Bankett", "example": "筵席 (yánxí) - Festmahl"},
+    {"char": "延", "pinyin": "yán", "radical": "廴", "meaning": "verlängern", "example": "延长 (yáncháng) - verlängern"}
+  ]
+},
+{
+  "phonetic": "腺",
+  "pinyinRoot": "xian",
+  "characters": [
+    {"char": "泉", "pinyin": "quán", "radical": "水", "meaning": "Quelle", "example": "泉水 (quánshuǐ) - Quellwasser"}
+  ]
+},
+{
+  "phonetic": "馅",
+  "pinyinRoot": "xian",
+  "characters": [
+    {"char": "陷", "pinyin": "xiàn", "radical": "阝", "meaning": "fallen", "example": "陷阱 (xiànjǐng) - Falle"}
+  ]
+},
+{
+  "phonetic": "相",
+  "pinyinRoot": "xiang",
+  "characters": [
+    {"char": "厢", "pinyin": "xiāng", "radical": "厂", "meaning": "Abteil", "example": "车厢 (chēxiāng) - Waggon"},
+    {"char": "箱", "pinyin": "xiāng", "radical": "⺮", "meaning": "Koffer", "example": "箱子 (xiāngzi) - Koffer"},
+    {"char": "湘", "pinyin": "xiāng", "radical": "氵", "meaning": "Provinzname", "example": "湖南 (Húnán) - Hunan"}
+  ]
+},
+{
+  "phonetic": "镶",
+  "pinyinRoot": "xiang",
+  "characters": [
+    {"char": "襄", "pinyin": "xiāng", "radical": "衣", "meaning": "helfen", "example": "襄助 (xiāngzhù) - unterstützen"}
+  ]
+},
+{
+  "phonetic": "香",
+  "pinyinRoot": "xiang",
+  "characters": [
+    {"char": "馥", "pinyin": "fù", "radical": "香", "meaning": "duftend", "example": "馥郁 (fùyù) - stark duftend"}
+  ]
+},
+{
+  "phonetic": "翔",
+  "pinyinRoot": "xiang",
+  "characters": [
+    {"char": "祥", "pinyin": "xiáng", "radical": "示", "meaning": "glückverheißend", "example": "吉祥 (jíxiáng) - glücklich"},
+    {"char": "详", "pinyin": "xiáng", "radical": "讠", "meaning": "detailliert", "example": "详细 (xiángxì) - detailliert"}
+  ]
+},
+{
+  "phonetic": "想",
+  "pinyinRoot": "xiang",
+  "characters": [
+    {"char": "相", "pinyin": "xiāng", "radical": "目", "meaning": "gegenseitig", "example": "相互 (xiānghù) - gegenseitig"},
+    {"char": "湘", "pinyin": "xiāng", "radical": "氵", "meaning": "Provinzname", "example": "湖南 (Húnán) - Hunan"},
+    {"char": "厢", "pinyin": "xiāng", "radical": "厂", "meaning": "Abteil", "example": "车厢 (chēxiāng) - Waggon"}
+  ]
+},
+{
+  "phonetic": "象",
+  "pinyinRoot": "xiang",
+  "characters": [
+    {"char": "橡", "pinyin": "xiàng", "radical": "木", "meaning": "Eiche", "example": "橡胶 (xiàngjiāo) - Gummi"},
+    {"char": "像", "pinyin": "xiàng", "radical": "亻", "meaning": "Bildnis", "example": "肖像 (xiàoxiàng) - Porträt"}
+  ]
+},
+{
+  "phonetic": "向",
+  "pinyinRoot": "xiang",
+  "characters": [
+    {"char": "响", "pinyin": "xiǎng", "radical": "口", "meaning": "Klang", "example": "响亮 (xiǎngliàng) - laut"}
+  ]
+},
+{
+  "phonetic": "萧",
+  "pinyinRoot": "xiao",
+  "characters": [
+    {"char": "肃", "pinyin": "sù", "radical": "聿", "meaning": "ernst", "example": "严肃 (yánsù) - ernsthaft"},
+    {"char": "啸", "pinyin": "xiào", "radical": "口", "meaning": "pfeifen", "example": "呼啸 (hūxiào) - heulen"}
+  ]
+},
+{
+  "phonetic": "哮",
+  "pinyinRoot": "xiao",
+  "characters": [
+    {"char": "教", "pinyin": "jiāo", "radical": "攵", "meaning": "lehren", "example": "教学 (jiāoxué) - lehren"},
+    {"char": "孝", "pinyin": "xiào", "radical": "子", "meaning": "Pietät", "example": "孝顺 (xiàoshùn) - gehorsam"}
+  ]
+},
+{
+  "phonetic": "肖",
+  "pinyinRoot": "xiao",
+  "characters": [
+    {"char": "硝", "pinyin": "xiāo", "radical": "石", "meaning": "Salpeter", "example": "硝酸 (xiāosuān) - Salpetersäure"},
+    {"char": "霄", "pinyin": "xiāo", "radical": "雨", "meaning": "Himmel", "example": "云霄 (yúnxiāo) - Wolkenhimmel"},
+    {"char": "削", "pinyin": "xiāo", "radical": "刂", "meaning": "schälen", "example": "削皮 (xiāopí) - schälen"},
+    {"char": "销", "pinyin": "xiāo", "radical": "钅", "meaning": "verkaufen", "example": "销售 (xiāoshòu) - Verkauf"},
+    {"char": "消", "pinyin": "xiāo", "radical": "氵", "meaning": "verschwinden", "example": "消失 (xiāoshī) - verschwinden"},
+    {"char": "宵", "pinyin": "xiāo", "radical": "宀", "meaning": "Nacht", "example": "元宵 (yuánxiāo) - Laternenfest"},
+    {"char": "屑", "pinyin": "xiè", "radical": "尸", "meaning": "Splitter", "example": "木屑 (mùxiè) - Holzspäne"},
+    {"char": "逍", "pinyin": "xiāo", "radical": "辶", "meaning": "sorglos", "example": "逍遥 (xiāoyáo) - sorglos"},
+    {"char": "遥", "pinyin": "yáo", "radical": "辶", "meaning": "fern", "example": "遥远 (yáoyuǎn) - weit entfernt"},
+    {"char": "哨", "pinyin": "shào", "radical": "口", "meaning": "Wache", "example": "哨兵 (shàobīng) - Wache"}
+  ]
+},
+{
+  "phonetic": "交",
+  "pinyinRoot": "jiao",
+  "characters": [
+    {"char": "效", "pinyin": "xiào", "radical": "攵", "meaning": "wirken", "example": "效果 (xiàoguǒ) - Effekt"},
+    {"char": "狡", "pinyin": "jiǎo", "radical": "犭", "meaning": "listig", "example": "狡猾 (jiǎohuá) - schlau"},
+    {"char": "胶", "pinyin": "jiāo", "radical": "月", "meaning": "Kleber", "example": "胶水 (jiāoshuǐ) - Klebstoff"},
+    {"char": "校", "pinyin": "xiào", "radical": "木", "meaning": "Schule", "example": "学校 (xuéxiào) - Schule"}
+  ]
+},
+{
+  "phonetic": "楔",
+  "pinyinRoot": "xie",
+  "characters": [
+    {"char": "锲", "pinyin": "qiè", "radical": "钅", "meaning": "meißeln", "example": "锲而不舍 (qiè'érbùshě) - unermüdlich"},
+    {"char": "契", "pinyin": "qì", "radical": "大", "meaning": "Vertrag", "example": "契约 (qìyuē) - Vertrag"}
+  ]
+},
+{
+  "phonetic": "鞋",
+  "pinyinRoot": "xie",
+  "characters": [
+    {"char": "娃", "pinyin": "wá", "radical": "女", "meaning": "Baby", "example": "娃娃 (wáwa) - Puppe"},
+    {"char": "哇", "pinyin": "wa", "radical": "口", "meaning": "oh", "example": "哇塞 (wāsāi) - wow"},
+    {"char": "蛙", "pinyin": "wā", "radical": "虫", "meaning": "Frosch", "example": "青蛙 (qīngwā) - Frosch"},
+    {"char": "洼", "pinyin": "wā", "radical": "氵", "meaning": "Senke", "example": "洼地 (wādì) - Senke"}
+  ]
+},
+{
+  "phonetic": "协",
+  "pinyinRoot": "xie",
+  "characters": [
+    {"char": "胁", "pinyin": "xié", "radical": "月", "meaning": "bedrohen", "example": "威胁 (wēixié) - bedrohen"},
+    {"char": "办", "pinyin": "bàn", "radical": "力", "meaning": "erledigen", "example": "办公室 (bàngōngshì) - Büro"}
+  ]
+},
+{
+  "phonetic": "携",
+  "pinyinRoot": "xie",
+  "characters": [
+    {"char": "隽", "pinyin": "juàn", "radical": "隹", "meaning": "bedeutend", "example": "隽永 (juànyǒng) - tiefgründig"},
+    {"char": "镌", "pinyin": "juān", "radical": "钅", "meaning": "gravieren", "example": "镌刻 (juānkè) - eingravieren"}
+  ]
+},
+{
+  "phonetic": "谐",
+  "pinyinRoot": "xie",
+  "characters": [
+    {"char": "皆", "pinyin": "jiē", "radical": "白", "meaning": "alle", "example": "皆大欢喜 (jiēdàhuānxǐ) - alle sind glücklich"}
+  ]
+},
+{
+  "phonetic": "写",
+  "pinyinRoot": "xie",
+  "characters": [
+    {"char": "泻", "pinyin": "xiè", "radical": "氵", "meaning": "fließen", "example": "腹泻 (fùxiè) - Durchfall"}
+  ]
+},
+{
+  "phonetic": "械",
+  "pinyinRoot": "xie",
+  "characters": [
+    {"char": "戒", "pinyin": "jiè", "radical": "戈", "meaning": "warnen", "example": "警戒 (jǐngjiè) - warnen"}
+  ]
+},
+{
+  "phonetic": "解",
+  "pinyinRoot": "jie",
+  "characters": [
+    {"char": "蟹", "pinyin": "xiè", "radical": "虫", "meaning": "Krabbe", "example": "螃蟹 (pángxiè) - Krabbe"},
+    {"char": "懈", "pinyin": "xiè", "radical": "忄", "meaning": "nachlässig", "example": "松懈 (sōngxiè) - lax"}
+  ]
+},
+{
+  "phonetic": "泄",
+  "pinyinRoot": "xie",
+  "characters": [
+    {"char": "世", "pinyin": "shì", "radical": "一", "meaning": "Welt", "example": "世界 (shìjiè) - Welt"}
+  ]
+},
+{
+  "phonetic": "辛",
+  "pinyinRoot": "xin",
+  "characters": [
+    {"char": "锌", "pinyin": "xīn", "radical": "钅", "meaning": "Zink", "example": "锌片 (xīnpiàn) - Zinkplatte"}
+  ]
+},
+{
+  "phonetic": "欣",
+  "pinyinRoot": "xin",
+  "characters": [
+    {"char": "新", "pinyin": "xīn", "radical": "斤", "meaning": "neu", "example": "新闻 (xīnwén) - Nachrichten"},
+    {"char": "忻", "pinyin": "xīn", "radical": "忄", "meaning": "freudig", "example": "忻悦 (xīnyuè) - erfreut"},
+    {"char": "沂", "pinyin": "yí", "radical": "氵", "meaning": "Flussname", "example": "沂河 (Yí Hé) - Yi-Fluss"},
+    {"char": "蒙", "pinyin": "méng", "radical": "艹", "meaning": "bedecken", "example": "蒙蔽 (méngbì) - täuschen"},
+    {"char": "昕", "pinyin": "xīn", "radical": "日", "meaning": "Morgen", "example": "昕夕 (xīnxī) - Morgen und Abend"},
+    {"char": "晰", "pinyin": "xī", "radical": "日", "meaning": "klar", "example": "清晰 (qīngxī) - deutlich"},
+    {"char": "祈", "pinyin": "qí", "radical": "示", "meaning": "bitten", "example": "祈祷 (qídǎo) - beten"},
+    {"char": "析", "pinyin": "xī", "radical": "木", "meaning": "analysieren", "example": "分析 (fēnxī) - analysieren"},
+    {"char": "芹", "pinyin": "qín", "radical": "艹", "meaning": "Sellerie", "example": "芹菜 (qíncài) - Sellerie"}
+  ]
+},
+{
+  "phonetic": "心",
+  "pinyinRoot": "xin",
+  "characters": [
+    {"char": "芯", "pinyin": "xīn", "radical": "艹", "meaning": "Wickel", "example": "灯芯 (dēngxīn) - Docht"},
+    {"char": "沁", "pinyin": "qìn", "radical": "氵", "meaning": "durchdringen", "example": "沁入 (qìnrù) - durchdringen"},
+    {"char": "蕊", "pinyin": "ruǐ", "radical": "艹", "meaning": "Stempel", "example": "花蕊 (huāruǐ) - Blütenstempel"}
+  ]
+},
+{
+  "phonetic": "星",
+  "pinyinRoot": "xing",
+  "characters": [
+    {"char": "腥", "pinyin": "xīng", "radical": "月", "meaning": "blutig", "example": "血腥 (xuèxīng) - blutig"},
+    {"char": "猩", "pinyin": "xīng", "radical": "犭", "meaning": "Orang-Utan", "example": "猩猩 (xīngxing) - Orang-Utan"},
+    {"char": "惺", "pinyin": "xīng", "radical": "忄", "meaning": "klar", "example": "惺忪 (xīngsōng) - verschlafen"},
+    {"char": "醒", "pinyin": "xǐng", "radical": "酉", "meaning": "aufwachen", "example": "清醒 (qīngxǐng) - nüchtern"},
+    {"char": "兴", "pinyin": "xīng", "radical": "八", "meaning": "aufblühen", "example": "兴奋 (xīngfèn) - aufgeregt"}
+  ]
+},
+{
+  "phonetic": "刑",
+  "pinyinRoot": "xing",
+  "characters": [
+    {"char": "型", "pinyin": "xíng", "radical": "土", "meaning": "Modell", "example": "模型 (móxíng) - Modell"},
+    {"char": "形", "pinyin": "xíng", "radical": "彡", "meaning": "Form", "example": "形状 (xíngzhuàng) - Form"},
+    {"char": "邢", "pinyin": "Xíng", "radical": "阝", "meaning": "Familienname", "example": "邢台 (Xíngtái) - Stadt in Hebei"}
+  ]
+},
+{
+  "phonetic": "生",
+  "pinyinRoot": "sheng",
+  "characters": [
+    {"char": "性", "pinyin": "xìng", "radical": "忄", "meaning": "Natur", "example": "性格 (xìnggé) - Charakter"},
+    {"char": "姓", "pinyin": "xìng", "radical": "女", "meaning": "Nachname", "example": "姓名 (xìngmíng) - Name"},
+    {"char": "笙", "pinyin": "shēng", "radical": "⺮", "meaning": "Instrument", "example": "笙歌 (shēnggē) - Musik"},
+    {"char": "星", "pinyin": "xīng", "radical": "日", "meaning": "Stern", "example": "星星 (xīngxing) - Stern"},
+    {"char": "醒", "pinyin": "xǐng", "radical": "酉", "meaning": "aufwachen", "example": "清醒 (qīngxǐng) - nüchtern"},
+    {"char": "胜", "pinyin": "shèng", "radical": "月", "meaning": "siegreich", "example": "胜利 (shènglì) - Sieg"}
+  ]
+},
+{
+  "phonetic": "胸",
+  "pinyinRoot": "xiong",
+  "characters": [
+    {"char": "匈", "pinyin": "xiōng", "radical": "勹", "meaning": "barbarisch", "example": "匈奴 (Xiōngnú) - Xiongnu"}
+  ]
+},
+{
+  "phonetic": "亏",
+  "pinyinRoot": "kui",
+  "characters": [
+    {"char": "污", "pinyin": "wū", "radical": "氵", "meaning": "schmutzig", "example": "污染 (wūrǎn) - verschmutzen"},
+    {"char": "巧", "pinyin": "qiǎo", "radical": "工", "meaning": "geschickt", "example": "巧妙 (qiǎomiào) - geschickt"},
+    {"char": "朽", "pinyin": "xiǔ", "radical": "木", "meaning": "verrotten", "example": "腐朽 (fǔxiǔ) - verfallen"}
+  ]
+},
+{
+  "phonetic": "臭",
+  "pinyinRoot": "chou",
+  "characters": [
+    {"char": "嗅", "pinyin": "xiù", "radical": "口", "meaning": "riechen", "example": "嗅觉 (xiùjué) - Geruchssinn"}
+  ]
+}
+
+[
+  {
+    "phonetic": "阴",
+    "pinyinRoot": "yin",
+    "characters": [
+      {"char": "荫", "pinyin": "yīn", "radical": "艹", "meaning": "Schatten", "example": "树荫 (shùyīn) - Baumschatten"}
+    ]
+  },
+  {
+    "phonetic": "今",
+    "pinyinRoot": "jin",
+    "characters": [
+      {"char": "吟", "pinyin": "yín", "radical": "口", "meaning": "rezitieren", "example": "吟诗 (yínshī) - Gedicht rezitieren"},
+      {"char": "衿", "pinyin": "jīn", "radical": "衤", "meaning": "Kragen", "example": "青衿 (qīngjīn) - blauer Kragen"},
+      {"char": "矜", "pinyin": "jīn", "radical": "矛", "meaning": "stolz", "example": "矜持 (jīnchí) - Zurückhaltung"},
+      {"char": "琴", "pinyin": "qín", "radical": "王", "meaning": "Musikinstrument", "example": "钢琴 (gāngqín) - Klavier"}
+    ]
+  },
+  {
+    "phonetic": "尹",
+    "pinyinRoot": "yin",
+    "characters": [
+      {"char": "伊", "pinyin": "yī", "radical": "亻", "meaning": "er/sie", "example": "伊始 (yīshǐ) - Anfang"},
+      {"char": "君", "pinyin": "jūn", "radical": "口", "meaning": "Herr", "example": "君子 (jūnzǐ) - Edler"},
+      {"char": "笋", "pinyin": "sǔn", "radical": "⺮", "meaning": "Bambusspross", "example": "竹笋 (zhúsǔn) - Bambusspross"},
+      {"char": "群", "pinyin": "qún", "radical": "羊", "meaning": "Gruppe", "example": "群众 (qúnzhòng) - Massen"},
+      {"char": "裙", "pinyin": "qún", "radical": "衤", "meaning": "Rock", "example": "裙子 (qúnzi) - Rock"}
+    ]
+  },
+  {
+    "phonetic": "婴",
+    "pinyinRoot": "ying",
+    "characters": [
+      {"char": "樱", "pinyin": "yīng", "radical": "木", "meaning": "Kirsche", "example": "樱花 (yīnghuā) - Kirschblüte"},
+      {"char": "缨", "pinyin": "yīng", "radical": "纟", "meaning": "Quaste", "example": "红缨 (hóngyīng) - rote Quaste"},
+      {"char": "撄", "pinyin": "yīng", "radical": "扌", "meaning": "stören", "example": "撄怒 (yīngnù) - verärgern"}
+    ]
+  },
+  {
+    "phonetic": "荧",
+    "pinyinRoot": "ying",
+    "characters": [
+      {"char": "莹", "pinyin": "yíng", "radical": "艹", "meaning": "glänzend", "example": "晶莹 (jīngyíng) - kristallklar"},
+      {"char": "萤", "pinyin": "yíng", "radical": "艹", "meaning": "Glühwürmchen", "example": "萤火虫 (yínghuǒchóng) - Glühwürmchen"},
+      {"char": "营", "pinyin": "yíng", "radical": "艹", "meaning": "Lager", "example": "营地 (yíngdì) - Lagerplatz"}
+    ]
+  },
+  {
+    "phonetic": "黾",
+    "pinyinRoot": "mian",
+    "characters": [
+      {"char": "蝇", "pinyin": "yíng", "radical": "虫", "meaning": "Fliege", "example": "苍蝇 (cāngying) - Fliege"},
+      {"char": "绳", "pinyin": "shéng", "radical": "纟", "meaning": "Seil", "example": "绳子 (shéngzi) - Seil"},
+      {"char": "渑", "pinyin": "miǎn", "radical": "氵", "meaning": "Flussname", "example": "渑池 (Miǎnchí) - Ortsname"}
+    ]
+  },
+  {
+    "phonetic": "嬴",
+    "pinyinRoot": "ying",
+    "characters": [
+      {"char": "赢", "pinyin": "yíng", "radical": "贝", "meaning": "gewinnen", "example": "赢利 (yínglì) - Gewinn"},
+      {"char": "羸", "pinyin": "léi", "radical": "羊", "meaning": "schwach", "example": "羸弱 (léiruò) - gebrechlich"}
+    ]
+  },
+  {
+    "phonetic": "更",
+    "pinyinRoot": "geng",
+    "characters": [
+      {"char": "硬", "pinyin": "yìng", "radical": "石", "meaning": "hart", "example": "硬币 (yìngbì) - Münze"},
+      {"char": "便", "pinyin": "biàn", "radical": "亻", "meaning": "bequem", "example": "方便 (fāngbiàn) - bequem"},
+      {"char": "梗", "pinyin": "gěng", "radical": "木", "meaning": "Stängel", "example": "梗概 (gěnggài) - Abriss"},
+      {"char": "埂", "pinyin": "gěng", "radical": "土", "meaning": "Feldrain", "example": "田埂 (tiángěng) - Feldrain"}
+    ]
+  },
+  {
+    "phonetic": "央",
+    "pinyinRoot": "yang",
+    "characters": [
+      {"char": "映", "pinyin": "yìng", "radical": "日", "meaning": "spiegeln", "example": "反映 (fǎnyìng) - widerspiegeln"},
+      {"char": "秧", "pinyin": "yāng", "radical": "禾", "meaning": "Setzling", "example": "插秧 (chāyāng) - Setzlinge pflanzen"},
+      {"char": "殃", "pinyin": "yāng", "radical": "歹", "meaning": "Unglück", "example": "遭殃 (zāoyāng) - Unglück erleiden"},
+      {"char": "英", "pinyin": "yīng", "radical": "艹", "meaning": "Held", "example": "英雄 (yīngxióng) - Held"},
+      {"char": "盎", "pinyin": "àng", "radical": "皿", "meaning": "voller", "example": "盎然 (àngrán) - üppig"}
+    ]
+  },
+  {
+    "phonetic": "用",
+    "pinyinRoot": "yong",
+    "characters": [
+      {"char": "拥", "pinyin": "yōng", "radical": "扌", "meaning": "umarmen", "example": "拥抱 (yōngbào) - Umarmung"},
+      {"char": "佣", "pinyin": "yōng", "radical": "亻", "meaning": "Dienstmädchen", "example": "女佣 (nǚyōng) - Dienstmädchen"},
+      {"char": "臃", "pinyin": "yōng", "radical": "月", "meaning": "aufgedunsen", "example": "臃肿 (yōngzhǒng) - aufgebläht"},
+      {"char": "痈", "pinyin": "yōng", "radical": "疒", "meaning": "Geschwür", "example": "痈疽 (yōngjū) - Geschwür"},
+      {"char": "庸", "pinyin": "yōng", "radical": "广", "meaning": "mittelmäßig", "example": "平庸 (píngyōng) - mittelmäßig"},
+      {"char": "雍", "pinyin": "yōng", "radical": "隹", "meaning": "harmonisch", "example": "雍正 (Yōngzhèng) - Kaiser Yongzheng"},
+      {"char": "踊", "pinyin": "yǒng", "radical": "⻊", "meaning": "hüpfen", "example": "踊跃 (yǒngyuè) - eifrig"},
+      {"char": "蛹", "pinyin": "yǒng", "radical": "虫", "meaning": "Puppe", "example": "蚕蛹 (cányǒng) - Seidenraupenpuppe"},
+      {"char": "涌", "pinyin": "yǒng", "radical": "氵", "meaning": "sprudeln", "example": "涌现 (yǒngxiàn) - auftauchen"}
+    ]
+  },
+  {
+    "phonetic": "永",
+    "pinyinRoot": "yong",
+    "characters": [
+      {"char": "咏", "pinyin": "yǒng", "radical": "口", "meaning": "singen", "example": "歌咏 (gēyǒng) - Gesang"},
+      {"char": "泳", "pinyin": "yǒng", "radical": "氵", "meaning": "schwimmen", "example": "游泳 (yóuyǒng) - schwimmen"}
+    ]
+  },
+  {
+    "phonetic": "甬",
+    "pinyinRoot": "yong",
+    "characters": [
+      {"char": "恿", "pinyin": "yǒng", "radical": "心", "meaning": "ermutigen", "example": "怂恿 (sǒngyǒng) - aufhetzen"},
+      {"char": "勇", "pinyin": "yǒng", "radical": "力", "meaning": "mutig", "example": "勇敢 (yǒnggǎn) - mutig"},
+      {"char": "桶", "pinyin": "tǒng", "radical": "木", "meaning": "Eimer", "example": "水桶 (shuǐtǒng) - Wassereimer"}
+    ]
+  },
+  {
+    "phonetic": "尤",
+    "pinyinRoot": "you",
+    "characters": [
+      {"char": "优", "pinyin": "yōu", "radical": "亻", "meaning": "ausgezeichnet", "example": "优秀 (yōuxiù) - ausgezeichnet"},
+      {"char": "悠", "pinyin": "yōu", "radical": "心", "meaning": "lang", "example": "悠久 (yōujiǔ) - lange Geschichte"},
+      {"char": "忧", "pinyin": "yōu", "radical": "忄", "meaning": "sorgen", "example": "忧虑 (yōulǜ) - Besorgnis"},
+      {"char": "犹", "pinyin": "yóu", "radical": "犭", "meaning": "noch", "example": "犹豫 (yóuyù) - zögern"}
+    ]
+  },
+  {
+    "phonetic": "由",
+    "pinyinRoot": "you",
+    "characters": [
+      {"char": "邮", "pinyin": "yóu", "radical": "阝", "meaning": "Post", "example": "邮票 (yóupiào) - Briefmarke"},
+      {"char": "铀", "pinyin": "yóu", "radical": "钅", "meaning": "Uran", "example": "铀矿 (yóukuàng) - Uranerz"},
+      {"char": "釉", "pinyin": "yòu", "radical": "采", "meaning": "Glasur", "example": "釉料 (yòuliào) - Glasurmaterial"},
+      {"char": "油", "pinyin": "yóu", "radical": "氵", "meaning": "Öl", "example": "汽油 (qìyóu) - Benzin"}
+    ]
+  },
+  {
+    "phonetic": "右",
+    "pinyinRoot": "you",
+    "characters": [
+      {"char": "佑", "pinyin": "yòu", "radical": "亻", "meaning": "schützen", "example": "保佑 (bǎoyòu) - beschützen"},
+      {"char": "若", "pinyin": "ruò", "radical": "艹", "meaning": "wie", "example": "若干 (ruògān) - einige"}
+    ]
+  },
+  {
+    "phonetic": "于",
+    "pinyinRoot": "yu",
+    "characters": [
+      {"char": "盂", "pinyin": "yú", "radical": "皿", "meaning": "Becher", "example": "痰盂 (tányú) - Spucknapf"},
+      {"char": "迂", "pinyin": "yū", "radical": "辶", "meaning": "pedantisch", "example": "迂腐 (yūfǔ) - pedantisch"},
+      {"char": "宇", "pinyin": "yǔ", "radical": "宀", "meaning": "Universum", "example": "宇宙 (yǔzhòu) - Universum"},
+      {"char": "芋", "pinyin": "yù", "radical": "艹", "meaning": "Taro", "example": "芋头 (yùtou) - Taro"}
+    ]
+  },
+  {
+    "phonetic": "余",
+    "pinyinRoot": "yu",
+    "characters": [
+      {"char": "涂", "pinyin": "tú", "radical": "氵", "meaning": "streichen", "example": "涂鸦 (túyā) - Gekritzel"},
+      {"char": "途", "pinyin": "tú", "radical": "辶", "meaning": "Weg", "example": "路途 (lùtú) - Weg"}
+    ]
+  },
+  {
+    "phonetic": "俞",
+    "pinyinRoot": "yu",
+    "characters": [
+      {"char": "榆", "pinyin": "yú", "radical": "木", "meaning": "Ulme", "example": "榆树 (yúshù) - Ulmenbaum"},
+      {"char": "逾", "pinyin": "yú", "radical": "辶", "meaning": "überschreiten", "example": "逾期 (yúqī) - überfällig"},
+      {"char": "愉", "pinyin": "yú", "radical": "忄", "meaning": "fröhlich", "example": "愉快 (yúkuài) - fröhlich"},
+      {"char": "渝", "pinyin": "yú", "radical": "氵", "meaning": "ändern", "example": "始终不渝 (shǐzhōng bùyú) - unverändert bleiben"},
+      {"char": "愈", "pinyin": "yù", "radical": "心", "meaning": "heilen", "example": "痊愈 (quányù) - vollständige Genesung"},
+      {"char": "偷", "pinyin": "tōu", "radical": "亻", "meaning": "stehlen", "example": "小偷 (xiǎotōu) - Dieb"},
+      {"char": "输", "pinyin": "shū", "radical": "车", "meaning": "verlieren", "example": "运输 (yùnshū) - Transport"},
+      {"char": "喻", "pinyin": "yù", "radical": "口", "meaning": "Metapher", "example": "比喻 (bǐyù) - Metapher"}
+    ]
+  },
+  {
+    "phonetic": "鱼",
+    "pinyinRoot": "yu",
+    "characters": [
+      {"char": "渔", "pinyin": "yú", "radical": "氵", "meaning": "fischen", "example": "渔民 (yúmín) - Fischer"}
+    ]
+  },
+  {
+    "phonetic": "与",
+    "pinyinRoot": "yu",
+    "characters": [
+      {"char": "屿", "pinyin": "yǔ", "radical": "山", "meaning": "Insel", "example": "岛屿 (dǎoyǔ) - Insel"}
+    ]
+  },
+  {
+    "phonetic": "谷",
+    "pinyinRoot": "gu",
+    "characters": [
+      {"char": "峪", "pinyin": "yù", "radical": "山", "meaning": "Schlucht", "example": "嘉峪关 (Jiāyùguān) - Jiayuguan-Pass"},
+      {"char": "浴", "pinyin": "yù", "radical": "氵", "meaning": "baden", "example": "浴室 (yùshì) - Badezimmer"},
+      {"char": "裕", "pinyin": "yù", "radical": "衤", "meaning": "reichlich", "example": "富裕 (fùyù) - wohlhabend"},
+      {"char": "欲", "pinyin": "yù", "radical": "欠", "meaning": "Verlangen", "example": "欲望 (yùwàng) - Begierde"}
+    ]
+  },
+  {
+    "phonetic": "禺",
+    "pinyinRoot": "yu",
+    "characters": [
+      {"char": "寓", "pinyin": "yù", "radical": "宀", "meaning": "wohnen", "example": "公寓 (gōngyù) - Wohnung"},
+      {"char": "隅", "pinyin": "yú", "radical": "阝", "meaning": "Ecke", "example": "角落 (jiǎoluò) - Ecke"},
+      {"char": "偶", "pinyin": "ǒu", "radical": "亻", "meaning": "zufällig", "example": "偶然 (ǒurán) - zufällig"},
+      {"char": "藕", "pinyin": "ǒu", "radical": "艹", "meaning": "Lotuswurzel", "example": "藕粉 (ǒufěn) - Lotuswurzelstärke"}
+    ]
+  },
+  {
+    "phonetic": "元",
+    "pinyinRoot": "yuan",
+    "characters": [
+      {"char": "远", "pinyin": "yuǎn", "radical": "辶", "meaning": "fern", "example": "远方 (yuǎnfāng) - Ferne"},
+      {"char": "院", "pinyin": "yuàn", "radical": "阝", "meaning": "Hof", "example": "医院 (yīyuàn) - Krankenhaus"},
+      {"char": "运", "pinyin": "yùn", "radical": "辶", "meaning": "transportieren", "example": "运动 (yùndòng) - Bewegung"},
+      {"char": "园", "pinyin": "yuán", "radical": "囗", "meaning": "Garten", "example": "公园 (gōngyuán) - Park"}
+    ]
+  },
+  {
+    "phonetic": "原",
+    "pinyinRoot": "yuan",
+    "characters": [
+      {"char": "源", "pinyin": "yuán", "radical": "氵", "meaning": "Quelle", "example": "资源 (zīyuán) - Ressourcen"},
+      {"char": "愿", "pinyin": "yuàn", "radical": "心", "meaning": "Wunsch", "example": "愿望 (yuànwàng) - Wunsch"},
+      {"char": "援", "pinyin": "yuán", "radical": "扌", "meaning": "helfen", "example": "援助 (yuánzhù) - Hilfe"}
+    ]
+  },
+  {
+    "phonetic": "袁",
+    "pinyinRoot": "yuan",
+    "characters": [
+      {"char": "辕", "pinyin": "yuán", "radical": "车", "meaning": "Deichsel", "example": "车辕 (chēyuán) - Wagendeichsel"},
+      {"char": "猿", "pinyin": "yuán", "radical": "犭", "meaning": "Affe", "example": "猿猴 (yuánhóu) - Affe"}
+    ]
+  },
+  {
+    "phonetic": "员",
+    "pinyinRoot": "yuan",
+    "characters": [
+      {"char": "圆", "pinyin": "yuán", "radical": "囗", "meaning": "rund", "example": "圆形 (yuánxíng) - Kreisform"},
+      {"char": "陨", "pinyin": "yǔn", "radical": "阝", "meaning": "fallen", "example": "陨石 (yǔnshí) - Meteorit"},
+      {"char": "勋", "pinyin": "xūn", "radical": "力", "meaning": "Verdienst", "example": "勋章 (xūnzhāng) - Orden"},
+      {"char": "郧", "pinyin": "yún", "radical": "阝", "meaning": "Ortsname", "example": "郧县 (Yún Xiàn) - Kreis Yun"}
+    ]
+  },
+  {
+    "phonetic": "夗",
+    "pinyinRoot": "yuan",
+    "characters": [
+      {"char": "苑", "pinyin": "yuàn", "radical": "艹", "meaning": "Park", "example": "御苑 (yùyuàn) - kaiserlicher Garten"},
+      {"char": "怨", "pinyin": "yuàn", "radical": "心", "meaning": "Groll", "example": "抱怨 (bàoyuàn) - sich beschweren"},
+      {"char": "碗", "pinyin": "wǎn", "radical": "石", "meaning": "Schüssel", "example": "饭碗 (fànwǎn) - Reisschüssel"},
+      {"char": "婉", "pinyin": "wǎn", "radical": "女", "meaning": "sanft", "example": "委婉 (wěiwǎn) - taktvoll"}
+    ]
+  },
+  {
+    "phonetic": "月",
+    "pinyinRoot": "yue",
+    "characters": [
+      {"char": "钥", "pinyin": "yào", "radical": "钅", "meaning": "Schlüssel", "example": "钥匙 (yàoshi) - Schlüssel"}
+    ]
+  },
+  {
+    "phonetic": "兑",
+    "pinyinRoot": "dui",
+    "characters": [
+      {"char": "悦", "pinyin": "yuè", "radical": "忄", "meaning": "freudig", "example": "喜悦 (xǐyuè) - Freude"},
+      {"char": "阅", "pinyin": "yuè", "radical": "门", "meaning": "lesen", "example": "阅读 (yuèdú) - lesen"}
+    ]
+  },
+  {
+    "phonetic": "云",
+    "pinyinRoot": "yun",
+    "characters": [
+      {"char": "耘", "pinyin": "yún", "radical": "耒", "meaning": "jäten", "example": "耕耘 (gēngyún) - pflügen und jäten"},
+      {"char": "酝", "pinyin": "yùn", "radical": "酉", "meaning": "gären", "example": "酝酿 (yùnniàng) - Gärung"},
+      {"char": "运", "pinyin": "yùn", "radical": "辶", "meaning": "transportieren", "example": "运输 (yùnshū) - Transport"}
+    ]
+  },
+  {
+    "phonetic": "匀",
+    "pinyinRoot": "yun",
+    "characters": [
+      {"char": "韵", "pinyin": "yùn", "radical": "音", "meaning": "Reim", "example": "韵律 (yùnlǜ) - Rhythmus"},
+      {"char": "均", "pinyin": "jūn", "radical": "土", "meaning": "gleichmäßig", "example": "平均 (píngjūn) - Durchschnitt"}
+    ]
+  },
+  {
+    "phonetic": "匝",
+    "pinyinRoot": "za",
+    "characters": [
+      {"char": "砸", "pinyin": "zá", "radical": "石", "meaning": "zerbrechen", "example": "砸碎 (zásuì) - zerschlagen"}
+    ]
+  },
+  {
+    "phonetic": "哉",
+    "pinyinRoot": "zai",
+    "characters": [
+      {"char": "栽", "pinyin": "zāi", "radical": "木", "meaning": "pflanzen", "example": "栽培 (zāipéi) - anbauen"},
+      {"char": "载", "pinyin": "zǎi", "radical": "车", "meaning": "beladen", "example": "载重 (zàizhòng) - Ladegewicht"}
+    ]
+  },
+  {
+    "phonetic": "赞",
+    "pinyinRoot": "zan",
+    "characters": [
+      {"char": "攒", "pinyin": "zǎn", "radical": "扌", "meaning": "sparen", "example": "积攒 (jīzǎn) - ansparen"},
+      {"char": "臜", "pinyin": "zā", "radical": "月", "meaning": "schmutzig", "example": "腌臜 (āzā) - schmutzig"}
+    ]
+  },
+  {
+    "phonetic": "庄",
+    "pinyinRoot": "zhuang",
+    "characters": [
+      {"char": "赃", "pinyin": "zāng", "radical": "贝", "meaning": "Diebesgut", "example": "赃物 (zāngwù) - Diebesgut"},
+      {"char": "脏", "pinyin": "zāng", "radical": "月", "meaning": "schmutzig", "example": "肮脏 (āngzāng) - schmutzig"}
+    ]
+  },
+  {
+    "phonetic": "曹",
+    "pinyinRoot": "cao",
+    "characters": [
+      {"char": "遭", "pinyin": "zāo", "radical": "辶", "meaning": "erleiden", "example": "遭遇 (zāoyù) - Erfahrung"},
+      {"char": "糟", "pinyin": "zāo", "radical": "米", "meaning": "schlecht", "example": "糟糕 (zāogāo) - schlimm"},
+      {"char": "漕", "pinyin": "cáo", "radical": "氵", "meaning": "Wassertransport", "example": "漕运 (cáoyùn) - Wassertransport"}
+    ]
+  },
+  {
+    "phonetic": "喿",
+    "pinyinRoot": "zao",
+    "characters": [
+      {"char": "藻", "pinyin": "zǎo", "radical": "艹", "meaning": "Alge", "example": "海藻 (hǎizǎo) - Seetang"},
+      {"char": "燥", "pinyin": "zào", "radical": "火", "meaning": "trocken", "example": "干燥 (gānzào) - trocken"},
+      {"char": "澡", "pinyin": "zǎo", "radical": "氵", "meaning": "baden", "example": "洗澡 (xǐzǎo) - baden"},
+      {"char": "操", "pinyin": "cāo", "radical": "扌", "meaning": "üben", "example": "操作 (cāozuò) - bedienen"},
+      {"char": "噪", "pinyin": "zào", "radical": "口", "meaning": "Lärm", "example": "噪音 (zàoyīn) - Lärm"},
+      {"char": "躁", "pinyin": "zào", "radical": "⻊", "meaning": "unruhig", "example": "急躁 (jízào) - ungeduldig"}
+    ]
+  },
+  {
+    "phonetic": "蚤",
+    "pinyinRoot": "zao",
+    "characters": [
+      {"char": "搔", "pinyin": "sāo", "radical": "扌", "meaning": "kratzen", "example": "搔痒 (sāoyǎng) - jucken"},
+      {"char": "骚", "pinyin": "sāo", "radical": "马", "meaning": "unruhig", "example": "骚扰 (sāorǎo) - belästigen"}
+    ]
+  },
+  {
+    "phonetic": "告",
+    "pinyinRoot": "gao",
+    "characters": [
+      {"char": "造", "pinyin": "zào", "radical": "辶", "meaning": "herstellen", "example": "制造 (zhìzào) - herstellen"},
+      {"char": "浩", "pinyin": "hào", "radical": "氵", "meaning": "gewaltig", "example": "浩瀚 (hàohàn) - unermesslich"},
+      {"char": "梏", "pinyin": "gù", "radical": "木", "meaning": "Fessel", "example": "桎梏 (zhìgù) - Fesseln"}
+    ]
+  }
+]
+
+[
+  {
+    "phonetic": "责",
+    "pinyinRoot": "ze",
+    "characters": [
+      {"char": "渍", "pinyin": "zì", "radical": "氵", "meaning": "einweichen", "example": "浸渍 (jìnzì) - einweichen"},
+      {"char": "债", "pinyin": "zhài", "radical": "亻", "meaning": "Schulden", "example": "债务 (zhàiwù) - Schulden"}
+    ]
+  },
+  {
+    "phonetic": "择",
+    "pinyinRoot": "ze",
+    "characters": [
+      {"char": "泽", "pinyin": "zé", "radical": "氵", "meaning": "Sumpf", "example": "沼泽 (zhǎozé) - Sumpf"},
+      {"char": "铎", "pinyin": "duó", "radical": "钅", "meaning": "Glocke", "example": "木铎 (mùduó) - Holzglocke"}
+    ]
+  },
+  {
+    "phonetic": "曾",
+    "pinyinRoot": "zeng",
+    "characters": [
+      {"char": "增", "pinyin": "zēng", "radical": "土", "meaning": "vermehren", "example": "增加 (zēngjiā) - erhöhen"},
+      {"char": "憎", "pinyin": "zēng", "radical": "忄", "meaning": "hassen", "example": "憎恨 (zēnghèn) - hassen"},
+      {"char": "赠", "pinyin": "zèng", "radical": "贝", "meaning": "schenken", "example": "赠送 (zèngsòng) - schenken"}
+    ]
+  },
+  {
+    "phonetic": "查",
+    "pinyinRoot": "zha",
+    "characters": [
+      {"char": "喳", "pinyin": "zhā", "radical": "口", "meaning": "zwitschern", "example": "叽叽喳喳 (jījizhāzhā) - zwitschern"},
+      {"char": "渣", "pinyin": "zhā", "radical": "氵", "meaning": "Rückstand", "example": "残渣 (cánzhā) - Rückstand"}
+    ]
+  },
+  {
+    "phonetic": "扎",
+    "pinyinRoot": "zha",
+    "characters": [
+      {"char": "札", "pinyin": "zhá", "radical": "木", "meaning": "Brief", "example": "信札 (xìnzhá) - Brief"},
+      {"char": "轧", "pinyin": "yà", "radical": "车", "meaning": "walzen", "example": "轧钢 (yàgāng) - Stahl walzen"}
+    ]
+  },
+  {
+    "phonetic": "乍",
+    "pinyinRoot": "zha",
+    "characters": [
+      {"char": "咋", "pinyin": "zǎ", "radical": "口", "meaning": "wie", "example": "咋样 (zǎyàng) - wie"},
+      {"char": "炸", "pinyin": "zhà", "radical": "火", "meaning": "explodieren", "example": "爆炸 (bàozhà) - Explosion"},
+      {"char": "诈", "pinyin": "zhà", "radical": "讠", "meaning": "betrügen", "example": "诈骗 (zhàpiàn) - Betrug"},
+      {"char": "昨", "pinyin": "zuó", "radical": "日", "meaning": "gestern", "example": "昨天 (zuótiān) - gestern"},
+      {"char": "窄", "pinyin": "zhǎi", "radical": "穴", "meaning": "eng", "example": "狭窄 (xiázhǎi) - eng"},
+      {"char": "榨", "pinyin": "zhà", "radical": "木", "meaning": "pressen", "example": "榨油 (zhàyóu) - Öl pressen"}
+    ]
+  },
+  {
+    "phonetic": "詹",
+    "pinyinRoot": "zhan",
+    "characters": [
+      {"char": "瞻", "pinyin": "zhān", "radical": "目", "meaning": "blicken", "example": "瞻仰 (zhānyǎng) - verehrend anblicken"},
+      {"char": "赡", "pinyin": "shàn", "radical": "贝", "meaning": "unterstützen", "example": "赡养 (shànyǎng) - unterstützen"}
+    ]
+  },
+  {
+    "phonetic": "斩",
+    "pinyinRoot": "zhan",
+    "characters": [
+      {"char": "崭", "pinyin": "zhǎn", "radical": "山", "meaning": "neu", "example": "崭新 (zhǎnxīn) - brandneu"},
+      {"char": "浙", "pinyin": "zhè", "radical": "氵", "meaning": "Zhejiang", "example": "浙江省 (Zhèjiāng Shěng) - Provinz Zhejiang"},
+      {"char": "折", "pinyin": "zhé", "radical": "扌", "meaning": "brechen", "example": "折断 (zhéduàn) - abbrechen"},
+      {"char": "哲", "pinyin": "zhé", "radical": "口", "meaning": "weise", "example": "哲学 (zhéxué) - Philosophie"}
+    ]
+  },
+  {
+    "phonetic": "占",
+    "pinyinRoot": "zhan",
+    "characters": [
+      {"char": "毡", "pinyin": "zhān", "radical": "毛", "meaning": "Filz", "example": "毡帽 (zhānmào) - Filzhut"},
+      {"char": "粘", "pinyin": "zhān", "radical": "米", "meaning": "kleben", "example": "粘贴 (zhāntiē) - ankleben"},
+      {"char": "沾", "pinyin": "zhān", "radical": "氵", "meaning": "benetzen", "example": "沾染 (zhānrǎn) - beflecken"},
+      {"char": "战", "pinyin": "zhàn", "radical": "戈", "meaning": "Krieg", "example": "战争 (zhànzhēng) - Krieg"},
+      {"char": "站", "pinyin": "zhàn", "radical": "立", "meaning": "stehen", "example": "车站 (chēzhàn) - Bahnhof"}
+    ]
+  },
+  {
+    "phonetic": "章",
+    "pinyinRoot": "zhang",
+    "characters": [
+      {"char": "樟", "pinyin": "zhāng", "radical": "木", "meaning": "Kampferbaum", "example": "樟脑 (zhāngnǎo) - Kampfer"},
+      {"char": "彰", "pinyin": "zhāng", "radical": "彡", "meaning": "deutlich", "example": "彰显 (zhāngxiǎn) - deutlich zeigen"},
+      {"char": "漳", "pinyin": "zhāng", "radical": "氵", "meaning": "Flussname", "example": "漳河 (Zhāng Hé) - Zhang-Fluss"}
+    ]
+  },
+  {
+    "phonetic": "张",
+    "pinyinRoot": "zhang",
+    "characters": [
+      {"char": "涨", "pinyin": "zhǎng", "radical": "氵", "meaning": "steigen", "example": "涨价 (zhǎngjià) - Preiserhöhung"},
+      {"char": "帐", "pinyin": "zhàng", "radical": "巾", "meaning": "Vorhang", "example": "帐篷 (zhàngpeng) - Zelt"},
+      {"char": "账", "pinyin": "zhàng", "radical": "贝", "meaning": "Konto", "example": "账户 (zhànghù) - Konto"},
+      {"char": "胀", "pinyin": "zhàng", "radical": "月", "meaning": "aufgebläht", "example": "肿胀 (zhǒngzhàng) - Schwellung"}
+    ]
+  },
+  {
+    "phonetic": "掌",
+    "pinyinRoot": "zhang",
+    "characters": [
+      {"char": "常", "pinyin": "cháng", "radical": "巾", "meaning": "oft", "example": "经常 (jīngcháng) - häufig"},
+      {"char": "尝", "pinyin": "cháng", "radical": "口", "meaning": "probieren", "example": "尝试 (chángshì) - versuchen"},
+      {"char": "党", "pinyin": "dǎng", "radical": "儿", "meaning": "Partei", "example": "党员 (dǎngyuán) - Parteimitglied"}
+    ]
+  },
+  {
+    "phonetic": "丈",
+    "pinyinRoot": "zhang",
+    "characters": [
+      {"char": "杖", "pinyin": "zhàng", "radical": "木", "meaning": "Stock", "example": "拐杖 (guǎizhàng) - Gehstock"},
+      {"char": "仗", "pinyin": "zhàng", "radical": "亻", "meaning": "sich verlassen", "example": "依靠 (yīkào) - sich verlassen"}
+    ]
+  },
+  {
+    "phonetic": "章",
+    "pinyinRoot": "zhang",
+    "characters": [
+      {"char": "瘴", "pinyin": "zhàng", "radical": "疒", "meaning": "Malaria", "example": "瘴气 (zhàngqì) - Malaria"},
+      {"char": "障", "pinyin": "zhàng", "radical": "阝", "meaning": "Hindernis", "example": "障碍 (zhàng'ài) - Hindernis"}
+    ]
+  },
+  {
+    "phonetic": "召",
+    "pinyinRoot": "zhao",
+    "characters": [
+      {"char": "招", "pinyin": "zhāo", "radical": "扌", "meaning": "einladen", "example": "招聘 (zhāopìn) - einstellen"},
+      {"char": "昭", "pinyin": "zhāo", "radical": "日", "meaning": "klar", "example": "昭示 (zhāoshì) - klar zeigen"},
+      {"char": "沼", "pinyin": "zhǎo", "radical": "氵", "meaning": "Teich", "example": "沼泽 (zhǎozé) - Sumpf"},
+      {"char": "照", "pinyin": "zhào", "radical": "灬", "meaning": "leuchten", "example": "照片 (zhàopiàn) - Foto"}
+    ]
+  },
+  {
+    "phonetic": "兆",
+    "pinyinRoot": "zhao",
+    "characters": [
+      {"char": "逃", "pinyin": "táo", "radical": "辶", "meaning": "fliehen", "example": "逃跑 (táopǎo) - fliehen"}
+    ]
+  },
+  {
+    "phonetic": "执",
+    "pinyinRoot": "zhi",
+    "characters": [
+      {"char": "蛰", "pinyin": "zhé", "radical": "虫", "meaning": "Winterschlaf", "example": "惊蛰 (jīngzhé) - Frühlingserwachen"}
+    ]
+  },
+  {
+    "phonetic": "徹",
+    "pinyinRoot": "che",
+    "characters": [
+      {"char": "辙", "pinyin": "zhé", "radical": "车", "meaning": "Wagenspur", "example": "车辙 (chēzhé) - Wagenspur"},
+      {"char": "澈", "pinyin": "chè", "radical": "氵", "meaning": "klar", "example": "清澈 (qīngchè) - kristallklar"}
+    ]
+  },
+  {
+    "phonetic": "贞",
+    "pinyinRoot": "zhen",
+    "characters": [
+      {"char": "侦", "pinyin": "zhēn", "radical": "亻", "meaning": "ermitteln", "example": "侦探 (zhēntàn) - Detektiv"},
+      {"char": "帧", "pinyin": "zhēn", "radical": "巾", "meaning": "Bild", "example": "帧数 (zhēnshù) - Bildrate"}
+    ]
+  },
+  {
+    "phonetic": "胗",
+    "pinyinRoot": "zhen",
+    "characters": [
+      {"char": "疹", "pinyin": "zhěn", "radical": "疒", "meaning": "Ausschlag", "example": "麻疹 (mázhěn) - Masern"},
+      {"char": "诊", "pinyin": "zhěn", "radical": "讠", "meaning": "untersuchen", "example": "诊断 (zhěnduàn) - Diagnose"},
+      {"char": "珍", "pinyin": "zhēn", "radical": "王", "meaning": "kostbar", "example": "珍贵 (zhēnguì) - wertvoll"}
+    ]
+  },
+  {
+    "phonetic": "争",
+    "pinyinRoot": "zheng",
+    "characters": [
+      {"char": "挣", "pinyin": "zhēng", "radical": "扌", "meaning": "ringen", "example": "挣扎 (zhēngzhá) - sich abmühen"},
+      {"char": "睁", "pinyin": "zhēng", "radical": "目", "meaning": "öffnen", "example": "睁眼 (zhēngyǎn) - Augen öffnen"},
+      {"char": "狰", "pinyin": "zhēng", "radical": "犭", "meaning": "wild", "example": "狰狞 (zhēngníng) - wild und hässlich"}
+    ]
+  },
+  {
+    "phonetic": "正",
+    "pinyinRoot": "zheng",
+    "characters": [
+      {"char": "征", "pinyin": "zhēng", "radical": "彳", "meaning": "erheben", "example": "征收 (zhēngshōu) - erheben"},
+      {"char": "怔", "pinyin": "zhēng", "radical": "忄", "meaning": "verwirrt", "example": "发怔 (fāzhēng) - verwirrt sein"},
+      {"char": "整", "pinyin": "zhěng", "radical": "攵", "meaning": "ganz", "example": "整个 (zhěnggè) - ganz"},
+      {"char": "拯", "pinyin": "zhěng", "radical": "扌", "meaning": "retten", "example": "拯救 (zhěngjiù) - retten"},
+      {"char": "政", "pinyin": "zhèng", "radical": "攵", "meaning": "Politik", "example": "政府 (zhèngfǔ) - Regierung"},
+      {"char": "症", "pinyin": "zhèng", "radical": "疒", "meaning": "Krankheit", "example": "症状 (zhèngzhuàng) - Symptom"},
+      {"char": "证", "pinyin": "zhèng", "radical": "讠", "meaning": "beweisen", "example": "证明 (zhèngmíng) - Beweis"}
+    ]
+  },
+  {
+    "phonetic": "支",
+    "pinyinRoot": "zhi",
+    "characters": [
+      {"char": "枝", "pinyin": "zhī", "radical": "木", "meaning": "Zweig", "example": "树枝 (shùzhī) - Baumzweig"},
+      {"char": "吱", "pinyin": "zhī", "radical": "口", "meaning": "piepsen", "example": "吱吱 (zhīzhī) - piepsen"},
+      {"char": "肢", "pinyin": "zhī", "radical": "月", "meaning": "Glied", "example": "肢体 (zhītǐ) - Gliedmaßen"}
+    ]
+  },
+  {
+    "phonetic": "知",
+    "pinyinRoot": "zhi",
+    "characters": [
+      {"char": "蜘", "pinyin": "zhī", "radical": "虫", "meaning": "Spinne", "example": "蜘蛛 (zhīzhū) - Spinne"},
+      {"char": "智", "pinyin": "zhì", "radical": "日", "meaning": "Weisheit", "example": "智慧 (zhìhuì) - Weisheit"},
+      {"char": "痴", "pinyin": "chī", "radical": "疒", "meaning": "töricht", "example": "痴迷 (chīmí) - besessen"}
+    ]
+  },
+  {
+    "phonetic": "只",
+    "pinyinRoot": "zhi",
+    "characters": [
+      {"char": "织", "pinyin": "zhī", "radical": "纟", "meaning": "weben", "example": "纺织 (fǎngzhī) - spinnen und weben"},
+      {"char": "职", "pinyin": "zhí", "radical": "耳", "meaning": "Beruf", "example": "职业 (zhíyè) - Beruf"}
+    ]
+  },
+  {
+    "phonetic": "直",
+    "pinyinRoot": "zhi",
+    "characters": [
+      {"char": "植", "pinyin": "zhí", "radical": "木", "meaning": "pflanzen", "example": "植物 (zhíwù) - Pflanze"},
+      {"char": "殖", "pinyin": "zhí", "radical": "歹", "meaning": "vermehren", "example": "繁殖 (fánzhí) - sich vermehren"},
+      {"char": "值", "pinyin": "zhí", "radical": "亻", "meaning": "Wert", "example": "价值 (jiàzhí) - Wert"}
+    ]
+  },
+  {
+    "phonetic": "止",
+    "pinyinRoot": "zhi",
+    "characters": [
+      {"char": "址", "pinyin": "zhǐ", "radical": "土", "meaning": "Standort", "example": "地址 (dìzhǐ) - Adresse"},
+      {"char": "趾", "pinyin": "zhǐ", "radical": "⻊", "meaning": "Zehe", "example": "脚趾 (jiǎozhǐ) - Zehe"},
+      {"char": "扯", "pinyin": "chě", "radical": "扌", "meaning": "zerren", "example": "拉扯 (lāchě) - zerren"}
+    ]
+  },
+  {
+    "phonetic": "旨",
+    "pinyinRoot": "zhi",
+    "characters": [
+      {"char": "指", "pinyin": "zhǐ", "radical": "扌", "meaning": "zeigen", "example": "指导 (zhǐdǎo) - anleiten"},
+      {"char": "脂", "pinyin": "zhī", "radical": "月", "meaning": "Fett", "example": "脂肪 (zhīfáng) - Fett"}
+    ]
+  },
+  {
+    "phonetic": "至",
+    "pinyinRoot": "zhi",
+    "characters": [
+      {"char": "侄", "pinyin": "zhí", "radical": "亻", "meaning": "Neffe", "example": "侄子 (zhízi) - Neffe"},
+      {"char": "致", "pinyin": "zhì", "radical": "至", "meaning": "führen zu", "example": "导致 (dǎozhì) - verursachen"},
+      {"char": "屋", "pinyin": "wū", "radical": "尸", "meaning": "Haus", "example": "房屋 (fángwū) - Haus"}
+    ]
+  }
+]
+
+[
+  {
+    "phonetic": "中",
+    "pinyinRoot": "zhong",
+    "characters": [
+      { "char": "盅", "pinyin": "zhōng", "radical": "皿", "meaning": "Tässchen", "example": "茶盅 (cházhōng) - Teetasse" },
+      { "char": "忠", "pinyin": "zhōng", "radical": "心", "meaning": "loyal", "example": "忠诚 (zhōngchéng) - Loyalität" },
+      { "char": "钟", "pinyin": "zhōng", "radical": "钅", "meaning": "Uhr", "example": "钟表 (zhōngbiǎo) - Uhr" },
+      { "char": "衷", "pinyin": "zhōng", "radical": "衣", "meaning": "Herz", "example": "衷心 (zhōngxīn) - von Herzen" },
+      { "char": "种", "pinyin": "zhǒng", "radical": "禾", "meaning": "Art", "example": "种类 (zhǒnglèi) - Sorte" },
+      { "char": "肿", "pinyin": "zhǒng", "radical": "月", "meaning": "geschwollen", "example": "肿胀 (zhǒngzhàng) - Schwellung" },
+      { "char": "仲", "pinyin": "zhòng", "radical": "亻", "meaning": "Mitte", "example": "仲裁 (zhòngcái) - Schiedsgericht" },
+      { "char": "冲", "pinyin": "chōng", "radical": "冫", "meaning": "stürmen", "example": "冲动 (chōngdòng) - Impuls" }
+    ]
+  },
+  {
+    "phonetic": "重",
+    "pinyinRoot": "zhong",
+    "characters": [
+      { "char": "踵", "pinyin": "zhǒng", "radical": "⻊", "meaning": "Ferse", "example": "接踵 (jiēzhǒng) - dicht gedrängt" },
+      { "char": "種", "pinyin": "zhǒng", "radical": "禾", "meaning": "Art (traditionell)", "example": "種類 (zhǒnglèi) - Art (traditionell)" },
+      { "char": "鍾", "pinyin": "zhōng", "radical": "钅", "meaning": "Uhr (traditionell)", "example": "鐘錶 (zhōngbiǎo) - Uhr (traditionell)" }
+    ]
+  },
+  {
+    "phonetic": "周",
+    "pinyinRoot": "zhou",
+    "characters": [
+      { "char": "稠", "pinyin": "chóu", "radical": "禾", "meaning": "dicht", "example": "稠密 (chóumì) - dicht gedrängt" },
+      { "char": "绸", "pinyin": "chóu", "radical": "纟", "meaning": "Seide", "example": "丝绸 (sīchóu) - Seidenstoff" },
+      { "char": "雕", "pinyin": "diāo", "radical": "隹", "meaning": "schnitzen", "example": "雕刻 (diāokè) - Schnitzerei" },
+      { "char": "凋", "pinyin": "diāo", "radical": "冫", "meaning": "verwelken", "example": "凋谢 (diāoxiè) - verwelken" }
+    ]
+  },
+  {
+    "phonetic": "州",
+    "pinyinRoot": "zhou",
+    "characters": [
+      { "char": "洲", "pinyin": "zhōu", "radical": "氵", "meaning": "Kontinent", "example": "亚洲 (Yàzhōu) - Asien" }
+    ]
+  },
+  {
+    "phonetic": "寸",
+    "pinyinRoot": "cun",
+    "characters": [
+      { "char": "纣", "pinyin": "Zhòu", "radical": "纟", "meaning": "letzter König der Shang-Dynastie", "example": "纣王 (Zhòuwáng) - König Zhou" },
+      { "char": "肘", "pinyin": "zhǒu", "radical": "月", "meaning": "Ellbogen", "example": "肘子 (zhǒuzi) - Schweinehaxe" },
+      { "char": "对", "pinyin": "duì", "radical": "又", "meaning": "richtig", "example": "对面 (duìmiàn) - gegenüber" },
+      { "char": "村", "pinyin": "cūn", "radical": "木", "meaning": "Dorf", "example": "农村 (nóngcūn) - Dorf" }
+    ]
+  },
+  {
+    "phonetic": "帚",
+    "pinyinRoot": "zhou",
+    "characters": [
+      { "char": "婦", "pinyin": "fù", "radical": "女", "meaning": "Frau (traditionell)", "example": "婦女 (fùnǚ) - Frauen (traditionell)" }
+    ]
+  },
+  {
+    "phonetic": "咒",
+    "pinyinRoot": "zhou",
+    "characters": [
+      { "char": "骂", "pinyin": "mà", "radical": "马", "meaning": "beschimpfen", "example": "骂人 (màrén) - jemanden beschimpfen" }
+    ]
+  },
+  {
+    "phonetic": "刍",
+    "pinyinRoot": "chu",
+    "characters": [
+      { "char": "绉", "pinyin": "zhòu", "radical": "纟", "meaning": "Krepp", "example": "绉纱 (zhòushā) - Kreppgewebe" },
+      { "char": "皱", "pinyin": "zhòu", "radical": "皮", "meaning": "Falte", "example": "皱纹 (zhòuwén) - Falten" },
+      { "char": "诌", "pinyin": "zhōu", "radical": "讠", "meaning": "erfinden", "example": "胡诌 (húzhōu) - Unsinn erzählen" }
+    ]
+  },
+  {
+    "phonetic": "朱",
+    "pinyinRoot": "zhu",
+    "characters": [
+      { "char": "珠", "pinyin": "zhū", "radical": "王", "meaning": "Perle", "example": "珍珠 (zhēnzhū) - Perle" },
+      { "char": "株", "pinyin": "zhū", "radical": "木", "meaning": "Baumstamm", "example": "株连 (zhūlián) - in etwas verwickelt sein" },
+      { "char": "蛛", "pinyin": "zhū", "radical": "虫", "meaning": "Spinne", "example": "蜘蛛 (zhīzhū) - Spinne" },
+      { "char": "朱", "pinyin": "zhū", "radical": "木", "meaning": "rot", "example": "朱红 (zhūhóng) - zinnoberrot" }
+    ]
+  },
+  {
+    "phonetic": "属",
+    "pinyinRoot": "zhu",
+    "characters": [
+      { "char": "瞩", "pinyin": "zhǔ", "radical": "目", "meaning": "beobachten", "example": "瞩目 (zhǔmù) - Aufmerksamkeit erregen" },
+      { "char": "嘱", "pinyin": "zhǔ", "radical": "口", "meaning": "beauftragen", "example": "嘱咐 (zhǔfù) - anweisen" }
+    ]
+  },
+  {
+    "phonetic": "主",
+    "pinyinRoot": "zhu",
+    "characters": [
+      { "char": "柱", "pinyin": "zhù", "radical": "木", "meaning": "Säule", "example": "柱子 (zhùzi) - Säule" },
+      { "char": "住", "pinyin": "zhù", "radical": "亻", "meaning": "wohnen", "example": "住房 (zhùfáng) - Wohnung" },
+      { "char": "注", "pinyin": "zhù", "radical": "氵", "meaning": "einfüllen", "example": "注意 (zhùyì) - aufpassen" },
+      { "char": "驻", "pinyin": "zhù", "radical": "马", "meaning": "stationieren", "example": "驻扎 (zhùzhā) - stationieren" },
+      { "char": "拄", "pinyin": "zhǔ", "radical": "扌", "meaning": "stützen", "example": "拄拐杖 (zhǔ guǎizhàng) - auf einen Stock gestützt" }
+    ]
+  },
+  {
+    "phonetic": "兄",
+    "pinyinRoot": "xiong",
+    "characters": [
+      { "char": "祝", "pinyin": "zhù", "radical": "示", "meaning": "wünschen", "example": "祝福 (zhùfú) - Segenswunsch" },
+      { "char": "况", "pinyin": "kuàng", "radical": "冫", "meaning": "Zustand", "example": "情况 (qíngkuàng) - Situation" },
+      { "char": "贶", "pinyin": "kuàng", "radical": "贝", "meaning": "schenken", "example": "厚贶 (hòukuàng) - großzügiges Geschenk" }
+    ]
+  },
+  {
+    "phonetic": "爪",
+    "pinyinRoot": "zhua",
+    "characters": [
+      { "char": "抓", "pinyin": "zhuā", "radical": "扌", "meaning": "greifen", "example": "抓住 (zhuāzhù) - festhalten" },
+      { "char": "爪", "pinyin": "zhǎo", "radical": "爪", "meaning": "Klaue", "example": "爪子 (zhuǎzi) - Kralle" },
+      { "char": "瓜", "pinyin": "guā", "radical": "瓜", "meaning": "Melone", "example": "西瓜 (xīguā) - Wassermelone" },
+      { "char": "爬", "pinyin": "pá", "radical": "爪", "meaning": "kriechen", "example": "爬山 (páshān) - Bergsteigen" }
+    ]
+  },
+  {
+    "phonetic": "曳",
+    "pinyinRoot": "ye",
+    "characters": [
+      { "char": "拽", "pinyin": "zhuài", "radical": "扌", "meaning": "zerren", "example": "拽住 (zhuàizhù) - festhalten" }
+    ]
+  },
+  {
+    "phonetic": "专",
+    "pinyinRoot": "zhuan",
+    "characters": [
+      { "char": "砖", "pinyin": "zhuān", "radical": "石", "meaning": "Ziegel", "example": "砖头 (zhuāntou) - Ziegelstein" },
+      { "char": "转", "pinyin": "zhuǎn", "radical": "车", "meaning": "drehen", "example": "转弯 (zhuǎnwān) - abbiegen" },
+      { "char": "抟", "pinyin": "tuán", "radical": "扌", "meaning": "kneten", "example": "抟土 (tuántǔ) - Erde kneten" }
+    ]
+  },
+  {
+    "phonetic": "庄",
+    "pinyinRoot": "zhuang",
+    "characters": [
+      { "char": "桩", "pinyin": "zhuāng", "radical": "木", "meaning": "Pfahl", "example": "木桩 (mùzhuāng) - Holzpfahl" }
+    ]
+  },
+  {
+    "phonetic": "壮",
+    "pinyinRoot": "zhuang",
+    "characters": [
+      { "char": "妆", "pinyin": "zhuāng", "radical": "女", "meaning": "Schminke", "example": "化妆 (huàzhuāng) - schminken" },
+      { "char": "状", "pinyin": "zhuàng", "radical": "犬", "meaning": "Form", "example": "形状 (xíngzhuàng) - Form" },
+      { "char": "装", "pinyin": "zhuāng", "radical": "衣", "meaning": "kleiden", "example": "服装 (fúzhuāng) - Kleidung" }
+    ]
+  },
+  {
+    "phonetic": "童",
+    "pinyinRoot": "tong",
+    "characters": [
+      { "char": "撞", "pinyin": "zhuàng", "radical": "扌", "meaning": "zusammenstoßen", "example": "撞击 (zhuàngjī) - Aufprall" },
+      { "char": "幢", "pinyin": "chuáng", "radical": "巾", "meaning": "Banner", "example": "经幢 (jīngchuáng) - buddhistische Steinsäule" }
+    ]
+  },
+  {
+    "phonetic": "追",
+    "pinyinRoot": "zhui",
+    "characters": [
+      { "char": "槌", "pinyin": "chuí", "radical": "木", "meaning": "Hämmer", "example": "鼓槌 (gǔchuí) - Trommelschlegel" }
+    ]
+  },
+  {
+    "phonetic": "队",
+    "pinyinRoot": "dui",
+    "characters": [
+      { "char": "坠", "pinyin": "zhuì", "radical": "土", "meaning": "fallen", "example": "坠落 (zhuìluò) - herabfallen" }
+    ]
+  }
+]
+
+[
+  {
+    "phonetic": "叕",
+    "pinyinRoot": "zhuo",
+    "characters": [
+      { "char": "缀", "pinyin": "zhuì", "radical": "纟", "meaning": "annähen", "example": "点缀 (diǎnzhuì) - verzieren" },
+      { "char": "辍", "pinyin": "chuò", "radical": "车", "meaning": "unterbrechen", "example": "辍学 (chuòxué) - die Schule abbrechen" }
+    ]
+  },
+  {
+    "phonetic": "享",
+    "pinyinRoot": "chun",
+    "characters": [
+      { "char": "谆", "pinyin": "zhūn", "radical": "讠", "meaning": "eindringlich", "example": "谆谆教诲 (zhūnzhūn jiàohuì) - eindringliche Belehrung" },
+      { "char": "淳", "pinyin": "chún", "radical": "氵", "meaning": "ehrlich", "example": "淳朴 (chúnpǔ) - ehrlich und einfach" },
+      { "char": "郭", "pinyin": "guō", "radical": "阝", "meaning": "Stadtmauer", "example": "城郭 (chéngguō) - Stadtmauern" }
+    ]
+  },
+  {
+    "phonetic": "出",
+    "pinyinRoot": "chu",
+    "characters": [
+      { "char": "拙", "pinyin": "zhuō", "radical": "扌", "meaning": "ungeschickt", "example": "笨拙 (bènzhuō) - ungeschickt" },
+      { "char": "黜", "pinyin": "chù", "radical": "黑", "meaning": "entlassen", "example": "罢黜 (bàchù) - entlassen" },
+      { "char": "绌", "pinyin": "chù", "radical": "纟", "meaning": "unzureichend", "example": "相形见绌 (xiāngxíngjiànchù) - daneben verblassen" },
+      { "char": "茁", "pinyin": "zhuó", "radical": "艹", "meaning": "üppig wachsen", "example": "茁壮 (zhuózhuàng) - kräftig wachsen" }
+    ]
+  },
+  {
+    "phonetic": "卓",
+    "pinyinRoot": "zhuo",
+    "characters": [
+      { "char": "桌", "pinyin": "zhuō", "radical": "木", "meaning": "Tisch", "example": "桌子 (zhuōzi) - Tisch" },
+      { "char": "绰", "pinyin": "chuò", "radical": "纟", "meaning": "großzügig", "example": "绰号 (chuòhào) - Spitzname" },
+      { "char": "约", "pinyin": "yuē", "radical": "纟", "meaning": "vereinbaren", "example": "约会 (yuēhuì) - Verabredung" },
+      { "char": "焯", "pinyin": "chāo", "radical": "火", "meaning": "blanchieren", "example": "焯水 (chāoshuǐ) - blanchieren" },
+      { "char": "掉", "pinyin": "diào", "radical": "扌", "meaning": "fallen", "example": "掉下 (diàoxià) - herunterfallen" }
+    ]
+  },
+  {
+    "phonetic": "豖",
+    "pinyinRoot": "zhu",
+    "characters": [
+      { "char": "琢", "pinyin": "zhuó", "radical": "王", "meaning": "schleifen", "example": "琢磨 (zhuómó) - überlegen" },
+      { "char": "啄", "pinyin": "zhuó", "radical": "口", "meaning": "picken", "example": "啄木鸟 (zhuómùniǎo) - Specht" },
+      { "char": "逐", "pinyin": "zhú", "radical": "辶", "meaning": "jagen", "example": "逐渐 (zhújiàn) - allmählich" }
+    ]
+  },
+  {
+    "phonetic": "兹",
+    "pinyinRoot": "zi",
+    "characters": [
+      { "char": "滋", "pinyin": "zī", "radical": "氵", "meaning": "wachsen", "example": "滋润 (zīrùn) - feucht" },
+      { "char": "磁", "pinyin": "cí", "radical": "石", "meaning": "Magnet", "example": "磁铁 (cítiě) - Magnet" },
+      { "char": "电", "pinyin": "diàn", "radical": "田", "meaning": "Elektrizität", "example": "电视 (diànshì) - Fernseher" }
+    ]
+  },
+  {
+    "phonetic": "次",
+    "pinyinRoot": "zi",
+    "characters": [
+      { "char": "咨", "pinyin": "zī", "radical": "口", "meaning": "beraten", "example": "咨询 (zīxún) - Beratung" },
+      { "char": "资", "pinyin": "zī", "radical": "贝", "meaning": "Ressourcen", "example": "资源 (zīyuán) - Ressourcen" },
+      { "char": "姿", "pinyin": "zī", "radical": "女", "meaning": "Haltung", "example": "姿势 (zīshì) - Körperhaltung" }
+    ]
+  },
+  {
+    "phonetic": "子",
+    "pinyinRoot": "zi",
+    "characters": [
+      { "char": "字", "pinyin": "zì", "radical": "宀", "meaning": "Schriftzeichen", "example": "汉字 (Hànzì) - chinesisches Schriftzeichen" },
+      { "char": "孜", "pinyin": "zī", "radical": "子", "meaning": "fleißig", "example": "孜孜不倦 (zīzī bùjuàn) - unermüdlich" },
+      { "char": "仔", "pinyin": "zǎi", "radical": "亻", "meaning": "sorgfältig", "example": "仔细 (zǐxì) - sorgfältig" },
+      { "char": "籽", "pinyin": "zǐ", "radical": "米", "meaning": "Samen", "example": "花籽 (huāzǐ) - Blumenkörner" },
+      { "char": "子", "pinyin": "zi", "radical": "子", "meaning": "Suffix", "example": "桌子 (zhuōzi) - Tisch" }
+    ]
+  },
+  {
+    "phonetic": "宗",
+    "pinyinRoot": "zong",
+    "characters": [
+      { "char": "鬃", "pinyin": "zōng", "radical": "髟", "meaning": "Mähne", "example": "马鬃 (mǎzōng) - Pferdemähne" },
+      { "char": "棕", "pinyin": "zōng", "radical": "木", "meaning": "Palme", "example": "棕榈 (zōnglǘ) - Palme" },
+      { "char": "踪", "pinyin": "zōng", "radical": "⻊", "meaning": "Spur", "example": "踪迹 (zōngjì) - Spur" },
+      { "char": "宗", "pinyin": "zōng", "radical": "宀", "meaning": "Ahnen", "example": "宗教 (zōngjiào) - Religion" },
+      { "char": "综", "pinyin": "zōng", "radical": "纟", "meaning": "zusammenfassen", "example": "综合 (zōnghé) - umfassend" }
+    ]
+  },
+  {
+    "phonetic": "奏",
+    "pinyinRoot": "zou",
+    "characters": [
+      { "char": "揍", "pinyin": "zòu", "radical": "扌", "meaning": "verprügeln", "example": "挨揍 (áizòu) - verprügelt werden" }
+    ]
+  },
+  {
+    "phonetic": "且",
+    "pinyinRoot": "zu",
+    "characters": [
+      { "char": "租", "pinyin": "zū", "radical": "禾", "meaning": "mieten", "example": "租房 (zūfáng) - Wohnung mieten" },
+      { "char": "祖", "pinyin": "zǔ", "radical": "示", "meaning": "Ahne", "example": "祖先 (zǔxiān) - Vorfahren" },
+      { "char": "诅", "pinyin": "zǔ", "radical": "讠", "meaning": "verfluchen", "example": "诅咒 (zǔzhòu) - Fluch" },
+      { "char": "阻", "pinyin": "zǔ", "radical": "阝", "meaning": "hindern", "example": "阻止 (zǔzhǐ) - verhindern" },
+      { "char": "组", "pinyin": "zǔ", "radical": "纟", "meaning": "Gruppe", "example": "组织 (zǔzhī) - Organisation" },
+      { "char": "粗", "pinyin": "cū", "radical": "米", "meaning": "grob", "example": "粗糙 (cūcāo) - rau" }
+    ]
+  },
+  {
+    "phonetic": "占",
+    "pinyinRoot": "zhan",
+    "characters": [
+      { "char": "钻", "pinyin": "zuān", "radical": "钅", "meaning": "bohren", "example": "钻石 (zuànshí) - Diamant" },
+      { "char": "站", "pinyin": "zhàn", "radical": "立", "meaning": "stehen", "example": "车站 (chēzhàn) - Bahnhof" },
+      { "char": "沾", "pinyin": "zhān", "radical": "氵", "meaning": "benetzen", "example": "沾水 (zhānshuǐ) - mit Wasser benetzen" },
+      { "char": "觇", "pinyin": "chān", "radical": "见", "meaning": "ausspähen", "example": "觇视 (chānshì) - ausspähen" },
+      { "char": "视", "pinyin": "shì", "radical": "见", "meaning": "ansehen", "example": "电视 (diànshì) - Fernseher" }
+    ]
+  },
+  {
+    "phonetic": "扁",
+    "pinyinRoot": "bian",
+    "characters": [
+      { "char": "编", "pinyin": "biān", "radical": "纟", "meaning": "flechten", "example": "编辑 (biānjí) - Redakteur" },
+      { "char": "篡", "pinyin": "cuàn", "radical": "⺮", "meaning": "usurpieren", "example": "篡改 (cuàngǎi) - fälschen" }
+    ]
+  },
+  {
+    "phonetic": "卒",
+    "pinyinRoot": "zu",
+    "characters": [
+      { "char": "醉", "pinyin": "zuì", "radical": "酉", "meaning": "betrunken", "example": "喝醉 (hēzuì) - betrunken werden" },
+      { "char": "淬", "pinyin": "cuì", "radical": "氵", "meaning": "härten", "example": "淬火 (cuìhuǒ) - Härten (Metall)" },
+      { "char": "卒", "pinyin": "zú", "radical": "十", "meaning": "Soldat", "example": "士卒 (shìzú) - Soldaten" }
+    ]
+  },
+  {
+    "phonetic": "左",
+    "pinyinRoot": "zuo",
+    "characters": [
+      { "char": "佐", "pinyin": "zuǒ", "radical": "亻", "meaning": "helfen", "example": "辅佐 (fǔzuǒ) - assistieren" }
+    ]
+  },
+  {
+    "phonetic": "乍",
+    "pinyinRoot": "zha",
+    "characters": [
+      { "char": "昨", "pinyin": "zuó", "radical": "日", "meaning": "gestern", "example": "昨天 (zuótiān) - gestern" },
+      { "char": "柞", "pinyin": "zuò", "radical": "木", "meaning": "Eiche", "example": "柞树 (zuòshù) - Eichenbaum" },
+      { "char": "作", "pinyin": "zuò", "radical": "亻", "meaning": "machen", "example": "工作 (gōngzuò) - Arbeit" }
+    ]
+  },
+  {
+    "phonetic": "坐",
+    "pinyinRoot": "zuo",
+    "characters": [
+      { "char": "座", "pinyin": "zuò", "radical": "广", "meaning": "Sitz", "example": "座位 (zuòwèi) - Sitzplatz" }
+    ]
+  },
+
+
+{
+    "phonetic": "肖",
+    "pinyinRoot": "xiao",
+    "characters": [
+        { "char": "俏", "pinyin": "qiào", "radical": "亻", "meaning": "hübsch", "example": "俏丽 (qiàolì) - hübsch und lieblich" },
+        { "char": "硝", "pinyin": "xiāo", "radical": "石", "meaning": "Salpeter", "example": "硝酸 (xiāosuān) - Salpetersäure" },
+        { "char": "消", "pinyin": "xiāo", "radical": "氵", "meaning": "verschwinden", "example": "消失 (xiāoshī) - verschwinden" },
+        { "char": "蛸", "pinyin": "xiāo", "radical": "虫", "meaning": "Krake", "example": "螵蛸 (piāoxiāo) - Ootheka (Insekteneier)" },
+        { "char": "峭", "pinyin": "qiào", "radical": "山", "meaning": "steil", "example": "峭壁 (qiàobì) - Klippe" },
+        { "char": "逍", "pinyin": "xiāo", "radical": "辶", "meaning": "sorglos", "example": "逍遥 (xiāoyáo) - sorglos und frei" },
+        { "char": "绡", "pinyin": "xiāo", "radical": "纟", "meaning": "Rohseide", "example": "绡巾 (xiāojīn) - Seidentuch" },
+        { "char": "霄", "pinyin": "xiāo", "radical": "雨", "meaning": "Himmel", "example": "云霄 (yúnxiāo) - Wolkenhimmel" },
+        { "char": "魈", "pinyin": "xiāo", "radical": "鬼", "meaning": "Bergdämon", "example": "山魈 (shānxiāo) - Mandrill" },
+        { "char": "削", "pinyin": "xiāo", "radical": "刂", "meaning": "schälen", "example": "削皮 (xiāopí) - schälen" },
+        { "char": "悄", "pinyin": "qiāo", "radical": "忄", "meaning": "leise", "example": "悄悄 (qiāoqiāo) - leise" },
+        { "char": "哨", "pinyin": "shào", "radical": "口", "meaning": "Pfeife", "example": "哨子 (shàozi) - Pfeife" }
+    ]
+},
+{
+    "phonetic": "者",
+    "pinyinRoot": "zhe",
+    "characters": [
+        { "char": "都", "pinyin": "dōu", "radical": "阝", "meaning": "alle", "example": "都是 (dōushì) - alle sind" },
+        { "char": "堵", "pinyin": "dǔ", "radical": "土", "meaning": "blockieren", "example": "堵塞 (dǔsè) - blockieren" },
+        { "char": "暑", "pinyin": "shǔ", "radical": "日", "meaning": "Hitze", "example": "暑假 (shǔjià) - Sommerferien" },
+        { "char": "屠", "pinyin": "tú", "radical": "尸", "meaning": "schlachten", "example": "屠杀 (túshā) - Massaker" },
+        { "char": "绪", "pinyin": "xù", "radical": "纟", "meaning": "Anfang", "example": "情绪 (qíngxù) - Stimmung" },
+        { "char": "诸", "pinyin": "zhū", "radical": "讠", "meaning": "alle", "example": "诸位 (zhūwèi) - meine Damen und Herren" },
+        { "char": "煮", "pinyin": "zhǔ", "radical": "灬", "meaning": "kochen", "example": "煮饭 (zhǔfàn) - Reis kochen" },
+        { "char": "著", "pinyin": "zhù", "radical": "艹", "meaning": "berühmt", "example": "著名 (zhùmíng) - berühmt" },
+        { "char": "睹", "pinyin": "dǔ", "radical": "目", "meaning": "sehen", "example": "目睹 (mùdǔ) - mit eigenen Augen sehen" },
+        { "char": "奢", "pinyin": "shē", "radical": "大", "meaning": "luxuriös", "example": "奢侈 (shēchǐ) - verschwenderisch" },
+        { "char": "署", "pinyin": "shǔ", "radical": "罒", "meaning": "Amt", "example": "署名 (shǔmíng) - unterschreiben" },
+        { "char": "锗", "pinyin": "zhě", "radical": "钅", "meaning": "Germanium", "example": "锗元素 (zhě yuánsù) - Germanium-Element" },
+        { "char": "赭", "pinyin": "zhě", "radical": "赤", "meaning": "ocker", "example": "赭石 (zhěshí) - Ockerstein" }
+    ]
+},
+
+
+            {
+                phonetic: "攵",
+                pinyinRoot: "pu",
+                characters: [
+                    { char: "教", pinyin: "jiào", radical: "攵", meaning: "lehren", example: "教育 (jiàoyù) - Bildung" },
+                    { char: "收", pinyin: "shōu", radical: "攵", meaning: "erhalten", example: "收到 (shōudào) - erhalten" },
+                    { char: "攻", pinyin: "gōng", radical: "攵", meaning: "angreifen", example: "攻击 (gōngjī) - Angriff" },
+                    { char: "改", pinyin: "gǎi", radical: "攵", meaning: "ändern", example: "改变 (gǎibiàn) - Veränderung" }
+                ]
+            }
+ ]
+        // Radical database with categories
+          const radicals = [
+            { radical: "氵", meaning: "Wasser", category: "nature" },
+            { radical: "日", meaning: "Sonne", category: "nature" },
+            { radical: "月", meaning: "Mond", category: "nature" },
+            { radical: "山", meaning: "Berg", category: "nature" },
+            { radical: "火", meaning: "Feuer", category: "nature" },
+            { radical: "灬", meaning: "Feuer", category: "nature" },
+            { radical: "土", meaning: "Erde", category: "nature" },
+            { radical: "雨", meaning: "Regen", category: "nature" },
+            { radical: "风", meaning: "Wind", category: "nature" },
+            { radical: "气", meaning: "Dampf", category: "nature" },
+            { radical: "石", meaning: "Stein", category: "nature" },
+            { radical: "方", meaning: "Quadrat", category: "nature" },
+            { radical: "虫", meaning: "Insekt", category: "animals" },
+            { radical: "犭", meaning: "Tier", category: "animals" },
+            { radical: "鸟", meaning: "Vogel", category: "animals" },
+            { radical: "鳥", meaning: "Vogel", category: "animals" },
+            { radical: "鱼", meaning: "Fisch", category: "animals" },
+            { radical: "马", meaning: "Pferd", category: "animals" },
+            { radical: "牛", meaning: "Rind", category: "animals" },
+            { radical: "羊", meaning: "Schaf", category: "animals" },
+            { radical: "犬", meaning: "Hund", category: "animals" },
+            { radical: "羽", meaning: "Feder", category: "animals" },
+            { radical: "木", meaning: "Holz", category: "plants" },
+            { radical: "艹", meaning: "Pflanze", category: "plants" },
+            { radical: "竹", meaning: "Bambus", category: "plants" },
+            { radical: "⺮", meaning: "Bambus", category: "plants" },
+            { radical: "禾", meaning: "Getreide", category: "plants" },
+            { radical: "米", meaning: "Reis", category: "plants" },
+            { radical: "人", meaning: "Person", category: "human" },
+            { radical: "亻", meaning: "Person", category: "human" },
+            { radical: "女", meaning: "Frau", category: "human" },
+            { radical: "子", meaning: "Kind", category: "human" },
+            { radical: "身", meaning: "Körper", category: "human" },
+            { radical: "心", meaning: "Herz", category: "human" },
+            { radical: "忄", meaning: "Herz", category: "human" },
+            { radical: "目", meaning: "Auge", category: "human" },
+            { radical: "口", meaning: "Mund", category: "human" },
+            { radical: "耳", meaning: "Ohr", category: "human" },
+            { radical: "手", meaning: "Hand", category: "human" },
+            { radical: "扌", meaning: "Hand", category: "human" },
+            { radical: "足", meaning: "Fuß", category: "human" },
+            { radical: "骨", meaning: "Knochen", category: "human" },
+            { radical: "齿", meaning: "Zahn", category: "human" },
+            { radical: "月", meaning: "Fleisch", category: "human" },
+            { radical: "疒", meaning: "Krankheit", category: "human" },
+            { radical: "尸", meaning: "Leiche", category: "human" },
+            { radical: "鬼", meaning: "Geist", category: "human" },
+            { radical: "毛", meaning: "Haar", category: "human" },
+            { radical: "走", meaning: "Laufen", category: "actions" },
+            { radical: "辶", meaning: "Gehen", category: "actions" },
+            { radical: "飞", meaning: "Fliegen", category: "actions" },
+            { radical: "言", meaning: "Sprechen", category: "actions" },
+            { radical: "讠", meaning: "Sprechen", category: "actions" },
+            { radical: "见", meaning: "Sehen", category: "actions" },
+            { radical: "攵", meaning: "Schlagen", category: "actions" },
+            { radical: "欠", meaning: "Gähnen", category: "actions" },
+            { radical: "廴", meaning: "Langes Gehen", category: "actions" },
+            { radical: "车", meaning: "Wagen", category: "objects" },
+            { radical: "舟", meaning: "Boot", category: "objects" },
+            { radical: "刀", meaning: "Messer", category: "objects" },
+            { radical: "刂", meaning: "Messer", category: "objects" },
+            { radical: "皿", meaning: "Gefäß", category: "objects" },
+            { radical: "缶", meaning: "Tongefäß", category: "objects" },
+            { radical: "瓦", meaning: "Dachziegel", category: "objects" },
+            { radical: "弓", meaning: "Bogen", category: "objects" },
+            { radical: "矢", meaning: "Pfeil", category: "objects" },
+            { radical: "戈", meaning: "Hellebarde", category: "objects" },
+            { radical: "矛", meaning: "Speer", category: "objects" },
+            { radical: "殳", meaning: "Waffe", category: "objects" },
+            { radical: "贝", meaning: "Muschel", category: "objects" },
+            { radical: "玉", meaning: "Jade", category: "objects" },
+            { radical: "王", meaning: "Jade", category: "objects" },
+            { radical: "金", meaning: "Gold", category: "objects" },
+            { radical: "钅", meaning: "Metall", category: "objects" },
+            { radical: "衣", meaning: "Kleidung", category: "objects" },
+            { radical: "衤", meaning: "Kleidung", category: "objects" },
+            { radical: "糸", meaning: "Seide", category: "objects" },
+            { radical: "纟", meaning: "Seide", category: "objects" },
+            { radical: "食", meaning: "Essen", category: "objects" },
+            { radical: "饣", meaning: "Essen", category: "objects" },
+            { radical: "飠", meaning: "Essen", category: "objects" },
+            { radical: "礻", meaning: "Gott", category: "objects" },
+            { radical: "罒", meaning: "Netz", category: "objects" },
+            { radical: "黒", meaning: "Schwarz", category: "objects" },
+            { radical: "弋", meaning: "Pfeil", category: "objects" },
+            { radical: "冂", meaning: "Umrandung", category: "objects" },
+            { radical: "匚", meaning: "Kiste", category: "objects" },
+            { radical: "凵", meaning: "Behälter", category: "objects" },
+            { radical: "宀", meaning: "Dach", category: "buildings" },
+            { radical: "广", meaning: "Haus", category: "buildings" },
+            { radical: "厂", meaning: "Klippe", category: "buildings" },
+            { radical: "穴", meaning: "Höhle", category: "buildings" },
+            { radical: "户", meaning: "Tür", category: "buildings" },
+            { radical: "门", meaning: "Tor", category: "buildings" },
+            { radical: "門", meaning: "Tor", category: "buildings" },
+            { radical: "囗", meaning: "Einfriedung", category: "buildings" },
+            { radical: "邑", meaning: "Stadt", category: "buildings" },
+            { radical: "阝", meaning: "Stadt", category: "buildings" }
+        ];
+
+        createApp({
+            setup() {
+                const score = ref(0);
+                const highscore = ref(0);
+                const correct = ref(0);
+                const wrong = ref(0);
+                const currentCharacters = ref([]);
+                const drawers = reactive([]);
+                const draggedItem = ref(null);
+                const expandedDrawer = ref(false);
+                const darkMode = ref(false);
+                const collectedChars = ref([]);
+                const currentCategory = ref("all");
+                const visibleDrawers = ref([]);
+                const correctFeedback = ref(null);
+                const wrongFeedback = ref(null);
+                const correctSound = ref(null);
+                const wrongSound = ref(null);
+
+                // Initialize drawers
+                const initDrawers = () => {
+                    if (drawers.length === 0) {
+                        radicals.forEach(rad => {
+                            drawers.push({
+                                radical: rad.radical,
+                                meaning: rad.meaning,
+                                category: rad.category,
+                                items: [],
+                                expanded: false
+                            });
+                        });
+                    }
+                    refreshDrawers();
+                };
+
+                // Filter visible drawers by category
+                const refreshDrawers = () => {
+                    let filtered = drawers;
+                    
+                    if (currentCategory.value !== "all") {
+                        filtered = drawers.filter(d => d.category === currentCategory.value);
+                    }
+                    
+                    // For "all" category, show all drawers
+                    if (currentCategory.value === "all") {
+                        visibleDrawers.value = [...drawers];
+                    } else {
+                        // For other categories, select up to 8 random drawers
+                        visibleDrawers.value = [...filtered]
+                            .sort(() => Math.random() - 0.5)
+                            .slice(0, 8);
+                    }
+                };
+
+                // Set category and update drawers
+                const setCategory = (category) => {
+                    currentCategory.value = category;
+                    refreshDrawers();
+                };
+
+                // Start a new game with new characters
+                const newGame = () => {
+                    initDrawers();
+                    currentCharacters.value = []; // Clear current characters before adding new ones
+                    
+                    // Select a random phonetic group
+                    const availableGroups = hanziDatabase.filter(g => 
+                        !collectedChars.value.some(c => g.characters.some(gc => gc.char === c.char))
+                    );
+                    
+                    if (availableGroups.length === 0) {
+                        alert("Alle Zeichen wurden gesammelt! Das Spiel wird zurückgesetzt.");
+                        collectedChars.value = [];
+                        score.value = 0;
+                        drawers.forEach(d => d.items = []);
+                        return;
+                    }
+                    
+                    const selectedGroup = availableGroups[Math.floor(Math.random() * availableGroups.length)];
+                    
+                    // Collect new characters from the selected group
+                    const newChars = selectedGroup.characters
+                        .filter(c => !collectedChars.value.some(cc => cc.char === c.char))
+                        .map(char => ({
+                            ...char,
+                            phonetic: selectedGroup.phonetic,
+                            pinyinRoot: selectedGroup.pinyinRoot,
+                            id: `${char.char}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+                        }));
+                    
+                    // Add new characters
+                    currentCharacters.value = [...newChars];
+                };
+
+                // Drag & Drop functions
+                const startDrag = (event, char) => {
+                    draggedItem.value = char;
+                    event.dataTransfer.setData('text/plain', char.id);
+                    event.target.classList.add('dragging');
+                };
+
+                const dropOnDrawer = (event, drawer) => {
+                    event.preventDefault();
+                    const char = draggedItem.value;
+                    
+                    if (char.radical === drawer.radical) {
+                        // Add character to drawer (if not already present)
+                        if (!drawer.items.some(item => item.char === char.char)) {
+                            drawer.items.push(char);
+                            collectedChars.value.push(char);
+                            score.value += 10;
+                            correct.value++;
+                            if (score.value > highscore.value) {
+                                highscore.value = score.value;
+                            }
+                            
+                            // Show correct feedback
+                            showFeedback(true);
+                            
+                            event.target.classList.add('highlight');
+                            setTimeout(() => {
+                                event.target.classList.remove('highlight');
+                            }, 1000);
+                        }
+                        
+                        // Remove character from current selection
+                        currentCharacters.value = currentCharacters.value.filter(c => c.id !== char.id);
+                    } else {
+                        wrong.value++;
+                        // Show wrong feedback
+                        showFeedback(false);
+                        
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+                    }
+                    
+                    document.querySelectorAll('.character.dragging').forEach(el => {
+                        el.classList.remove('dragging');
+                    });
+                };
+
+                // Show feedback with sound and image
+                const showFeedback = (isCorrect) => {
+                    if (isCorrect) {
+                        correctSound.value.play();
+                        correctFeedback.value.style.display = 'block';
+                        setTimeout(() => {
+                            correctFeedback.value.style.display = 'none';
+                        }, 1500);
+                    } else {
+                        wrongSound.value.play();
+                        wrongFeedback.value.style.display = 'block';
+                        setTimeout(() => {
+                            wrongFeedback.value.style.display = 'none';
+                        }, 1500);
+                    }
+                };
+
+                // Drawer expansion with dynamic size
+                const expandedDrawerStyle = (drawer) => {
+                    const itemCount = drawer.items.length;
+                    const baseHeight = 400;
+                    const extraHeight = Math.min(400, Math.floor(itemCount / 3) * 60);
+                    const width = Math.min(800, 400 + Math.floor(itemCount / 5) * 50);
+                    
+                    return {
+                        width: `${width}px`,
+                        height: `${baseHeight + extraHeight}px`
+                    };
+                };
+
+                const toggleDrawer = (drawer) => {
+                    drawers.forEach(d => {
+                        if (d !== drawer) d.expanded = false;
+                    });
+                    drawer.expanded = !drawer.expanded;
+                    expandedDrawer.value = drawer.expanded;
+                };
+
+                const closeExpandedDrawer = () => {
+                    drawers.forEach(d => d.expanded = false);
+                    expandedDrawer.value = false;
+                };
+
+                // Show character info
+                const showCharacterInfo = (char) => {
+                    const elements = document.querySelectorAll('.example-sentence');
+                    elements.forEach(el => {
+                        if (el.textContent.includes(char.char)) {
+                            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+                        } else {
+                            el.style.display = 'none';
+                        }
+                    });
+                };
+
+                // Clear drawers
+                const clearDrawers = () => {
+                    if (confirm("Alle gesammelten Zeichen löschen?")) {
+                        drawers.forEach(d => d.items = []);
+                        collectedChars.value = [];
+                        score.value = 0;
+                        currentCharacters.value = [];
+                    }
+                };
+
+                // Dark mode toggle
+                const toggleDarkMode = () => {
+                    darkMode.value = !darkMode.value;
+                    document.body.classList.toggle('dark-mode', darkMode.value);
+                };
+
+                // Initialize
+                onMounted(() => {
+                    initDrawers();
+                    newGame();
+                });
+
+                return {
+                    score,
+                    highscore,
+                    correct,
+                    wrong,
+                    currentCharacters,
+                    drawers,
+                    visibleDrawers,
+                    expandedDrawer,
+                    darkMode,
+                    collectedChars,
+                    correctFeedback,
+                    wrongFeedback,
+                    correctSound,
+                    wrongSound,
+                    newGame,
+                    startDrag,
+                    dropOnDrawer,
+                    toggleDrawer,
+                    closeExpandedDrawer,
+                    showCharacterInfo,
+                    clearDrawers,
+                    toggleDarkMode,
+                    expandedDrawerStyle,
+                    refreshDrawers,
+                    setCategory,
+                    showFeedback
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

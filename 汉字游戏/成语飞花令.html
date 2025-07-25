@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>成语飞花令</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom right, #fffbe6, #cce6ff);
+      text-align: center;
+      padding: 50px;
+    }
+    #idiom {
+      font-size: 24px;
+      opacity: 0;
+      transition: all 1s ease;
+      margin: 30px auto;
+      width: fit-content;
+      padding: 10px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    #pinyin {
+      font-size: 2em;
+    }
+    #definition, #examples, #translations, #nextBtn {
+      margin-top: 20px;
+      display: none;
+    }
+    .colorful {
+      animation: pop 1s ease forwards;
+    }
+    @keyframes pop {
+      0% { font-size: 14px; opacity: 0.2; transform: scale(0.5); }
+      100% { font-size: 64px; opacity: 1; transform: scale(1); }
+    }
+    button {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>成语飞花令 · 多语互动版</h1>
+  <div id="idiom" onclick="revealStep()"></div>
+
+  <div id="pinyin"></div>
+  <div id="definition"></div>
+  <div id="examples"></div>
+  <div id="translations"></div>
+
+  <button id="nextBtn" onclick="nextIdiom()">显示下一个成语</button>
+
+  <script>
+    const idioms = [
+  {
+    idiom: "一五一十",
+    pinyin: "yi wu yi shi",
+    definition: "形容原原本本地叙述事情经过。",
+    examples: [
+      "他把整件事一五一十地说了出来。",
+      "她把发生的情况一五一十地告诉了老师。"
+    ],
+    translations: {
+      en: "To recount everything in full detail.",
+      de: "Etwas vollständig und ehrlich schildern.",
+      fr: "Raconter les faits dans les moindres détails."
+    }
+  },
+  {
+    idiom: "目不识丁",
+    pinyin: "mu bu shi ding",
+    definition: "形容一个字也不认识。",
+    examples: [
+      "他虽然富有，却目不识丁。",
+      "那个老人目不识丁，却很聪明。"
+    ],
+    translations: {
+      en: "Not able to recognize even a single character.",
+      de: "Nicht einmal einen Buchstaben erkennen können.",
+      fr: "Ne pas savoir lire un seul mot."
+    }
+  },
+  {
+    idiom: "七上八下",
+    pinyin: "qi shang ba xia",
+    definition: "形容心神不定，焦虑不安。",
+    examples: [
+      "考试成绩还没出，他心里七上八下的。",
+      "听到那个消息，她心里七上八下。"
+    ],
+    translations: {
+      en: "To feel restless or anxious.",
+      de: "Unruhig oder nervös sein.",
+      fr: "Être anxieux ou agité."
+    }
+  },
+  {
+    idiom: "八面威风",
+    pinyin: "ba mian wei feng",
+    definition: "形容非常威风，声势逼人。",
+    examples: [
+      "他穿上军装，八面威风。",
+      "老板出场时八面威风，气势不凡。"
+    ],
+    translations: {
+      en: "Imposing and majestic on all sides.",
+      de: "Eindrucksvoll und mächtig in alle Richtungen.",
+      fr: "Impressionnant et majestueux sous tous les angles."
+    }
+  },
+  {
+    idiom: "儿女情长",
+    pinyin: "er nv qing chang",
+    definition: "形容过分沉溺于感情纠葛。",
+    examples: [
+      "英雄不问儿女情长。",
+      "他虽多情，却不愿陷入儿女情长。"
+    ],
+    translations: {
+      en: "Overindulgence in sentimental affairs.",
+      de: "Zu sehr in Gefühlen verstrickt.",
+      fr: "Trop absorbé par les sentiments amoureux."
+    }
+  },
+  {
+    idiom: "尽力而为",
+    pinyin: "jin li er wei",
+    definition: "表示尽最大的努力去做。",
+    examples: [
+      "这件事我会尽力而为。",
+      "他尽力而为，虽然没成功但无怨。"
+    ],
+    translations: {
+      en: "To do one's best.",
+      de: "Sein Bestes geben.",
+      fr: "Faire de son mieux."
+    }
+  },
+  {
+    idiom: "刀光剑影",
+    pinyin: "dao guang jian ying",
+    definition: "形容激烈的战斗场面。",
+    examples: [
+      "战场上刀光剑影，十分危险。",
+      "这是一个充满刀光剑影的世界。"
+    ],
+    translations: {
+      en: "Gleam of swords and shadow of blades; intense conflict.",
+      de: "Kampf mit blitzenden Klingen.",
+      fr: "Éclats de lames, ombres de sabres ; combat intense."
+    }
+  },
+  {
+    idiom: "三心二意",
+    pinyin: "san xin er yi",
+    definition: "形容做事不专心，犹豫不定。",
+    examples: [
+      "他做事总是三心二意。",
+      "学习不能三心二意，要专注。"
+    ],
+    translations: {
+      en: "Indecisive and distracted.",
+      de: "Unentschlossen und abgelenkt.",
+      fr: "Indécis et peu concentré."
+    }
+  }
+];
+
+    let current = 0;
+    let step = 0;
+
+    function nextIdiom() {
+      const idiomBox = document.getElementById("idiom");
+      const data = idioms[current];
+      idiomBox.style.backgroundColor = getRandomColor();
+      idiomBox.innerText = data.idiom;
+      idiomBox.className = "colorful";
+      resetInfo();
+      speak(data.idiom, 'zh-CN');
+      step = 0;
+      current = (current + 1) % idioms.length;
+    }
+
+    function resetInfo() {
+      document.getElementById("pinyin").style.display = 'none';
+      document.getElementById("definition").style.display = 'none';
+      document.getElementById("examples").style.display = 'none';
+      document.getElementById("translations").style.display = 'none';
+      document.getElementById("nextBtn").style.display = 'none';
+    }
+
+    function revealStep() {
+      const data = idioms[(current + idioms.length - 1) % idioms.length];
+      step++;
+      if (step === 1) {
+        document.getElementById("pinyin").innerText = `${data.pinyin}`;
+        document.getElementById("pinyin").style.display = 'block';
+      } else if (step === 2) {
+        document.getElementById("definition").innerText = `解释：${data.definition}`;
+        document.getElementById("definition").style.display = 'block';
+        speak(data.definition, 'zh-CN');
+      } else if (step === 3) {
+        document.getElementById("examples").innerText = `例句：\n- ${data.examples.join("\n- ")}`;
+        document.getElementById("examples").style.display = 'block';
+        speak(data.examples[0], 'zh-CN');
+        speak(data.examples[1], 'zh-CN');
+      } else if (step === 4) {
+        const trEl = document.getElementById("translations");
+        trEl.innerHTML =
+          `英文：<span onclick="speakTranslation('${data.translations.en}', 'en-US')" style="cursor:pointer;text-decoration:underline">${data.translations.en}</span><br>` +
+          `德文：<span onclick="speakTranslation('${data.translations.de}', 'de-DE')" style="cursor:pointer;text-decoration:underline">${data.translations.de}</span><br>` +
+          `法文：<span onclick="speakTranslation('${data.translations.fr}', 'fr-FR')" style="cursor:pointer;text-decoration:underline">${data.translations.fr}</span>`;
+        trEl.style.display = 'block';
+        // 自动朗读英文解释
+        speak(data.translations.en, 'en-US');
+      } else if (step === 5) {
+        document.getElementById("nextBtn").style.display = 'inline-block';
+      }
+    }
+
+    function speak(text, lang) {
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = lang;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function speakTranslation(text, lang) {
+      speak(text, lang);
+    }
+
+    function getRandomColor() {
+      const colors = ["#f06292", "#4fc3f7", "#ba68c8", "#81c784", "#ffb74d"];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // 自动显示第一个成语
+    nextIdiom();
+  </script>
+</body>
+</html>

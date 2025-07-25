@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>汉字雨游戏</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      font-family: "微软雅黑", sans-serif;
+      color: #fff;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+      background-size: auto;
+    }
+
+    #scoreBoard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #basket {
+      position: absolute;
+      bottom: 0;
+      height: auto;
+      min-height: 60px;
+      width: 100%;
+      background-color: rgba(44, 62, 80, 0.85);
+      text-align: center;
+      line-height: 60px;
+      font-size: 18px;
+      color: #ccc;
+      padding: 10px 0;
+    }
+
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #charInput {
+      width: 200px;
+      min-height: 32px;
+      max-height: 180px;
+      font-size: 16px;
+      resize: none;
+      overflow: hidden;
+      padding: 8px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 6px;
+      background-color: #e0f7fa;
+      color: #000;
+      line-height: 1.4;
+      font-family: "微软雅黑", sans-serif;
+      transition: height 0.2s ease;
+    }
+    #charInput:focus {
+      outline: none;
+      box-shadow: 0 0 6px #0ff;
+    }
+
+    button {
+      margin-top: 6px;
+      margin-left: 4px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background: #00bcd4;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0097a7;
+    }
+
+    #wordDetail {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 30, 40, 0.95);
+      border: 2px solid #00fff7;
+      border-radius: 12px;
+      padding: 20px;
+      width: 80%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 2000;
+      box-shadow: 0 0 20px rgba(0, 255, 247, 0.5);
+      display: none;
+    }
+
+    #wordDetail h2 {
+      color: #00fff7;
+      margin-top: 0;
+      text-align: center;
+      font-size: 36px; /* 放大诗句字体 */
+      line-height: 1.5;
+    }
+
+    #wordDetail .author {
+      font-size: 20px;
+      color: #ffcc00;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    #wordDetail .meaning {
+      background: rgba(0, 20, 30, 0.7);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-size: 18px;
+    }
+
+    #closeDetail {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #00fff7;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    #speakBtn {
+      display: block;
+      margin: 15px auto;
+      padding: 8px 16px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #speakBtn:hover {
+      background: #0097a7;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="scoreBoard">分数：0</div>
+    <div id="controls">
+        <textarea id="charInput" placeholder="输入汉字（如：战利胜）" oninput="autoResize(this)"></textarea>
+        <br>
+        <button onclick="useCustomChars()">使用</button>
+        <button onclick="useDefaultChars()">字库</button>
+        <button onclick="reset()">分数清零</button>
+        <button onclick="resetToDefault()">清除字庫</button>
+        <button id="autoPlayBtn">自动播放</button>
+        <button id="stopPlayBtn">停止播放</button>
+    </div>
+    <div id="basket">⬇ 生字纸篓 ⬇</div>
+  </div>
+
+  <div id="wordDetail">
+    <button id="closeDetail">×</button>
+    <h2 id="detailVerse"></h2>
+    <div class="author" id="detailAuthor"></div>
+    <div class="meaning" id="detailMeaning"></div>
+  </div>
+
+  <script>
+    // 扩展词汇库，包含诗句
+    const wordVocabulary = {
+      '锦江春色来天地，玉垒浮云变古今': { author: '唐·杜甫《登楼》', meaning: 'The spring scenery of Jin River comes between heaven and earth, The floating clouds over Yulei Fortress change from ancient to modern times.' },
+      '建标天地阔，诣绝古今迷': { author: '唐·杜甫《奉赠太常张卿二十韵》', meaning: 'Establishing standards makes heaven and earth vast, Reaching the ultimate confounds ancient and modern.' },
+      '路穿天地险，人续古今愁': { author: '唐·白居易《发白狗峡次黄牛峡登高寺却望忠州》', meaning: 'The road passes through the dangers of heaven and earth, People continue the sorrows of ancient and modern.' },
+      '江山磨尽古今事，风雨送来天地愁': { author: '宋·胡仲弓《颐斋诗筒急递次韵奉酬》', meaning: 'Rivers and mountains wear away all past and present affairs, Wind and rain bring the sorrows of heaven and earth.' },
+      '名胜直同天地老，青山不管古今忙': { author: '南宋·戴复古《罗汉寺》', meaning: 'Famous sites grow old together with heaven and earth, Green mountains care not for the busyness of past and present.' },
+      '汴水波声天地远，上林春色古今同': { author: '北宋·李新《送刘金部三首 其二》', meaning: 'The sound of Bian River waves carries far between heaven and earth, The spring scenery of Shanglin Garden remains the same through ages.' },
+      '无色图从天地展，有声画与古今看': { author: '南宋·吴潜《十一二用喜雪韵四首 其一》', meaning: 'Colorless pictures unfold between heaven and earth, Soundful paintings are viewed by past and present.' },
+      '千里放开天地景，一轮题尽古今诗': { author: '北宋·杨齐和《中秋对月》', meaning: 'A thousand miles release the scenery between heaven and earth, One moon inspires all poetry from ancient to modern.' },
+      '豪杰彫零天地老，山河牢落古今愁': { author: '南宋·何梦桂《挽邵青溪二章 其一》', meaning: 'Heroes wither as heaven and earth grow old, Mountains and rivers desolate with past and present sorrows.' },
+      '葛岭春风天地醉，芜湖夜月古今愁': { author: '南宋·彭秋宇《感旧》', meaning: 'Spring breeze on Ge Ridge intoxicates heaven and earth, Night moon over Wu Lake saddens past and present.' },
+      '雪屋五更天地独，梅诗一句古今难': { author: '宋末元初·方回《岁尽即事三首 其二》', meaning: 'Snowy hut at fifth watch stands alone between heaven and earth, One line of plum blossom poetry challenges past and present.' },
+      '一樽长照古今月，两鬓不禁天地秋': { author: '宋末元初·于石《次韵君会感思》', meaning: 'One cup forever reflects the moon of past and present, Two temples cannot resist the autumn of heaven and earth.' },
+      '滏水波声天地远，灞陵山色古今同': { author: '北宋·李新《挽史太君词》', meaning: 'The sound of Fu River waves carries far between heaven and earth, The mountain scenery of Baling remains the same through ages.' },
+      '俯仰尚嫌天地窄，卷舒宁计古今长': { author: '南宋·陈渊《寄傲轩》', meaning: 'Looking up and down still finds heaven and earth narrow, Rolling and unrolling cares not for the length of past and present.' },
+      '牢落二贤天地外，风流三绝古今间': { author: '北宋·苏舜元《青州资政寄示小楷伯夷颂许昌相公以诗跋尾因作诗谢二公兼呈永兴观文相公》', meaning: 'Two sages desolate beyond heaven and earth, Three excellences romantic between past and present.' },
+      '天地无情催岁月，古今何物是功名': { author: '宋末元初·黎廷瑞《金陵岁晚》', meaning: 'Heaven and earth heartlessly hasten the years, What thing in past or present counts as achievement?' },
+      '古今不泯春秋笔，天地难欺暮夜金': { author: '宋末元初·俞德邻《老病》', meaning: 'The Spring and Autumn brush never fades through ages, Heaven and earth can hardly conceal night gold.' },
+      '古今上下几千首，天地中间八九椽': { author: '宋·胡仲弓《晚眺 其二》', meaning: 'Thousands of poems above and below through ages, Eight or nine rafters between heaven and earth.' },
+      '天地无情搔短发，古今多变付残杯': { author: '宋末元初·谢枋得《题东观壁 其一》', meaning: 'Heaven and earth heartlessly tease my short hair, Past and present changes are left to the dregs of wine.' },
+      '古今蔽显神功相，天地韬藏裕眼迷': { author: '南宋·陈宓《和枢上人韵》', meaning: 'Divine achievements appear and disappear through ages, Heaven and earth conceal and confuse the generous eye.' },
+      '古今更欲悲何事，天地长留景似人': { author: '宋·汪藻《过金陵》', meaning: 'What more should past and present grieve about? Heaven and earth forever retain scenes like people.' },
+      '已识古今体，且知天地全': { author: '宋·孔平仲《咏大》', meaning: 'Already knowing the forms of past and present, And understanding the completeness of heaven and earth.' },
+      '机深天地秘，知少古今难': { author: '北宋·韩琦《甲午冬阅》', meaning: 'Profound mechanisms conceal heaven and earth secrets, Little knowledge faces past and present difficulties.' },
+      '生德齐天地，仁声振古今': { author: '北宋·韩琦《仁宗皇帝揭辞三首 其一》', meaning: 'Virtue equal to heaven and earth, Benevolent reputation shaking past and present.' },
+      '古今同逆旅，天地一愁城': { author: '清末民国初·易顺鼎《宿乐乡关用陈伯玉晚次诗韵》', meaning: 'Past and present share the same inn, Heaven and earth form one sorrowful city.' },
+      '古今难得者，天地锡恩然': { author: '清·弘历《除夕》', meaning: 'What is rare through ages, Heaven and earth bestow grace thus.' },
+      '古今学有别，天地德无涯': { author: '清·弘历《仲春经筵》', meaning: 'Learning differs between past and present, The virtue of heaven and earth knows no bounds.' },
+      '天地元无着，古今不可涯': { author: '清·赵冕镐《记知庵夜》', meaning: 'Heaven and earth originally have no attachment, Past and present cannot be limited.' },
+      '大海无天地，愁云自古今': { author: '清·南龙翼《早发赤关阻风更滞。次秋潭韵》', meaning: 'The great sea has no heaven or earth, Sorrowful clouds exist since ancient times.' },
+      '天地客同老，古今僧自闲': { author: '明末清初·张文光《观音阁》', meaning: 'Guest of heaven and earth grows old together, Monk of past and present remains leisurely.' },
+      '果知天地大，不尽古今愁': { author: '清·陈玉璂《同友登京口避风馆高阁望江题壁》', meaning: 'Truly knowing the vastness of heaven and earth, Cannot exhaust the sorrows of past and present.' },
+      '龙沙天地□，沉水古今流': { author: '清·戴梓《佳公子招游郊野座中赠陈省斋杨玉斧两太史 其一》', meaning: 'Dragon sand heaven and earth □, Sinking water flows through past and present.' },
+      '量包天地外，色染古今容': { author: '清·胤禛《登望海楼》', meaning: 'Capacity embraces beyond heaven and earth, Color dyes the appearance of past and present.' },
+      '当途豺虎塞天地，片刻波澜变古今': { author: '清末民国初·仇亮《绝命诗六首 其六》', meaning: 'Jackals and tigers on the road block heaven and earth, Moments of waves change past and present.' },
+      '园圃拓余天地老，江湖历尽古今春': { author: '现当代·章敬和《还山吟 其二》', meaning: 'Gardens expanded make heaven and earth old, Rivers and lakes experienced exhaust past and present springs.' },
+      '圣伏神徂天地尽，山崩钟应古今奇': { author: '清末至民国·方守敦《寄怀光炯》', meaning: 'Saints hidden and spirits gone, heaven and earth exhausted, Mountains collapsed and bells responded, past and present marveled.' },
+      '商鼎不嫌天地老，河声淘出古今情': { author: '现当代·章敬和《应《郑州年鉴》索题》', meaning: 'Shang Dynasty tripod does not mind heaven and earth growing old, River sounds wash out past and present feelings.' },
+      '古今来往鱼龙梦，天地沉浮荻苇风': { author: '清末至民国·袁嘉谷《游来鹤亭》', meaning: 'Fish and dragon dreams come and go through ages, Reeds and rushes wind rises and falls between heaven and earth.' },
+      '此景古今同慨喟，有人天地感秕糠': { author: '清末至民国·苏继祖《秋兴八首（选二） 其一》', meaning: 'This scene makes past and present sigh together, Someone feels chaff between heaven and earth.' },
+      '古今人物藏胸底，天地山川出指头': { author: '现当代·章敬和《参观黄河窑洞工艺》', meaning: 'Past and present figures stored in the chest, Heaven and earth mountains and rivers emerge from fingertips.' },
+      '浩唱唤醒天地醉，长戈挥尽古今愁': { author: '现当代·彭靖《山中秋兴用杜老韵 （八首） 其六》', meaning: 'Great singing awakens heaven and earth from drunkenness, Long spear waves away past and present sorrows.' },
+      '古今成世变，天地入愁心': { author: '清末至民国·刘咸荥《临江关小饮 其一》', meaning: 'Past and present become worldly changes, Heaven and earth enter sorrowful heart.' },
+      '古今真旦暮，天地且浮沉': { author: '清末至民国·郭象升《将游京师出城有作 其二》', meaning: 'Past and present are truly morning and evening, Heaven and earth moreover rise and fall.' },
+      '却看天地在，未觉古今殊': { author: '清末至民国·杨圻《感怀诗示同志 其三》', meaning: 'Yet seeing heaven and earth remain, Not feeling past and present differ.' },
+      '放眼古今事，侧身天地间': { author: '现当代·萧劳《日暮》', meaning: 'Surveying past and present affairs, Standing between heaven and earth.' },
+      '众妙参天地，予怀自古今': { author: '近现代·朱帆《题宝峰寺》', meaning: 'All mysteries participate in heaven and earth, My feelings come from past and present.' },
+      '缒险开天地，逃空无古今': { author: '清末至现当代·王蘧常《海日楼呈沈子培师》', meaning: 'Descending dangers opens heaven and earth, Escaping emptiness knows no past or present.' },
+      '独溯古今聊闭阁，尚馀天地孰争棋': { author: '当代·陈永正《刘逸老寄诗见怀奉和》', meaning: 'Alone tracing past and present to close the pavilion, Still remaining between heaven and earth, who competes in chess?' },
+      '胸罗星斗开天地，笔起波澜撼古今': { author: '现当代·林恭祖《蟠桃会二首 其一》', meaning: 'Chest containing stars opens heaven and earth, Brush raising waves shakes past and present.' },
+      '回首忽惊天地坼，观棋不了古今愁': { author: '当代·潘乐乐《蜀游方归数日，惊闻大地震，更北川诗社五十余同志集体遇难，恸次杨启宇先生韵》', meaning: 'Turning head suddenly shocked by heaven and earth splitting, Watching chess cannot resolve past and present sorrows.' },
+      '古今自变春随在，天地俱空我独来': { author: '当代·卢青山《梦至君山》', meaning: 'Past and present change themselves, spring follows existence, Heaven and earth both empty, I alone come.' },
+      '不尽古今月，更生天地秋': { author: '当代·姚佳《泰州 其一》', meaning: 'Endless moon of past and present, Renewed autumn of heaven and earth.' },
+      '黑白尤天地，玄黄更古今': { author: '当代·姚佳《留白 其一》', meaning: 'Black and white especially heaven and earth, Mysterious yellow moreover past and present.' },
+      '春醒天地梦，雪掩古今愁': { author: '当代·姚佳《留白 其二》', meaning: 'Spring awakens heaven and earth dreams, Snow covers past and present sorrows.' },
+      '古今同寂寞，天地自悠扬': { author: '当代·姚佳《柳州马鞍山》', meaning: 'Past and present share the same solitude, Heaven and earth naturally float freely.' }
+    };
+
+    // 从词汇库中提取所有诗句
+    const allVerses = Object.keys(wordVocabulary);
+    
+    let currentVerseIndex = 0;
+    let isAutoPlaying = false;
+    let autoPlayInterval;
+    let isSpeaking = false;
+
+    function useCustomChars() {
+      const input = document.getElementById('charInput').value.trim();
+      if (input) {
+        // 将输入转换为词汇列表
+        const customWords = input.split(' ').filter(word => word.length > 0);
+        activeWords = [...new Set(customWords)];
+        score = 0;
+        missedWords = {};
+        updateScore();
+        renderMissedWords();
+      }
+    }
+
+    function resetToDefault() {
+      activeWords = [...allVerses]; // 重置为只显示诗句
+      document.getElementById('charInput').value = '';
+      score = 0;
+      missedWords = {};
+      updateScore();
+      renderMissedWords();
+    }
+
+    function reset() {
+      score = 0;
+      missedWords = {};
+      updateScore();
+      renderMissedWords();
+    }
+
+    function useDefaultChars() {
+      updateScore();
+    }
+
+    function updateScore() {
+      document.getElementById("scoreBoard").textContent = `分数：${score}`;
+    }
+
+    function showWordDetail(verse) {
+      const detail = wordVocabulary[verse];
+      if (!detail) return;
+      
+      document.getElementById('detailVerse').textContent = verse;
+      document.getElementById('detailAuthor').textContent = detail.author;
+      document.getElementById('detailMeaning').textContent = detail.meaning;
+      
+      document.getElementById('wordDetail').style.display = 'block';
+      
+      // 朗读诗句和英文解释
+      speakContent(verse, detail.meaning);
+    }
+
+    function speakContent(verse, meaning) {
+      if ('speechSynthesis' in window) {
+        // 停止当前正在朗读的内容
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+        
+        // 朗读诗句
+        const verseUtterance = new SpeechSynthesisUtterance(verse);
+        verseUtterance.lang = 'zh-CN';
+        verseUtterance.rate = 0.8;
+        
+        // 诗句朗读完成后朗读英文解释
+        verseUtterance.onend = function() {
+          const meaningUtterance = new SpeechSynthesisUtterance(meaning);
+          meaningUtterance.lang = 'en-US';
+          meaningUtterance.rate = 0.9;
+          window.speechSynthesis.speak(meaningUtterance);
+          
+          meaningUtterance.onend = function() {
+            isSpeaking = false;
+            // 如果是自动播放模式，继续下一首诗
+            if (isAutoPlaying) {
+              setTimeout(showNextVerse, 2000); // 2秒间隔
+            }
+          };
+        };
+        
+        isSpeaking = true;
+        window.speechSynthesis.speak(verseUtterance);
+      } else {
+        alert('您的浏览器不支持语音合成功能');
+        // 如果是自动播放模式，继续下一首诗
+        if (isAutoPlaying) {
+          setTimeout(showNextVerse, 2000); // 2秒间隔
+        }
+      }
+    }
+
+    document.getElementById('closeDetail').addEventListener('click', () => {
+      document.getElementById('wordDetail').style.display = 'none';
+      // 停止朗读
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+      }
+    });
+
+    function renderMissedWords() {
+      const basket = document.getElementById("basket");
+      basket.innerHTML = "⬇ 生字纸篓 ⬇";
+
+      const list = document.createElement("div");
+      list.style.marginTop = "6px";
+      list.style.fontSize = "16px";
+      list.style.display = "flex";
+      list.style.flexWrap = "wrap";
+      list.style.gap = "12px";
+      list.style.justifyContent = "center";
+
+      for (const word in missedWords) {
+        const count = missedWords[word];
+        const entry = document.createElement("div");
+        entry.textContent = `${count}× ${word}`;
+        entry.style.background = "#1a1a1a";
+        entry.style.padding = "4px 8px";
+        entry.style.borderRadius = "6px";
+        entry.style.color = "#fff";
+        list.appendChild(entry);
+      }
+
+      basket.appendChild(list);
+    }
+
+    function autoResize(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = (textarea.scrollHeight) + "px";
+    }
+
+    function showNextVerse() {
+      if (!isAutoPlaying) return;
+      
+      if (currentVerseIndex >= allVerses.length) {
+        currentVerseIndex = 0; // 循环播放
+      }
+      
+      const verse = allVerses[currentVerseIndex];
+      currentVerseIndex++;
+      
+      // 显示诗句详情
+      showWordDetail(verse);
+    }
+
+    function startAutoPlay() {
+      if (!isAutoPlaying) {
+        isAutoPlaying = true;
+        currentVerseIndex = 0;
+        document.getElementById('autoPlayBtn').disabled = true;
+        document.getElementById('stopPlayBtn').disabled = false;
+        showNextVerse();
+      }
+    }
+
+    function stopAutoPlay() {
+      isAutoPlaying = false;
+      document.getElementById('autoPlayBtn').disabled = false;
+      document.getElementById('stopPlayBtn').disabled = true;
+      
+      // 停止朗读
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        isSpeaking = false;
+      }
+    }
+
+    // 页面加载后初始化
+    window.onload = function() {
+      // 初始化按钮状态
+      document.getElementById('autoPlayBtn').onclick = startAutoPlay;
+      document.getElementById('stopPlayBtn').onclick = stopAutoPlay;
+      document.getElementById('stopPlayBtn').disabled = true;
+      
+      // 自动开始播放
+      startAutoPlay();
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>汉字雨游戏</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      font-family: "微软雅黑", sans-serif;
+      color: #fff;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+      background-size: auto;
+    }
+
+    .fallingChar {
+      position: absolute;
+      font-size: 20px;
+      color: #00fff7;
+      user-select: none;
+      animation-name: fallGrow;
+      animation-timing-function: linear;
+      cursor: pointer;
+      text-shadow: 0 0 8px #00fff7;
+      white-space: nowrap;
+    }
+
+    @keyframes fallGrow {
+      from {
+        top: -50px;
+        font-size: 40px;
+        opacity: 1;
+      }
+      to {
+        top: calc(100vh - 80px);
+        font-size: 60px;
+        opacity: 0.6;
+      }
+    }
+
+    #scoreBoard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #basket {
+      position: absolute;
+      bottom: 0;
+      height: auto;
+      min-height: 60px;
+      width: 100%;
+      background-color: rgba(44, 62, 80, 0.85);
+      text-align: center;
+      line-height: 60px;
+      font-size: 18px;
+      color: #ccc;
+      padding: 10px 0;
+    }
+
+    #appleReward {
+      position: absolute;
+      font-size: 5rem;
+      animation: popUp 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes popUp {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0;
+        top: -30px;
+      }
+    }
+
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #charInput {
+      width: 200px;
+      min-height: 32px;
+      max-height: 180px;
+      font-size: 16px;
+      resize: none;
+      overflow: hidden;
+      padding: 8px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 6px;
+      background-color: #e0f7fa;
+      color: #000;
+      line-height: 1.4;
+      font-family: "微软雅黑", sans-serif;
+      transition: height 0.2s ease;
+    }
+    #charInput:focus {
+      outline: none;
+      box-shadow: 0 0 6px #0ff;
+    }
+
+    button {
+      margin-top: 6px;
+      margin-left: 4px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background: #00bcd4;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0097a7;
+    }
+
+    #wordDetail {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 30, 40, 0.95);
+      border: 2px solid #00fff7;
+      border-radius: 12px;
+      padding: 20px;
+      width: 80%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 2000;
+      box-shadow: 0 0 20px rgba(0, 255, 247, 0.5);
+      display: none;
+    }
+
+    #wordDetail h2 {
+      color: #00fff7;
+      margin-top: 0;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    #wordDetail p {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+
+    #wordDetail .pinyin {
+      font-size: 20px;
+      color: #ffcc00;
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    #wordDetail .meaning {
+      background: rgba(0, 20, 30, 0.7);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    #wordDetail .example {
+      font-style: italic;
+      color: #aaffaa;
+      border-left: 3px solid #00fff7;
+      padding-left: 10px;
+      margin: 15px 0;
+    }
+
+    #closeDetail {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #00fff7;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    #speakBtn {
+      display: block;
+      margin: 15px auto;
+      padding: 8px 16px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #speakBtn:hover {
+      background: #0097a7;
+    }
+
+    @media (max-width: 768px) {
+      .fallingChar {
+        white-space: normal;
+        width: 80%;
+        text-align: center;
+        word-break: break-word;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="scoreBoard">分数：0</div>
+    <div id="controls">
+        <textarea id="charInput" placeholder="输入汉字（如：战利胜）" oninput="autoResize(this)"></textarea>
+        <br>
+        <button onclick="useCustomChars()">使用</button>
+        <button onclick="useDefaultChars()">字库</button>
+        <button onclick="reset()">分数清零</button>
+        <button onclick="resetToDefault()">清除字庫</button>
+    </div>
+    <div id="basket">⬇ 生字纸篓 ⬇</div>
+  </div>
+
+  <div id="wordDetail">
+    <button id="closeDetail">×</button>
+    <h2 id="detailWord"></h2>
+    <div class="pinyin" id="detailPinyin"></div>
+    <button id="speakBtn">朗读</button>
+    <div class="meaning" id="detailMeaning"></div>
+    <div class="example" id="detailExample"></div>
+  </div>
+
+  <script>
+    // 扩展词汇库，包含诗句
+    const wordVocabulary = {
+      '天地': { pinyin: 'tiān dì', meaning: 'heaven and earth', example: '锦江春色来天地，玉垒浮云变古今。唐·杜甫登楼' },
+      '古今': { pinyin: 'gǔ jīn', meaning: 'ancient and modern', example: '锦江春色来天地，玉垒浮云变古今。唐·杜甫登楼' },
+      '锦江春色来天地，玉垒浮云变古今。唐·杜甫登楼': { pinyin: 'jǐn jiāng chūn sè lái tiān dì, yù lěi fú yún biàn gǔ jīn. táng·dù fǔ dēng lóu', meaning: 'The spring scenery of Jin River comes between heaven and earth, The floating clouds over Yulei Fortress change from ancient to modern times.', example: '锦江春色来天地，玉垒浮云变古今。唐·杜甫登楼' },
+      '建标天地阔，诣绝古今迷。唐·杜甫奉赠太常张卿二十韵': { pinyin: 'jiàn biāo tiān dì kuò, yì jué gǔ jīn mí. táng·dù fǔ fèng zèng tài cháng zhāng qīng èr shí yùn', meaning: 'Establishing standards makes heaven and earth vast, Reaching the ultimate confounds ancient and modern.', example: '建标天地阔，诣绝古今迷。唐·杜甫奉赠太常张卿二十韵' },
+      '路穿天地险，人续古今愁。唐·白居易发白狗峡次黄牛峡登高寺却望忠州': { pinyin: 'lù chuān tiān dì xiǎn, rén xù gǔ jīn chóu. táng·bái jū yì fā bái gǒu xiá cì huáng niú xiá dēng gāo sì què wàng zhōng zhōu', meaning: 'The road passes through the dangers of heaven and earth, People continue the sorrows of ancient and modern.', example: '路穿天地险，人续古今愁。唐·白居易发白狗峡次黄牛峡登高寺却望忠州' },
+      '江山磨尽古今事，风雨送来天地愁。宋·胡仲弓颐斋诗筒急递次韵奉酬': { pinyin: 'jiāng shān mó jìn gǔ jīn shì, fēng yǔ sòng lái tiān dì chóu. sòng·hú zhòng gōng yí zhāi shī tǒng jí dì cì yùn fèng chóu', meaning: 'Rivers and mountains wear away all past and present affairs, Wind and rain bring the sorrows of heaven and earth.', example: '江山磨尽古今事，风雨送来天地愁。宋·胡仲弓颐斋诗筒急递次韵奉酬' },
+      '名胜直同天地老，青山不管古今忙。南宋·戴复古罗汉寺': { pinyin: 'míng shèng zhí tóng tiān dì lǎo, qīng shān bù guǎn gǔ jīn máng. nán sòng·dài fù gǔ luó hàn sì', meaning: 'Famous sites grow old together with heaven and earth, Green mountains care not for the busyness of past and present.', example: '名胜直同天地老，青山不管古今忙。南宋·戴复古罗汉寺' },
+      '汴水波声天地远，上林春色古今同。北宋·李新送刘金部三首 其二': { pinyin: 'biàn shuǐ bō shēng tiān dì yuǎn, shàng lín chūn sè gǔ jīn tóng. běi sòng·lǐ xīn sòng liú jīn bù sān shǒu qí èr', meaning: 'The sound of Bian River waves carries far between heaven and earth, The spring scenery of Shanglin Garden remains the same through ages.', example: '汴水波声天地远，上林春色古今同。北宋·李新送刘金部三首 其二' },
+      '无色图从天地展，有声画与古今看。南宋·吴潜十一二用喜雪韵四首 其一': { pinyin: 'wú sè tú cóng tiān dì zhǎn, yǒu shēng huà yǔ gǔ jīn kàn. nán sòng·wú qián shí yī èr yòng xǐ xuě yùn sì shǒu qí yī', meaning: 'Colorless pictures unfold between heaven and earth, Soundful paintings are viewed by past and present.', example: '无色图从天地展，有声画与古今看。南宋·吴潜十一二用喜雪韵四首 其一' },
+      '千里放开天地景，一轮题尽古今诗。北宋·杨齐和中秋对月': { pinyin: 'qiān lǐ fàng kāi tiān dì jǐng, yī lún tí jìn gǔ jīn shī. běi sòng·yáng qí hé zhōng qiū duì yuè', meaning: 'A thousand miles release the scenery between heaven and earth, One moon inspires all poetry from ancient to modern.', example: '千里放开天地景，一轮题尽古今诗。北宋·杨齐和中秋对月' },
+      '豪杰彫零天地老，山河牢落古今愁。南宋·何梦桂挽邵青溪二章 其一': { pinyin: 'háo jié diāo líng tiān dì lǎo, shān hé láo luò gǔ jīn chóu. nán sòng·hé mèng guì wǎn shào qīng xī èr zhāng qí yī', meaning: 'Heroes wither as heaven and earth grow old, Mountains and rivers desolate with past and present sorrows.', example: '豪杰彫零天地老，山河牢落古今愁。南宋·何梦桂挽邵青溪二章 其一' },
+      '葛岭春风天地醉，芜湖夜月古今愁。南宋·彭秋宇感旧': { pinyin: 'gě lǐng chūn fēng tiān dì zuì, wú hú yè yuè gǔ jīn chóu. nán sòng·péng qiū yǔ gǎn jiù', meaning: 'Spring breeze on Ge Ridge intoxicates heaven and earth, Night moon over Wu Lake saddens past and present.', example: '葛岭春风天地醉，芜湖夜月古今愁。南宋·彭秋宇感旧' },
+      '雪屋五更天地独，梅诗一句古今难。宋末元初·方回岁尽即事三首 其二': { pinyin: 'xuě wū wǔ gēng tiān dì dú, méi shī yī jù gǔ jīn nán. sòng mò yuán chū·fāng huí suì jìn jí shì sān shǒu qí èr', meaning: 'Snowy hut at fifth watch stands alone between heaven and earth, One line of plum blossom poetry challenges past and present.', example: '雪屋五更天地独，梅诗一句古今难。宋末元初·方回岁尽即事三首 其二' },
+      '一樽长照古今月，两鬓不禁天地秋。宋末元初·于石次韵君会感思': { pinyin: 'yī zūn zhǎng zhào gǔ jīn yuè, liǎng bìn bù jīn tiān dì qiū. sòng mò yuán chū·yú shí cì yùn jūn huì gǎn sī', meaning: 'One cup forever reflects the moon of past and present, Two temples cannot resist the autumn of heaven and earth.', example: '一樽长照古今月，两鬓不禁天地秋。宋末元初·于石次韵君会感思' },
+      '滏水波声天地远，灞陵山色古今同。北宋·李新挽史太君词': { pinyin: 'fǔ shuǐ bō shēng tiān dì yuǎn, bà líng shān sè gǔ jīn tóng. běi sòng·lǐ xīn wǎn shǐ tài jūn cí', meaning: 'The sound of Fu River waves carries far between heaven and earth, The mountain scenery of Baling remains the same through ages.', example: '滏水波声天地远，灞陵山色古今同。北宋·李新挽史太君词' },
+      '俯仰尚嫌天地窄，卷舒宁计古今长。南宋·陈渊寄傲轩': { pinyin: 'fǔ yǎng shàng xián tiān dì zhǎi, juǎn shū níng jì gǔ jīn cháng. nán sòng·chén yuān jì ào xuān', meaning: 'Looking up and down still finds heaven and earth narrow, Rolling and unrolling cares not for the length of past and present.', example: '俯仰尚嫌天地窄，卷舒宁计古今长。南宋·陈渊寄傲轩' },
+      '牢落二贤天地外，风流三绝古今间。北宋·苏舜元青州资政寄示小楷伯夷颂许昌相公以诗跋尾因作诗谢二公兼呈永兴观文相公': { pinyin: 'láo luò èr xián tiān dì wài, fēng liú sān jué gǔ jīn jiān. běi sòng·sū shùn yuán qīng zhōu zī zhèng jì shì xiǎo kǎi bó yí sòng xǔ chāng xiàng gōng yǐ shī bá wěi yīn zuò shī xiè èr gōng jiān chéng yǒng xīng guān wén xiàng gōng', meaning: 'Two sages desolate beyond heaven and earth, Three excellences romantic between past and present.', example: '牢落二贤天地外，风流三绝古今间。北宋·苏舜元青州资政寄示小楷伯夷颂许昌相公以诗跋尾因作诗谢二公兼呈永兴观文相公' },
+      '天地无情催岁月，古今何物是功名。宋末元初·黎廷瑞金陵岁晚': { pinyin: 'tiān dì wú qíng cuī suì yuè, gǔ jīn hé wù shì gōng míng. sòng mò yuán chū·lí tíng ruì jīn líng suì wǎn', meaning: 'Heaven and earth heartlessly hasten the years, What thing in past or present counts as achievement?', example: '天地无情催岁月，古今何物是功名。宋末元初·黎廷瑞金陵岁晚' },
+      '古今不泯春秋笔，天地难欺暮夜金。宋末元初·俞德邻老病': { pinyin: 'gǔ jīn bù mǐn chūn qiū bǐ, tiān dì nán qī mù yè jīn. sòng mò yuán chū·yú dé lín lǎo bìng', meaning: 'The Spring and Autumn brush never fades through ages, Heaven and earth can hardly conceal night gold.', example: '古今不泯春秋笔，天地难欺暮夜金。宋末元初·俞德邻老病' },
+      '古今上下几千首，天地中间八九椽。宋·胡仲弓晚眺 其二': { pinyin: 'gǔ jīn shàng xià jǐ qiān shǒu, tiān dì zhōng jiān bā jiǔ chuán. sòng·hú zhòng gōng wǎn tiào qí èr', meaning: 'Thousands of poems above and below through ages, Eight or nine rafters between heaven and earth.', example: '古今上下几千首，天地中间八九椽。宋·胡仲弓晚眺 其二' },
+      '天地无情搔短发，古今多变付残杯。宋末元初·谢枋得题东观壁 其一': { pinyin: 'tiān dì wú qíng sāo duǎn fà, gǔ jīn duō biàn fù cán bēi. sòng mò yuán chū·xiè fāng dé tí dōng guān bì qí yī', meaning: 'Heaven and earth heartlessly tease my short hair, Past and present changes are left to the dregs of wine.', example: '天地无情搔短发，古今多变付残杯。宋末元初·谢枋得题东观壁 其一' },
+      '古今蔽显神功相，天地韬藏裕眼迷。南宋·陈宓和枢上人韵': { pinyin: 'gǔ jīn bì xiǎn shén gōng xiāng, tiān dì tāo cáng yù yǎn mí. nán sòng·chén mì hé shū shàng rén yùn', meaning: 'Divine achievements appear and disappear through ages, Heaven and earth conceal and confuse the generous eye.', example: '古今蔽显神功相，天地韬藏裕眼迷。南宋·陈宓和枢上人韵' },
+      '古今更欲悲何事，天地长留景似人。宋·汪藻过金陵': { pinyin: 'gǔ jīn gèng yù bēi hé shì, tiān dì cháng liú jǐng sì rén. sòng·wāng zǎo guò jīn líng', meaning: 'What more should past and present grieve about? Heaven and earth forever retain scenes like people.', example: '古今更欲悲何事，天地长留景似人。宋·汪藻过金陵' },
+      '已识古今体，且知天地全。宋·孔平仲咏大': { pinyin: 'yǐ shí gǔ jīn tǐ, qiě zhī tiān dì quán. sòng·kǒng píng zhòng yǒng dà', meaning: 'Already knowing the forms of past and present, And understanding the completeness of heaven and earth.', example: '已识古今体，且知天地全。宋·孔平仲咏大' },
+      '机深天地秘，知少古今难。北宋·韩琦甲午冬阅': { pinyin: 'jī shēn tiān dì mì, zhī shǎo gǔ jīn nán. běi sòng·hán qí jiǎ wǔ dōng yuè', meaning: 'Profound mechanisms conceal heaven and earth secrets, Little knowledge faces past and present difficulties.', example: '机深天地秘，知少古今难。北宋·韩琦甲午冬阅' },
+      '生德齐天地，仁声振古今。北宋·韩琦仁宗皇帝揭辞三首 其一': { pinyin: 'shēng dé qí tiān dì, rén shēng zhèn gǔ jīn. běi sòng·hán qí rén zōng huáng dì jiē cí sān shǒu qí yī', meaning: 'Virtue equal to heaven and earth, Benevolent reputation shaking past and present.', example: '生德齐天地，仁声振古今。北宋·韩琦仁宗皇帝揭辞三首 其一' },
+      '古今同逆旅，天地一愁城。清末民国初·易顺鼎宿乐乡关用陈伯玉晚次诗韵': { pinyin: 'gǔ jīn tóng nì lǚ, tiān dì yī chóu chéng. qīng mò mín guó chū·yì shùn dǐng sù lè xiāng guān yòng chén bó yù wǎn cì shī yùn', meaning: 'Past and present share the same inn, Heaven and earth form one sorrowful city.', example: '古今同逆旅，天地一愁城。清末民国初·易顺鼎宿乐乡关用陈伯玉晚次诗韵' },
+      '古今难得者，天地锡恩然。清·弘历除夕': { pinyin: 'gǔ jīn nán dé zhě, tiān dì xī ēn rán. qīng·hóng lì chú xī', meaning: 'What is rare through ages, Heaven and earth bestow grace thus.', example: '古今难得者，天地锡恩然。清·弘历除夕' },
+      '古今学有别，天地德无涯。清·弘历仲春经筵': { pinyin: 'gǔ jīn xué yǒu bié, tiān dì dé wú yá. qīng·hóng lì zhòng chūn jīng yán', meaning: 'Learning differs between past and present, The virtue of heaven and earth knows no bounds.', example: '古今学有别，天地德无涯。清·弘历仲春经筵' },
+      '天地元无着，古今不可涯。清·赵冕镐记知庵夜': { pinyin: 'tiān dì yuán wú zhuó, gǔ jīn bù kě yá. qīng·zhào miǎn hào jì zhī ān yè', meaning: 'Heaven and earth originally have no attachment, Past and present cannot be limited.', example: '天地元无着，古今不可涯。清·赵冕镐记知庵夜' },
+      '大海无天地，愁云自古今。清·南龙翼早发赤关阻风更滞。次秋潭韵': { pinyin: 'dà hǎi wú tiān dì, chóu yún zì gǔ jīn. qīng·nán lóng yì zǎo fā chì guān zǔ fēng gèng zhì. cì qiū tán yùn', meaning: 'The great sea has no heaven or earth, Sorrowful clouds exist since ancient times.', example: '大海无天地，愁云自古今。清·南龙翼早发赤关阻风更滞。次秋潭韵' },
+      '天地客同老，古今僧自闲。明末清初·张文光观音阁': { pinyin: 'tiān dì kè tóng lǎo, gǔ jīn sēng zì xián. míng mò qīng chū·zhāng wén guāng guān yīn gé', meaning: 'Guest of heaven and earth grows old together, Monk of past and present remains leisurely.', example: '天地客同老，古今僧自闲。明末清初·张文光观音阁' },
+      '果知天地大，不尽古今愁。清·陈玉璂同友登京口避风馆高阁望江题壁': { pinyin: 'guǒ zhī tiān dì dà, bù jìn gǔ jīn chóu. qīng·chén yù qí tóng yǒu dēng jīng kǒu bì fēng guǎn gāo gé wàng jiāng tí bì', meaning: 'Truly knowing the vastness of heaven and earth, Cannot exhaust the sorrows of past and present.', example: '果知天地大，不尽古今愁。清·陈玉璂同友登京口避风馆高阁望江题壁' },
+      '龙沙天地□，沉水古今流。清·戴梓佳公子招游郊野座中赠陈省斋杨玉斧两太史 其一': { pinyin: 'lóng shā tiān dì □, chén shuǐ gǔ jīn liú. qīng·dài zǐ jiā gōng zǐ zhāo yóu jiāo yě zuò zhōng zèng chén shěng zhāi yáng yù fǔ liǎng tài shǐ qí yī', meaning: 'Dragon sand heaven and earth □, Sinking water flows through past and present.', example: '龙沙天地□，沉水古今流。清·戴梓佳公子招游郊野座中赠陈省斋杨玉斧两太史 其一' },
+      '量包天地外，色染古今容。清·胤禛登望海楼': { pinyin: 'liàng bāo tiān dì wài, sè rǎn gǔ jīn róng. qīng·yìn zhēn dēng wàng hǎi lóu', meaning: 'Capacity embraces beyond heaven and earth, Color dyes the appearance of past and present.', example: '量包天地外，色染古今容。清·胤禛登望海楼' },
+      '当途豺虎塞天地，片刻波澜变古今。清末民国初·仇亮绝命诗六首 其六': { pinyin: 'dāng tú chái hǔ sāi tiān dì, piàn kè bō lán biàn gǔ jīn. qīng mò mín guó chū·chóu liàng jué mìng shī liù shǒu qí liù', meaning: 'Jackals and tigers on the road block heaven and earth, Moments of waves change past and present.', example: '当途豺虎塞天地，片刻波澜变古今。清末民国初·仇亮绝命诗六首 其六' },
+      '园圃拓余天地老，江湖历尽古今春。现当代·章敬和还山吟 其二': { pinyin: 'yuán pǔ tuò yú tiān dì lǎo, jiāng hú lì jìn gǔ jīn chūn. xiàn dāng dài·zhāng jìng hé huán shān yín qí èr', meaning: 'Gardens expanded make heaven and earth old, Rivers and lakes experienced exhaust past and present springs.', example: '园圃拓余天地老，江湖历尽古今春。现当代·章敬和还山吟 其二' },
+      '圣伏神徂天地尽，山崩钟应古今奇。清末至民国·方守敦寄怀光炯': { pinyin: 'shèng fú shén cú tiān dì jìn, shān bēng zhōng yìng gǔ jīn qí. qīng mò zhì mín guó·fāng shǒu dūn jì huái guāng jiǒng', meaning: 'Saints hidden and spirits gone, heaven and earth exhausted, Mountains collapsed and bells responded, past and present marveled.', example: '圣伏神徂天地尽，山崩钟应古今奇。清末至民国·方守敦寄怀光炯' },
+      '商鼎不嫌天地老，河声淘出古今情。现当代·章敬和应《郑州年鉴》索题': { pinyin: 'shāng dǐng bù xián tiān dì lǎo, hé shēng táo chū gǔ jīn qíng. xiàn dāng dài·zhāng jìng hé yìng "zhèng zhōu nián jiàn" suǒ tí', meaning: 'Shang Dynasty tripod does not mind heaven and earth growing old, River sounds wash out past and present feelings.', example: '商鼎不嫌天地老，河声淘出古今情。现当代·章敬和应《郑州年鉴》索题' },
+      '古今来往鱼龙梦，天地沉浮荻苇风。清末至民国·袁嘉谷游来鹤亭': { pinyin: 'gǔ jīn lái wǎng yú lóng mèng, tiān dì chén fú dí wěi fēng. qīng mò zhì mín guó·yuán jiā gǔ yóu lái hè tíng', meaning: 'Fish and dragon dreams come and go through ages, Reeds and rushes wind rises and falls between heaven and earth.', example: '古今来往鱼龙梦，天地沉浮荻苇风。清末至民国·袁嘉谷游来鹤亭' },
+      '此景古今同慨喟，有人天地感秕糠。清末至民国·苏继祖秋兴八首（选二） 其一': { pinyin: 'cǐ jǐng gǔ jīn tóng kǎi kuì, yǒu rén tiān dì gǎn bǐ kāng. qīng mò zhì mín guó·sū jì zǔ qiū xìng bā shǒu (xuǎn èr) qí yī', meaning: 'This scene makes past and present sigh together, Someone feels chaff between heaven and earth.', example: '此景古今同慨喟，有人天地感秕糠。清末至民国·苏继祖秋兴八首（选二） 其一' },
+      '古今人物藏胸底，天地山川出指头。现当代·章敬和参观黄河窑洞工艺': { pinyin: 'gǔ jīn rén wù cáng xiōng dǐ, tiān dì shān chuān chū zhǐ tou. xiàn dāng dài·zhāng jìng hé cān guān huáng hé yáo dòng gōng yì', meaning: 'Past and present figures stored in the chest, Heaven and earth mountains and rivers emerge from fingertips.', example: '古今人物藏胸底，天地山川出指头。现当代·章敬和参观黄河窑洞工艺' },
+      '浩唱唤醒天地醉，长戈挥尽古今愁。现当代·彭靖山中秋兴用杜老韵 （八首） 其六 一九三八年作，时年十五岁': { pinyin: 'hào chàng huàn xǐng tiān dì zuì, cháng gē huī jìn gǔ jīn chóu. xiàn dāng dài·péng jìng shān zhōng qiū xìng yòng dù lǎo yùn (bā shǒu) qí liù yī jiǔ sān bā nián zuò, shí nián shí wǔ suì', meaning: 'Great singing awakens heaven and earth from drunkenness, Long spear waves away past and present sorrows.', example: '浩唱唤醒天地醉，长戈挥尽古今愁。现当代·彭靖山中秋兴用杜老韵 （八首） 其六 一九三八年作，时年十五岁' },
+      '古今成世变，天地入愁心。清末至民国·刘咸荥临江关小饮 其一': { pinyin: 'gǔ jīn chéng shì biàn, tiān dì rù chóu xīn. qīng mò zhì mín guó·liú xián yíng lín jiāng guān xiǎo yǐn qí yī', meaning: 'Past and present become worldly changes, Heaven and earth enter sorrowful heart.', example: '古今成世变，天地入愁心。清末至民国·刘咸荥临江关小饮 其一' },
+      '古今真旦暮，天地且浮沉。清末至民国·郭象升将游京师出城有作 其二': { pinyin: 'gǔ jīn zhēn dàn mù, tiān dì qiě fú chén. qīng mò zhì mín guó·guō xiàng shēng jiāng yóu jīng shī chū chéng yǒu zuò qí èr', meaning: 'Past and present are truly morning and evening, Heaven and earth moreover rise and fall.', example: '古今真旦暮，天地且浮沉。清末至民国·郭象升将游京师出城有作 其二' },
+      '却看天地在，未觉古今殊。清末至民国·杨圻感怀诗示同志 其三': { pinyin: 'què kàn tiān dì zài, wèi jué gǔ jīn shū. qīng mò zhì mín guó·yáng qí gǎn huái shī shì tóng zhì qí sān', meaning: 'Yet seeing heaven and earth remain, Not feeling past and present differ.', example: '却看天地在，未觉古今殊。清末至民国·杨圻感怀诗示同志 其三' },
+      '放眼古今事，侧身天地间。现当代·萧劳日暮': { pinyin: 'fàng yǎn gǔ jīn shì, cè shēn tiān dì jiān. xiàn dāng dài·xiāo láo rì mù', meaning: 'Surveying past and present affairs, Standing between heaven and earth.', example: '放眼古今事，侧身天地间。现当代·萧劳日暮' },
+      '众妙参天地，予怀自古今。近现代·朱帆题宝峰寺': { pinyin: 'zhòng miào cān tiān dì, yǔ huái zì gǔ jīn. jìn xiàn dài·zhū fān tí bǎo fēng sì', meaning: 'All mysteries participate in heaven and earth, My feelings come from past and present.', example: '众妙参天地，予怀自古今。近现代·朱帆题宝峰寺' },
+      '缒险开天地，逃空无古今。清末至现当代·王蘧常海日楼呈沈子培师': { pinyin: 'zhuì xiǎn kāi tiān dì, táo kōng wú gǔ jīn. qīng mò zhì xiàn dāng dài·wáng qú cháng hǎi rì lóu chéng shěn zǐ péi shī', meaning: 'Descending dangers opens heaven and earth, Escaping emptiness knows no past or present.', example: '缒险开天地，逃空无古今。清末至现当代·王蘧常海日楼呈沈子培师' },
+      '独溯古今聊闭阁，尚馀天地孰争棋。当代·陈永正刘逸老寄诗见怀奉和': { pinyin: 'dú sù gǔ jīn liáo bì gé, shàng yú tiān dì shú zhēng qí. dāng dài·chén yǒng zhèng liú yì lǎo jì shī jiàn huái fèng hé', meaning: 'Alone tracing past and present to close the pavilion, Still remaining between heaven and earth, who competes in chess?', example: '独溯古今聊闭阁，尚馀天地孰争棋。当代·陈永正刘逸老寄诗见怀奉和' },
+      '胸罗星斗开天地，笔起波澜撼古今。现当代·林恭祖蟠桃会二首 其一': { pinyin: 'xiōng luó xīng dǒu kāi tiān dì, bǐ qǐ bō lán hàn gǔ jīn. xiàn dāng dài·lín gōng zǔ pán táo huì èr shǒu qí yī', meaning: 'Chest containing stars opens heaven and earth, Brush raising waves shakes past and present.', example: '胸罗星斗开天地，笔起波澜撼古今。现当代·林恭祖蟠桃会二首 其一' },
+      '回首忽惊天地坼，观棋不了古今愁。当代·潘乐乐蜀游方归数日，惊闻大地震，更北川诗社五十余同志集体遇难，恸次杨启宇先生韵': { pinyin: 'huí shǒu hū jīng tiān dì chè, guān qí bù liǎo gǔ jīn chóu. dāng dài·pān lè lè shǔ yóu fāng guī shù rì, jīng wén dà dì zhèn, gèng běi chuān shī shè wǔ shí yú tóng zhì jí tǐ yù nàn, tòng cì yáng qǐ yǔ xiān shēng yùn', meaning: 'Turning head suddenly shocked by heaven and earth splitting, Watching chess cannot resolve past and present sorrows.', example: '回首忽惊天地坼，观棋不了古今愁。当代·潘乐乐蜀游方归数日，惊闻大地震，更北川诗社五十余同志集体遇难，恸次杨启宇先生韵' },
+      '古今自变春随在，天地俱空我独来。当代·卢青山梦至君山': { pinyin: 'gǔ jīn zì biàn chūn suí zài, tiān dì jù kōng wǒ dú lái. dāng dài·lú qīng shān mèng zhì jūn shān', meaning: 'Past and present change themselves, spring follows existence, Heaven and earth both empty, I alone come.', example: '古今自变春随在，天地俱空我独来。当代·卢青山梦至君山' },
+      '不尽古今月，更生天地秋。当代·姚佳泰州 其一': { pinyin: 'bù jìn gǔ jīn yuè, gēng shēng tiān dì qiū. dāng dài·yáo jiā tài zhōu qí yī', meaning: 'Endless moon of past and present, Renewed autumn of heaven and earth.', example: '不尽古今月，更生天地秋。当代·姚佳泰州 其一' },
+      '黑白尤天地，玄黄更古今。当代·姚佳留白 其一': { pinyin: 'hēi bái yóu tiān dì, xuán huáng gèng gǔ jīn. dāng dài·yáo jiā liú bái qí yī', meaning: 'Black and white especially heaven and earth, Mysterious yellow moreover past and present.', example: '黑白尤天地，玄黄更古今。当代·姚佳留白 其一' },
+      '春醒天地梦，雪掩古今愁。当代·姚佳留白 其二': { pinyin: 'chūn xǐng tiān dì mèng, xuě yǎn gǔ jīn chóu. dāng dài·yáo jiā liú bái qí èr', meaning: 'Spring awakens heaven and earth dreams, Snow covers past and present sorrows.', example: '春醒天地梦，雪掩古今愁。当代·姚佳留白 其二' },
+      '古今同寂寞，天地自悠扬。当代·姚佳柳州马鞍山': { pinyin: 'gǔ jīn tóng jì mò, tiān dì zì yōu yáng. dāng dài·yáo jiā liǔ zhōu mǎ ān shān', meaning: 'Past and present share the same solitude, Heaven and earth naturally float freely.', example: '古今同寂寞，天地自悠扬。当代·姚佳柳州马鞍山' }
+    };
+
+    // 从词汇库中提取所有词汇
+    const allWords = Object.keys(wordVocabulary);
+    
+    // 将词汇按长度分组
+    const wordsByLength = {
+      1: allWords.filter(word => word.length === 1),
+      2: allWords.filter(word => word.length === 2),
+      3: allWords.filter(word => word.length === 3),
+      4: allWords.filter(word => word.length === 4),
+      'verse': allWords.filter(word => word.includes('。')) // 诗句单独分组
+    };
+
+    let activeWords = [...wordsByLength['verse']]; // 默认只显示诗句
+    let score = 0;
+    let missedWords = {};
+    let currentFallingWord = null; // 当前下落的诗句
+
+    function useCustomChars() {
+      const input = document.getElementById('charInput').value.trim();
+      if (input) {
+        // 将输入转换为词汇列表
+        const customWords = input.split(' ').filter(word => word.length > 0);
+        activeWords = [...new Set(customWords)];
+        score = 0;
+        missedWords = {};
+        updateScore();
+        renderMissedWords();
+      }
+    }
+
+    function resetToDefault() {
+      activeWords = [...wordsByLength['verse']]; // 重置为只显示诗句
+      document.getElementById('charInput').value = '';
+      score = 0;
+      missedWords = {};
+      updateScore();
+      renderMissedWords();
+    }
+
+    function reset() {
+      score = 0;
+      missedWords = {};
+      updateScore();
+      renderMissedWords();
+    }
+
+    function useDefaultChars() {
+      updateScore();
+    }
+
+    function updateScore() {
+      document.getElementById("scoreBoard").textContent = `分数：${score}`;
+    }
+
+    function createFallingWord() {
+      if (activeWords.length === 0 || currentFallingWord) return;
+      
+      const word = activeWords[Math.floor(Math.random() * activeWords.length)];
+      const wordElem = document.createElement('div');
+      wordElem.className = 'fallingChar';
+      
+      // 在移动端以逗号分行
+      if (window.innerWidth <= 768 && word.includes('，')) {
+        wordElem.textContent = word.replace(/，/g, '，\n');
+      } else {
+        wordElem.textContent = word;
+      }
+
+      // 诗句下落更慢，持续时间更长
+      const fallDuration = 30; // 30秒下落时间
+      
+      wordElem.style.animationDuration = `${fallDuration}s`;
+      wordElem.style.left = `${Math.random() * (window.innerWidth - 40)}px`;
+
+      wordElem.addEventListener('click', () => {
+        score++;
+        updateScore();
+        showApple(wordElem.offsetLeft, wordElem.offsetTop);
+        showWordDetail(word);
+        wordElem.remove();
+        currentFallingWord = null;
+      });
+
+      document.getElementById('gameContainer').appendChild(wordElem);
+      currentFallingWord = wordElem;
+
+      setTimeout(() => {
+        if (wordElem.parentElement) {
+          wordElem.remove();
+          if (word in missedWords) {
+            missedWords[word]++;
+          } else {
+            missedWords[word] = 1;
+          }
+          renderMissedWords();
+          currentFallingWord = null;
+        }
+      }, fallDuration * 1000);
+    }
+
+    function showWordDetail(word) {
+      const detail = wordVocabulary[word];
+      if (!detail) return;
+      
+      document.getElementById('detailWord').textContent = word;
+      document.getElementById('detailPinyin').textContent = detail.pinyin;
+      document.getElementById('detailMeaning').innerHTML = `<strong>释义：</strong>${detail.meaning}`;
+      document.getElementById('detailExample').innerHTML = `<strong>例句：</strong>${detail.example}`;
+      
+      document.getElementById('wordDetail').style.display = 'block';
+      
+      // 设置朗读功能
+      document.getElementById('speakBtn').onclick = () => {
+        speakWord(word);
+      };
+    }
+
+    function speakWord(word) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'zh-CN';
+        utterance.rate = 0.8; // 慢速朗读
+        speechSynthesis.speak(utterance);
+      } else {
+        alert('您的浏览器不支持语音合成功能');
+      }
+    }
+
+    document.getElementById('closeDetail').addEventListener('click', () => {
+      document.getElementById('wordDetail').style.display = 'none';
+    });
+
+    function renderMissedWords() {
+      const basket = document.getElementById("basket");
+      basket.innerHTML = "⬇ 生字纸篓 ⬇";
+
+      const list = document.createElement("div");
+      list.style.marginTop = "6px";
+      list.style.fontSize = "16px";
+      list.style.display = "flex";
+      list.style.flexWrap = "wrap";
+      list.style.gap = "12px";
+      list.style.justifyContent = "center";
+
+      for (const word in missedWords) {
+        const count = missedWords[word];
+        const entry = document.createElement("div");
+        entry.textContent = `${count}× ${word}`;
+        entry.style.background = "#1a1a1a";
+        entry.style.padding = "4px 8px";
+        entry.style.borderRadius = "6px";
+        entry.style.color = "#fff";
+        list.appendChild(entry);
+      }
+
+      basket.appendChild(list);
+    }
+
+    function autoResize(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = (textarea.scrollHeight) + "px";
+    }
+
+    function showApple(x, y) {
+      const apple = document.createElement('div');
+      apple.id = 'appleReward';
+      apple.textContent = '🍎';
+      apple.style.left = `${x}px`;
+      apple.style.top = `${y}px`;
+      document.getElementById('gameContainer').appendChild(apple);
+      setTimeout(() => apple.remove(), 600);
+    }
+
+    // 每5秒创建一个新诗句，确保同一时间只有一个诗句下落
+    setInterval(() => {
+      createFallingWord();
+    }, 5000);
+  </script>
+</body>
+</html>

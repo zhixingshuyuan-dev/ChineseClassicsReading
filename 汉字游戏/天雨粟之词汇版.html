@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>汉字雨游戏</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
+      font-family: "微软雅黑", sans-serif;
+      color: #fff;
+    }
+
+    #gameContainer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+      background-size: auto;
+    }
+
+    .fallingChar {
+      position: absolute;
+      font-size: 20px;
+      color: #00fff7;
+      user-select: none;
+      animation-name: fallGrow;
+      animation-timing-function: linear;
+      cursor: pointer;
+      text-shadow: 0 0 8px #00fff7;
+      white-space: nowrap;
+    }
+
+    @keyframes fallGrow {
+      from {
+        top: -50px;
+        font-size: 40px;
+        opacity: 1;
+      }
+      to {
+        top: calc(100vh - 80px);
+        font-size: 60px;
+        opacity: 0.6;
+      }
+    }
+
+    #scoreBoard {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 6px 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #basket {
+      position: absolute;
+      bottom: 0;
+      height: auto;
+      min-height: 60px;
+      width: 100%;
+      background-color: rgba(44, 62, 80, 0.85);
+      text-align: center;
+      line-height: 60px;
+      font-size: 18px;
+      color: #ccc;
+      padding: 10px 0;
+    }
+
+    #appleReward {
+      position: absolute;
+      font-size: 5rem;
+      animation: popUp 0.6s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes popUp {
+      0% {
+        transform: scale(0.5);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 0;
+        top: -30px;
+      }
+    }
+
+    #controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px #0ff;
+    }
+
+    #charInput {
+      width: 200px;
+      min-height: 32px;
+      max-height: 180px;
+      font-size: 16px;
+      resize: none;
+      overflow: hidden;
+      padding: 8px;
+      box-sizing: border-box;
+      border: none;
+      border-radius: 6px;
+      background-color: #e0f7fa;
+      color: #000;
+      line-height: 1.4;
+      font-family: "微软雅黑", sans-serif;
+      transition: height 0.2s ease;
+    }
+    #charInput:focus {
+      outline: none;
+      box-shadow: 0 0 6px #0ff;
+    }
+
+    button {
+      margin-top: 6px;
+      margin-left: 4px;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: none;
+      background: #00bcd4;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0097a7;
+    }
+
+    #wordDetail {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 30, 40, 0.95);
+      border: 2px solid #00fff7;
+      border-radius: 12px;
+      padding: 20px;
+      width: 80%;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      z-index: 2000;
+      box-shadow: 0 0 20px rgba(0, 255, 247, 0.5);
+      display: none;
+    }
+
+    #wordDetail h2 {
+      color: #00fff7;
+      margin-top: 0;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    #wordDetail p {
+      margin: 10px 0;
+      line-height: 1.6;
+    }
+
+    #wordDetail .pinyin {
+      font-size: 20px;
+      color: #ffcc00;
+      text-align: center;
+      margin: 15px 0;
+    }
+
+    #wordDetail .meaning {
+      background: rgba(0, 20, 30, 0.7);
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 0;
+    }
+
+    #wordDetail .example {
+      font-style: italic;
+      color: #aaffaa;
+      border-left: 3px solid #00fff7;
+      padding-left: 10px;
+      margin: 15px 0;
+    }
+
+    #closeDetail {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #00fff7;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    #speakBtn {
+      display: block;
+      margin: 15px auto;
+      padding: 8px 16px;
+      background: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #speakBtn:hover {
+      background: #0097a7;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <div id="scoreBoard">分数：0</div>
+    <div id="controls">
+        <textarea id="charInput" placeholder="输入汉字（如：战利胜）" oninput="autoResize(this)"></textarea>
+        <br>
+        <button onclick="useCustomChars()">使用</button>
+        <button onclick="useDefaultChars()">字库</button>
+        <button onclick="reset()">分数清零</button>
+        <button onclick="resetToDefault()">清除字庫</button>
+    </div>
+    <div id="basket">⬇ 生字纸篓 ⬇</div>
+  </div>
+
+  <div id="wordDetail">
+    <button id="closeDetail">×</button>
+    <h2 id="detailWord"></h2>
+    <div class="pinyin" id="detailPinyin"></div>
+    <button id="speakBtn">朗读</button>
+    <div class="meaning" id="detailMeaning"></div>
+    <div class="example" id="detailExample"></div>
+  </div>
+
+  <script>
+    // 扩展词汇库，包含多音节词汇
+    const wordVocabulary = {
+      '爱': { pinyin: 'ài', meaning: 'love; affection', example: '爱屋及乌 - Love me, love my dog.' },
+      '人': { pinyin: 'rén', meaning: 'person; people', example: '人山人海 - huge crowds of people' },
+      '山': { pinyin: 'shān', meaning: 'mountain', example: '山清水秀 - beautiful mountains and clear waters' },
+      '水': { pinyin: 'shuǐ', meaning: 'water', example: '水到渠成 - when conditions are ripe, success will come' },
+      '天': { pinyin: 'tiān', meaning: 'sky; heaven', example: '天高云淡 - The sky is high and the clouds are pale.' },
+      '地': { pinyin: 'dì', meaning: 'earth; ground', example: '地大物博 - vast territory and abundant resources' },
+      '日': { pinyin: 'rì', meaning: 'sun; day', example: '日新月异 - change with each passing day' },
+      '月': { pinyin: 'yuè', meaning: 'moon; month', example: '月明星稀 - The moon is bright and the stars are few.' },
+      '风': { pinyin: 'fēng', meaning: 'wind', example: '风和日丽 - gentle breeze and bright sunshine' },
+      '雨': { pinyin: 'yǔ', meaning: 'rain', example: '雨后春笋 - spring up like mushrooms' },
+      '花': { pinyin: 'huā', meaning: 'flower', example: '花好月圆 - perfect conjugal bliss' },
+      '鸟': { pinyin: 'niǎo', meaning: 'bird', example: '鸟语花香 - birds sing and flowers give forth fragrance' },
+      '鱼': { pinyin: 'yú', meaning: 'fish', example: '鱼跃龙门 - succeed in the civil service exam' },
+      '春': { pinyin: 'chūn', meaning: 'spring', example: '春华秋实 - spring flowers and autumn fruits' },
+      '夏': { pinyin: 'xià', meaning: 'summer', example: '夏日炎炎 - scorching summer heat' },
+      '秋': { pinyin: 'qiū', meaning: 'autumn', example: '秋高气爽 - clear autumn skies and crisp air' },
+      '冬': { pinyin: 'dōng', meaning: 'winter', example: '冬日可爱 - as lovely as winter sunshine' },
+      '红': { pinyin: 'hóng', meaning: 'red', example: '红红火火 - prosperous; thriving' },
+      '绿': { pinyin: 'lǜ', meaning: 'green', example: '绿水青山 - green waters and mountains' },
+      '蓝': { pinyin: 'lán', meaning: 'blue', example: '蓝天白云 - blue sky and white clouds' },
+      '白': { pinyin: 'bái', meaning: 'white', example: '白璧无瑕 - flawless white jade' },
+      '黑': { pinyin: 'hēi', meaning: 'black', example: '黑白分明 - in sharp contrast' },
+      '上': { pinyin: 'shàng', meaning: 'up; above', example: '上善若水 - The highest virtue is like water.' },
+      '下': { pinyin: 'xià', meaning: 'down; below', example: '下笔成章 - write an article with a stroke of the pen' },
+      '左': { pinyin: 'zuǒ', meaning: 'left', example: '左右逢源 - gain advantage from both sides' },
+      '右': { pinyin: 'yòu', meaning: 'right', example: '左右为难 - in a dilemma' },
+      '中': { pinyin: 'zhōng', meaning: 'middle; center', example: '中流砥柱 - mainstay; pillar' },
+      '大': { pinyin: 'dà', meaning: 'big; large', example: '大智若愚 - A man of great wisdom often appears slow-witted.' },
+      '小': { pinyin: 'xiǎo', meaning: 'small; little', example: '小巧玲珑 - small and exquisite' },
+      '多': { pinyin: 'duō', meaning: 'many; much', example: '多多益善 - The more the better.' },
+      '少': { pinyin: 'shǎo', meaning: 'few; little', example: '少见多怪 - ignorant people are easily surprised' },
+      '长': { pinyin: 'cháng', meaning: 'long', example: '长命百岁 - long life' },
+      '短': { pinyin: 'duǎn', meaning: 'short', example: '短小精悍 - short but powerful' },
+      '高': { pinyin: 'gāo', meaning: 'high; tall', example: '高山流水 - sublime music' },
+      '低': { pinyin: 'dī', meaning: 'low', example: '低三下四 - servile; obsequious' },
+      '快': { pinyin: 'kuài', meaning: 'fast; quick', example: '快马加鞭 - spur on the flying horse' },
+      '慢': { pinyin: 'màn', meaning: 'slow', example: '慢条斯理 - unhurried; methodical' },
+      '好': { pinyin: 'hǎo', meaning: 'good', example: '好事多磨 - The road to happiness is strewn with setbacks.' },
+      '坏': { pinyin: 'huài', meaning: 'bad', example: '坏人心术 - corrupt someone\'s mind' },
+      '新': { pinyin: 'xīn', meaning: 'new', example: '新陈代谢 - metabolism' },
+      '旧': { pinyin: 'jiù', meaning: 'old', example: '旧地重游 - revisit a once familiar place' },
+      '生': { pinyin: 'shēng', meaning: 'life; birth', example: '生龙活虎 - full of vigor and vitality' },
+      '死': { pinyin: 'sǐ', meaning: 'death', example: '死而后已 - until one\'s dying day' },
+      '美': { pinyin: 'měi', meaning: 'beautiful', example: '美不胜收 - too many beautiful things to be appreciated at once' },
+      '丑': { pinyin: 'chǒu', meaning: 'ugly', example: '丑态百出 - show all sorts of ugly behaviors' },
+      '善': { pinyin: 'shàn', meaning: 'good; kind', example: '善始善终 - start well and end well' },
+      '恶': { pinyin: 'è', meaning: 'evil; wicked', example: '恶贯满盈 - face retribution for a life of crime' },
+      '真': { pinyin: 'zhēn', meaning: 'true; real', example: '真才实学 - real talent and learning' },
+      '假': { pinyin: 'jiǎ', meaning: 'false; fake', example: '假公济私 - exploit public resources for private gains' },
+      '快乐': { pinyin: 'kuài lè', meaning: 'happy; joyful', example: '快乐时光 - happy times' },
+      '悲伤': { pinyin: 'bēi shāng', meaning: 'sad; sorrowful', example: '悲伤的故事 - a sad story' },
+      '幸福': { pinyin: 'xìng fú', meaning: 'happiness; blessed', example: '幸福生活 - happy life' },
+      '痛苦': { pinyin: 'tòng kǔ', meaning: 'pain; suffering', example: '痛苦的经历 - painful experience' },
+      '希望': { pinyin: 'xī wàng', meaning: 'hope; wish', example: '充满希望 - full of hope' },
+      '失望': { pinyin: 'shī wàng', meaning: 'disappointed', example: '令人失望 - disappointing' },
+      '成功': { pinyin: 'chéng gōng', meaning: 'success', example: '取得成功 - achieve success' },
+      '失败': { pinyin: 'shī bài', meaning: 'failure', example: '失败是成功之母 - Failure is the mother of success.' },
+      '勇敢': { pinyin: 'yǒng gǎn', meaning: 'brave; courageous', example: '勇敢的心 - brave heart' },
+      '胆小': { pinyin: 'dǎn xiǎo', meaning: 'timid; cowardly', example: '胆小如鼠 - as timid as a mouse' },
+      '聪明': { pinyin: 'cōng míng', meaning: 'clever; intelligent', example: '聪明才智 - intelligence and wisdom' },
+      '愚蠢': { pinyin: 'yú chǔn', meaning: 'stupid; foolish', example: '愚蠢的行为 - foolish behavior' },
+      '美丽': { pinyin: 'měi lì', meaning: 'beautiful', example: '美丽的风景 - beautiful scenery' },
+      '丑陋': { pinyin: 'chǒu lòu', meaning: 'ugly', example: '丑陋的面孔 - ugly face' },
+      '善良': { pinyin: 'shàn liáng', meaning: 'kind; virtuous', example: '善良的人 - kind person' },
+      '邪恶': { pinyin: 'xié è', meaning: 'evil; wicked', example: '邪恶势力 - evil forces' },
+      '真诚': { pinyin: 'zhēn chéng', meaning: 'sincere; genuine', example: '真诚的朋友 - sincere friend' },
+      '虚伪': { pinyin: 'xū wěi', meaning: 'hypocritical', example: '虚伪的笑容 - hypocritical smile' },
+      '自由': { pinyin: 'zì yóu', meaning: 'freedom; liberty', example: '自由飞翔 - fly freely' },
+      '束缚': { pinyin: 'shù fù', meaning: 'restraint; bondage', example: '摆脱束缚 - break free from restraints' },
+      '和平': { pinyin: 'hé píng', meaning: 'peace', example: '和平共处 - peaceful coexistence' },
+      '战争': { pinyin: 'zhàn zhēng', meaning: 'war', example: '战争与和平 - war and peace' },
+      '爱情': { pinyin: 'ài qíng', meaning: 'love; romance', example: '纯洁的爱情 - pure love' },
+      '友谊': { pinyin: 'yǒu yì', meaning: 'friendship', example: '真挚的友谊 - genuine friendship' },
+      '家庭': { pinyin: 'jiā tíng', meaning: 'family', example: '幸福的家庭 - happy family' },
+      '学校': { pinyin: 'xué xiào', meaning: 'school', example: '美丽的校园 - beautiful campus' },
+      '社会': { pinyin: 'shè huì', meaning: 'society', example: '和谐社会 - harmonious society' },
+      '国家': { pinyin: 'guó jiā', meaning: 'country; nation', example: '国家富强 - prosperous nation' },
+      '世界': { pinyin: 'shì jiè', meaning: 'world', example: '世界和平 - world peace' },
+      '自然': { pinyin: 'zì rán', meaning: 'nature', example: '自然风光 - natural scenery' },
+      '科学': { pinyin: 'kē xué', meaning: 'science', example: '科学技术 - science and technology' },
+      '艺术': { pinyin: 'yì shù', meaning: 'art', example: '艺术作品 - artwork' },
+      '文化': { pinyin: 'wén huà', meaning: 'culture', example: '文化交流 - cultural exchange' },
+      '历史': { pinyin: 'lì shǐ', meaning: 'history', example: '历史文化 - historical culture' },
+      '未来': { pinyin: 'wèi lái', meaning: 'future', example: '美好未来 - bright future' },
+      '过去': { pinyin: 'guò qù', meaning: 'past', example: '过去的回忆 - past memories' },
+      '现在': { pinyin: 'xiàn zài', meaning: 'present; now', example: '此时此刻 - at this very moment' },
+      '时间': { pinyin: 'shí jiān', meaning: 'time', example: '时间飞逝 - Time flies.' },
+      '空间': { pinyin: 'kōng jiān', meaning: 'space', example: '生存空间 - living space' },
+      '太阳': { pinyin: 'tài yáng', meaning: 'sun', example: '太阳升起 - The sun rises.' },
+      '月亮': { pinyin: 'yuè liàng', meaning: 'moon', example: '月亮代表我的心 - The Moon Represents My Heart' },
+      '星星': { pinyin: 'xīng xīng', meaning: 'stars', example: '满天星星 - starry sky' },
+      '云彩': { pinyin: 'yún cǎi', meaning: 'clouds', example: '五彩云彩 - colorful clouds' },
+      '风雨': { pinyin: 'fēng yǔ', meaning: 'wind and rain', example: '风雨同舟 - stand together through storm and stress' },
+      '雷电': { pinyin: 'léi diàn', meaning: 'thunder and lightning', example: '雷电交加 - lightning accompanied by peals of thunder' },
+      '雪花': { pinyin: 'xuě huā', meaning: 'snowflakes', example: '雪花飘飘 - snowflakes fluttering in the air' },
+      '冰霜': { pinyin: 'bīng shuāng', meaning: 'frost', example: '冰霜美人 - ice queen' },
+      '江河': { pinyin: 'jiāng hé', meaning: 'rivers', example: '江河湖海 - rivers, lakes and seas' },
+      '湖泊': { pinyin: 'hú pō', meaning: 'lakes', example: '美丽湖泊 - beautiful lakes' },
+      '海洋': { pinyin: 'hǎi yáng', meaning: 'ocean', example: '海洋生物 - marine life' },
+      '森林': { pinyin: 'sēn lín', meaning: 'forest', example: '原始森林 - virgin forest' },
+      '草原': { pinyin: 'cǎo yuán', meaning: 'grassland', example: '辽阔草原 - vast grassland' },
+      '沙漠': { pinyin: 'shā mò', meaning: 'desert', example: '沙漠绿洲 - desert oasis' },
+      '高山': { pinyin: 'gāo shān', meaning: 'high mountains', example: '高山流水 - lofty mountains and flowing water' },
+      '平原': { pinyin: 'píng yuán', meaning: 'plain', example: '华北平原 - North China Plain' },
+      '城市': { pinyin: 'chéng shì', meaning: 'city', example: '现代化城市 - modern city' },
+      '乡村': { pinyin: 'xiāng cūn', meaning: 'village', example: '美丽乡村 - beautiful village' },
+      '建筑': { pinyin: 'jiàn zhù', meaning: 'architecture', example: '古代建筑 - ancient architecture' },
+      '道路': { pinyin: 'dào lù', meaning: 'road', example: '道路畅通 - smooth traffic' },
+      '桥梁': { pinyin: 'qiáo liáng', meaning: 'bridge', example: '桥梁工程 - bridge engineering' },
+      '飞机': { pinyin: 'fēi jī', meaning: 'airplane', example: '飞机起飞 - The plane takes off.' },
+      '火车': { pinyin: 'huǒ chē', meaning: 'train', example: '火车进站 - The train enters the station.' },
+      '汽车': { pinyin: 'qì chē', meaning: 'car', example: '汽车驾驶 - car driving' },
+      '轮船': { pinyin: 'lún chuán', meaning: 'ship', example: '轮船航行 - ship sailing' },
+      '自行车': { pinyin: 'zì xíng chē', meaning: 'bicycle', example: '骑自行车 - ride a bicycle' },
+      '电动车': { pinyin: 'diàn dòng chē', meaning: 'electric vehicle', example: '电动车充电 - charge an electric vehicle' },
+      '计算机': { pinyin: 'jì suàn jī', meaning: 'computer', example: '计算机科学 - computer science' },
+      '互联网': { pinyin: 'hù lián wǎng', meaning: 'internet', example: '互联网时代 - internet era' },
+      '智能手机': { pinyin: 'zhì néng shǒu jī', meaning: 'smartphone', example: '智能手机应用 - smartphone application' },
+      '人工智能': { pinyin: 'rén gōng zhì néng', meaning: 'artificial intelligence', example: '人工智能技术 - AI technology' },
+      '大数据': { pinyin: 'dà shù jù', meaning: 'big data', example: '大数据分析 - big data analysis' },
+      '云计算': { pinyin: 'yún jì suàn', meaning: 'cloud computing', example: '云计算平台 - cloud computing platform' },
+      '区块链': { pinyin: 'qū kuài liàn', meaning: 'blockchain', example: '区块链技术 - blockchain technology' },
+      '虚拟现实': { pinyin: 'xū nǐ xiàn shí', meaning: 'virtual reality', example: '虚拟现实游戏 - VR game' },
+      '增强现实': { pinyin: 'zēng qiáng xiàn shí', meaning: 'augmented reality', example: '增强现实应用 - AR application' },
+      '数字经济': { pinyin: 'shù zì jīng jì', meaning: 'digital economy', example: '数字经济发展 - development of digital economy' },
+      '电子商务': { pinyin: 'diàn zǐ shāng wù', meaning: 'e-commerce', example: '电子商务平台 - e-commerce platform' },
+      '社交媒体': { pinyin: 'shè jiāo méi tǐ', meaning: 'social media', example: '社交媒体营销 - social media marketing' },
+      '视频直播': { pinyin: 'shì pín zhí bō', meaning: 'video live streaming', example: '视频直播平台 - live streaming platform' },
+      '在线教育': { pinyin: 'zài xiàn jiào yù', meaning: 'online education', example: '在线教育平台 - online education platform' },
+      '远程办公': { pinyin: 'yuǎn chéng bàn gōng', meaning: 'remote work', example: '远程办公软件 - remote work software' },
+      '智慧城市': { pinyin: 'zhì huì chéng shì', meaning: 'smart city', example: '智慧城市建设 - smart city construction' },
+      '物联网': { pinyin: 'wù lián wǎng', meaning: 'Internet of Things', example: '物联网技术 - IoT technology' },
+      '5G网络': { pinyin: '5G wǎng luò', meaning: '5G network', example: '5G网络覆盖 - 5G network coverage' },
+      '自动驾驶': { pinyin: 'zì dòng jià shǐ', meaning: 'autonomous driving', example: '自动驾驶汽车 - self-driving car' },
+      '机器人': { pinyin: 'jī qì rén', meaning: 'robot', example: '工业机器人 - industrial robot' },
+      '3D打印': { pinyin: '3D dǎ yìn', meaning: '3D printing', example: '3D打印技术 - 3D printing technology' },
+      '可再生能源': { pinyin: 'kě zài shēng néng yuán', meaning: 'renewable energy', example: '可再生能源发电 - renewable energy power generation' },
+      '环境保护': { pinyin: 'huán jìng bǎo hù', meaning: 'environmental protection', example: '环境保护意识 - environmental awareness' },
+      '气候变化': { pinyin: 'qì hòu biàn huà', meaning: 'climate change', example: '气候变化影响 - impact of climate change' },
+      '可持续发展': { pinyin: 'kě chí xù fā zhǎn', meaning: 'sustainable development', example: '可持续发展战略 - sustainable development strategy' },
+      '生态文明': { pinyin: 'shēng tài wén míng', meaning: 'ecological civilization', example: '生态文明建设 - ecological civilization construction' },
+      '绿色发展': { pinyin: 'lǜ sè fā zhǎn', meaning: 'green development', example: '绿色发展理念 - concept of green development' },
+      '碳中和': { pinyin: 'tàn zhōng hé', meaning: 'carbon neutrality', example: '碳中和目标 - carbon neutrality goal' },
+      '生物多样性': { pinyin: 'shēng wù duō yàng xìng', meaning: 'biodiversity', example: '生物多样性保护 - biodiversity conservation' },
+      '全球变暖': { pinyin: 'quán qiú biàn nuǎn', meaning: 'global warming', example: '全球变暖问题 - global warming issue' },
+      '极端天气': { pinyin: 'jí duān tiān qì', meaning: 'extreme weather', example: '极端天气事件 - extreme weather events' },
+      '自然灾害': { pinyin: 'zì rán zāi hài', meaning: 'natural disaster', example: '自然灾害防治 - natural disaster prevention' },
+      '公共卫生': { pinyin: 'gōng gòng wèi shēng', meaning: 'public health', example: '公共卫生事件 - public health event' },
+      '疫情防控': { pinyin: 'yì qíng fáng kòng', meaning: 'epidemic prevention and control', example: '疫情防控措施 - epidemic prevention measures' },
+      '疫苗接种': { pinyin: 'yì miáo jiē zhòng', meaning: 'vaccination', example: '疫苗接种率 - vaccination rate' },
+      '心理健康': { pinyin: 'xīn lǐ jiàn kāng', meaning: 'mental health', example: '心理健康教育 - mental health education' },
+      '身体健康': { pinyin: 'shēn tǐ jiàn kāng', meaning: 'physical health', example: '身体健康状况 - physical health condition' },
+      '全民健身': { pinyin: 'quán mín jiàn shēn', meaning: 'national fitness', example: '全民健身运动 - national fitness campaign' },
+      '奥林匹克': { pinyin: 'ào lín pǐ kè', meaning: 'Olympic', example: '奥林匹克精神 - Olympic spirit' },
+      '体育运动': { pinyin: 'tǐ yù yùn dòng', meaning: 'sports', example: '体育运动项目 - sports events' },
+      '篮球比赛': { pinyin: 'lán qiú bǐ sài', meaning: 'basketball game', example: '篮球比赛直播 - live basketball game' },
+      '足球世界杯': { pinyin: 'zú qiú shì jiè bēi', meaning: 'FIFA World Cup', example: '足球世界杯冠军 - World Cup champion' },
+      '乒乓球': { pinyin: 'pīng pāng qiú', meaning: 'table tennis', example: '乒乓球比赛 - table tennis match' },
+      '羽毛球': { pinyin: 'yǔ máo qiú', meaning: 'badminton', example: '羽毛球运动员 - badminton player' },
+      '网球比赛': { pinyin: 'wǎng qiú bǐ sài', meaning: 'tennis match', example: '网球比赛规则 - tennis rules' },
+      '游泳比赛': { pinyin: 'yóu yǒng bǐ sài', meaning: 'swimming competition', example: '游泳比赛记录 - swimming record' },
+      '田径运动': { pinyin: 'tián jìng yùn dòng', meaning: 'track and field', example: '田径运动会 - track and field meet' },
+      '体操表演': { pinyin: 'tǐ cāo biǎo yǎn', meaning: 'gymnastics performance', example: '体操运动员 - gymnast' },
+      '武术表演': { pinyin: 'wǔ shù biǎo yǎn', meaning: 'martial arts performance', example: '中国武术 - Chinese martial arts' },
+      '围棋比赛': { pinyin: 'wéi qí bǐ sài', meaning: 'Go game', example: '围棋世界冠军 - Go world champion' },
+      '象棋比赛': { pinyin: 'xiàng qí bǐ sài', meaning: 'Chinese chess game', example: '象棋大师 - Chinese chess master' },
+      '国际象棋': { pinyin: 'guó jì xiàng qí', meaning: 'chess', example: '国际象棋比赛 - chess tournament' },
+      '扑克牌': { pinyin: 'pū kè pái', meaning: 'playing cards', example: '扑克牌游戏 - card game' },
+      '麻将游戏': { pinyin: 'má jiàng yóu xì', meaning: 'mahjong game', example: '麻将规则 - mahjong rules' },
+      '电子游戏': { pinyin: 'diàn zǐ yóu xì', meaning: 'video game', example: '电子竞技 - esports' },
+      '网络游戏': { pinyin: 'wǎng luò yóu xì', meaning: 'online game', example: '网络游戏玩家 - online gamer' },
+      '手机游戏': { pinyin: 'shǒu jī yóu xì', meaning: 'mobile game', example: '手机游戏开发 - mobile game development' },
+      '角色扮演': { pinyin: 'jué sè bàn yǎn', meaning: 'role-playing', example: '角色扮演游戏 - RPG' },
+      '策略游戏': { pinyin: 'cè lüè yóu xì', meaning: 'strategy game', example: '策略游戏设计 - strategy game design' },
+      '动作游戏': { pinyin: 'dòng zuò yóu xì', meaning: 'action game', example: '动作游戏玩家 - action gamer' },
+      '冒险游戏': { pinyin: 'mào xiǎn yóu xì', meaning: 'adventure game', example: '冒险游戏剧情 - adventure game plot' },
+      '模拟游戏': { pinyin: 'mó nǐ yóu xì', meaning: 'simulation game', example: '模拟游戏体验 - simulation game experience' },
+      '益智游戏': { pinyin: 'yì zhì yóu xì', meaning: 'puzzle game', example: '益智游戏开发 - puzzle game development' },
+      '音乐游戏': { pinyin: 'yīn yuè yóu xì', meaning: 'music game', example: '音乐游戏节奏 - music game rhythm' },
+      '体育游戏': { pinyin: 'tǐ yù yóu xì', meaning: 'sports game', example: '体育游戏模拟 - sports game simulation' },
+      '赛车游戏': { pinyin: 'sài chē yóu xì', meaning: 'racing game', example: '赛车游戏体验 - racing game experience' },
+      '射击游戏': { pinyin: 'shè jī yóu xì', meaning: 'shooting game', example: '射击游戏技巧 - shooting game skills' },
+      '格斗游戏': { pinyin: 'gé dòu yóu xì', meaning: 'fighting game', example: '格斗游戏角色 - fighting game character' },
+      '生存游戏': { pinyin: 'shēng cún yóu xì', meaning: 'survival game', example: '生存游戏挑战 - survival game challenge' },
+      '恐怖游戏': { pinyin: 'kǒng bù yóu xì', meaning: 'horror game', example: '恐怖游戏氛围 - horror game atmosphere' },
+      '科幻游戏': { pinyin: 'kē huàn yóu xì', meaning: 'sci-fi game', example: '科幻游戏世界 - sci-fi game world' },
+      '奇幻游戏': { pinyin: 'qí huàn yóu xì', meaning: 'fantasy game', example: '奇幻游戏故事 - fantasy game story' },
+      '历史游戏': { pinyin: 'lì shǐ yóu xì', meaning: 'historical game', example: '历史游戏背景 - historical game setting' },
+      '军事游戏': { pinyin: 'jūn shì yóu xì', meaning: 'military game', example: '军事游戏策略 - military game strategy' },
+      '城市建设': { pinyin: 'chéng shì jiàn shè', meaning: 'city building', example: '城市建设游戏 - city building game' },
+      '农场经营': { pinyin: 'nóng chǎng jīng yíng', meaning: 'farm management', example: '农场经营游戏 - farm management game' },
+      '餐厅经营': { pinyin: 'cān tīng jīng yíng', meaning: 'restaurant management', example: '餐厅经营游戏 - restaurant management game' },
+      '医院经营': { pinyin: 'yī yuàn jīng yíng', meaning: 'hospital management', example: '医院经营游戏 - hospital management game' },
+      '学校经营': { pinyin: 'xué xiào jīng yíng', meaning: 'school management', example: '学校经营游戏 - school management game' },
+      '动物园': { pinyin: 'dòng wù yuán', meaning: 'zoo', example: '动物园经营 - zoo management' },
+      '水族馆': { pinyin: 'shuǐ zú guǎn', meaning: 'aquarium', example: '水族馆游戏 - aquarium game' },
+      '游乐园': { pinyin: 'yóu lè yuán', meaning: 'amusement park', example: '游乐园经营 - amusement park management' },
+      '博物馆': { pinyin: 'bó wù guǎn', meaning: 'museum', example: '博物馆游戏 - museum game' },
+      '太空站': { pinyin: 'tài kōng zhàn', meaning: 'space station', example: '太空站游戏 - space station game' },
+      '海底世界': { pinyin: 'hǎi dǐ shì jiè', meaning: 'underwater world', example: '海底世界探索 - underwater world exploration' },
+      '恐龙时代': { pinyin: 'kǒng lóng shí dài', meaning: 'dinosaur age', example: '恐龙时代游戏 - dinosaur age game' },
+      '中世纪': { pinyin: 'zhōng shì jì', meaning: 'Middle Ages', example: '中世纪游戏 - medieval game' },
+      '西部牛仔': { pinyin: 'xī bù niú zǎi', meaning: 'wild west', example: '西部牛仔游戏 - wild west game' },
+      '未来世界': { pinyin: 'wèi lái shì jiè', meaning: 'future world', example: '未来世界游戏 - futuristic game' },
+      '童话王国': { pinyin: 'tóng huà wáng guó', meaning: 'fairy tale kingdom', example: '童话王国游戏 - fairy tale game' },
+      '魔法世界': { pinyin: 'mó fǎ shì jiè', meaning: 'magic world', example: '魔法世界冒险 - magic world adventure' },
+      '星际旅行': { pinyin: 'xīng jì lǚ xíng', meaning: 'space travel', example: '星际旅行游戏 - space travel game' },
+      '时间旅行': { pinyin: 'shí jiān lǚ xíng', meaning: 'time travel', example: '时间旅行故事 - time travel story' },
+      '平行宇宙': { pinyin: 'píng xíng yǔ zhòu', meaning: 'parallel universe', example: '平行宇宙理论 - parallel universe theory' },
+      '人工智能': { pinyin: 'rén gōng zhì néng', meaning: 'artificial intelligence', example: '人工智能发展 - AI development' },
+      '机器人': { pinyin: 'jī qì rén', meaning: 'robot', example: '机器人技术 - robotics' },
+      '虚拟现实': { pinyin: 'xū nǐ xiàn shí', meaning: 'virtual reality', example: '虚拟现实体验 - VR experience' },
+      '增强现实': { pinyin: 'zēng qiáng xiàn shí', meaning: 'augmented reality', example: '增强现实应用 - AR application' },
+      '混合现实': { pinyin: 'hùn hé xiàn shí', meaning: 'mixed reality', example: '混合现实技术 - MR technology' },
+      '全息投影': { pinyin: 'quán xī tóu yǐng', meaning: 'holographic projection', example: '全息投影技术 - holographic technology' },
+      '3D打印': { pinyin: '3D dǎ yìn', meaning: '3D printing', example: '3D打印模型 - 3D printed model' },
+      '无人驾驶': { pinyin: 'wú rén jià shǐ', meaning: 'autonomous driving', example: '无人驾驶汽车 - self-driving car' },
+      '无人机': { pinyin: 'wú rén jī', meaning: 'drone', example: '无人机航拍 - drone aerial photography' },
+      '智能家居': { pinyin: 'zhì néng jiā jū', meaning: 'smart home', example: '智能家居系统 - smart home system' },
+      '物联网': { pinyin: 'wù lián wǎng', meaning: 'Internet of Things', example: '物联网设备 - IoT device' },
+      '云计算': { pinyin: 'yún jì suàn', meaning: 'cloud computing', example: '云计算服务 - cloud computing service' },
+      '大数据': { pinyin: 'dà shù jù', meaning: 'big data', example: '大数据分析 - big data analysis' },
+      '区块链': { pinyin: 'qū kuài liàn', meaning: 'blockchain', example: '区块链技术 - blockchain technology' },
+      '数字货币': { pinyin: 'shù zì huò bì', meaning: 'digital currency', example: '数字货币交易 - digital currency trading' },
+      '比特币': { pinyin: 'bǐ tè bì', meaning: 'Bitcoin', example: '比特币价格 - Bitcoin price' },
+      '以太坊': { pinyin: 'yǐ tài fáng', meaning: 'Ethereum', example: '以太坊智能合约 - Ethereum smart contract' },
+      '加密货币': { pinyin: 'jiā mì huò bì', meaning: 'cryptocurrency', example: '加密货币市场 - cryptocurrency market' },
+      '去中心化': { pinyin: 'qù zhōng xīn huà', meaning: 'decentralization', example: '去中心化应用 - decentralized application' },
+      '智能合约': { pinyin: 'zhì néng hé yuē', meaning: 'smart contract', example: '智能合约开发 - smart contract development' },
+      '分布式账本': { pinyin: 'fēn bù shì zhàng běn', meaning: 'distributed ledger', example: '分布式账本技术 - distributed ledger technology' },
+      '共识机制': { pinyin: 'gòng shí jī zhì', meaning: 'consensus mechanism', example: '共识算法 - consensus algorithm' },
+      '挖矿': { pinyin: 'wā kuàng', meaning: 'mining', example: '比特币挖矿 - Bitcoin mining' },
+      '数字钱包': { pinyin: 'shù zì qián bāo', meaning: 'digital wallet', example: '数字钱包安全 - digital wallet security' },
+      '交易所': { pinyin: 'jiāo yì suǒ', meaning: 'exchange', example: '加密货币交易所 - cryptocurrency exchange' },
+      '去中心化金融': { pinyin: 'qù zhōng xīn huà jīn róng', meaning: 'DeFi', example: '去中心化金融平台 - DeFi platform' },
+      '非同质化代币': { pinyin: 'fēi tóng zhì huà dài bì', meaning: 'NFT', example: '非同质化代币交易 - NFT trading' },
+      '元宇宙': { pinyin: 'yuán yǔ zhòu', meaning: 'metaverse', example: '元宇宙概念 - metaverse concept' },
+      '数字孪生': { pinyin: 'shù zì luán shēng', meaning: 'digital twin', example: '数字孪生技术 - digital twin technology' },
+      '量子计算': { pinyin: 'liàng zǐ jì suàn', meaning: 'quantum computing', example: '量子计算机 - quantum computer' },
+      '基因编辑': { pinyin: 'jī yīn biān jí', meaning: 'gene editing', example: '基因编辑技术 - gene editing technology' },
+      '生物技术': { pinyin: 'shēng wù jì shù', meaning: 'biotechnology', example: '生物技术应用 - biotechnology application' },
+      '纳米技术': { pinyin: 'nà mǐ jì shù', meaning: 'nanotechnology', example: '纳米材料 - nanomaterials' },
+      '可再生能源': { pinyin: 'kě zài shēng néng yuán', meaning: 'renewable energy', example: '可再生能源发电 - renewable energy power generation' },
+      '太阳能': { pinyin: 'tài yáng néng', meaning: 'solar energy', example: '太阳能电池 - solar cell' },
+      '风能': { pinyin: 'fēng néng', meaning: 'wind energy', example: '风能发电 - wind power generation' },
+      '水能': { pinyin: 'shuǐ néng', meaning: 'hydropower', example: '水能利用 - hydropower utilization' },
+      '地热能': { pinyin: 'dì rè néng', meaning: 'geothermal energy', example: '地热能开发 - geothermal energy development' },
+      '生物质能': { pinyin: 'shēng wù zhì néng', meaning: 'biomass energy', example: '生物质能利用 - biomass energy utilization' },
+      '氢能源': { pinyin: 'qīng néng yuán', meaning: 'hydrogen energy', example: '氢能源汽车 - hydrogen energy vehicle' },
+      '核能': { pinyin: 'hé néng', meaning: 'nuclear energy', example: '核能发电 - nuclear power generation' },
+      '清洁能源': { pinyin: 'qīng jié néng yuán', meaning: 'clean energy', example: '清洁能源发展 - clean energy development' },
+      '碳中和': { pinyin: 'tàn zhōng hé', meaning: 'carbon neutrality', example: '碳中和目标 - carbon neutrality goal' },
+      '碳足迹': { pinyin: 'tàn zú jì', meaning: 'carbon footprint', example: '减少碳足迹 - reduce carbon footprint' },
+      '气候变化': { pinyin: 'qì hòu biàn huà', meaning: 'climate change', example: '气候变化影响 - climate change impact' },
+      '全球变暖': { pinyin: 'quán qiú biàn nuǎn', meaning: 'global warming', example: '全球变暖问题 - global warming issue' },
+      '极端天气': { pinyin: 'jí duān tiān qì', meaning: 'extreme weather', example: '极端天气事件 - extreme weather events' },
+      '环境保护': { pinyin: 'huán jìng bǎo hù', meaning: 'environmental protection', example: '环境保护意识 - environmental awareness' },
+      '可持续发展': { pinyin: 'kě chí xù fā zhǎn', meaning: 'sustainable development', example: '可持续发展战略 - sustainable development strategy' },
+      '生态文明': { pinyin: 'shēng tài wén míng', meaning: 'ecological civilization', example: '生态文明建设 - ecological civilization construction' },
+      '绿色发展': { pinyin: 'lǜ sè fā zhǎn', meaning: 'green development', example: '绿色发展理念 - concept of green development' },
+      '循环经济': { pinyin: 'xún huán jīng jì', meaning: 'circular economy', example: '循环经济模式 - circular economy model' },
+      '垃圾分类': { pinyin: 'lā jī fēn lèi', meaning: 'garbage classification', example: '垃圾分类回收 - garbage sorting and recycling' },
+      '节能减排': { pinyin: 'jié néng jiǎn pái', meaning: 'energy conservation and emission reduction', example: '节能减排措施 - energy-saving and emission-reduction measures' },
+      '绿色出行': { pinyin: 'lǜ sè chū xíng', meaning: 'green travel', example: '绿色出行方式 - green travel methods' },
+      '公共交通': { pinyin: 'gōng gòng jiāo tōng', meaning: 'public transportation', example: '公共交通系统 - public transportation system' },
+      '新能源汽车': { pinyin: 'xīn néng yuán qì chē', meaning: 'new energy vehicle', example: '新能源汽车发展 - new energy vehicle development' },
+      '电动汽车': { pinyin: 'diàn dòng qì chē', meaning: 'electric vehicle', example: '电动汽车充电 - electric vehicle charging' },
+      '混合动力': { pinyin: 'hùn hé dòng lì', meaning: 'hybrid power', example: '混合动力汽车 - hybrid vehicle' },
+      '燃料电池': { pinyin: 'rán liào diàn chí', meaning: 'fuel cell', example: '燃料电池技术 - fuel cell technology' },
+      '自动驾驶': { pinyin: 'zì dòng jià shǐ', meaning: 'autonomous driving', example: '自动驾驶汽车 - self-driving car' },
+      '智能交通': { pinyin: 'zhì néng jiāo tōng', meaning: 'intelligent transportation', example: '智能交通系统 - intelligent transportation system' },
+      '共享单车': { pinyin: 'gòng xiǎng dān chē', meaning: 'bike-sharing', example: '共享单车服务 - bike-sharing service' },
+      '共享汽车': { pinyin: 'gòng xiǎng qì chē', meaning: 'car-sharing', example: '共享汽车平台 - car-sharing platform' },
+      '智慧城市': { pinyin: 'zhì huì chéng shì', meaning: 'smart city', example: '智慧城市建设 - smart city construction' },
+      '数字政府': { pinyin: 'shù zì zhèng fǔ', meaning: 'digital government', example: '数字政府服务 - digital government services' },
+      '电子政务': { pinyin: 'diàn zǐ zhèng wù', meaning: 'e-government', example: '电子政务平台 - e-government platform' },
+      '在线办公': { pinyin: 'zài xiàn bàn gōng', meaning: 'online office', example: '在线办公软件 - online office software' },
+      '远程会议': { pinyin: 'yuǎn chéng huì yì', meaning: 'remote meeting', example: '远程会议系统 - remote meeting system' },
+      '视频会议': { pinyin: 'shì pín huì yì', meaning: 'video conference', example: '视频会议设备 - video conference equipment' },
+      '云存储': { pinyin: 'yún cún chǔ', meaning: 'cloud storage', example: '云存储服务 - cloud storage service' },
+      '云计算': { pinyin: 'yún jì suàn', meaning: 'cloud computing', example: '云计算平台 - cloud computing platform' },
+      '大数据': { pinyin: 'dà shù jù', meaning: 'big data', example: '大数据分析 - big data analysis' },
+      '人工智能': { pinyin: 'rén gōng zhì néng', meaning: 'artificial intelligence', example: '人工智能应用 - AI applications' },
+      '机器学习': { pinyin: 'jī qì xué xí', meaning: 'machine learning', example: '机器学习算法 - machine learning algorithms' },
+      '深度学习': { pinyin: 'shēn dù xué xí', meaning: 'deep learning', example: '深度学习模型 - deep learning models' },
+      '神经网络': { pinyin: 'shén jīng wǎng luò', meaning: 'neural network', example: '神经网络训练 - neural network training' },
+      '自然语言处理': { pinyin: 'zì rán yǔ yán chǔ lǐ', meaning: 'natural language processing', example: '自然语言处理技术 - NLP technology' },
+      '计算机视觉': { pinyin: 'jì suàn jī shì jué', meaning: 'computer vision', example: '计算机视觉应用 - computer vision applications' },
+      '语音识别': { pinyin: 'yǔ yīn shí bié', meaning: 'speech recognition', example: '语音识别技术 - speech recognition technology' },
+      '图像识别': { pinyin: 'tú xiàng shí bié', meaning: 'image recognition', example: '图像识别系统 - image recognition system' },
+      '机器人': { pinyin: 'jī qì rén', meaning: 'robot', example: '机器人技术 - robotics' },
+      '自动化': { pinyin: 'zì dòng huà', meaning: 'automation', example: '自动化生产线 - automated production line' },
+      '智能制造': { pinyin: 'zhì néng zhì zào', meaning: 'intelligent manufacturing', example: '智能制造工厂 - intelligent manufacturing factory' },
+      '工业互联网': { pinyin: 'gōng yè hù lián wǎng', meaning: 'industrial internet', example: '工业互联网平台 - industrial internet platform' },
+      '数字孪生': { pinyin: 'shù zì luán shēng', meaning: 'digital twin', example: '数字孪生技术 - digital twin technology' },
+      '3D打印': { pinyin: '3D dǎ yìn', meaning: '3D printing', example: '3D打印模型 - 3D printed model' },
+      '虚拟现实': { pinyin: 'xū nǐ xiàn shí', meaning: 'virtual reality', example: '虚拟现实体验 - VR experience' },
+      '增强现实': { pinyin: 'zēng qiáng xiàn shí', meaning: 'augmented reality', example: '增强现实应用 - AR application' },
+      '混合现实': { pinyin: 'hùn hé xiàn shí', meaning: 'mixed reality', example: '混合现实技术 - MR technology' },
+      '元宇宙': { pinyin: 'yuán yǔ zhòu', meaning: 'metaverse', example: '元宇宙概念 - metaverse concept' },
+      '区块链': { pinyin: 'qū kuài liàn', meaning: 'blockchain', example: '区块链技术 - blockchain technology' },
+      '数字货币': { pinyin: 'shù zì huò bì', meaning: 'digital currency', example: '数字货币交易 - digital currency trading' },
+      '比特币': { pinyin: 'bǐ tè bì', meaning: 'Bitcoin', example: '比特币价格 - Bitcoin price' },
+      '以太坊': { pinyin: 'yǐ tài fáng', meaning: 'Ethereum', example: '以太坊智能合约 - Ethereum smart contract' },
+      '加密货币': { pinyin: 'jiā mì huò bì', meaning: 'cryptocurrency', example: '加密货币市场 - cryptocurrency market' },
+      '去中心化': { pinyin: 'qù zhōng xīn huà', meaning: 'decentralization', example: '去中心化应用 - decentralized application' },
+      '智能合约': { pinyin: 'zhì néng hé yuē', meaning: 'smart contract', example: '智能合约开发 - smart contract development' },
+      '分布式账本': { pinyin: 'fēn bù shì zhàng běn', meaning: 'distributed ledger', example: '分布式账本技术 - distributed ledger technology' },
+      '共识机制': { pinyin: 'gòng shí jī zhì', meaning: 'consensus mechanism', example: '共识算法 - consensus algorithm' },
+      '挖矿': { pinyin: 'wā kuàng', meaning: 'mining', example: '比特币挖矿 - Bitcoin mining' },
+      '数字钱包': { pinyin: 'shù zì qián bāo', meaning: 'digital wallet', example: '数字钱包安全 - digital wallet security' },
+      '交易所': { pinyin: 'jiāo yì suǒ', meaning: 'exchange', example: '加密货币交易所 - cryptocurrency exchange' },
+      '去中心化金融': { pinyin: 'qù zhōng xīn huà jīn róng', meaning: 'DeFi', example: '去中心化金融平台 - DeFi platform' },
+      '非同质化代币': { pinyin: 'fēi tóng zhì huà dài bì', meaning: 'NFT', example: '非同质化代币交易 - NFT trading' },
+      '数字艺术': { pinyin: 'shù zì yì shù', meaning: 'digital art', example: '数字艺术品 - digital artwork' },
+      '虚拟货币': { pinyin: 'xū nǐ huò bì', meaning: 'virtual currency', example: '虚拟货币交易 - virtual currency trading' },
+      '游戏代币': { pinyin: 'yóu xì dài bì', meaning: 'game token', example: '游戏代币经济 - game token economy' },
+      '元宇宙经济': { pinyin: 'yuán yǔ zhòu jīng jì', meaning: 'metaverse economy', example: '元宇宙经济系统 - metaverse economic system' },
+      '虚拟地产': { pinyin: 'xū nǐ dì chǎn', meaning: 'virtual real estate', example: '虚拟地产交易 - virtual real estate trading' },
+      '数字身份': { pinyin: 'shù zì shēn fèn', meaning: 'digital identity', example: '数字身份认证 - digital identity authentication' },
+      '数据隐私': { pinyin: 'shù jù yǐn sī', meaning: 'data privacy', example: '数据隐私保护 - data privacy protection' },
+      '网络安全': { pinyin: 'wǎng luò ān quán', meaning: 'cybersecurity', example: '网络安全防护 - cybersecurity protection' },
+      '信息加密': { pinyin: 'xìn xī jiā mì', meaning: 'information encryption', example: '信息加密技术 - information encryption technology' },
+      '量子通信': { pinyin: 'liàng zǐ tōng xìn', meaning: 'quantum communication', example: '量子通信网络 - quantum communication network' },
+      '卫星互联网': { pinyin: 'wèi xīng hù lián wǎng', meaning: 'satellite internet', example: '卫星互联网服务 - satellite internet service' },
+      '5G网络': { pinyin: '5G wǎng luò', meaning: '5G network', example: '5G网络覆盖 - 5G network coverage' },
+      '6G技术': { pinyin: '6G jì shù', meaning: '6G technology', example: '6G技术研发 - 6G technology research and development' },
+      '物联网': { pinyin: 'wù lián wǎng', meaning: 'Internet of Things', example: '物联网设备 - IoT device' },
+      '智能家居': { pinyin: 'zhì néng jiā jū', meaning: 'smart home', example: '智能家居系统 - smart home system' },
+      '可穿戴设备': { pinyin: 'kě chuān dài shè bèi', meaning: 'wearable device', example: '可穿戴技术 - wearable technology' },
+      '健康监测': { pinyin: 'jiàn kāng jiān cè', meaning: 'health monitoring', example: '健康监测设备 - health monitoring device' },
+      '远程医疗': { pinyin: 'yuǎn chéng yī liáo', meaning: 'telemedicine', example: '远程医疗服务 - telemedicine service' },
+      '电子健康': { pinyin: 'diàn zǐ jiàn kāng', meaning: 'e-health', example: '电子健康记录 - electronic health record' },
+      '基因检测': { pinyin: 'jī yīn jiǎn cè', meaning: 'genetic testing', example: '基因检测报告 - genetic testing report' },
+      '精准医疗': { pinyin: 'jīng zhǔn yī liáo', meaning: 'precision medicine', example: '精准医疗技术 - precision medicine technology' },
+      '生物医药': { pinyin: 'shēng wù yī yào', meaning: 'biopharmaceutical', example: '生物医药产业 - biopharmaceutical industry' },
+      '疫苗研发': { pinyin: 'yì miáo yán fā', meaning: 'vaccine development', example: '疫苗研发进展 - vaccine development progress' },
+      '药物发现': { pinyin: 'yào wù fā xiàn', meaning: 'drug discovery', example: '药物发现过程 - drug discovery process' },
+      '临床试验': { pinyin: 'lín chuáng shì yàn', meaning: 'clinical trial', example: '临床试验阶段 - clinical trial phase' },
+      '医疗机器人': { pinyin: 'yī liáo jī qì rén', meaning: 'medical robot', example: '医疗机器人手术 - medical robot surgery' },
+      '手术机器人': { pinyin: 'shǒu shù jī qì rén', meaning: 'surgical robot', example: '手术机器人系统 - surgical robot system' },
+      '康复机器人': { pinyin: 'kāng fù jī qì rén', meaning: 'rehabilitation robot', example: '康复机器人辅助 - rehabilitation robot assistance' },
+      '护理机器人': { pinyin: 'hù lǐ jī qì rén', meaning: 'nursing robot', example: '护理机器人服务 - nursing robot service' },
+      '智能假肢': { pinyin: 'zhì néng jiǎ zhī', meaning: 'smart prosthesis', example: '智能假肢技术 - smart prosthesis technology' },
+      '脑机接口': { pinyin: 'nǎo jī jiē kǒu', meaning: 'brain-computer interface', example: '脑机接口研究 - BCI research' },
+      '神经科技': { pinyin: 'shén jīng kē jì', meaning: 'neurotechnology', example: '神经科技应用 - neurotechnology applications' },
+      '人工智能医疗': { pinyin: 'rén gōng zhì néng yī liáo', meaning: 'AI healthcare', example: '人工智能医疗诊断 - AI healthcare diagnosis' },
+      '医学影像': { pinyin: 'yī xué yǐng xiàng', meaning: 'medical imaging', example: '医学影像分析 - medical imaging analysis' },
+      '病理诊断': { pinyin: 'bìng lǐ zhěn duàn', meaning: 'pathological diagnosis', example: '病理诊断系统 - pathological diagnosis system' },
+      '健康大数据': { pinyin: 'jiàn kāng dà shù jù', meaning: 'health big data', example: '健康大数据分析 - health big data analysis' },
+      '基因组学': { pinyin: 'jī yīn zǔ xué', meaning: 'genomics', example: '基因组学研究 - genomics research' },
+      '蛋白质组学': { pinyin: 'dàn bái zhì zǔ xué', meaning: 'proteomics', example: '蛋白质组学分析 - proteomics analysis' },
+      '代谢组学': { pinyin: 'dài xiè zǔ xué', meaning: 'metabolomics', example: '代谢组学研究 - metabolomics research' },
+      '合成生物学': { pinyin: 'hé chéng shēng wù xué', meaning: 'synthetic biology', example: '合成生物学应用 - synthetic biology applications' },
+      '基因编辑': { pinyin: 'jī yīn biān jí', meaning: 'gene editing', example: '基因编辑技术 - gene editing technology' },
+      'CRISPR': { pinyin: 'CRISPR', meaning: 'CRISPR gene editing', example: 'CRISPR技术 - CRISPR technology' },
+      '干细胞': { pinyin: 'gàn xì bāo', meaning: 'stem cell', example: '干细胞治疗 - stem cell therapy' },
+      '再生医学': { pinyin: 'zài shēng yī xué', meaning: 'regenerative medicine', example: '再生医学研究 - regenerative medicine research' },
+      '组织工程': { pinyin: 'zǔ zhī gōng chéng', meaning: 'tissue engineering', example: '组织工程技术 - tissue engineering technology' },
+      '3D生物打印': { pinyin: '3D shēng wù dǎ yìn', meaning: '3D bioprinting', example: '3D生物打印器官 - 3D bioprinted organs' },
+      '器官移植': { pinyin: 'qì guān yí zhí', meaning: 'organ transplantation', example: '器官移植手术 - organ transplantation surgery' },
+      '免疫治疗': { pinyin: 'miǎn yì zhì liáo', meaning: 'immunotherapy', example: '免疫治疗癌症 - cancer immunotherapy' },
+      '靶向治疗': { pinyin: 'bǎ xiàng zhì liáo', meaning: 'targeted therapy', example: '靶向治疗药物 - targeted therapy drugs' },
+      '个性化医疗': { pinyin: 'gè xìng huà yī liáo', meaning: 'personalized medicine', example: '个性化医疗方案 - personalized medicine plan' },
+      '预防医学': { pinyin: 'yù fáng yī xué', meaning: 'preventive medicine', example: '预防医学措施 - preventive medicine measures' },
+      '公共卫生': { pinyin: 'gōng gòng wèi shēng', meaning: 'public health', example: '公共卫生事件 - public health event' },
+      '流行病学': { pinyin: 'liú xíng bìng xué', meaning: 'epidemiology', example: '流行病学研究 - epidemiological research' },
+      '疫情防控': { pinyin: 'yì qíng fáng kòng', meaning: 'epidemic prevention and control', example: '疫情防控措施 - epidemic prevention measures' },
+      '疫苗接种': { pinyin: 'yì miáo jiē zhòng', meaning: 'vaccination', example: '疫苗接种率 - vaccination rate' },
+      '核酸检测': { pinyin: 'hé suān jiǎn cè', meaning: 'nucleic acid test', example: '核酸检测报告 - nucleic acid test report' },
+      '抗体检测': { pinyin: 'kàng tǐ jiǎn cè', meaning: 'antibody test', example: '抗体检测结果 - antibody test result' },
+      '传染病': { pinyin: 'chuán rǎn bìng', meaning: 'infectious disease', example: '传染病防控 - infectious disease prevention and control' },
+      '慢性病': { pinyin: 'màn xìng bìng', meaning: 'chronic disease', example: '慢性病管理 - chronic disease management' },
+      '心理健康': { pinyin: 'xīn lǐ jiàn kāng', meaning: 'mental health', example: '心理健康教育 - mental health education' },
+      '心理咨询': { pinyin: 'xīn lǐ zī xún', meaning: 'psychological counseling', example: '心理咨询服务 - psychological counseling service' },
+      '抑郁症': { pinyin: 'yì yù zhèng', meaning: 'depression', example: '抑郁症治疗 - depression treatment' },
+      '焦虑症': { pinyin: 'jiāo lǜ zhèng', meaning: 'anxiety disorder', example: '焦虑症症状 - anxiety disorder symptoms' },
+      '睡眠障碍': { pinyin: 'shuì mián zhàng ài', meaning: 'sleep disorder', example: '睡眠障碍治疗 - sleep disorder treatment' },
+      '认知障碍': { pinyin: 'rèn zhī zhàng ài', meaning: 'cognitive impairment', example: '认知障碍评估 - cognitive impairment assessment' },
+      '老年痴呆': { pinyin: 'lǎo nián chī dāi', meaning: 'Alzheimer\'s disease', example: '老年痴呆研究 - Alzheimer\'s disease research' },
+      '自闭症': { pinyin: 'zì bì zhèng', meaning: 'autism', example: '自闭症儿童 - autistic children' },
+      '多动症': { pinyin: 'duō dòng zhèng', meaning: 'ADHD', example: '多动症治疗 - ADHD treatment' },
+      '精神分裂': { pinyin: 'jīng shén fēn liè', meaning: 'schizophrenia', example: '精神分裂症状 - schizophrenia symptoms' },
+      '心理治疗': { pinyin: 'xīn lǐ zhì liáo', meaning: 'psychotherapy', example: '心理治疗方法 - psychotherapy methods' },
+      '药物治疗': { pinyin: 'yào wù zhì liáo', meaning: 'drug therapy', example: '药物治疗方案 - drug therapy plan' },
+      '康复治疗': { pinyin: 'kāng fù zhì liáo', meaning: 'rehabilitation therapy', example: '康复治疗中心 - rehabilitation therapy center' },
+      '物理治疗': { pinyin: 'wù lǐ zhì liáo', meaning: 'physical therapy', example: '物理治疗设备 - physical therapy equipment' },
+      '中医治疗': { pinyin: 'zhōng yī zhì liáo', meaning: 'traditional Chinese medicine therapy', example: '中医治疗方法 - TCM therapy methods' },
+      '针灸': { pinyin: 'zhēn jiǔ', meaning: 'acupuncture', example: '针灸治疗 - acupuncture treatment' },
+      '推拿': { pinyin: 'tuī ná', meaning: 'massage therapy', example: '推拿按摩 - massage therapy' },
+      '中药': { pinyin: 'zhōng yào', meaning: 'traditional Chinese medicine', example: '中药配方 - TCM prescription' },
+      '食疗': { pinyin: 'shí liáo', meaning: 'diet therapy', example: '食疗养生 - diet therapy for health' },
+      '气功': { pinyin: 'qì gōng', meaning: 'qigong', example: '气功练习 - qigong practice' },
+      '太极拳': { pinyin: 'tài jí quán', meaning: 'tai chi', example: '太极拳健身 - tai chi for fitness' },
+      '瑜伽': { pinyin: 'yú jiā', meaning: 'yoga', example: '瑜伽练习 - yoga practice' },
+      '冥想': { pinyin: 'míng xiǎng', meaning: 'meditation', example: '冥想放松 - meditation for relaxation' },
+      '正念': { pinyin: 'zhèng niàn', meaning: 'mindfulness', example: '正念练习 - mindfulness practice' },
+      '心理健康': { pinyin: 'xīn lǐ jiàn kāng', meaning: 'mental health', example: '心理健康教育 - mental health education' },
+      '心理咨询': { pinyin: 'xīn lǐ zī xún', meaning: 'psychological counseling', example: '心理咨询服务 - psychological counseling service' },
+      '心理测评': { pinyin: 'xīn lǐ cè píng', meaning: 'psychological assessment', example: '心理测评工具 - psychological assessment tools' },
+      '心理干预': { pinyin: 'xīn lǐ gān yù', meaning: 'psychological intervention', example: '心理干预措施 - psychological intervention measures' },
+      '心理支持': { pinyin: 'xīn lǐ zhī chí', meaning: 'psychological support', example: '心理支持系统 - psychological support system' },
+      '心理危机': { pinyin: 'xīn lǐ wēi jī', meaning: 'psychological crisis', example: '心理危机干预 - psychological crisis intervention' },
+      '心理创伤': { pinyin: 'xīn lǐ chuāng shāng', meaning: 'psychological trauma', example: '心理创伤治疗 - psychological trauma treatment' },
+      '心理康复': { pinyin: 'xīn lǐ kāng fù', meaning: 'psychological rehabilitation', example: '心理康复中心 - psychological rehabilitation center' },
+      '心理健康': { pinyin: 'xīn lǐ jiàn kāng', meaning: 'mental health', example: '心理健康教育 - mental health education' },
+      '心理咨询': { pinyin: 'xīn lǐ zī xún', meaning: 'psychological counseling', example: '心理咨询服务 - psychological counseling service' },
+      '心理测评': { pinyin: 'xīn lǐ cè píng', meaning: 'psychological assessment', example: '心理测评工具 - psychological assessment tools' },
+      '心理干预': { pinyin: 'xīn lǐ gān yù', meaning: 'psychological intervention', example: '心理干预措施 - psychological intervention measures' },
+      '心理支持': { pinyin: 'xīn lǐ zhī chí', meaning: 'psychological support', example: '心理支持系统 - psychological support system' },
+      '心理危机': { pinyin: 'xīn lǐ wēi jī', meaning: 'psychological crisis', example: '心理危机干预 - psychological crisis intervention' },
+      '心理创伤': { pinyin: 'xīn lǐ chuāng shāng', meaning: 'psychological trauma', example: '心理创伤治疗 - psychological trauma treatment' },
+      '心理康复': { pinyin: 'xīn lǐ kāng fù', meaning: 'psychological rehabilitation', example: '心理康复中心 - psychological rehabilitation center' },
+      '天地': { pinyin: 'tiān dì', meaning: 'heaven and earth', example: '永忆江湖归白发，欲回天地入扁舟。 唐·李商隐 安定城楼' },
+  '江湖': { pinyin: 'jiāng hú', meaning: 'rivers and lakes; the world', example: '风雨嗟何及，江湖涕泫然。 唐·杜甫 哭李尚书' },
+  '风雨': { pinyin: 'fēng yǔ', meaning: 'wind and rain; hardships', example: '江山三楚分，风雨二妃祠。 唐末·罗隐 秋日怀孟夷庚' },
+  '江山': { pinyin: 'jiāng shān', meaning: 'rivers and mountains; country', example: '两地江山蹋得遍，五年风月咏将残。 唐·白居易 咏怀' },
+  '风月': { pinyin: 'fēng yuè', meaning: 'wind and moon; romantic affairs', example: '乾坤劫数有成毁，风月性情无古今。 南宋·刘克庄 总戎徐侯伯东远访田舍赠诗二首次韵 其二' },
+  '乾坤': { pinyin: 'qián kūn', meaning: 'heaven and earth; universe', example: '闷向酒杯吞日月，闲将诗句问乾坤。 唐末·杜荀鹤 投郑先辈' },
+  '日月': { pinyin: 'rì yuè', meaning: 'sun and moon; time', example: '风云随绝足，日月继高衢。 唐·杜甫 行次昭陵' },
+  '风云': { pinyin: 'fēng yún', meaning: 'wind and cloud; changing situation', example: '风云皆会合，雨露各沾濡。 唐·白居易 东南行一百韵寄通州元九侍御澧州李十一舍人果州崔二十二使君开州韦大员外庾三十二补阙杜十四拾遗李二十助教员外窦七校书' },
+  '雨露': { pinyin: 'yǔ lù', meaning: 'rain and dew; imperial favor', example: '红取风霜实，青看雨露柯。 唐·杜甫 江头五咏 其二 栀子' },
+  '风霜': { pinyin: 'fēng shuāng', meaning: 'wind and frost; hardships', example: '岁月青松老，风霜苦竹疏。 盛唐·孟浩然 寻白鹤岩张子容隐居' },
+  '岁月': { pinyin: 'suì yuè', meaning: 'years; time', example: '风宁可系功名误，日不能黏岁月迁。 南宋·陆游 夜坐' },
+  '功名': { pinyin: 'gōng míng', meaning: 'achievement and fame', example: '功名谁使连三捷，身世何缘得两忘。 北宋·苏轼 和章七出守湖州二首 其一' },
+  '身世': { pinyin: 'shēn shì', meaning: 'one\'s life experience', example: '身世已如风六鹢，文章仍似闰黄杨。 南宋·陆游 春晚村居' },
+  '文章': { pinyin: 'wén zhāng', meaning: 'literary works; essay', example: '礼乐羊叔子，文章王仲宣。 初唐·沈佺期 哭苏眉州崔司业二公' },
+  '礼乐': { pinyin: 'lǐ yuè', meaning: 'rites and music; culture', example: '礼乐夷风变，衣冠汉制新。 唐·陶翰 送金卿归新罗' },
+  '衣冠': { pinyin: 'yī guān', meaning: 'hat and clothes; scholar', example: '扫松稍喜衣冠众，荐芰何妨俎豆贫。 南宋·刘克庄 壬辰春上冢五首 其三 郭西' },
+  '俎豆': { pinyin: 'zǔ dòu', meaning: 'sacrificial vessels; ceremony', example: '弦歌未辍文斯在，俎豆亲陪献有终。 宋·虞俦 和巩使君释奠韵' },
+  '弦歌': { pinyin: 'xián gē', meaning: 'music and singing; education', example: '民乐弦歌爱言偃，天将桃李醉河阳。 南宋·杨万里 答胡仲方赠诗' },
+  '桃李': { pinyin: 'táo lǐ', meaning: 'peach and plum; students', example: '桃李惭无语，芝兰让不芳。 唐·白居易 裴常侍以题蔷薇架十八韵见示因广为三十韵以和之' },
+  '芝兰': { pinyin: 'zhī lán', meaning: 'iris and orchid; virtuous person', example: '松柏霜逾翠，芝兰露更香。 唐·陈陶 圣帝击壤歌四十声' },
+  '松柏': { pinyin: 'sōng bǎi', meaning: 'pine and cypress; steadfastness', example: '烟霞开古色，松柏尚高标。 南宋·释文珦 安分' },
+  '烟霞': { pinyin: 'yān xiá', meaning: 'mist and rosy clouds; nature', example: '门掩右军馀水石，路横诸谢旧烟霞。 唐·赵嘏 送剡客' },
+  '水石': { pinyin: 'shuǐ shí', meaning: 'water and stones; landscape', example: '林泉水石君先到，京国风尘我尚留。 宋·杨时 和郑商老下第' },
+  '风尘': { pinyin: 'fēng chén', meaning: 'wind and dust; hardships', example: '风尘头共白，湖海气全灰。 元·朱晞颜 别蕲县尹二首 其一' },
+  '湖海': { pinyin: 'hú hǎi', meaning: 'lakes and seas; the world', example: '云霄路近行囊涩，湖海尘扬故旧稀。 元末明初·舒頔 自叹' },
+  '云霄': { pinyin: 'yún xiāo', meaning: 'clouds and sky; high position', example: '云霄未得路，江海作闲人。 唐·朱庆馀 酬李处士见赠' },
+  '江海': { pinyin: 'jiāng hǎi', meaning: 'rivers and seas; vast area', example: '须信山林愁不密，岂云江海要横流。 南宋·韩淲 寄赵正字秀倅员外置' },
+  '山林': { pinyin: 'shān lín', meaning: 'mountains and forests; hermitage', example: '不恨山林淹岁月，但悲道路困风沙。 南宋·陆游 入都' },
+  '道路': { pinyin: 'dào lù', meaning: 'road; way', example: '将来道路终须达，过去山川实不平。 唐·薛能 雨霁宿望喜驿' },
+  '山川': { pinyin: 'shān chuān', meaning: 'mountains and rivers; landscape', example: '山川随转战，草木困横行。 中唐·刘长卿 至德三年春正月时谬蒙差摄海盐令闻王师收二京因书事寄上浙西节度李侍郎中丞行营五十韵' },
+  '草木': { pinyin: 'cǎo mù', meaning: 'grass and trees; vegetation', example: '草木潜加润，山河更益雄。 唐·无可 小雪' },
+  '山河': { pinyin: 'shān hé', meaning: 'mountains and rivers; country', example: '宇宙诗名小，山河客路新。 唐·项斯 落第后归觐喜逢僧再阳' },
+  '宇宙': { pinyin: 'yǔ zhòu', meaning: 'universe; cosmos', example: '地分吴楚星辰内，水迫沧溟宇宙间。 唐·李绅 早渡扬子江' },
+  '星辰': { pinyin: 'xīng chén', meaning: 'stars; celestial bodies', example: '星辰七曜隔，河汉九泉开。 盛唐·王维 过始皇墓' },
+  '河汉': { pinyin: 'hé hàn', meaning: 'Milky Way; empty talk', example: '河汉不改色，关山空自寒。 唐·杜甫 初月' },
+  '关山': { pinyin: 'guān shān', meaning: 'frontier passes; long journey', example: '关山唯一道，雨雪尽三边。 盛唐·高适 别冯判官' },
+  '雨雪': { pinyin: 'yǔ xuě', meaning: 'rain and snow; hardships', example: '衰颜空雨雪，幽致自风烟。 元·虞集 戏作试问堂前石五首 其一' },
+  '风烟': { pinyin: 'fēng yān', meaning: 'wind and mist; distant view', example: '伏波故道风烟在，翁仲遗墟草树平。 中唐·柳宗元 衡阳与梦得分路赠别' },
+  '草树': { pinyin: 'cǎo shù', meaning: 'grass and trees; vegetation', example: '晋国颓墉生草树，皇家瑞气在楼台。 中唐·欧阳詹 和太原郑中丞登龙兴寺阁' },
+  '楼台': { pinyin: 'lóu tái', meaning: 'towers; buildings', example: '城郭连增媚，楼台映转华。 唐·王储 赋得花发上林' },
+  '城郭': { pinyin: 'chéng guō', meaning: 'city walls; city', example: '扬州城郭高低树，瓜埠帆樯上下风。 元·叶兰 送人之商镇江' },
+  '帆樯': { pinyin: 'fān qiáng', meaning: 'sails and masts; ships', example: '江清楼阁中流见，日落帆樯万里回。 明·何景明 秋兴八首 其五' },
+  '楼阁': { pinyin: 'lóu gé', meaning: 'towers and pavilions; buildings', example: '二室峰峦凝画碧，万家楼阁带轻烟。 北宋·吕公著 杨郎中新居和尧夫先生韵 其一' },
+  '峰峦': { pinyin: 'fēng luán', meaning: 'peaks and ridges; mountains', example: '峰峦松叠翠，树木日浮红。 元末明初·李穑 廿五日。入圣居山。明日设斋荐先妣。回至山台岩。韩柳巷设食以迓。门生崔通宪亦在。晚而还家。虽遇胜景。不敢吟哦。困而就寝。颓然达旦。则所谓胜景。十忘七八矣。恐遂遗佚。追赋数首。廿七日也 其二 出山' },
+  '树木': { pinyin: 'shù mù', meaning: 'trees; vegetation', example: '云封路径人烟少，翠拥峰峦树木稠。 宋·林通 通山洞' },
+  '人烟': { pinyin: 'rén yān', meaning: 'signs of human habitation', example: '青芜古路人烟绝，绿树新墟鬼火明。 宋末元初·汪元量 钱塘' },
+  '鬼火': { pinyin: 'guǐ huǒ', meaning: 'will-o\'-the-wisp; phosphorescent light', example: '鬼火林间碧，渔灯雨外明。 金·李奎报 江头暮行' },
+  '渔灯': { pinyin: 'yú dēng', meaning: 'fishing boat lights', example: '浦外渔灯窥燕垒，津头人语应鸡鸣。 明末清初·陈子升 江城旅兴' },
+  '人语': { pinyin: 'rén yǔ', meaning: 'human voices', example: '聚居人语杂，递送马蹄联。 元末明初·李穑 途中' },
+  '马蹄': { pinyin: 'mǎ tí', meaning: 'horse hooves', example: '践迹嗔鸿爪，全生愧马蹄。 元·柳贯 大雪戏咏' },
+  '鸿爪': { pinyin: 'hóng zhǎo', meaning: 'goose footprints; traces of past events', example: '吊古客寻鸿爪去，卖花娘抱马头来。 清·王季珠 金陵题咏' },
+  '马头': { pinyin: 'mǎ tóu', meaning: 'horse head; wharf', example: '白门暝早随鸦背，京兆情多拂马头。 北宋·宋祁 柳花' },
+  '鸦背': { pinyin: 'yā bèi', meaning: 'crow\'s back', example: '风稳栖鸦背，烟凝睡鸭头。 元末明初·卓光茂 偶题稼亭' },
+  '鸭头': { pinyin: 'yā tóu', meaning: 'duck head; dark green', example: '鸭头波荡漾，螺髻色崔嵬。 北宋·释德洪 兴阑' },
+  '螺髻': { pinyin: 'luó jì', meaning: 'spiral-shaped hair bun', example: '螺髻不梳千载晓，蛾眉空扫万年春。 南宋·王十朋 石夫人' },
+  '蛾眉': { pinyin: 'é méi', meaning: 'moth eyebrows; beautiful eyebrows', example: '未易蛾眉老，何当骏骨留。 明·王世贞 夜遇子相城西同宿 其二' },
+  '骏骨': { pinyin: 'jùn gǔ', meaning: 'steed\'s bones; talented person', example: '龙泉自遇张华使，骏骨须登郭隗台。 明·罗洪先 赠友人应贡' },
+  '龙泉': { pinyin: 'lóng quán', meaning: 'dragon spring; famous sword', example: '夜禅临虎穴，寒漱撇龙泉。 中唐·贾岛 送僧归太白山' },
+  '虎穴': { pinyin: 'hǔ xué', meaning: 'tiger\'s den; dangerous place', example: '徒手岂能探虎穴，敝车安得绕羊肠。 南宋·赵蕃 次韵晁大舅祖子应' },
+  '羊肠': { pinyin: 'yáng cháng', meaning: 'sheep intestines; winding path', example: '火龙明鸟道，铁骑绕羊肠。 盛唐·李隆基 早登太行山中言志' },
+  '鸟道': { pinyin: 'niǎo dào', meaning: 'bird\'s path; precipitous path', example: '鸟道挂疏雨，人家残夕阳。 唐·钱起 太子李舍人城东别业与二三文友逃暑' },
+  '人家': { pinyin: 'rén jiā', meaning: 'household; family', example: '客路随枫岸，人家扫橘林。 唐·韩翃 送元诜还江东' },
+  '客路': { pinyin: 'kè lù', meaning: 'traveler\'s road', example: '贫泥客路黏难出，愁锁乡心掣不开。 唐·白居易 醉别程秀才' },
+  '乡心': { pinyin: 'xiāng xīn', meaning: 'homesickness', example: '客梦并随残夜尽，乡心潜傍一阳回。 宋末元初·汪炎昶 冬至 其二' },
+  '客梦': { pinyin: 'kè mèng', meaning: 'traveler\'s dream', example: '孤灯然客梦，寒杵捣乡愁。 唐·岑参 宿关西客舍寄东山严许二山人时天宝初七月初三日在内学见有高道举徵' },
+  '乡愁': { pinyin: 'xiāng chóu', meaning: 'homesickness', example: '世事看来心火闹，乡愁着处鬓丝繁。 明·具思孟 敬次柳谷李尚书诗卷中听天沈相公 其三' },
+  '世事': { pinyin: 'shì shì', meaning: 'worldly affairs', example: '世事本来谁得鹿，人生何处不亡羊。 南宋·陆游 早秋四首 其二' },
+  '人生': { pinyin: 'rén shēng', meaning: 'human life', example: '人生一虫臂，世路几羊肠。 南宋·陆游 溪行二首 其二' },
+  '世路': { pinyin: 'shì lù', meaning: 'path of life', example: '人情薄似平原酒，世路危于滟滪滩。 南宋·刘克庄 翌日宫教惠诗次韵二首 其二' },
+  '人情': { pinyin: 'rén qíng', meaning: 'human feelings; favor', example: '天意高难问，人情老易悲。 唐·杜甫 暮春江陵送马大卿公恩命追赴阙下' },
+  '天意': { pinyin: 'tiān yì', meaning: 'will of heaven', example: '人心犹未革，天意似难明。 唐末·罗隐 使者' },
+  '人心': { pinyin: 'rén xīn', meaning: 'people\'s hearts', example: '人心悬反覆，天道暂虚盈。 中唐·刘长卿 至德三年春正月时谬蒙差摄海盐令闻王师收二京因书事寄上浙西节度李侍郎中丞行营五十韵' },
+  '天道': { pinyin: 'tiān dào', meaning: 'way of heaven; natural law', example: '天道不言成四运，人间无处證三乘。 宋·王铚 姜山通阇黎真骨归塔以诗送之' },
+  '人间': { pinyin: 'rén jiān', meaning: 'human world', example: '天上别归京兆府，人间空数茂陵阡。 中唐·刘禹锡 哭庞京兆' },
+  '天上': { pinyin: 'tiān shàng', meaning: 'heaven; sky', example: '天上欢华春有限，世间漂泊海无边。 唐·白居易 寄李相公崔侍郎钱舍人' },
+  '世间': { pinyin: 'shì jiān', meaning: 'in the world', example: '世间此恨偏敦我，天下何人不哭儿。 唐·白居易 初丧崔儿报微之晦叔' },
+  '天下': { pinyin: 'tiān xià', meaning: 'under heaven; the world', example: '志存天下食不足，节慕古人谗愈来。 南宋·陆游 新秋感事二首 其一' },
+  '古人': { pinyin: 'gǔ rén', meaning: 'ancient people; ancestors', example: '受谏无今日，临危忆古人。 唐·杜甫 遣忧' },
+  '今日': { pinyin: 'jīn rì', meaning: 'today', example: '遍看今日乘轩客，多是昔年呈卷人。 中唐·刘禹锡 詶国子崔博士立之见寄' },
+  '昔年': { pinyin: 'xī nián', meaning: 'former years', example: '昔年曾是江南客，此日初为关外心。 唐·李商隐 出关宿盘豆馆对丛芦有感' },
+  '此日': { pinyin: 'cǐ rì', meaning: 'this day', example: '水澄此日兰宫镜，树忆当年柏署霜。 晚唐·黄滔 奉和翁文尧员外文秀光贤昼锦之什 其三 昼锦堂' },
+  '当年': { pinyin: 'dāng nián', meaning: 'in those years', example: '茂绩当年举，英魂此地销。 唐·贾彦璋 王龙骧墓' },
+  '此地': { pinyin: 'cǐ dì', meaning: 'this place', example: '此地难相遇，何人更共游。 唐·李频 峡州送清彻上人归浙西' },
+  '何人': { pinyin: 'hé rén', meaning: 'who', example: '有客棹舟将命友，何人高卧共称贤。 五代至宋初·徐铉 和元少卿雪' },
+  '有客': { pinyin: 'yǒu kè', meaning: 'there is a guest', example: '无人更献椒花颂，有客同参柏子禅。 唐·戴叔伦 二灵寺守岁' },
+  '无人': { pinyin: 'wú rén', meaning: 'no one', example: '中林有路到花尽，一日无人看竹回。 唐·赵嘏 越中寺居寄上主人' },
+  '有路': { pinyin: 'yǒu lù', meaning: 'there is a road', example: '白沙有路鸳鸯泊，芳草无情妯娌花。 北宋·陈襄 使还咸熙馆道中作' },
+  '无情': { pinyin: 'wú qíng', meaning: 'heartless; ruthless', example: '千岁鹤归犹有恨，一年人住岂无情。 唐·杜牧 八月十二日得替后移居霅溪馆因题长句四韵' },
+  '有恨': { pinyin: 'yǒu hèn', meaning: 'have regret', example: '有恨同湘女，无言类楚妃。 盛唐·李白 望夫石' },
+  '无言': { pinyin: 'wú yán', meaning: 'speechless', example: '有意留连我，无言怨思谁。 唐·白居易 草词毕遇芍药初开因咏小谢红药当阶翻诗以为一句未尽其状偶成十六韵' },
+  '有意': { pinyin: 'yǒu yì', meaning: 'intentional; have intention', example: '无心于道道自得，有意向人人转赊。 五代·贯休 野居偶作' },
+  '无心': { pinyin: 'wú xīn', meaning: 'unintentional; no intention', example: '有梦思红药，无心采紫芝。 北宋·王禹偁 谪居感事' },
+  '有梦': { pinyin: 'yǒu mèng', meaning: 'have dreams', example: '兄弟候归应有梦，交游散去更无书。 南宋·高翥 叹息' },
+  '无书': { pinyin: 'wú shū', meaning: 'no letter', example: '百年有约君南在，千里无书雁北飞。 元末明初·金九容 寄郑判书宇 其一' },
+  '有约': { pinyin: 'yǒu yuē', meaning: 'have an appointment', example: '有约同看红日上，无端独占白云间。 元·程钜夫 寅夫惠教游鼓山四诗细读如在屴崱杖屦间想像追和用坚重游之约四首 其一' },
+  '无端': { pinyin: 'wú duān', meaning: 'for no reason', example: '流年不尽人自老，外事无端心已空。 唐·戴叔伦 酬盩厔耿少府湋见寄' },
+  '不尽': { pinyin: 'bù jìn', meaning: 'endless', example: '千里暮烟愁不尽，一川秋草恨无穷。 五代至宋·张泌 边上' },
+  '无穷': { pinyin: 'wú qióng', meaning: 'infinite; endless', example: '胜事无穷境，流年有限身。 中唐·元稹 酬乐天早春闲游西湖颇多野趣恨不得与微之同赏因思在越官重事殷镜湖之游或恐未暇因成十八韵见寄乐天前篇到时适会予亦宴镜湖南亭因述目前所睹以成酬荅末章亦示暇诚则势使之然亦欲粗为恬养之赠耳' },
+  '有限': { pinyin: 'yǒu xiàn', meaning: 'limited', example: '花残狂有限，酒熟闷无多。 南宋·陆游 醉歌' },
+  '无多': { pinyin: 'wú duō', meaning: 'not much', example: '尽说无多事，能闲有几人。 中唐·张籍 闲居' },
+  '有几': { pinyin: 'yǒu jǐ', meaning: 'how many', example: '清镜无双影，穷泉有几重。 唐·顾况 酅公合祔挽歌' },
+  '无双': { pinyin: 'wú shuāng', meaning: 'matchless; unparalleled', example: '无双汉殿鬓，第一楚宫腰。 唐·李商隐 碧瓦' },
+  '第一': { pinyin: 'dì yī', meaning: 'first; foremost', example: '史书元祐三千牍，乐奏坤成第一篇。 北宋·苏轼 坤成节集英殿宴教坊词致语口号' },
+  '三千': { pinyin: 'sān qiān', meaning: 'three thousand; many', example: '南临赡部三千界，东对蓬宫十二层。 唐·白居易 酬微之开拆新楼初毕相报末联见戏之作' },
+  '十二': { pinyin: 'shí èr', meaning: 'twelve', example: '唯看老子五千字，不蹋长安十二衢。 唐·白居易 村居寄张殷衡' },
+  '五千': { pinyin: 'wǔ qiān', meaning: 'five thousand', example: '五千言里教知足，三百篇中劝式微。 唐·白居易 留别微之' },
+  '三百': { pinyin: 'sān bǎi', meaning: 'three hundred; many', example: '小瀑便高三百尺，短松多是一千年。 五代·贯休 题东林寺四首' },
+  '一千': { pinyin: 'yī qiān', meaning: 'one thousand', example: '绕郭荷花三十里，拂城松树一千株。 唐·白居易 馀杭形胜' },
+  '三十': { pinyin: 'sān shí', meaning: 'thirty', example: '百千难过尚惊惕，三十岁前尤苦辛。 北宋·邵雍 岁暮吟' },
+  '百千': { pinyin: 'bǎi qiān', meaning: 'hundreds and thousands; many', example: '摘索又开三两朵，团栾空绕百千回。 北宋·林逋 又咏小梅' },
+  '三两': { pinyin: 'sān liǎng', meaning: 'two or three', example: '柳边洗钵僧三两，塔顶看云象万千。 晚清·丘逢甲 山寺 其二' },
+  '万千': { pinyin: 'wàn qiān', meaning: 'myriad; countless', example: '云出半天三五岫，江横一水万千洲。 宋·钱闻诗 叠石庵' },
+  '三五': { pinyin: 'sān wǔ', meaning: 'three or five', example: '德施超三五，文雄赋十千。 唐·苏颋 奉和马常侍寺中之作' },
+  '十千': { pinyin: 'shí qiān', meaning: 'ten thousand', example: '十千方得斗，二八正当垆。 唐·白居易 东南行一百韵寄通州元九侍御澧州李十一舍人果州崔二十二使君开州韦大员外庾三十二补阙杜十四拾遗李二十助教员外窦七校书' },
+  '二八': { pinyin: 'èr bā', meaning: 'sixteen; two times eight', example: '二八月轮蟾影破，十三弦柱雁行斜。 唐·李商隐 昨日' },
+  '十三': { pinyin: 'shí sān', meaning: 'thirteen', example: '世乱备经千百痛，慈颜不见十三春。 元·李士瞻 怀吕伯益' },
+  '千百': { pinyin: 'qiān bǎi', meaning: 'thousands and hundreds; many', example: '两三翠盖张前面，千百香囊缀上头。 宋·曾几 得瑞香于四明' },
+  '两三': { pinyin: 'liǎng sān', meaning: 'two or three', example: '洽恰举头千万颗，婆娑拂面两三株。 唐·白居易 吴樱桃' },
+  '千万': { pinyin: 'qiān wàn', meaning: 'ten million; must', example: '藏镪百千万，沈舟十二三。 唐·白居易 劝酒十四首 其三 不如来饮酒七首' },
+  '二三': { pinyin: 'èr sān', meaning: 'two or three', example: '四五百竿竹，二三千卷书。 唐末·李洞 鄠郊山舍题赵处士林亭' },
+  '四五': { pinyin: 'sì wǔ', meaning: 'four or five', example: '亭子是谁开四五，招提缘此异寻常。 元·宋褧 章台寺留题' },
+  '寻常': { pinyin: 'xún cháng', meaning: 'ordinary; usual', example: '咫尺江湖尽，寻常鸥鸟飞。 唐·张祜 题王右丞山水障二首 其二' },
+  '咫尺': { pinyin: 'zhǐ chǐ', meaning: 'very close', example: '两京全咫尺，三入不参差。 北宋·王禹偁 送仆射相公赴西京' },
+  '参差': { pinyin: 'cēn cī', meaning: 'uneven; irregular', example: '叶随彩笔参差长，花逐轻风次第开。 唐末·罗隐 扇上画牡丹' },
+  '次第': { pinyin: 'cì dì', meaning: 'in order; one after another', example: '文笔分明传异状，画图次第记当时。 南宋·曾协 题陈倅升卿芝草图二首 其一' },
+  '分明': { pinyin: 'fēn míng', meaning: 'clear; distinct', example: '彷佛瞻王母，分明献玉环。 唐·丁泽 上元日梦王母献白玉环' },
+  '彷佛': { pinyin: 'fǎng fú', meaning: 'seem; as if', example: '彷佛看高掌，依稀听子先。 盛唐·李隆基 途经华岳' },
+  '依稀': { pinyin: 'yī xī', meaning: 'vaguely; faintly', example: '笙歌缥缈虚空里，风月依稀梦想间。 唐·白居易 送姚杭州赴任因思旧游二首 其一' },
+  '缥缈': { pinyin: 'piāo miǎo', meaning: 'misty; ethereal', example: '山横玉海苍茫外，人在冰壶缥缈中。 南宋·陆游 月下自三桥泛湖归三山' },
+  '苍茫': { pinyin: 'cāng máng', meaning: 'vast; boundless', example: '坟生苦雾苍茫外，门掩寒云寂寞中。 五代·贯休 悼张道古' },
+  '寂寞': { pinyin: 'jì mò', meaning: 'lonely; desolate', example: '外地见花终寂寞，异乡闻乐更凄凉。 唐末至五代·韦庄 思归乐' },
+  '凄凉': { pinyin: 'qī liáng', meaning: 'desolate; miserable', example: '履道凄凉新第宅，宣城零落旧笙歌。 唐·白居易 与梦得偶同到敦诗宅感而题壁' },
+  '零落': { pinyin: 'líng luò', meaning: 'withered; scattered', example: '旌旗零落沉荒服，簪履萧条返故居。 五代至宋初·徐铉 闻查建州陷贼寄钟郎中' },
+  '萧条': { pinyin: 'xiāo tiáo', meaning: 'desolate; depressed', example: '风尘荏苒音书绝，关塞萧条行路难。 唐·杜甫 宿府' },
+  '荏苒': { pinyin: 'rěn rǎn', meaning: 'elapse gradually', example: '年华空荏苒，名宦转蹉跎。 唐·耿湋 寄司空曙李端联句' },
+  '蹉跎': { pinyin: 'cuō tuó', meaning: 'waste time', example: '齿发蹉跎将五十，关河迢递过三千。 唐·白居易 十年三月三十日别微之于沣上十四年三月十一日夜遇微之于峡中停舟夷陵三宿而别言不尽者以诗终之因赋七言十七韵以赠且欲记所遇之地与相见之时为他年会话张本也' },
+  '迢递': { pinyin: 'tiáo dì', meaning: 'far away; remote', example: '远岫微茫南斗外，平川迢递楚天低。 元末明初·陈谟 平远图为祝驿丞赋' },
+  '微茫': { pinyin: 'wēi máng', meaning: 'vague; indistinct', example: '风声空浩荡，雪意愈微茫。 南宋·陆游 作雪不成独咏' },
+  '浩荡': { pinyin: 'hào dàng', meaning: 'vast; mighty', example: '纵横笔阵千人废，浩荡辞源万顷宽。 南宋·陆游 致语口号二首 其一' },
+  '纵横': { pinyin: 'zòng héng', meaning: 'vertical and horizontal; free', example: '引弓上下人鸣镝，罗草纵横兽轶群。 北宋·苏颂 观北人围猎' },
+  '上下': { pinyin: 'shàng xià', meaning: 'up and down; about', example: '江声里过东西寺，树影中行上下方。 唐末至五代·齐己 寄道林寺诸友' },
+  '东西': { pinyin: 'dōng xī', meaning: 'east and west; things', example: '川合东西瞻使节，地分南北任流萍。 唐·杜甫 严中丞枉驾见过' },
+  '南北': { pinyin: 'nán běi', meaning: 'north and south', example: '古今人不断，南北路长存。 唐末至五代·于武陵 洛中晴望' },
+  '古今': { pinyin: 'gǔ jīn', meaning: 'ancient and modern', example: '瘴雨蛮烟朝暮景，平芜野草古今愁。 中唐·殷尧藩 九日' },
+  '朝暮': { pinyin: 'zhāo mù', meaning: 'morning and evening', example: '闭阁只听朝暮鼓，上楼空望往来船。 唐·白居易 春江' },
+  '往来': { pinyin: 'wǎng lái', meaning: 'come and go', example: '往来人自老，今古月常新。 唐末五代初·修睦 宿岳阳开元寺' },
+  '今古': { pinyin: 'jīn gǔ', meaning: 'now and ancient', example: '曲直多今古，经过失是非。 唐初·陈子昂 万州晓发放舟乘涨还寄蜀中亲朋' },
+  '是非': { pinyin: 'shì fēi', meaning: 'right and wrong', example: '言下是非齐虎尾，宿来荣辱比鸿毛。 唐·许浑 泊蒜山津闻东林寺光仪上人物故' },
+  '荣辱': { pinyin: 'róng rǔ', meaning: 'honor and disgrace', example: '死生离骨肉，荣辱间朋游。 初唐·沈佺期 从驩州廨宅移住山间水亭赠苏使君' },
+  '死生': { pinyin: 'sǐ shēng', meaning: 'life and death', example: '当时底事伤离别，今日安知隔死生。 北宋·刘敞 送司马倩赴权官平凉尉' },
+  '离别': { pinyin: 'lí bié', meaning: 'part; leave', example: '嗟我久离别，羡君看弟兄。 盛唐·高适 别张少府' },
+  '弟兄': { pinyin: 'dì xiōng', meaning: 'brothers', example: '弟兄齿序元投分，儿女情亲又结婚。 北宋·王禹偁 赠密直张谏议' },
+  '儿女': { pinyin: 'ér nǚ', meaning: 'sons and daughters', example: '何得英雄主，返令儿女欺。 盛唐·高适 辟阳城' },
+  '英雄': { pinyin: 'yīng xióng', meaning: 'hero', example: '英雄达处谁言命，富贵来时自逼身。 唐末至五代·徐夤 贺清源太保王延彬 其二' },
+  '富贵': { pinyin: 'fù guì', meaning: 'wealth and rank', example: '多情不住神仙界，薄命曾嫌富贵家。 唐末至五代·韦庄 伤灼灼' },
+  '神仙': { pinyin: 'shén xiān', meaning: 'immortal', example: '尽爱中都为宰相，岂知上界有神仙。 宋末元初·王奕 谢叠山先生己丑九月被执北行闽士以诗送之倚歌以饯 其二' },
+  '宰相': { pinyin: 'zǎi xiàng', meaning: 'prime minister', example: '冲街不避将军令，跋敕兼题宰相名。 中唐·元稹 内状诗寄杨白二员外' },
+  '将军': { pinyin: 'jiāng jūn', meaning: 'general', example: '非关使者徵求急，自识将军礼数宽。 唐·杜甫 严公仲夏枉驾草堂' },
+  '使者': { pinyin: 'shǐ zhě', meaning: 'envoy; messenger', example: '观海仙人骑赤鲤，驱雷使者蹑黄蛇。 元·郑洪 八月三日夜宿张景叔听雨联句忆张思廉' },
+  '仙人': { pinyin: 'xiān rén', meaning: 'immortal; celestial being', example: '仙人六膳调神鼎，玉女三浆捧帝壶。 初唐·沈佺期 嵩山石淙侍宴应制' },
+  '玉女': { pinyin: 'yù nǚ', meaning: 'jade maiden; fairy maiden', example: '殿前玉女移香案，云际金人捧露盘。 唐·薛逢 汉武宫辞' },
+  '金人': { pinyin: 'jīn rén', meaning: 'golden statue', example: '金人往日泪曾堕，石马何时汗忽流。 宋末元初·方一夔 清明二首 其一' },
+  '石马': { pinyin: 'shí mǎ', meaning: 'stone horse', example: '寝园残石马，废殿泣铜驼。 南宋·刘克庄 北来人二首 其一' },
+  '铜驼': { pinyin: 'tóng tuó', meaning: 'bronze camel', example: '朝回金马门前晓，宴罢铜驼陌上春。 北宋·宋祁 柳花' },
+  '金马': { pinyin: 'jīn mǎ', meaning: 'golden horse', example: '承明厌直辞金马，英荡非关访碧鸡。 南宋·杨万里 送罗春伯大著提举浙西' },
+  '碧鸡': { pinyin: 'bì jī', meaning: 'green chicken', example: '王城晓入窥丹凤，蜀路晴来见碧鸡。 中唐·刘禹锡 洛中送杨处厚入关便游蜀' },
+  '丹凤': { pinyin: 'dān fèng', meaning: 'red phoenix', example: '君去定趋丹凤阙，我閒但占白鸥沙。 南宋·林希逸 雨山徐总管袖诗见访以道间见梅而作少留一夕次韵为别 其二' },
+  '白鸥': { pinyin: 'bái ōu', meaning: 'white gull', example: '冲开烟缕飞黄鸟，点破潭心瀁白鸥。 后周·释延寿 山居诗 其三十一' },
+  '黄鸟': { pinyin: 'huáng niǎo', meaning: 'yellow bird', example: '梅天马上愁黄鸟，泽国帆前见白云。 唐·朱庆馀 送窦秀才' },
+  '白云': { pinyin: 'bái yún', meaning: 'white cloud', example: '几处吹笳明月夜，何人倚剑白云天。 中唐·李益 盐州过胡儿饮马泉' },
+  '明月': { pinyin: 'míng yuè', meaning: 'bright moon', example: '清风坐向罗衫起，明月看从玉手生。 唐·张祜 赋得福州白竹扇子' },
+  '清风': { pinyin: 'qīng fēng', meaning: 'cool breeze', example: '桂树一枝当白日，芸香三代继清风。 唐·李商隐 奉和太原公送前杨秀才戴兼招杨正字戎' },
+  '白日': { pinyin: 'bái rì', meaning: 'daytime; sun', example: '青山春满目，白日夜随舟。 中唐·刘长卿 送勤照和尚往睢阳赴太守请' },
+  '青山': { pinyin: 'qīng shān', meaning: 'green hills', example: '愁窥白发羞微禄，悔别青山忆旧溪。 唐·岑参 首春渭西郊行呈蓝田张二主簿' },
+  '白发': { pinyin: 'bái fà', meaning: 'white hair', example: '苦遭白发不相放，羞见黄花无数新。 唐·杜甫 九日' },
+  '黄花': { pinyin: 'huáng huā', meaning: 'yellow flower; chrysanthemum', example: '黄花助兴方携酒，红叶添愁正满阶。 唐·白居易 酬皇甫郎中对新菊花见忆' },
+  '红叶': { pinyin: 'hóng yè', meaning: 'red leaves', example: '红叶随时变，白头最易伤。 北宋·赵炅 缘识 其十八' },
+  '白头': { pinyin: 'bái tóu', meaning: 'white head; old age', example: '昔年顾我长青眼，今日逢君尽白头。 唐·许浑 赠河东虞押衙二首 其二' },
+  '青眼': { pinyin: 'qīng yǎn', meaning: 'favorable look', example: '致身将相黑头在，怜我渔樵青眼开。 南宋·杨万里 谢蜀帅刘仲洪尚书龙学遣骑诒书之惠' },
+  '黑头': { pinyin: 'hēi tóu', meaning: 'black head; young', example: '末路自矜黄发老，平时曾识黑头公。 北宋·苏颂 和门下侍郎东台夜直见寄' },
+  '黄发': { pinyin: 'huáng fà', meaning: 'yellow hair; old age', example: '方惭当宁询黄发，绝喜吾宗见白眉。 南宋·刘克庄 送君用侄判官' },
+  '白眉': { pinyin: 'bái méi', meaning: 'white eyebrow; outstanding person', example: '黑首公卿方赫舄，白眉兄弟独联翩。 明·车天辂 送李提督 其五十一' },
+  '黑首': { pinyin: 'hēi shǒu', meaning: 'black head; young', example: '位极上台犹黑首，寿才中岁奈苍天。 明·李荇 领相挽词' },
+  '苍天': { pinyin: 'cāng tiān', meaning: 'blue sky; heaven', example: '君犹淹白首，吾欲问苍天。 南宋·岳珂 挽张贡父二章 其二' },
+  '白首': { pinyin: 'bái shǒu', meaning: 'white head; old age', example: '病渴三更回白首，传声一注湿青云。 唐·杜甫 示獠奴阿段' },
+  '青云': { pinyin: 'qīng yún', meaning: 'blue clouds; high position', example: '自吟白雪诠词赋，指示青云借羽翰。 中唐·刘禹锡 宣上人远寄和礼部王侍郎放榜后诗因而继和' },
+  '白雪': { pinyin: 'bái xuě', meaning: 'white snow', example: '黄金印绶悬腰底，白雪歌诗落笔头。 唐·白居易 赠楚州郭使君' },
+  '黄金': { pinyin: 'huáng jīn', meaning: 'gold', example: '十分满盏黄金液，一尺中庭白玉尘。 唐·白居易 雪夜喜李郎中见访兼酬所赠' },
+  '白玉': { pinyin: 'bái yù', meaning: 'white jade', example: '盘出高门行白玉，菜传纤手送青丝。 唐·杜甫 立春' },
+  '青丝': { pinyin: 'qīng sī', meaning: 'black silk; black hair', example: '蹄想尘中翻碧玉，尾休烟里掉青丝。 唐·章孝标 和滕迈先辈伤马' },
+  '碧玉': { pinyin: 'bì yù', meaning: 'jasper; young girl', example: '江作青罗带，山如碧玉篸。 中唐·韩愈 送桂州严大夫同用南字' },
+  '青罗': { pinyin: 'qīng luó', meaning: 'green silk', example: '轻阴不护青罗缬，艳露应凝紫玉盘。 明·区怀瑞 咏斋前牡丹' },
+  '紫玉': { pinyin: 'zǐ yù', meaning: 'purple jade', example: '幕里仙姝怜紫玉，座中词客重青莲。 明·张元凯 元夕灯宴' },
+  '青莲': { pinyin: 'qīng lián', meaning: 'blue lotus', example: '星辰照出青莲颗，日月能藏白马牙。 中唐·吕岩 七言 其八十九' },
+  '白马': { pinyin: 'bái mǎ', meaning: 'white horse', example: '空乘说法黄龙听，贝叶翻经白马驮。 元·杨载 钱塘怀古 其四' },
+  '黄龙': { pinyin: 'huáng lóng', meaning: 'yellow dragon', example: '黄龙山下传心印，白鹤泉边起道场。 北宋·鲜于侁 送确公长老住灵岩' },
+  '白鹤': { pinyin: 'bái hè', meaning: 'white crane', example: '花暖青牛卧，松高白鹤眠。 盛唐·李白 寻雍尊师隐居' },
+  '青牛': { pinyin: 'qīng niú', meaning: 'green ox', example: '雨中白鹿眠芳草，松下青牛卧落花。 唐·皮日休 道院迎仙' },
+  '白鹿': { pinyin: 'bái lù', meaning: 'white deer', example: '白鹿行为卫，青鸾舞自闲。 唐·范传正 谢真人还旧山' },
+  '青鸾': { pinyin: 'qīng luán', meaning: 'green phoenix', example: '云间彩凤衔金简，花底青鸾度玉笙。 明·祝允明 寿徐瘦石大参七十' },
+  '彩凤': { pinyin: 'cǎi fèng', meaning: 'colorful phoenix', example: '彩凤应门千仗肃，苍龙双阙五云明。 元·王恽 观光三首 其二' },
+  '苍龙': { pinyin: 'cāng lóng', meaning: 'black dragon', example: '月到滩心来白鹭，云浮潭面起苍龙。 北宋·臧诜 东峰亭' },
+  '白鹭': { pinyin: 'bái lù', meaning: 'egret', example: '黄鹂并坐交愁湿，白鹭群飞大剧乾。 唐·杜甫 遣闷戏呈路十九曹长' },
+  '黄鹂': { pinyin: 'huáng lí', meaning: 'oriole', example: '紫燕时翻翼，黄鹂不露身。 唐·杜甫 柳边' },
+  '紫燕': { pinyin: 'zǐ yàn', meaning: 'purple swallow', example: '黄莺历历啼红树，紫燕关关语画梁。 唐末·韩偓 御制春游长句' },
+  '黄莺': { pinyin: 'huáng yīng', meaning: 'yellow oriole', example: '黄莺窥水亭亭立，白鸟投空远远来。 北宋·陆佃 閒居示王君仪' },
+  '白鸟': { pinyin: 'bái niǎo', meaning: 'white bird', example: '沙头有庙青林合，驿步无人白鸟飞。 唐末·韩偓 汉江行次' },
+  '青林': { pinyin: 'qīng lín', meaning: 'green forest', example: '袅袅孤云生翠壁，霏霏急雪洒青林。 南宋·陆游 人日雪' },
+  '翠壁': { pinyin: 'cuì bì', meaning: 'emerald cliff', example: '短李高名光翠壁，伪刘真迹没苍苔。 北宋·叶南仲 七星岩' },
+  '苍苔': { pinyin: 'cāng tái', meaning: 'green moss', example: '落叶堕巢禽自出，苍苔封砌竹成竿。 唐·刘沧 经无可旧居兼伤贾岛' },
+  '落叶': { pinyin: 'luò yè', meaning: 'fallen leaves', example: '斜阳穿破厩，落叶满空廊。 南宋·陆游 驿壁偶题三首 其二' },
+  '斜阳': { pinyin: 'xié yáng', meaning: 'setting sun', example: '绿陂细雨移秧罢，朱舫斜阳擘纸归。 南宋·陆游 春夏之交风日清美欣然有赋三首 其二' },
+  '细雨': { pinyin: 'xì yǔ', meaning: 'drizzle', example: '细雨鱼儿出，微风燕子斜。 唐·杜甫 水槛遣心二首 其一' },
+  '微风': { pinyin: 'wēi fēng', meaning: 'gentle breeze', example: '落日留王母，微风倚少儿。 唐·杜甫 宿昔' },
+  '落日': { pinyin: 'luò rì', meaning: 'setting sun', example: '落日澄江乌榜外，秋风疏柳白门前。 唐·韩翃 送冷朝阳还上元' },
+  '秋风': { pinyin: 'qiū fēng', meaning: 'autumn wind', example: '荆溪夜雨花开疾，吴苑秋风月满频。 唐·许浑 题苏州虎丘寺僧院' },
+  '夜雨': { pinyin: 'yè yǔ', meaning: 'night rain', example: '为旅春风外，怀人夜雨间。 唐末·杜荀鹤 维扬冬末寄幕中二从事' },
+  '春风': { pinyin: 'chūn fēng', meaning: 'spring breeze', example: '老爱早眠虚夜月，病妨杯酒负春风。 中唐·元稹 贻蜀五首 其三 卢评事子蒙' },
+  '夜月': { pinyin: 'yè yuè', meaning: 'night moon', example: '夜月江流阔，春云岭路深。 唐·张祜 送苏绍之归岭南' },
+  '春云': { pinyin: 'chūn yún', meaning: 'spring clouds', example: '涧花然暮雨，潭树煖春云。 唐·岑参 高冠谷口招郑鄠' },
+  '暮雨': { pinyin: 'mù yǔ', meaning: 'evening rain', example: '忽惊暮雨飘零尽，唯有朝云梦想期。 中唐·刘禹锡 窦夔州见寄寒食日忆故姬小红吹笙因和之' },
+  '朝云': { pinyin: 'zhāo yún', meaning: 'morning clouds', example: '巫峡朝云湿，洞庭秋水波。 宋末元初·文天祥 江行有感' },
+  '秋水': { pinyin: 'qiū shuǐ', meaning: 'autumn water', example: '帆带夕阳千里没，天连秋水一人归。 中唐·刘长卿 青溪口送人归岳州' },
+  '夕阳': { pinyin: 'xī yáng', meaning: 'setting sun', example: '出寺马嘶秋色里，向陵鸦乱夕阳中。 唐·温庭筠 开圣寺' },
+  '秋色': { pinyin: 'qiū sè', meaning: 'autumn scenery', example: '已觉远天秋色动，不堪闲夜雨声频。 唐·刘邺 翰林作' },
+  '雨声': { pinyin: 'yǔ shēng', meaning: 'sound of rain', example: '炉烟云气合，林叶雨声馀。 盛唐·皇甫冉 同裴少府安居寺对雨' },
+  '云气': { pinyin: 'yún qì', meaning: 'clouds', example: '座中云气侵人湿，砌下泉声逼酒寒。 北宋·黄庭坚 李大夫招饮' },
+  '泉声': { pinyin: 'quán shēng', meaning: 'sound of spring', example: '山色好当晴后见，泉声宜向醉中闻。 唐·许浑 晚自朝台津至韦隐居郊园' },
+  '山色': { pinyin: 'shān sè', meaning: 'mountain scenery', example: '松阁晴看山色近，石渠秋放水声新。 唐·白居易 宿裴相公兴化池亭' },
+  '水声': { pinyin: 'shuǐ shēng', meaning: 'sound of water', example: '步步入山影，房房闻水声。 唐·无可 游山寺' },
+  '山影': { pinyin: 'shān yǐng', meaning: 'mountain shadow', example: '山影水中尽，鸟声天上来。 中唐·戎昱 题招提寺' },
+  '鸟声': { pinyin: 'niǎo shēng', meaning: 'birdsong', example: '入风花气馥，出树鸟声娇。 唐·无名氏 咏月诗' },
+  '花气': { pinyin: 'huā qì', meaning: 'fragrance of flowers', example: '雨馀花气浓如酒，风鼓松声冷似秋。 南宋·赵善漮 游西山 其一' },
+  '松声': { pinyin: 'sōng shēng', meaning: 'sound of pine', example: '草色摇霞上，松声汎月边。 盛唐·王维 游悟真寺' },
+  '草色': { pinyin: 'cǎo sè', meaning: 'color of grass', example: '莺声诱引来花下，草色句留坐水边。 唐·白居易 春江' },
+  '莺声': { pinyin: 'yīng shēng', meaning: 'sound of oriole', example: '莺声随坐啸，柳色唤行春。 唐·岑参 陪使君早春东郊游眺' },
+  '柳色': { pinyin: 'liǔ sè', meaning: 'color of willow', example: '梅花残腊月，柳色半春天。 盛唐·孟浩然 冬至后过吴张二子檀溪别业' },
+  '梅花': { pinyin: 'méi huā', meaning: 'plum blossom', example: '碧毡帐暖梅花湿，红燎炉香竹叶春。 唐·白居易 洛下雪中频与刘李二宾客宴集因寄汴州李尚书' },
+  '竹叶': { pinyin: 'zhú yè', meaning: 'bamboo leaves', example: '倾如竹叶盈樽绿，饮作桃花上面红。 唐·白居易 钱湖州以箬下酒，李苏州以五酘酒相次寄到，无因同饮，聊咏所怀' },
+  '桃花': { pinyin: 'táo huā', meaning: 'peach blossom', example: '续借桃花马，催迎杨柳姬。 唐·白居易 秋霖中奉裴令公见招早出赴会马上先寄六韵' },
+  '杨柳': { pinyin: 'yáng liǔ', meaning: 'willow', example: '薄烟杨柳路，微雨杏花村。 唐·许浑 下第归蒲城墅居' },
+  '杏花': { pinyin: 'xìng huā', meaning: 'apricot blossom', example: '一川芳草绿堪染，夹路杏花红欲然。 金·赵秉文 春山诗意图' },
+  '芳草': { pinyin: 'fāng cǎo', meaning: 'fragrant grass', example: '鸟散落花人自醉，马嘶芳草客先愁。 唐·许浑 詶钱汝州' },
+  '落花': { pinyin: 'luò huā', meaning: 'fallen flowers', example: '落花不语空辞树，流水无情自入池。 唐·白居易 过元家履信宅' },
+  '流水': { pinyin: 'liú shuǐ', meaning: 'flowing water', example: '浮云一别后，流水十年间。 中唐·韦应物 淮上喜会梁川故人' },
+  '浮云': { pinyin: 'fú yún', meaning: 'floating clouds', example: '荣枯尽寄浮云外，哀乐犹惊逝水前。 唐·许浑 重游綀湖怀旧' },
+  '逝水': { pinyin: 'shì shuǐ', meaning: 'flowing water; passing time', example: '百岁流光方过半，新春逝水忽驰东。 北宋·李复 王夫人挽词 其一' },
+  '流光': { pinyin: 'liú guāng', meaning: 'flowing light; time', example: '流光冉冉增惆怅，往事悠悠倦品题。 元末明初·蓝仁 春兴' },
+  '往事': { pinyin: 'wǎng shì', meaning: 'past events', example: '浮生聚散云相似，往事微茫梦一般。 唐·李群玉 重经巴丘追感' },
+  '浮生': { pinyin: 'fú shēng', meaning: 'fleeting life', example: '浮生莫把还丹续，万事须将至理齐。 唐末至五代·齐己 中春林下偶作' },
+  '万事': { pinyin: 'wàn shì', meaning: 'all things', example: '忽忽百年行欲半，茫茫万事坐成空。 唐·白居易 风雨晚泊' },
+  '百年': { pinyin: 'bǎi nián', meaning: 'hundred years; lifetime', example: '旅泊成千里，栖遑共百年。 初唐·王勃 重别薛华' },
+  '千里': { pinyin: 'qiān lǐ', meaning: 'thousand miles; far', example: '十年别鬓疑朝镜，千里归心著晚钟。 唐末·罗隐 抚州别阮兵曹' },
+  '十年': { pinyin: 'shí nián', meaning: 'ten years', example: '万里有家留百越，十年无路到三秦。 唐末至五代·韦庄 投寄旧知' },
+  '万里': { pinyin: 'wàn lǐ', meaning: 'ten thousand miles; far', example: '万里山河唐土地，千年魂魄晋英雄。 唐末·罗隐 登夏州城楼' },
+  '千年': { pinyin: 'qiān nián', meaning: 'thousand years', example: '千年王气浮清洛，万古坤灵镇碧嵩。 唐末至五代·韦庄 北原闲眺' },
+  '万古': { pinyin: 'wàn gǔ', meaning: 'eternity', example: '鸾凤影沉归万古，歌钟声断梦千秋。 唐·李郢 骊山怀古 其一' },
+  '千秋': { pinyin: 'qiān qiū', meaning: 'thousand years', example: '一代执鞭士，千秋折角巾。 宋·晁说之 题六一东坡像 其二' },
+  '一代': { pinyin: 'yī dài', meaning: 'generation', example: '文章一代喧高价，忠直三朝受圣知。 宋·黄觉 送梅昌言出镇太原' },
+  '三朝': { pinyin: 'sān cháo', meaning: 'three dynasties', example: '清句三朝谁是敌，白须四海半为兄。 唐·白居易 赠杨秘书巨源' },
+  '四海': { pinyin: 'sì hǎi', meaning: 'four seas; everywhere', example: '一时但恐无耆旧，四海谁言有弟兄。 北宋末·周紫芝 寄开元奎律师' },
+  '一时': { pinyin: 'yī shí', meaning: 'moment; temporary', example: '传声千古后，得意一时间。 唐·白居易 郡中夜听李山人弹三乐' },
+  '千古': { pinyin: 'qiān gǔ', meaning: 'thousand years; eternity', example: '名虽千古在，身已一生休。 唐·姚合 哭贾岛二首 其一' },
+  '一生': { pinyin: 'yī shēng', meaning: 'whole life', example: '一生虽抱楚王恨，千载终为息地灵。 唐末·罗隐 息夫人庙' },
+  '千载': { pinyin: 'qiān zǎi', meaning: 'thousand years', example: '千载休疑漱石讹，几人堪说种瓜事。 南宋末·蒲寿宬 送孙耕山' },
+  '几人': { pinyin: 'jǐ rén', meaning: 'how many people', example: '旧友几人在，故乡何处归？ 唐·许浑 别韦处士' },
+  '何处': { pinyin: 'hé chù', meaning: 'where', example: '一声何处送书雁，百丈谁家上水船。 唐·杜甫 十二月一日三首 其一' },
+  '谁家': { pinyin: 'shuí jiā', meaning: 'whose family', example: '几处早莺争暖树，谁家新燕啄春泥。 唐·白居易 钱唐湖春行' },
+  '几处': { pinyin: 'jǐ chù', meaning: 'several places', example: '湘浦何年变，山阳几处残。 中唐·刘长卿 同郭参谋咏崔仆射淮南节度使厅前竹' },
+  '何年': { pinyin: 'hé nián', meaning: 'which year', example: '尽日慵移棹，何年醉倚松。 五代至宋初·徐铉 和张少监舟中望蒋山' },
+  '尽日': { pinyin: 'jìn rì', meaning: 'all day', example: '尽日观鱼临涧坐，有时随鹿上山行。 唐·白居易 荅元八郎中杨十二博士' },
+  '有时': { pinyin: 'yǒu shí', meaning: 'sometimes', example: '有时透雾凌空去，无事随风入草迷。 中唐·贾岛 病鹘吟' },
+  '无事': { pinyin: 'wú shì', meaning: 'nothing; leisure', example: '花若有情还怅望，水应无事莫潺湲。 唐·温庭筠 李羽处士故里' },
+  '有情': { pinyin: 'yǒu qíng', meaning: 'sentimental', example: '有情惟墨客，无语是禅家。 唐·皮日休 寂上人院联句' },
+  '无语': { pinyin: 'wú yǔ', meaning: 'speechless', example: '万壑有声含晚籁，数峰无语立斜阳。 北宋·王禹偁 村行' },
+  '有声': { pinyin: 'yǒu shēng', meaning: 'have sound', example: '飙御有声时杳杳，宝衣无影自珊珊。 唐·皮日休 奉和鲁望上元日道室焚修' },
+  '无影': { pinyin: 'wú yǐng', meaning: 'no shadow', example: '玉露有香黏翡翠，碧云无影浸琉璃。 宋末元初·陆文圭 洛中郑悫三伏之际率宾僚避暑于使君林取大莲叶盛酒以簪刺叶令与柄通屈茎轮囷如象鼻焉传吸之名碧筒杯故坡诗云碧碗犹作象鼻弯白酒时带莲心苦丙寅五月宜兴州赏诚以此为题为赋十一首 其十一' },
+  '有香': { pinyin: 'yǒu xiāng', meaning: 'have fragrance', example: '万花场里春无色，独树桥边月有香。 南宋·张道洽 梅花七律 其十八' },
+  '无色': { pinyin: 'wú sè', meaning: 'colorless', example: '绛桃成子花无色，银烛烧心泪有痕。 明·丘吉 和姑苏刘工部昌无题三首 其三' },
+  '有痕': { pinyin: 'yǒu hén', meaning: 'have traces', example: '柳丝到地烟无力，花脸迎阳露有痕。 北宋·宋庠 池上春物已烂漫寄东甫' },
+  '无力': { pinyin: 'wú lì', meaning: 'powerless', example: '天地有心归道德，山河无力为英雄。 唐末五代初·归仁 题楚庙' },
+  '有心': { pinyin: 'yǒu xīn', meaning: 'intentional', example: '有心传五叶，无意据千峰。 唐末·克符道者 南岳让禅师凤' },
+  '无意': { pinyin: 'wú yì', meaning: 'unintentional', example: '多情乳燕梁间垒，无意蜘蛛屋角丝。 明·徐熥 夏日园居和兴公韵 其二' },
+  '多情': { pinyin: 'duō qíng', meaning: 'sentimental', example: '多情流水引归思，无赖严风促别觞。 唐末·李咸用 送从兄入京' },
+  '无赖': { pinyin: 'wú lài', meaning: 'rascal; naughty', example: '门外溪山无赖碧，眼中须鬓可怜青。 宋·刘一止 次韵宋希仲贻故人虞仲容一首' },
+  '可怜': { pinyin: 'kě lián', meaning: 'pitiful', example: '扫地可怜花更落，卷帘无奈燕还来。 北宋·贺铸 海陵西楼寓目' },
+  '无奈': { pinyin: 'wú nài', meaning: 'helpless', example: '茶风无奈笔，酒秃不胜簪。 唐·张祜 宋城道中逢王直方八韵' },
+  '不胜': { pinyin: 'bù shèng', meaning: 'cannot bear', example: '为含无限意，遂对不胜繁。 唐·李商隐 杏花' },
+  '无限': { pinyin: 'wú xiàn', meaning: 'infinite', example: '詹子情无限，龙阳恨有馀。 中唐·李贺 钓鱼诗' },
+  '有馀': { pinyin: 'yǒu yú', meaning: 'have surplus', example: '万家乞巧心无尽，斜汉飞光望有馀。 北宋·梅尧臣 依韵和永叔久在病告近方赴直道怀见寄二章 其一' },
+  '无尽': { pinyin: 'wú jìn', meaning: 'endless', example: '芳草行无尽，清源去不穷。 唐·皎然 若邪春兴' },
+  '不穷': { pinyin: 'bù qióng', meaning: 'inexhaustible', example: '喻筏知何极，传灯竟不穷。 初唐·武三思 秋日于天中寺寻复礼上人' },
+  '何极': { pinyin: 'hé jí', meaning: 'how extreme', example: '雉子斑何极，龙媒蹀未央。 明末清初·屈大均 为频阳田先生八十寿' },
+  '未央': { pinyin: 'wèi yāng', meaning: 'not ended', example: '未央新柳色，长乐旧钟声。 中唐·刘长卿 至德三年春正月时谬蒙差摄海盐令闻王师收二京因书事寄上浙西节度李侍郎中丞行营五十韵' },
+  '长乐': { pinyin: 'cháng lè', meaning: 'long happiness', example: '长乐宵钟尽，明光晓奏催。 初唐·沈佺期 和韦舍人早朝' },
+  '明光': { pinyin: 'míng guāng', meaning: 'bright light', example: '三署履声通建礼，九霄星彩映明光。 唐末·罗隐 送陆郎中赴阙' },
+  '建礼': { pinyin: 'jiàn lǐ', meaning: 'establish rites', example: '承明连夜直，建礼拂晨趋。 唐·白居易 东南行一百韵寄通州元九侍御澧州李十一舍人果州崔二十二使君开州韦大员外庾三十二补阙杜十四拾遗李二十助教员外窦七校书' },
+  '承明': { pinyin: 'chéng míng', meaning: 'inherit brightness', example: '门接承明近，池连太液低。 唐·包佶 奉和常阁老晚秋集贤院即事寄赠徐薛二侍郎' },
+  '太液': { pinyin: 'tài yè', meaning: 'imperial pond', example: '太液天为水，蓬莱雪作山。 初唐·宗楚客 奉和人日清晖阁宴群臣遇雪应制' },
+  '蓬莱': { pinyin: 'péng lái', meaning: 'Penglai (fairy island)', example: '树出蓬莱殿，城开阊阖门。 盛唐·储光羲 京口留别徐大补阙赵二零陵' },
+  '阊阖': { pinyin: 'chāng hé', meaning: 'heaven\'s gate', example: '风生阊阖陈金镜，云拥罘罳拜玉除。 明·黄佐 送顾少参进表之京' },
+  '罘罳': { pinyin: 'fú sī', meaning: 'ornamental screen', example: '宫城开睥睨，观阙丽罘罳。 唐·白居易 喜晴联句' },
+  '睥睨': { pinyin: 'pì nì', meaning: 'look sideways; parapet', example: '太行睥睨云飞远，栈阁崔嵬马度难。 明·朱诚泳 送陈公辅伴读省亲入蜀时其弟进士亦归省' },
+  '崔嵬': { pinyin: 'cuī wéi', meaning: 'lofty', example: '崔嵬微有状，窈窕莫知名。 北宋·释智圆 远山' },
+  '窈窕': { pinyin: 'yǎo tiǎo', meaning: 'gentle and graceful', example: '桂香随窈窕，珠缀隔玲珑。 中唐·武元衡 八月十五夜与诸公锦楼望月得中字' },
+  '玲珑': { pinyin: 'líng lóng', meaning: 'exquisite', example: '蹙为宛转青蛇项，喷作玲珑白雪堆。 唐·白居易 题平泉薛家雪堆庄' },
+  '宛转': { pinyin: 'wǎn zhuǎn', meaning: 'tortuous; melodious', example: '缠绵意向双行起，宛转歌成四月愁。 明末清初·彭孙贻 缠枝牡丹' },
+  '缠绵': { pinyin: 'chán mián', meaning: 'lingering', example: '早识英雄真解脱，也防身世太缠绵。 清·张问陶 杨柳岸晓风残月词意画卷为石叙民明府题时之官浙江即以送别' },
+  '解脱': { pinyin: 'jiě tuō', meaning: 'liberation', example: '江神夜听光明偈，天女朝分解脱香。 元·袁桷 寄开元奎律师' },
+  '光明': { pinyin: 'guāng míng', meaning: 'bright', example: '气色含珠日，光明吐翠雰。 唐·无名氏 华山庆云见' },
+  '气色': { pinyin: 'qì sè', meaning: 'complexion', example: '精神欺竹树，气色压亭台。 唐·白居易 奉和思黯相公以李苏州所寄太湖石奇状绝伦因题二十韵见示兼呈梦得' },
+  '精神': { pinyin: 'jīng shén', meaning: 'spirit', example: '黄图气象占龙阙，丹穴精神识凤毛。 北宋·胡宿 送次道学士倅洛中' },
+  '气象': { pinyin: 'qì xiàng', meaning: 'meteorology; atmosphere', example: '自闻出守风流似，稍觉承平气象还。 北宋·苏轼 次韵王雄州还朝留别' },
+  '风流': { pinyin: 'fēng liú', meaning: 'romantic; talented', example: '喑呜意气千人废，娴雅风流一座倾。 南宋·陆游 有怀独孤景略' },
+  '意气': { pinyin: 'yì qì', meaning: 'spirit', example: '阙下声名出，乡中意气游。 唐·姚合 送任畹及第归蜀中觐亲' },
+  '声名': { pinyin: 'shēng míng', meaning: 'reputation', example: '平日声名追屈贾，暮年勋业佐虞唐。 北宋·曾肇 二贤堂 其二' },
+  '勋业': { pinyin: 'xūn yè', meaning: 'achievements', example: '勋业频看镜，行藏独倚楼。 唐·杜甫 江上' },
+  '行藏': { pinyin: 'xíng cáng', meaning: 'conduct', example: '去住非无数，行藏莫问天。 宋·张元干 申伯有行色会宿东禅次元韵' },
+  '去住': { pinyin: 'qù zhù', meaning: 'come and go', example: '悲欢一世事，去住两乡心。 唐·长孙佐辅 杭州秋日别故友' },
+  '悲欢': { pinyin: 'bēi huān', meaning: 'sorrow and joy', example: '聚散同行客，悲欢属故人。 唐·苏颋 春晚送瑕丘田少府还任因寄洛中镜上人' },
+  '聚散': { pinyin: 'jù sàn', meaning: 'meeting and parting', example: '升沈嗟薄宦，聚散忽流年。 宋·刘子翚 与温其对榻' },
+  '升沈': { pinyin: 'shēng chén', meaning: 'rise and fall', example: '出处虽无意，升沈亦有媒。 唐·白居易 奉和思黯相公以李苏州所寄太湖石奇状绝伦因题二十韵见示兼呈梦得' },
+  '出处': { pinyin: 'chū chǔ', meaning: 'source; conduct', example: '安危一身系，出处万民望。 北宋·吕陶 上韩端明' },
+  '安危': { pinyin: 'ān wēi', meaning: 'safety and danger', example: '安危繄礼貌，进退肯雷同。 宋·张元干 李丞相生朝' },
+  '进退': { pinyin: 'jìn tuì', meaning: 'advance and retreat', example: '进退无机常蹭蹬，穷通知命自夷犹。 北宋·余靖 和王子元同归曲江有感' },
+  '穷通': { pinyin: 'qióng tōng', meaning: 'poverty and wealth', example: '穷通往事真如梦，得失秋毫岂更嗟。 北宋·王安石 次韵酬宋玘六首 其二' },
+  '得失': { pinyin: 'dé shī', meaning: 'gain and loss', example: '得失片时痛，荣枯一岁伤。 唐·薛莹 十日菊' },
+  '荣枯': { pinyin: 'róng kū', meaning: 'prosperity and decline', example: '得丧初难识，荣枯划易该。 唐·杜甫 秋日荆南述怀三十韵' },
+  '得丧': { pinyin: 'dé sàng', meaning: 'gain and loss', example: '得丧元相似，乘除岂自谋。 南宋·孙应时 杜子贞远访自言山居之胜以二诗送之 其一' },
+  '乘除': { pinyin: 'chéng chú', meaning: 'multiplication and division', example: '悠悠造物乘除里，碌碌随人俯仰间。 元初·张之翰 郭司丞善甫以马上之诗见示因次韵奉答' },
+  '俯仰': { pinyin: 'fǔ yǎng', meaning: 'bow and raise; a moment', example: '登临未觉三山隔，俯仰常随万壑流。 宋·李光 陈氏园亭' },
+  '登临': { pinyin: 'dēng lín', meaning: 'climb and overlook', example: '自揣老怀饶感慨，可须佳节强登临。 宋末元初·方回 九月初四日大风雨近重阳无酒夜成二首 其一' },
+  '感慨': { pinyin: 'gǎn kǎi', meaning: 'sigh with emotion', example: '春风桑梓欢娱极，秋雨松楸感慨深。 宋·姜大民 洪遂良自京师东归赠以诗' },
+  '欢娱': { pinyin: 'huān yú', meaning: 'joy', example: '居民笑语酬佳节，客子欢娱减旧时。 明·申之悌 正月十五夜有感 其二' },
+  '笑语': { pinyin: 'xiào yǔ', meaning: 'laughing and talking', example: '助喜杯盘盛，忘机笑语訇。 中唐·刘禹锡 历阳书事七十韵' },
+  '杯盘': { pinyin: 'bēi pán', meaning: 'cups and plates', example: '草草杯盘供笑语，昏昏灯火话平生。 北宋·王安石 示长安君' },
+  '灯火': { pinyin: 'dēng huǒ', meaning: 'lights', example: '灯火家家市，笙歌处处楼。 唐·白居易 正月十五日夜月' },
+  '笙歌': { pinyin: 'shēng gē', meaning: 'music and singing', example: '天净笙歌临路发，日高车马隔尘行。 唐·司空曙 长安晓望寄程补阙' },
+  '车马': { pinyin: 'chē mǎ', meaning: 'carriages and horses', example: '领略琴书意，扫空车马尘。 南宋·陆游 春兴' },
+  '琴书': { pinyin: 'qín shū', meaning: 'qin and books', example: '云连海气琴书润，风带潮声枕簟凉。 唐·许浑 晚自朝台津至韦隐居郊园' },
+  '枕簟': { pinyin: 'zhěn diàn', meaning: 'pillow and mat', example: '衣裳朝不润，枕簟夜相亲。 唐·白居易 新秋喜凉' },
+  '衣裳': { pinyin: 'yī shang', meaning: 'clothes', example: '典质衣裳今已尽，留连舟楫可无归。 宋末元初·方回 丁亥生日纪事五首 其五' },
+  '舟楫': { pinyin: 'zhōu jí', meaning: 'boats and oars', example: '舟楫欹斜疾，鱼龙偃卧高。 唐·杜甫 渡江' },
+  '鱼龙': { pinyin: 'yú lóng', meaning: 'fish and dragon', example: '棹发鱼龙气，舟冲鸿雁群。 初唐·宋之问 夜渡吴松江怀古' },
+  '鸿雁': { pinyin: 'hóng yàn', meaning: 'wild goose', example: '鸿雁影来连峡内，鹡鸰飞急到沙头。 唐·杜甫 舍弟观赴蓝田取妻子到江陵喜寄三首 其一' },
+  '鹡鸰': { pinyin: 'jí líng', meaning: 'wagtail', example: '浪传乌鹊喜，深负鹡鸰诗。 唐·杜甫 得弟消息二首 其二' },
+  '乌鹊': { pinyin: 'wū què', meaning: 'crow and magpie', example: '凤凰骑罢犹轻举，乌鹊桥成得燕居。 北宋·陆佃 依韵和双头芍药十六首 其十四' },
+  '凤凰': { pinyin: 'fèng huáng', meaning: 'phoenix', example: '郎君下笔惊鹦鹉，侍女吹笙弄凤凰。 唐·李商隐 留赠畏之 其一' },
+  '鹦鹉': { pinyin: 'yīng wǔ', meaning: 'parrot', example: '愿陪鹦鹉乐，希并鹧鸪留。 初唐·沈佺期 从驩州廨宅移住山间水亭赠苏使君' },
+  '鹧鸪': { pinyin: 'zhè gū', meaning: 'francolin', example: '客思莫牵蝴蝶梦，乡心自忆鹧鸪声。 唐末至五代·齐己 渚宫春日因怀有作' },
+  '蝴蝶': { pinyin: 'hú dié', meaning: 'butterfly', example: '蝴蝶有情牵晚梦，杜鹃无赖伴春愁。 唐末·罗隐 下第寄张坤' },
+  '杜鹃': { pinyin: 'dù juān', meaning: 'cuckoo', example: '精卫海能涸，杜鹃天可通。 宋末元初·许月卿 暮春联句九首 其七' },
+  '精卫': { pinyin: 'jīng wèi', meaning: 'Jingwei (mythical bird)', example: '写恨凭精卫，声冤付子规。 北宋·刘弇 伤友人潘镇之失意七十韵' },
+  '子规': { pinyin: 'zǐ guī', meaning: 'cuckoo', example: '胡蝶翅翻残露滴，子规声尽野烟深。 唐·刘沧 经古行宫' },
+  '胡蝶': { pinyin: 'hú dié', meaning: 'butterfly', example: '林如膏沐鹁鸠语，草已怒生胡蝶飞。 南宋·李处权 次韵民瞻端礼二首 其二' },
+  '鹁鸠': { pinyin: 'bó jiū', meaning: 'turtledove', example: '鹁鸠夫妇孤村雨，杜宇君臣故国春。 宋末元初·于石 春事' },
+  '杜宇': { pinyin: 'dù yǔ', meaning: 'cuckoo', example: '轻薄杨花芳草岸，凄凉杜宇夕阳山。 宋末元初·吴锡畴 晚春' },
+  '杨花': { pinyin: 'yáng huā', meaning: 'poplar catkins', example: '燕子家家入，杨花处处飞。 盛唐·孟浩然 赋得盈盈楼上女' },
+  '燕子': { pinyin: 'yàn zi', meaning: 'swallow', example: '若怜燕子寒相并，生怕梨花晚不禁。 北宋·王安国 春阴' },
+  '梨花': { pinyin: 'lí huā', meaning: 'pear blossom', example: '春阴妨柳絮，月黑见梨花。 唐末·郑谷 旅寓洛南村舍' },
+  '柳絮': { pinyin: 'liǔ xù', meaning: 'willow catkins', example: '帘前柳絮惊春晚，头上花枝奈老何。 北宋·苏轼 李钤辖坐上分题戴花' },
+  '花枝': { pinyin: 'huā zhī', meaning: 'flower branch', example: '几时酒盏曾抛却，何处花枝不把看？ 唐·白居易 咏怀' },
+  '酒盏': { pinyin: 'jiǔ zhǎn', meaning: 'wine cup', example: '诗篇闲里曾无数，酒盏生前亦有涯。 北宋·强至 暮春感怀' },
+  '诗篇': { pinyin: 'shī piān', meaning: 'poem', example: '诗篇随意赠，杯酒越巡行。 中唐·元稹 夜饮' },
+  '杯酒': { pinyin: 'bēi jiǔ', meaning: 'cup of wine', example: '厌见簿书先眼合，喜逢杯酒暂眉开。 唐·白居易 赴苏州至常州荅贾舍人' },
+  '簿书': { pinyin: 'bù shū', meaning: 'documents', example: '已脱簿书身自放，肆寻山水意宁厌。 北宋·沈遘 将至京口先寄孙少述并呈晏子俞' },
+  '山水': { pinyin: 'shān shuǐ', meaning: 'mountains and waters', example: '山水会稽郡，诗书孔氏门。 盛唐·孟浩然 夜登孔伯昭南楼时沈太清朱升在座' },
+  '诗书': { pinyin: 'shī shū', meaning: 'poetry and books', example: '诗书教子心尤切，孝友承家德自丰。 宋·郭印 宋正纪挽词二首 其一' },
+  '孝友': { pinyin: 'xiào yǒu', meaning: 'filial and friendly', example: '孝友风微惟故井，神明胄冷尚荒州。 宋末元初·林景熙 舜庙' },
+  '神明': { pinyin: 'shén míng', meaning: 'gods', example: '恐被神明哭，忧为造化灾。 中唐·元稹 酬卢秘书' },
+  '造化': { pinyin: 'zào huà', meaning: 'nature', example: '造化炉思火，阴阳炭鼓烟。 唐·张祜 苦旱' },
+  '阴阳': { pinyin: 'yīn yáng', meaning: 'yin and yang', example: '水火均平方是药，阴阳差互不成丹。 中唐·吕岩 七言 其五十一' },
+  '水火': { pinyin: 'shuǐ huǒ', meaning: 'water and fire', example: '帝一澄明藏水火，昆丘凝结粲云霞。 宋·曹勋 用秦公赠李次仲韵呈次仲三首 其三' },
+  '云霞': { pinyin: 'yún xiá', meaning: 'clouds and rosy clouds', example: '丹篆云霞从地出，玉坛星斗与天通。 元末明初·胡奎 送南昌玄妙吴大节鍊师编书之上清 其一' },
+  '星斗': { pinyin: 'xīng dǒu', meaning: 'stars', example: '一坛星斗修真馆，数里云烟斸药家。 北宋·余靖 西山' },
+  '云烟': { pinyin: 'yún yān', meaning: 'clouds and mist', example: '云烟澹闲寂，鱼鸟媚清深。 南宋·陈造 步西湖次韵徐南卿 其四' },
+  '鱼鸟': { pinyin: 'yú niǎo', meaning: 'fish and birds', example: '渐觉溪山秀，更高鱼鸟情。 唐末·林宽 朱坡' },
+  '溪山': { pinyin: 'xī shān', meaning: 'streams and mountains', example: '湖外溪山明小槛，雨馀花柳暗西园。 南宋·韩元吉 留别傅安道 其一' },
+  '花柳': { pinyin: 'huā liǔ', meaning: 'flowers and willows', example: '桑麻附郭公私足，花柳无边富贵春。 元·李溥光 漯阳道中' },
+  '桑麻': { pinyin: 'sāng má', meaning: 'mulberry and hemp', example: '桃源鸡犬尘凡隔，杜曲桑麻梦想归。 南宋·陆游 晦日西窗怀故山' },
+  '鸡犬': { pinyin: 'jī quǎn', meaning: 'chickens and dogs', example: '牛羊路杳千山合，鸡犬村深一径通。 南宋·范成大 馀杭道中' },
+  '牛羊': { pinyin: 'niú yáng', meaning: 'cattle and sheep', example: '牛羊归径险，鸟雀聚枝深。 唐·杜甫 暝' },
+  '鸟雀': { pinyin: 'niǎo què', meaning: 'birds', example: '日摇槎影龙蛇断，雪缀花痕鸟雀疑。 宋·董嗣杲 陈朝柏' },
+  '龙蛇': { pinyin: 'lóng shé', meaning: 'dragons and snakes', example: '英材尽作龙蛇蛰，战地多成虎豹村。 唐·陆龟蒙 徐方平后闻赦因寄袭美' },
+  '虎豹': { pinyin: 'hǔ bào', meaning: 'tigers and leopards', example: '鸣铙虎豹林中避，吹角蛟龙水底惊。 北宋·胡宿 送王龙图硕赴荆南' },
+  '蛟龙': { pinyin: 'jiāo lóng', meaning: 'flood dragon', example: '旗尾蛟龙会，楼头燕雀驯。 唐·杜甫 奉和严中丞西城晚眺十韵' },
+  '燕雀': { pinyin: 'yàn què', meaning: 'swallows and sparrows', example: '今兹封土麒麟冢，乃有衔泥燕雀群。 南宋·马之纯 燕雀湖' },
+  '麒麟': { pinyin: 'qí lín', meaning: 'kylin', example: '休闭玉笼留鸑鷟，早开金埒纵麒麟。 唐·许浑 寄献三川守刘公 其一' },
+  '鸑鷟': { pinyin: 'yuè zhuó', meaning: 'phoenix', example: '鸑鷟老寻丹穴宿，骅骝饥上赤霄行。 北宋·彭汝砺 次来韵' },
+  '骅骝': { pinyin: 'huá liú', meaning: 'fine horse', example: '雕鹗腾空犹逞俊，骅骝啮足自无惊。 中唐·刘禹锡 和仆射牛相公寓言二首 其二' },
+  '雕鹗': { pinyin: 'diāo è', meaning: 'eagle', example: '雕鹗清秋急，豺狼当路空。 宋·李光 次韵师川见赠' },
+  '豺狼': { pinyin: 'chái láng', meaning: 'jackals and wolves', example: '豺狼毳幕三千帐，貔虎金戈十万军。 唐·韩琮 京西即事' },
+  '貔虎': { pinyin: 'pí hǔ', meaning: 'brave warriors', example: '犬羊忧破竹，貔虎极飞蓬。 唐·许浑 登蒜山观发军' },
+  '犬羊': { pinyin: 'quǎn yáng', meaning: 'dogs and sheep', example: '龙虎翔空瞻王气，犬羊度漠避天诛。 南宋·陆游 雪夜有感' },
+  '龙虎': { pinyin: 'lóng hǔ', meaning: 'dragons and tigers', example: '风过鬼神延受箓，夜深龙虎卫烧丹。 中唐·戎昱 送吉州阎使君入道二首 其一' },
+  '鬼神': { pinyin: 'guǐ shén', meaning: 'ghosts and gods', example: '坚如金石犹能动，灵若鬼神何可欺。 北宋·邵雍 首尾吟 其一百四' },
+  '金石': { pinyin: 'jīn shí', meaning: 'metal and stone', example: '金石谁新三代乐，丹青空上两京图。 北宋·王圭 赠礼部侍郎宋次道挽词' },
+  '丹青': { pinyin: 'dān qīng', meaning: 'painting', example: '山水丹青杂，烟云紫翠浮。 唐初·陈子昂 江上暂别萧四刘三旋欣接遇' },
+  '紫翠': { pinyin: 'zǐ cuì', meaning: 'purple and emerald', example: '云乱水光浮紫翠，天含山气入青红。 北宋·曾巩 甘露寺多景楼' },
+  '青红': { pinyin: 'qīng hóng', meaning: 'green and red', example: '病眼昏昏迷白黑，幻花隐隐出青红。 北宋·赵鼎臣 寒食道中病目' },
+  '白黑': { pinyin: 'bái hēi', meaning: 'white and black', example: '白黑全凭眼，苍黄欲吐肝。 元末明初·李穑 聋哑小童' },
+  '苍黄': { pinyin: 'cāng huáng', meaning: 'greenish yellow', example: '久别羁孤成潦倒，回看书剑更苍黄。 唐末·罗邺 冬夕江上言事五首 其二' },
+  '潦倒': { pinyin: 'liáo dǎo', meaning: 'disappointed', example: '飘零无复相从乐，潦倒难堪送别愁。 宋·赵鼎 送张京与之宰解县' },
+  '飘零': { pinyin: 'piāo líng', meaning: 'wandering', example: '烟波憔悴西施国，风月飘零范蠡舟。 宋·张伯玉 西楼早望' },
+  '憔悴': { pinyin: 'qiáo cuì', meaning: 'haggard', example: '憔悴官曹冗，艰难祸难婴。 北宋·张耒 福昌书事言怀一百韵上运判唐通直' },
+  '艰难': { pinyin: 'jiān nán', meaning: 'difficult', example: '慷慨传丹桂，艰难保旧居。 唐末·罗隐 寄苏拾遗' },
+  '慷慨': { pinyin: 'kāng kǎi', meaning: 'vehement', example: '慷慨匡时略，从容问罪师。 唐·杜牧 和野人殷潜之题筹笔驿十四韵' },
+  '从容': { pinyin: 'cóng róng', meaning: 'leisurely', example: '从容发口酬摩诘，邂逅持心契慧能。 北宋·王安石 和平甫招道光法师' },
+  '邂逅': { pinyin: 'xiè hòu', meaning: 'meet by chance', example: '邂逅尘中遇，殷勤马上辞。 唐·白居易 代书诗一百韵寄微之' },
+  '殷勤': { pinyin: 'yīn qín', meaning: 'solicitous', example: '辛苦谋身无瓮算，殷勤娱耳有瓶笙。 南宋·刘克庄 即事二首 其一' },
+  '辛苦': { pinyin: 'xīn kǔ', meaning: 'hard', example: '万里饥寒民所德，半生辛苦学之功。 南宋·曾丰 至衡阳谒提刑范右司东叔同年兄 其一' },
+  '饥寒': { pinyin: 'jī hán', meaning: 'hunger and cold', example: '丧乱不沾新雨露，饥寒今忆旧田园。 元末明初·谢应芳 元夕寓田舍有感' },
+  '丧乱': { pinyin: 'sāng luàn', meaning: 'chaos', example: '丧乱怀先帝，艰危有我生。 明·郑善夫 阻济上' },
+  '艰危': { pinyin: 'jiān wēi', meaning: 'hardship and danger', example: '遥知驻跸艰危地，尚有忧时老大臣。 宋·韩驹 次韵曾寺丞观早朝上徐谏议' },
+  '老大': { pinyin: 'lǎo dà', meaning: 'old', example: '百忧寻老大，一笑属儿童。 南宋·范成大 元日奉呈项丈诸生' },
+  '儿童': { pinyin: 'ér tóng', meaning: 'children', example: '儿童鼓笛迎归舰，父老壶觞叙别情。 南宋·陆游 舟行钱清柯桥之间' },
+  '父老': { pinyin: 'fù lǎo', meaning: 'elders', example: '君王旧赐冯唐节，父老新传李愬碑。 元末明初·郭钰 奉赠江西省郎中颜希古' },
+  '君王': { pinyin: 'jūn wáng', meaning: 'monarch', example: '欲为臣子定出处，知与君王分重轻。 南宋·吕声之 过七里濑怀古' },
+  '臣子': { pinyin: 'chén zǐ', meaning: 'subject', example: '臣子涓埃何补报，君亲天地有包容。 明·程通 和韵' },
+  '君亲': { pinyin: 'jūn qīn', meaning: 'monarch and parents', example: '君亲于我皆无尽，忠孝须君两不惭。 明·陈献章 次韵汪鼎夫侍御寿母生日' },
+  '忠孝': { pinyin: 'zhōng xiào', meaning: 'loyalty and filial piety', example: '千秋鉴自传忠孝，万石风元饬性情。 清·钱载 侍讲张先生若需挽词' },
+  '性情': { pinyin: 'xìng qíng', meaning: 'disposition', example: '求人颜色尽，知道性情宽。 唐·许浑 赠隐者' },
+  '颜色': { pinyin: 'yán sè', meaning: 'color', example: '颜色却还天上女，馨香留与世间人。 唐·李山甫 落花' },
+  '馨香': { pinyin: 'xīn xiāng', meaning: 'fragrance', example: '馨香非黍稷，陟降是威神。 明·车天辂 庚戌三月十二日寒食。祗事健元陵' },
+  '陟降': { pinyin: 'zhì jiàng', meaning: 'ascend and descend', example: '陟降俨临神鉴赫，显承佑启泰阶平。 清·弘历 孟秋时享太庙' },
+  '显承': { pinyin: 'xiǎn chéng', meaning: 'manifest and inherit', example: '圣德光垂裕，神谟大显承。 清·玄烨 台湾平告祀孝陵有述' },
+  '垂裕': { pinyin: 'chuí yù', meaning: 'leave a legacy', example: '关河气象雄天险，文武规模壮帝畿。 明·王鏊 送杨尚絅杨名甫毛贞甫陆全卿四进士归省 其三 毛' }
+
+    };
+
+    // 从词汇库中提取所有词汇
+    const allWords = Object.keys(wordVocabulary);
+    
+    // 将词汇按长度分组
+    const wordsByLength = {
+      1: allWords.filter(word => word.length === 1),
+      2: allWords.filter(word => word.length === 2),
+      3: allWords.filter(word => word.length === 3),
+      4: allWords.filter(word => word.length === 4)
+    };
+
+    let activeWords = [...wordsByLength[1], ...wordsByLength[2], ...wordsByLength[3], ...wordsByLength[4]];
+    let score = 0;
+    let missedWords = {};
+
+    function useCustomChars() {
+      const input = document.getElementById('charInput').value.trim();
+      if (input) {
+        // 将输入转换为词汇列表
+        const customWords = input.split(' ').filter(word => word.length > 0);
+        activeWords = [...new Set(customWords)];
+        score = 0;
+        missedWords = {};
+        updateScore();
+        renderMissedWords();
+      }
+    }
+
+    function resetToDefault() {
+      activeWords = [...wordsByLength[1], ...wordsByLength[2], ...wordsByLength[3], ...wordsByLength[4]];
+      document.getElementById('charInput').value = '';
+      score = 0;
+      missedWords = {};
+      updateScore();
+      renderMissedWords();
+    }
+
+    function reset() {
+      score = 0;
+      missedWords = {};
+      updateScore();
+      renderMissedWords();
+    }
+
+    function useDefaultChars() {
+      updateScore();
+    }
+
+    function updateScore() {
+      document.getElementById("scoreBoard").textContent = `分数：${score}`;
+    }
+
+    function createFallingWord() {
+      if (activeWords.length === 0) return;
+      
+      // 随机选择1-4个字的词汇
+      const wordLength = Math.min(Math.floor(Math.random() * 4) + 1, 4);
+      const availableWords = activeWords.filter(word => word.length === wordLength);
+      
+      if (availableWords.length === 0) return;
+      
+      const word = availableWords[Math.floor(Math.random() * availableWords.length)];
+      const wordElem = document.createElement('div');
+      wordElem.className = 'fallingChar';
+      wordElem.textContent = word;
+
+      // 根据词汇长度调整动画持续时间
+      const baseDuration = 15;
+      const lengthFactor = 1 + (word.length - 1) * 0.2; // 每多一个字增加20%时间
+      const fallDuration = (Math.random() * 3 + baseDuration) * lengthFactor;
+      
+      wordElem.style.animationDuration = `${fallDuration}s`;
+      wordElem.style.left = `${Math.random() * (window.innerWidth - 40)}px`;
+
+      wordElem.addEventListener('click', () => {
+        score++;
+        updateScore();
+        showApple(wordElem.offsetLeft, wordElem.offsetTop);
+        showWordDetail(word);
+        wordElem.remove();
+      });
+
+      document.getElementById('gameContainer').appendChild(wordElem);
+
+      setTimeout(() => {
+        if (wordElem.parentElement) {
+          wordElem.remove();
+          if (word in missedWords) {
+            missedWords[word]++;
+          } else {
+            missedWords[word] = 1;
+          }
+          renderMissedWords();
+        }
+      }, fallDuration * 1000);
+    }
+
+    function showWordDetail(word) {
+      const detail = wordVocabulary[word];
+      if (!detail) return;
+      
+      document.getElementById('detailWord').textContent = word;
+      document.getElementById('detailPinyin').textContent = detail.pinyin;
+      document.getElementById('detailMeaning').innerHTML = `<strong>释义：</strong>${detail.meaning}`;
+      document.getElementById('detailExample').innerHTML = `<strong>例句：</strong>${detail.example}`;
+      
+      document.getElementById('wordDetail').style.display = 'block';
+      
+      // 设置朗读功能
+      document.getElementById('speakBtn').onclick = () => {
+        speakWord(word);
+      };
+    }
+
+    function speakWord(word) {
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(word);
+        utterance.lang = 'zh-CN';
+        speechSynthesis.speak(utterance);
+      } else {
+        alert('您的浏览器不支持语音合成功能');
+      }
+    }
+
+    document.getElementById('closeDetail').addEventListener('click', () => {
+      document.getElementById('wordDetail').style.display = 'none';
+    });
+
+    function renderMissedWords() {
+      const basket = document.getElementById("basket");
+      basket.innerHTML = "⬇ 生字纸篓 ⬇";
+
+      const list = document.createElement("div");
+      list.style.marginTop = "6px";
+      list.style.fontSize = "16px";
+      list.style.display = "flex";
+      list.style.flexWrap = "wrap";
+      list.style.gap = "12px";
+      list.style.justifyContent = "center";
+
+      for (const word in missedWords) {
+        const count = missedWords[word];
+        const entry = document.createElement("div");
+        entry.textContent = `${count}× ${word}`;
+        entry.style.background = "#1a1a1a";
+        entry.style.padding = "4px 8px";
+        entry.style.borderRadius = "6px";
+        entry.style.color = "#fff";
+        list.appendChild(entry);
+      }
+
+      basket.appendChild(list);
+    }
+
+    function autoResize(textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = (textarea.scrollHeight) + "px";
+    }
+
+    function showApple(x, y) {
+      const apple = document.createElement('div');
+      apple.id = 'appleReward';
+      apple.textContent = '🍎';
+      apple.style.left = `${x}px`;
+      apple.style.top = `${y}px`;
+      document.getElementById('gameContainer').appendChild(apple);
+      setTimeout(() => apple.remove(), 600);
+    }
+
+    setInterval(() => {
+      createFallingWord();
+    }, 1800);
+  </script>
+</body>
+</html>

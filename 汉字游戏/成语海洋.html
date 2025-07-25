@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>成语海洋</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(to bottom, #000428, #1a1a2e);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 1200px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            position: relative;
+            min-height: 700px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+        
+        .title {
+            color: #1A237E;
+            font-size: 32px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .score-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .score {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4a6ea9;
+        }
+        
+        .achievements {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .achievement {
+            font-size: 24px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.5s;
+        }
+        
+        .ocean-surface {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #000428, #1a1a2e);
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        .chengyu {
+            position: absolute;
+            font-size: 72px; /* 200% größer */
+            cursor: pointer;
+            transition: all 0.5s;
+            color: #FFEB3B;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+            bottom: -100px;
+            text-align: center;
+            width: 100%;
+        }
+        
+        .chengyu.active {
+            bottom: 50%;
+            transform: translateY(50%);
+        }
+        
+        .pinyin-display {
+            position: absolute;
+            font-size: 48px; /* 200% größer */
+            color: #FFFFFF;
+            text-align: center;
+            width: 100%;
+            bottom: 40%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            cursor: pointer;
+        }
+        
+        .pinyin-display.show {
+            opacity: 1;
+        }
+        
+        .example-sentence {
+            position: absolute;
+            font-size: 22px;
+            color: #FFFFFF;
+            text-align: center;
+            width: 80%;
+            left: 10%;
+            bottom: 30%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            cursor: pointer;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .example-sentence.show {
+            opacity: 1;
+        }
+        
+        .translation {
+            position: absolute;
+            font-size: 18px;
+            color: #FFFFFF;
+            text-align: center;
+            width: 80%;
+            left: 10%;
+            bottom: 15%;
+            opacity: 1;
+            transition: opacity 0.5s;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            font-style: italic;
+            cursor: pointer;
+        }
+        
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 1.5s infinite alternate;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+        
+        .wave {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: url('data:image/svg+xml;utf8,<svg viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg"><path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" fill="%23006587" opacity=".25"/><path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" fill="%23006587" opacity=".5"/><path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z" fill="%23006587"/></svg>');
+            background-size: cover;
+            animation: wave 10s linear infinite;
+        }
+        
+        .wave:nth-child(2) {
+            animation-delay: -5s;
+            opacity: 0.7;
+        }
+        
+        @keyframes wave {
+            0% { background-position-x: 0; }
+            100% { background-position-x: 1200px; }
+        }
+        
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        
+        .celebration.active {
+            opacity: 1;
+        }
+        
+        .flower, .fruit, .clap {
+            position: absolute;
+            font-size: 40px;
+            opacity: 0;
+            animation: float 3s ease-in-out forwards;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-300px) rotate(360deg); opacity: 0; }
+        }
+        
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .control-btn {
+            padding: 12px 24px;
+            background-color: #4a6ea9;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-btn:hover {
+            background-color: #3a5a8f;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .control-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        @media (max-width: 768px) {
+            .game-container {
+                max-width: 95%;
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .score {
+                font-size: 22px;
+            }
+            
+            .ocean-surface {
+                height: 500px;
+            }
+            
+            .chengyu {
+                font-size: 48px; /* Angepasst für mobile */
+            }
+            
+            .pinyin-display {
+                font-size: 32px; /* Angepasst für mobile */
+                bottom: 35%;
+            }
+            
+            .example-sentence, .translation {
+                font-size: 18px;
+                width: 90%;
+                left: 5%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1 class="title">成语海洋</h1>
+            <div class="score-container">
+                <span class="score">积分: 0</span>
+                <div class="achievements">
+                    <div class="achievement">🌸</div>
+                    <div class="achievement">🍎</div>
+                    <div class="achievement">👏</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ocean-surface" id="oceanSurface">
+            <div class="stars" id="stars"></div>
+            <div class="wave"></div>
+            <div class="wave"></div>
+            
+            <div class="chengyu" id="chengyu"></div>
+            <div class="pinyin-display" id="pinyinDisplay"></div>
+            <div class="example-sentence" id="exampleSentence"></div>
+            <div class="translation" id="translation"></div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" id="startBtn">开始探索</button>
+            <button class="control-btn" id="pauseBtn" disabled>暂停</button>
+        </div>
+    </div>
+    
+    <div class="celebration" id="celebration"></div>
+    
+    <script>
+        // 300个常见成语及其数据
+        const chengyuData = [
+            {
+                idiom: "画龙点睛",
+                pinyin: "huà lóng diǎn jīng",
+                meaning: "比喻在关键处用一两句话点明要旨，使内容更加生动有力",
+                example: "这篇文章的最后一段真是画龙点睛，让整个主题更加鲜明。",
+                translation: "Like adding the pupils to the eyes of a painted dragon - the finishing touch that brings a work of art to life"
+            },
+            {
+                idiom: "守株待兔",
+                pinyin: "shǒu zhū dài tù",
+                meaning: "比喻希望不经过努力而得到成功的侥幸心理",
+                example: "想要成功不能守株待兔，必须主动努力。",
+                translation: "To stand by a tree stump waiting for a hare - to trust to chance rather than show initiative"
+            },
+            {
+                idiom: "亡羊补牢",
+                pinyin: "wáng yáng bǔ láo",
+                meaning: "比喻出了问题以后想办法补救，可以防止继续受损失",
+                example: "虽然犯了错误，但现在亡羊补牢还来得及。",
+                translation: "To mend the fold after the sheep have been stolen - it's never too late to mend"
+            },
+            {
+                idiom: "掩耳盗铃",
+                pinyin: "yǎn ěr dào líng",
+                meaning: "比喻自己欺骗自己，明明掩盖不了的事情偏要设法掩盖",
+                example: "他以为不承认就没人知道，这不过是掩耳盗铃罢了。",
+                translation: "To plug one's ears while stealing a bell - to deceive oneself"
+            },
+            {
+                idiom: "狐假虎威",
+                pinyin: "hú jiǎ hǔ wēi",
+                meaning: "比喻依仗别人的势力欺压人",
+                example: "他不过是狐假虎威，借着领导的名义吓唬人。",
+                translation: "The fox borrows the tiger's ferocity - to bully others by flaunting one's powerful connections"
+            },
+            // 可以继续添加更多成语...
+            // 实际应用中应该有完整的300个成语
+            {
+                idiom: "井底之蛙",
+                pinyin: "jǐng dǐ zhī wā",
+                meaning: "比喻见识狭窄的人",
+                example: "不出国看看，你永远都是井底之蛙。",
+                translation: "A frog in a well - a person with a limited outlook"
+            },
+            {
+                idiom: "对牛弹琴",
+                pinyin: "duì niú tán qín",
+                meaning: "比喻对不懂道理的人讲道理，对外行人说内行话",
+                example: "跟他说这些高深的理论简直是对牛弹琴。",
+                translation: "To play the lute to a cow - to address the wrong audience"
+            },
+            {
+                idiom: "望梅止渴",
+                pinyin: "wàng méi zhǐ kě",
+                meaning: "比喻用空想安慰自己",
+                example: "现在只能望梅止渴，等发工资才能买新手机。",
+                translation: "To gaze at plums to quench thirst - to console oneself with false hopes"
+            },
+            {
+                idiom: "刻舟求剑",
+                pinyin: "kè zhōu qiú jiàn",
+                meaning: "比喻不懂事物已发展变化而仍静止地看问题",
+                example: "用老办法解决新问题，无异于刻舟求剑。",
+                translation: "To notch the boat to locate the sword - a fruitless approach"
+            },
+            {
+                idiom: "滥竽充数",
+                pinyin: "làn yú chōng shù",
+                meaning: "比喻无本领的冒充有本领，次货冒充好货",
+                example: "这个团队里有些人根本就是滥竽充数。",
+                translation: "To fill a post without real qualifications - to make up the number"
+            }
+        ];
+        
+        // 游戏状态
+        const gameState = {
+            score: 0,
+            currentIdiom: null,
+            isPlaying: false,
+            timer: null,
+            achievements: 0,
+            speechSynthesis: window.speechSynthesis || null
+        };
+        
+        // DOM元素
+        const oceanSurface = document.getElementById('oceanSurface');
+        const chengyuElement = document.getElementById('chengyu');
+        const pinyinDisplay = document.getElementById('pinyinDisplay');
+        const exampleSentence = document.getElementById('exampleSentence');
+        const translation = document.getElementById('translation');
+        const starsContainer = document.getElementById('stars');
+        const scoreElement = document.querySelector('.score');
+        const achievementElements = document.querySelectorAll('.achievement');
+        const celebration = document.getElementById('celebration');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        
+        // 创建星星
+        function createStars() {
+            starsContainer.innerHTML = '';
+            const starCount = 100;
+            
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // Zufällige Position und Größe
+                const size = Math.random() * 3 + 1;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                // Zufällige Animationsdauer
+                star.style.animationDuration = `${Math.random() * 2 + 1}s`;
+                star.style.animationDelay = `${Math.random() * 2}s`;
+                
+                starsContainer.appendChild(star);
+            }
+        }
+        
+        // 初始化游戏
+        function initGame() {
+            createStars();
+            
+            // 设置事件监听器
+            startBtn.addEventListener('click', startGame);
+            pauseBtn.addEventListener('click', pauseGame);
+            chengyuElement.addEventListener('click', handleChengyuClick);
+            pinyinDisplay.addEventListener('click', handlePinyinClick);
+            exampleSentence.addEventListener('click', handleExampleClick);
+            translation.addEventListener('click', handleTranslationClick);
+            
+            // 初始化语音合成
+            if (!gameState.speechSynthesis) {
+                console.warn('浏览器不支持语音合成API');
+            }
+        }
+        
+        // 开始游戏
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState.isPlaying = true;
+            startBtn.disabled = true;
+            pauseBtn.disabled = false;
+            
+            // 开始生成成语
+            generateChengyu();
+        }
+        
+        // 暂停游戏
+        function pauseGame() {
+            gameState.isPlaying = false;
+            clearTimeout(gameState.timer);
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            
+            // 隐藏所有元素
+            resetDisplay();
+        }
+        
+        // 生成随机成语
+        function generateChengyu() {
+            if (!gameState.isPlaying) return;
+            
+            // 随机选择一个成语
+            const randomIndex = Math.floor(Math.random() * chengyuData.length);
+            gameState.currentIdiom = chengyuData[randomIndex];
+            
+            // 重置显示
+            resetDisplay();
+            
+            // 显示成语
+            chengyuElement.textContent = gameState.currentIdiom.idiom;
+            setTimeout(() => {
+                chengyuElement.classList.add('active');
+            }, 500);
+        }
+        
+        // 处理成语点击
+        function handleChengyuClick() {
+            // 朗读成语
+            speak(gameState.currentIdiom.idiom);
+            
+            // 5秒后显示拼音
+            setTimeout(() => {
+                chengyuElement.classList.remove('active');
+                pinyinDisplay.textContent = gameState.currentIdiom.pinyin;
+                pinyinDisplay.classList.add('show');
+            }, 5000);
+        }
+        
+        // 处理拼音点击
+        function handlePinyinClick() {
+            // 再次显示成语
+            pinyinDisplay.classList.remove('show');
+            chengyuElement.classList.add('active');
+            
+            // 显示例句
+            setTimeout(() => {
+                exampleSentence.textContent = gameState.currentIdiom.example;
+                exampleSentence.classList.add('show');
+            }, 1000);
+        }
+        
+        // 处理例句点击
+        function handleExampleClick() {
+            // 朗读例句
+            speak(gameState.currentIdiom.example);
+            
+            // 显示翻译
+            setTimeout(() => {
+                translation.textContent = gameState.currentIdiom.translation;
+                translation.classList.add('show');
+                
+                // 朗读翻译
+                setTimeout(() => {
+                    speak(gameState.currentIdiom.translation);
+                    
+                    // 增加分数
+                    addScore(10);
+                }, 1000);
+            }, 1000);
+        }
+        
+        // 处理翻译点击
+        function handleTranslationClick() {
+            // 3秒后生成新成语
+            setTimeout(() => {
+                generateChengyu();
+            }, 3000);
+        }
+        
+        // 增加分数
+        function addScore(points) {
+            gameState.score += points;
+            scoreElement.textContent = `积分: ${gameState.score}`;
+            
+            // 每50分获得成就
+            if (gameState.score >= (gameState.achievements + 1) * 50) {
+                gameState.achievements++;
+                showAchievement();
+            }
+        }
+        
+        // 显示成就
+        function showAchievement() {
+            // 显示成就图标
+            if (gameState.achievements <= achievementElements.length) {
+                achievementElements[gameState.achievements - 1].style.opacity = 1;
+                achievementElements[gameState.achievements - 1].style.transform = 'scale(1)';
+            }
+            
+            // 显示庆祝效果
+            showCelebration();
+        }
+        
+        // 显示庆祝效果
+        function showCelebration() {
+            celebration.innerHTML = '';
+            celebration.classList.add('active');
+            
+            // 创建花朵、水果和掌声
+            const items = ['🌸', '🌺', '🌻', '🍎', '🍊', '🍓', '👏', '👍', '🎉'];
+            for (let i = 0; i < 20; i++) {
+                const item = document.createElement('div');
+                item.className = i < 7 ? 'flower' : i < 14 ? 'fruit' : 'clap';
+                item.textContent = items[Math.floor(Math.random() * items.length)];
+                item.style.left = `${Math.random() * 100}%`;
+                item.style.bottom = '0';
+                item.style.animationDelay = `${i * 0.1}s`;
+                celebration.appendChild(item);
+            }
+            
+            // 3秒后隐藏庆祝效果
+            setTimeout(() => {
+                celebration.classList.remove('active');
+            }, 3000);
+        }
+        
+        // 重置显示
+        function resetDisplay() {
+            chengyuElement.classList.remove('active');
+            pinyinDisplay.classList.remove('show');
+            exampleSentence.classList.remove('show');
+            translation.classList.remove('show');
+        }
+        
+        // 语音朗读
+        function speak(text) {
+            if (!gameState.speechSynthesis) return;
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.9;
+            gameState.speechSynthesis.speak(utterance);
+        }
+        
+        // 初始化游戏
+        window.onload = initGame;
+    </script>
+</body>
+</html>

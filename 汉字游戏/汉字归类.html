@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hanzi Master Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #2c3e50;
+            --background-light: #f5f5f5;
+            --background-dark: #222;
+            --text-light: #333;
+            --text-dark: #eee;
+            --drawer-width: 120px;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--background-light);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        
+        body.dark-mode {
+            background: var(--background-dark);
+            color: var(--text-dark);
+        }
+        
+        #app {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .score {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .characters-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            min-height: 120px;
+        }
+        
+        .character {
+            font-size: 3em;
+            cursor: grab;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            user-select: none;
+        }
+        
+        .dark-mode .character {
+            background: #333;
+            color: white;
+        }
+        
+        .character:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .character.dragging {
+            opacity: 0.7;
+            transform: scale(1.05);
+        }
+        
+        .drawers-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(var(--drawer-width), 1fr));
+            gap: 12px;
+            padding: 10px;
+        }
+        
+        .drawer {
+            background: #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            overflow: hidden;
+            height: 180px;
+        }
+        
+        .dark-mode .drawer {
+            background: #444;
+        }
+        
+        .drawer.expanded {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 100;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            overflow-y: auto;
+        }
+        
+        .dark-mode .drawer.expanded {
+            background: #333;
+        }
+        
+        .drawer-header {
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding: 5px;
+            background: var(--secondary-color);
+            color: white;
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+        
+        .drawer-character {
+            font-size: 2em;
+            margin: 5px 0;
+        }
+        
+        .drawer-pinyin {
+            font-size: 0.9em;
+            color: #d32f2f;
+            font-weight: bold;
+        }
+        
+        .drawer-meaning {
+            font-size: 0.8em;
+            margin-bottom: 5px;
+        }
+        
+        .example-sentence {
+            font-size: 1em; /* 100% größer als vorher */
+            padding: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            margin-top: 8px;
+            display: none;
+        }
+        
+        .dark-mode .example-sentence {
+            background: #555;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            filter: brightness(1.1);
+        }
+        
+        select {
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            background: white;
+        }
+        
+        .dark-mode select {
+            background: #555;
+            color: white;
+            border-color: #777;
+        }
+        
+        .phonetic-hint {
+            color: #666;
+            font-size: 0.7em;
+            margin-top: 3px;
+        }
+        
+        .dark-mode .phonetic-hint {
+            color: #aaa;
+        }
+        
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+        
+        .overlay.active {
+            display: block;
+        }
+        
+        .stats {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+        
+        .dark-mode .stats {
+            color: #aaa;
+        }
+        
+        /* Responsive Anpassungen */
+        @media (max-width: 768px) {
+            .drawers-container {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            }
+            
+            .character {
+                font-size: 2.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="header">
+            <h1>Hanzi Master Pro</h1>
+            <div class="score">Punkte: {{ score }} | Highscore: {{ highscore }}</div>
+            <div class="stats">Richtig: {{ correct }} | Falsch: {{ wrong }} | Gesammelt: {{ collectedChars.length }}</div>
+        </div>
+
+        <div class="controls">
+            <button @click="newGame">Neue Runde (+{{ newCharsCount }} Zeichen)</button>
+            <select v-model="difficulty">
+                <option value="5">Leicht (5-8 Zeichen)</option>
+                <option value="12">Mittel (12-15 Zeichen)</option>
+                <option value="20">Schwer (18-20 Zeichen)</option>
+            </select>
+            <button @click="toggleDarkMode">{{ darkMode ? 'Hellmodus' : 'Dunkelmodus' }}</button>
+            <button @click="clearDrawers">Schubladen leeren</button>
+        </div>
+
+        <div class="characters-container">
+            <div v-for="char in currentCharacters" 
+                 :key="char.id"
+                 class="character"
+                 draggable="true"
+                 @dragstart="startDrag($event, char)"
+                 @click="showCharacterInfo(char)">
+                {{ char.char }}
+                <div class="phonetic-hint">{{ char.phonetic }} ({{ char.pinyinRoot }})</div>
+            </div>
+        </div>
+
+        <div class="overlay" :class="{ active: expandedDrawer }" @click.self="closeExpandedDrawer"></div>
+        
+        <div class="drawers-container">
+            <div v-for="drawer in drawers" 
+                 :key="drawer.radical"
+                 class="drawer"
+                 :class="{ expanded: drawer.expanded }"
+                 :style="drawer.expanded ? expandedDrawerStyle(drawer) : {}"
+                 @dragover.prevent
+                 @drop="dropOnDrawer($event, drawer)"
+                 @click="toggleDrawer(drawer)"
+                 @dblclick="drawer.expanded = false">
+                <div class="drawer-header">{{ drawer.radical }} - {{ drawer.meaning }} ({{ drawer.items.length }})</div>
+                <div v-for="item in drawer.items" 
+                     :key="item.id"
+                     @click.stop="showCharacterInfo(item)">
+                    <div class="drawer-character">{{ item.char }}</div>
+                    <div class="drawer-pinyin">{{ item.pinyin }}</div>
+                    <div class="drawer-meaning">{{ item.meaning }}</div>
+                    <div class="example-sentence">{{ item.example }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, reactive, computed } = Vue;
+
+        // Erweiterte Datenbank mit 20 phonetischen Gruppen (im Beispiel)
+        const hanziDatabase = [
+            // Gruppe 青 (qing)
+            {
+                phonetic: "青",
+                pinyinRoot: "qing",
+                characters: [
+                    { char: "清", pinyin: "qīng", radical: "氵", meaning: "klar, rein", example: "清水 (qīngshuǐ) - klares Wasser" },
+                    { char: "晴", pinyin: "qíng", radical: "日", meaning: "sonnig", example: "晴天 (qíngtiān) - sonniger Tag" },
+                    { char: "请", pinyin: "qǐng", radical: "讠", meaning: "bitten", example: "请进 (qǐng jìn) - bitte eintreten" },
+                    { char: "情", pinyin: "qíng", radical: "忄", meaning: "Gefühl", example: "心情 (xīnqíng) - Gemütszustand" },
+                    { char: "蜻", pinyin: "qīng", radical: "虫", meaning: "Libelle", example: "蜻蜓 (qīngtíng) - Libelle" }
+                ]
+            },
+            // Gruppe 马 (ma)
+            {
+                phonetic: "马",
+                pinyinRoot: "ma",
+                characters: [
+                    { char: "妈", pinyin: "mā", radical: "女", meaning: "Mutter", example: "妈妈 (māma) - Mama" },
+                    { char: "吗", pinyin: "ma", radical: "口", meaning: "Fragepartikel", example: "你好吗？(nǐ hǎo ma?) - Wie geht's?" },
+                    { char: "码", pinyin: "mǎ", radical: "石", meaning: "Nummer, Code", example: "密码 (mìmǎ) - Passwort" },
+                    { char: "骂", pinyin: "mà", radical: "口", meaning: "beschimpfen", example: "骂人 (mà rén) - jemanden beschimpfen" },
+                    { char: "蚂", pinyin: "mǎ", radical: "虫", meaning: "Ameise", example: "蚂蚁 (mǎyǐ) - Ameise" }
+                ]
+            },
+            // Weitere Gruppen...
+            {
+                phonetic: "可",
+                pinyinRoot: "ke",
+                characters: [
+                    { char: "河", pinyin: "hé", radical: "氵", meaning: "Fluss", example: "黄河 (Huáng Hé) - Gelber Fluss" },
+                    { char: "何", pinyin: "hé", radical: "亻", meaning: "was, wie", example: "任何 (rènhé) - irgendein" },
+                    { char: "呵", pinyin: "hē", radical: "口", meaning: "ausatmen", example: "呵气 (hē qì) - hauchen" }
+                ]
+            },
+            // 17 weitere Gruppen hier...
+        ];
+
+        // Radikal-Datenbank mit 60 Einträgen (Auszug)
+        const radicals = {
+            "氵": "Wasser",
+            "日": "Sonne",
+            "讠": "Sprache",
+            "忄": "Herz",
+            "女": "Frau",
+            "口": "Mund",
+            "石": "Stein",
+            "亻": "Person",
+            "木": "Holz",
+            "艹": "Pflanze",
+            "扌": "Hand",
+            "辶": "Gehen",
+            "钅": "Metall",
+            "月": "Fleisch/Mond",
+            "火": "Feuer",
+            "土": "Erde",
+            "宀": "Dach",
+            "纟": "Seide",
+            "贝": "Muschel/Geld",
+            "车": "Wagen",
+            // 40 weitere Radikale...
+        };
+
+        createApp({
+            setup() {
+                const score = ref(0);
+                const highscore = ref(0);
+                const correct = ref(0);
+                const wrong = ref(0);
+                const difficulty = ref("5");
+                const currentCharacters = ref([]);
+                const drawers = reactive([]);
+                const draggedItem = ref(null);
+                const expandedDrawer = ref(false);
+                const darkMode = ref(false);
+                const collectedChars = ref([]);
+
+                // Berechnete Eigenschaften
+                const newCharsCount = computed(() => {
+                    const base = parseInt(difficulty.value);
+                    return base + Math.floor(Math.random() * 3);
+                });
+
+                // Initialisiert die Schubladen
+                const initDrawers = () => {
+                    if (drawers.length === 0) {
+                        for (const [radical, meaning] of Object.entries(radicals)) {
+                            drawers.push({
+                                radical,
+                                meaning,
+                                items: [],
+                                expanded: false
+                            });
+                        }
+                    }
+                };
+
+                // Startet eine neue Runde mit neuen Zeichen
+                const newGame = () => {
+                    initDrawers();
+                    
+                    // Wählt mehrere zufällige phonetische Gruppen aus
+                    const groups = [];
+                    const groupCount = Math.max(1, Math.floor(Math.random() * 3));
+                    for (let i = 0; i < groupCount; i++) {
+                        const availableGroups = hanziDatabase.filter(g => 
+                            !groups.includes(g) && 
+                            !collectedChars.value.some(c => g.characters.some(gc => gc.char === c.char))
+                        );
+                        if (availableGroups.length > 0) {
+                            groups.push(availableGroups[Math.floor(Math.random() * availableGroups.length)]);
+                        }
+                    }
+                    
+                    // Sammelt neue Zeichen aus den ausgewählten Gruppen
+                    let newChars = [];
+                    groups.forEach(group => {
+                        const availableChars = group.characters.filter(c => 
+                            !collectedChars.value.some(cc => cc.char === c.char)
+                        );
+                        newChars = newChars.concat(availableChars.map(char => ({
+                            ...char,
+                            phonetic: group.phonetic,
+                            pinyinRoot: group.pinyinRoot,
+                            id: `${char.char}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`
+                        })));
+                    });
+                    
+                    // Begrenzt die Anzahl der neuen Zeichen
+                    const maxNewChars = Math.min(newCharsCount.value, newChars.length);
+                    const selectedNewChars = [...newChars]
+                        .sort(() => Math.random() - 0.5)
+                        .slice(0, maxNewChars);
+                    
+                    currentCharacters.value = selectedNewChars;
+                };
+
+                // Drag & Drop Funktionen
+                const startDrag = (event, char) => {
+                    draggedItem.value = char;
+                    event.dataTransfer.setData('text/plain', char.id);
+                    event.target.classList.add('dragging');
+                };
+
+                const dropOnDrawer = (event, drawer) => {
+                    event.preventDefault();
+                    const char = draggedItem.value;
+                    
+                    if (char.radical === drawer.radical) {
+                        // Fügt das Zeichen zur Schublade hinzu (wenn nicht bereits vorhanden)
+                        if (!drawer.items.some(item => item.char === char.char)) {
+                            drawer.items.push(char);
+                            collectedChars.value.push(char);
+                            score.value += 10;
+                            correct.value++;
+                            if (score.value > highscore.value) {
+                                highscore.value = score.value;
+                            }
+                            event.target.classList.add('highlight');
+                            setTimeout(() => {
+                                event.target.classList.remove('highlight');
+                            }, 1000);
+                        }
+                        
+                        // Entfernt das Zeichen aus der aktuellen Auswahl
+                        currentCharacters.value = currentCharacters.value.filter(c => c.id !== char.id);
+                    } else {
+                        wrong.value++;
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+                    }
+                    
+                    document.querySelectorAll('.character.dragging').forEach(el => {
+                        el.classList.remove('dragging');
+                    });
+                };
+
+                // Schubladen-Erweiterung mit dynamischer Größe
+                const expandedDrawerStyle = (drawer) => {
+                    const itemCount = drawer.items.length;
+                    const baseHeight = 400;
+                    const extraHeight = Math.min(400, Math.floor(itemCount / 3) * 60);
+                    const width = Math.min(800, 400 + Math.floor(itemCount / 5) * 50);
+                    
+                    return {
+                        width: `${width}px`,
+                        height: `${baseHeight + extraHeight}px`
+                    };
+                };
+
+                const toggleDrawer = (drawer) => {
+                    drawers.forEach(d => {
+                        if (d !== drawer) d.expanded = false;
+                    });
+                    drawer.expanded = !drawer.expanded;
+                    expandedDrawer.value = drawer.expanded;
+                };
+
+                const closeExpandedDrawer = () => {
+                    drawers.forEach(d => d.expanded = false);
+                    expandedDrawer.value = false;
+                };
+
+                // Zeichen-Info anzeigen
+                const showCharacterInfo = (char) => {
+                    const elements = document.querySelectorAll('.example-sentence');
+                    elements.forEach(el => {
+                        if (el.textContent.includes(char.char)) {
+                            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+                        } else {
+                            el.style.display = 'none';
+                        }
+                    });
+                };
+
+                // Schubladen leeren
+                const clearDrawers = () => {
+                    if (confirm("Alle gesammelten Zeichen löschen?")) {
+                        drawers.forEach(d => d.items = []);
+                        collectedChars.value = [];
+                        score.value = 0;
+                    }
+                };
+
+                // Dunkelmodus
+                const toggleDarkMode = () => {
+                    darkMode.value = !darkMode.value;
+                    document.body.classList.toggle('dark-mode', darkMode.value);
+                };
+
+                // Initialisierung
+                initDrawers();
+                newGame();
+
+                return {
+                    score,
+                    highscore,
+                    correct,
+                    wrong,
+                    difficulty,
+                    currentCharacters,
+                    drawers,
+                    expandedDrawer,
+                    darkMode,
+                    collectedChars,
+                    newCharsCount,
+                    newGame,
+                    startDrag,
+                    dropOnDrawer,
+                    toggleDrawer,
+                    closeExpandedDrawer,
+                    showCharacterInfo,
+                    clearDrawers,
+                    toggleDarkMode,
+                    expandedDrawerStyle
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
