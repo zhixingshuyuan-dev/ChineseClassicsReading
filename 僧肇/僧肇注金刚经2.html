@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金刚般若波罗蜜经（完整交互版）</title>
+    <style>
+        body {
+            font-family: "SimSun", "STKaiti", serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1.4em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 2.0em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d4a762;
+        }
+        
+        .author {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .preface-section {
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #d4a762;
+        }
+        
+        .preface-content {
+            margin-bottom: 20px;
+            line-height: 2.0;
+            color: #e0e0e0;
+        }
+        
+        .preface-annotation {
+            color: #999;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 3px solid #555;
+            margin-top: 15px;
+        }
+        
+        .text-section {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .text-section h3 {
+            margin-top: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            color: #d4a762;
+            background-color: #2a2a2a;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .annotation-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            color: #e0e0e0;
+        }
+        
+        .char-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #444;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .char:hover .char-tooltip {
+            display: block;
+        }
+        
+        .annotation {
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .plain-text {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.7em;
+            background-color: #444;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .action-btn:hover {
+            background-color: #555;
+        }
+        
+        .action-btn.speak {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .action-btn.stop {
+            background-color: #a76a6a;
+            color: #1a1a1a;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 15px 0;
+        }
+        
+        .translation-tab {
+            padding: 3px 8px;
+            background-color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .translation-tab.active {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        /* 新增的弹窗样式 */
+        .char-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .char-modal-content {
+            background-color: #2a2a2a;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .char-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .char-modal-char {
+            font-size: 3em;
+            color: #d4a762;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .char-modal-pinyin {
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+        
+        .char-modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .char-modal-close:hover {
+            color: #e0e0e0;
+        }
+        
+        .char-modal-section {
+            margin-bottom: 20px;
+        }
+        
+        .char-modal-section h3 {
+            color: #d4a762;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+        
+        .char-modal-meaning {
+            line-height: 1.6;
+        }
+        
+        /* Color schemes for alternating sections */
+        .section-1 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-1 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #d4a762;
+        }
+        
+        .section-2 .text-content {
+            background-color: #333333;
+        }
+        .section-2 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #5d8aa8;
+        }
+        
+        .section-3 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-3 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a8d4a7;
+        }
+        
+        .section-4 .text-content {
+            background-color: #333333;
+        }
+        .section-4 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4a7a7;
+        }
+        
+        .section-5 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-5 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a7a7d4;
+        }
+        
+        .section-6 .text-content {
+            background-color: #333333;
+        }
+        .section-6 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4d4a7;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+            color: #d4a762;
+            font-weight: bold;
+        }
+        
+        .reading-text {
+            display: none; /* 不再需要单独显示 */
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            
+            .char-modal-content {
+                padding: 15px;
+            }
+            
+            .char-modal-char {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 汉字详情弹窗 -->
+<div class="char-modal" id="charModal">
+    <div class="char-modal-content">
+        <div class="char-modal-header">
+            <h2>汉字详情</h2>
+            <button class="char-modal-close" id="closeCharModal">&times;</button>
+        </div>
+        <div class="char-modal-char" id="modalChar"></div>
+        <div class="char-modal-pinyin" id="modalPinyin"></div>
+        <div class="char-modal-section">
+            <h3>基本释义</h3>
+            <div class="char-modal-meaning" id="modalMeaning"></div>
+        </div>
+        <div class="char-modal-section">
+            <h3>佛教释义</h3>
+            <div class="char-modal-meaning" id="modalBuddhistMeaning"></div>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="title">金刚般若波罗蜜经</div>
+    <div class="author">姚秦三藏法师鸠摩罗什译</div>
+</div>
+
+<!-- 第二品标题 -->
+<div class="section-title">第二品</div>
+
+<!-- 经文内容 -->
+<div id="scriptureContent"></div>
+
+<script>
+// 语音合成对象
+let currentUtterance = null;
+
+// 标点符号的拼音映射
+const punctuationPinyin = {
+    '，': 'dòu hào',
+    '。': 'jù hào',
+    '、': 'dùn hào',
+    '；': 'fēn hào',
+    '：': 'mào hào',
+    '！': 'tàn hào',
+    '？': 'wèn hào',
+    '「': 'zuǒ yǐn hào',
+    '」': 'yòu yǐn hào',
+    '『': 'zuǒ shuāng yǐn hào',
+    '』': 'yòu shuāng yǐn hào',
+    '（': 'zuǒ kuò hào',
+    '）': 'yòu kuò hào',
+    '《': 'zuǒ shū míng hào',
+    '》': 'yòu shū míng hào'
+};
+
+// 汉字的多义项解释
+const charMeanings = {
+    '時': {
+        pinyin: 'shí',
+        meanings: [
+            'time; season; era, epoch',
+            'hour',
+            'opportunity; chance',
+            'current; present',
+            'occasionally; from time to time'
+        ],
+        buddhist: 'In Buddhism, "time" (kāla) is considered a conventional truth, with all phenomena being impermanent and constantly changing.'
+    },
+    '長': {
+        pinyin: 'zhǎng',
+        meanings: [
+            'chief; head; leader',
+            'elder; senior',
+            'to grow; to develop',
+            'to increase; to enhance'
+        ],
+        buddhist: 'In Buddhist context, often refers to senior monks or elders in the monastic community.'
+    },
+    '老': {
+        pinyin: 'lǎo',
+        meanings: [
+            'old; aged',
+            'experienced; veteran',
+            'always; all the time',
+            'outdated; old-fashioned'
+        ],
+        buddhist: 'Represents wisdom through long practice and experience in the Dharma.'
+    },
+    '須': {
+        pinyin: 'xū',
+        meanings: [
+            'must; have to',
+            'necessary; essential',
+            'beard; whiskers',
+            'await'
+        ],
+        buddhist: 'Indicates necessity in practice, often used in names like Subhūti (须菩提).'
+    },
+    '菩': {
+        pinyin: 'pú',
+        meanings: [
+            'bodhi (awakening)',
+            'used in transliteration of Buddhist terms'
+        ],
+        buddhist: 'Short for "bodhi" (awakening), the supreme enlightenment sought in Buddhism.'
+    },
+    '提': {
+        pinyin: 'tí',
+        meanings: [
+            'to carry; to lift',
+            'to put forward; to mention',
+            'to extract; to draw out'
+        ],
+        buddhist: 'Part of Subhūti\'s name, meaning "well-extracted" or "well-born".'
+    },
+    '在': {
+        pinyin: 'zài',
+        meanings: [
+            'at; in; on',
+            'exist; be present',
+            'to be located at',
+            'in the process of'
+        ],
+        buddhist: 'Indicates presence in the here and now, important in mindfulness practice.'
+    },
+    '大': {
+        pinyin: 'dà',
+        meanings: [
+            'big; large; great',
+            'main; major',
+            'greatly; fully',
+            'eldest'
+        ],
+        buddhist: 'Often used in terms like "great vehicle" (Mahāyāna) or "great compassion".'
+    },
+    '眾': {
+        pinyin: 'zhòng',
+        meanings: [
+            'crowd; multitude',
+            'many; numerous',
+            'common people',
+            'all; everyone'
+        ],
+        buddhist: 'Refers to the sangha or assembly of practitioners.'
+    },
+    '中': {
+        pinyin: 'zhōng',
+        meanings: [
+            'middle; center',
+            'within; among',
+            'in the process of',
+            'China'
+        ],
+        buddhist: 'The Middle Way (中道) between extremes, central to Buddhist philosophy.'
+    },
+    '即': {
+        pinyin: 'jí',
+        meanings: [
+            'namely; that is',
+            'at once; immediately',
+            'approach; draw near',
+            'even if'
+        ],
+        buddhist: 'Indicates immediacy of realization or direct experience.'
+    },
+    '從': {
+        pinyin: 'cóng',
+        meanings: [
+            'from; since',
+            'follow; comply with',
+            'join; engage in',
+            'secondary; accessory'
+        ],
+        buddhist: 'Following the Dharma or a teacher\'s guidance.'
+    },
+    '座': {
+        pinyin: 'zuò',
+        meanings: [
+            'seat; place',
+            'stand; pedestal',
+            'constellation',
+            'classifier for mountains, statues'
+        ],
+        buddhist: 'Refers to the seat of meditation or teaching.'
+    },
+    '起': {
+        pinyin: 'qǐ',
+        meanings: [
+            'to rise; to stand up',
+            'to start; to begin',
+            'to draft; to work out',
+            'to appear; to emerge'
+        ],
+        buddhist: 'The arising of phenomena or the beginning of practice.'
+    },
+    '偏': {
+        pinyin: 'piān',
+        meanings: [
+            'inclined to one side',
+            'partial; prejudiced',
+            'slanting; leaning',
+            'remote; far'
+        ],
+        buddhist: 'In this context, refers to the traditional gesture of baring one shoulder.'
+    },
+    '袒': {
+        pinyin: 'tǎn',
+        meanings: [
+            'to bare; to expose',
+            'to leave uncovered',
+            'to favor; to be partial to'
+        ],
+        buddhist: 'Part of the respectful gesture of baring the right shoulder.'
+    },
+    '右': {
+        pinyin: 'yòu',
+        meanings: [
+            'right (side)',
+            'west (traditional orientation)',
+            'conservative',
+            'to assist'
+        ],
+        buddhist: 'The right side is considered auspicious in many Buddhist traditions.'
+    },
+    '肩': {
+        pinyin: 'jiān',
+        meanings: [
+            'shoulder',
+            'to undertake; to shoulder responsibility'
+        ],
+        buddhist: 'Symbolizing bearing the responsibility of Dharma practice.'
+    },
+    '膝': {
+        pinyin: 'xī',
+        meanings: [
+            'knee',
+            'lap'
+        ],
+        buddhist: 'Part of the posture showing respect to the Buddha.'
+    },
+    '著': {
+        pinyin: 'zhuó',
+        meanings: [
+            'to wear; to put on',
+            'to touch; to contact',
+            'to apply; to use',
+            'to attach; to adhere'
+        ],
+        buddhist: 'In this context, means "to place" or "to rest upon".'
+    },
+    '地': {
+        pinyin: 'dì',
+        meanings: [
+            'earth; ground',
+            'place; location',
+            'position; situation',
+            'distance'
+        ],
+        buddhist: 'Represents the solid foundation of practice or reality.'
+    },
+    '合': {
+        pinyin: 'hé',
+        meanings: [
+            'to close; to join',
+            'to combine; to unite',
+            'whole; entire',
+            'to agree; to conform'
+        ],
+        buddhist: 'The gesture of joining palms (añjali) shows respect and devotion.'
+    },
+    '掌': {
+        pinyin: 'zhǎng',
+        meanings: [
+            'palm (of hand)',
+            'to control; to manage',
+            'sole (of foot)',
+            'horseshoe'
+        ],
+        buddhist: 'Part of the respectful gesture of joined palms.'
+    },
+    '恭': {
+        pinyin: 'gōng',
+        meanings: [
+            'respectful; polite',
+            'reverent',
+            'solemn'
+        ],
+        buddhist: 'Essential attitude in Dharma practice and toward teachers.'
+    },
+    '敬': {
+        pinyin: 'jìng',
+        meanings: [
+            'to respect; to honor',
+            'reverent; respectful',
+            'to offer politely'
+        ],
+        buddhist: 'One of the key virtues in Buddhist practice, especially toward the Three Jewels.'
+    },
+    '而': {
+        pinyin: 'ér',
+        meanings: [
+            'and; but',
+            'yet; however',
+            'as; like',
+            'to; in order to'
+        ],
+        buddhist: 'Connective indicating sequence of actions or states.'
+    },
+    '白': {
+        pinyin: 'bái',
+        meanings: [
+            'white',
+            'clear; pure',
+            'in vain; for nothing',
+            'to state; to explain'
+        ],
+        buddhist: 'Symbolizes purity and often used in names of Buddhist texts (白 means "explanation").'
+    },
+    '佛': {
+        pinyin: 'fó',
+        meanings: [
+            'Buddha',
+            'Buddhism',
+            'awakened one'
+        ],
+        buddhist: 'The fully enlightened one who has awakened from the sleep of ignorance.'
+    },
+    '言': {
+        pinyin: 'yán',
+        meanings: [
+            'speech; word',
+            'to speak; to say',
+            'language',
+            'character; word'
+        ],
+        buddhist: 'Right Speech is an important part of the Noble Eightfold Path.'
+    },
+    '希': {
+        pinyin: 'xī',
+        meanings: [
+            'rare; uncommon',
+            'to hope; to admire',
+            'thin; sparse'
+        ],
+        buddhist: 'Indicates something precious and hard to encounter, like the Dharma.'
+    },
+    '有': {
+        pinyin: 'yǒu',
+        meanings: [
+            'to have; to possess',
+            'there is; there are',
+            'to exist',
+            'some; certain'
+        ],
+        buddhist: 'In Buddhist philosophy, all conditioned things are said to have the three marks: impermanent, unsatisfactory, and not-self.'
+    },
+    '世': {
+        pinyin: 'shì',
+        meanings: [
+            'world; lifetime',
+            'generation',
+            'age; era',
+            'society'
+        ],
+        buddhist: 'Refers to the worldly realm (samsara) as opposed to liberation (nirvana).'
+    },
+    '尊': {
+        pinyin: 'zūn',
+        meanings: [
+            'honorable; respected',
+            'senior; elder',
+            'to respect; to honor',
+            'vessel; wine cup'
+        ],
+        buddhist: 'Epithet for the Buddha (世尊 - World-Honored One), one who is worthy of respect.'
+    },
+    '如': {
+        pinyin: 'rú',
+        meanings: [
+            'as; like',
+            'according to',
+            'if; in case',
+            'to go to'
+        ],
+        buddhist: 'Part of Tathāgata (如来 - Thus Come One), an epithet of the Buddha.'
+    },
+    '來': {
+        pinyin: 'lái',
+        meanings: [
+            'to come',
+            'future',
+            'about; around',
+            'ever since'
+        ],
+        buddhist: 'Part of Tathāgata (如来 - Thus Come One), indicating one who comes thus from the truth.'
+    },
+    '善': {
+        pinyin: 'shàn',
+        meanings: [
+            'good; virtuous',
+            'skilful; adept',
+            'to be good at',
+            'kind; friendly'
+        ],
+        buddhist: 'Refers to wholesome actions that lead to good results and liberation.'
+    },
+    '護': {
+        pinyin: 'hù',
+        meanings: [
+            'to protect; to guard',
+            'to defend',
+            'to take care of',
+            'nurse'
+        ],
+        buddhist: 'The protective power of the Dharma and the Buddha\'s compassion.'
+    },
+    '念': {
+        pinyin: 'niàn',
+        meanings: [
+            'to think of; to miss',
+            'thought; idea',
+            'to read aloud',
+            'twenty (in banking)'
+        ],
+        buddhist: 'Mindfulness (smṛti), one of the key practices in Buddhism.'
+    },
+    '諸': {
+        pinyin: 'zhū',
+        meanings: [
+            'all; various',
+            'many',
+            'the (plural)',
+            'to go to'
+        ],
+        buddhist: 'Refers to all beings or all phenomena in Buddhist texts.'
+    },
+    '菩': {
+        pinyin: 'pú',
+        meanings: [
+            'bodhi (awakening)',
+            'used in transliteration of Buddhist terms'
+        ],
+        buddhist: 'Short for "bodhi" (awakening), the supreme enlightenment sought in Buddhism.'
+    },
+    '薩': {
+        pinyin: 'sà',
+        meanings: [
+            'short for bodhisattva',
+            'used in transliteration'
+        ],
+        buddhist: 'Part of "bodhisattva" (菩萨), one who seeks awakening for the benefit of all beings.'
+    },
+    '付': {
+        pinyin: 'fù',
+        meanings: [
+            'to hand over',
+            'to pay',
+            'to entrust',
+            'to apply'
+        ],
+        buddhist: 'The Buddha\'s entrusting of the Dharma to his disciples.'
+    },
+    '囑': {
+        pinyin: 'zhǔ',
+        meanings: [
+            'to enjoin',
+            'to instruct',
+            'to entrust',
+            'last words'
+        ],
+        buddhist: 'The Buddha\'s final instructions to his disciples.'
+    },
+    '男': {
+        pinyin: 'nán',
+        meanings: [
+            'male',
+            'man',
+            'son',
+            'baron'
+        ],
+        buddhist: 'One who has the potential to practice and realize the Dharma.'
+    },
+    '子': {
+        pinyin: 'zǐ',
+        meanings: [
+            'child; son',
+            'person',
+            'seed',
+            'ancient title for masters'
+        ],
+        buddhist: 'Refers to disciples or those with the "seed" of awakening.'
+    },
+    '女': {
+        pinyin: 'nǚ',
+        meanings: [
+            'female',
+            'woman',
+            'daughter',
+            'you (archaic)'
+        ],
+        buddhist: 'One who has the potential to practice and realize the Dharma.'
+    },
+    '人': {
+        pinyin: 'rén',
+        meanings: [
+            'person; people',
+            'human',
+            'everybody',
+            'man-made'
+        ],
+        buddhist: 'Human rebirth is considered precious as it provides opportunity to practice Dharma.'
+    },
+    '發': {
+        pinyin: 'fā',
+        meanings: [
+            'to send out',
+            'to issue',
+            'to express',
+            'to develop'
+        ],
+        buddhist: 'The arising or development of the bodhicitta (awakening mind).'
+    },
+    '阿': {
+        pinyin: 'ā',
+        meanings: [
+            'prefix used in transliteration',
+            'flatter',
+            'a final particle'
+        ],
+        buddhist: 'Often used in Buddhist terms like anuttarā (阿耨多罗 - unsurpassed).'
+    },
+    '耨': {
+        pinyin: 'nòu',
+        meanings: [
+            'to weed',
+            'used in Buddhist terms'
+        ],
+        buddhist: 'Part of anuttarā-samyak-saṃbodhi (阿耨多罗三藐三菩提 - unsurpassed perfect enlightenment).'
+    },
+    '多': {
+        pinyin: 'duō',
+        meanings: [
+            'many; much',
+            'more',
+            'excessive',
+            'to what extent'
+        ],
+        buddhist: 'Represents the countless beings to be liberated or the manifold teachings.'
+    },
+    '羅': {
+        pinyin: 'luó',
+        meanings: [
+            'to collect',
+            'net',
+            'sieve',
+            'used in transliteration'
+        ],
+        buddhist: 'Part of terms like anuttarā (unsurpassed) and names like Rāhula.'
+    },
+    '三': {
+        pinyin: 'sān',
+        meanings: [
+            'three',
+            'several',
+            'repeatedly'
+        ],
+        buddhist: 'The Three Jewels (Buddha, Dharma, Sangha), Three Poisons, etc.'
+    },
+    '藐': {
+        pinyin: 'miǎo',
+        meanings: [
+            'small; tiny',
+            'to despise',
+            'used in Buddhist terms'
+        ],
+        buddhist: 'Part of samyak-saṃbodhi (三藐三菩提 - perfect complete enlightenment).'
+    },
+    '心': {
+        pinyin: 'xīn',
+        meanings: [
+            'heart; mind',
+            'core; center',
+            'intention',
+            'feeling'
+        ],
+        buddhist: 'The mind is the source of all experience and the key to liberation in Buddhism.'
+    },
+    '應': {
+        pinyin: 'yīng',
+        meanings: [
+            'ought to; should',
+            'to answer',
+            'to respond',
+            'to suit'
+        ],
+        buddhist: 'The appropriate way to practice according to one\'s capacity.'
+    },
+    '云': {
+        pinyin: 'yún',
+        meanings: [
+            'to say',
+            'cloud',
+            'such; like this',
+            'used in classical Chinese'
+        ],
+        buddhist: 'Used in questions about the nature of reality or practice.'
+    },
+    '何': {
+        pinyin: 'hé',
+        meanings: [
+            'what; how',
+            'why',
+            'where',
+            'which'
+        ],
+        buddhist: 'Used in fundamental questions about the nature of existence.'
+    },
+    '住': {
+        pinyin: 'zhù',
+        meanings: [
+            'to live; to dwell',
+            'to stay',
+            'to stop',
+            'residence'
+        ],
+        buddhist: 'The abiding of mind in meditation or in awakened states.'
+    },
+    '降': {
+        pinyin: 'xiáng',
+        meanings: [
+            'to surrender',
+            'to subdue',
+            'to tame',
+            'to descend'
+        ],
+        buddhist: 'The taming of the mind through meditation and wisdom.'
+    },
+    '伏': {
+        pinyin: 'fú',
+        meanings: [
+            'to bend over',
+            'to subdue',
+            'to conceal',
+            'volt'
+        ],
+        buddhist: 'The complete pacification of disturbing emotions.'
+    },
+    '其': {
+        pinyin: 'qí',
+        meanings: [
+            'his; her; its; their',
+            'that; such',
+            'used in classical Chinese'
+        ],
+        buddhist: 'Refers to the mind or other phenomena being discussed.'
+    },
+    '佛': {
+        pinyin: 'fó',
+        meanings: [
+            'Buddha',
+            'Buddhism',
+            'awakened one'
+        ],
+        buddhist: 'The fully enlightened one who has awakened from the sleep of ignorance.'
+    },
+    '善': {
+        pinyin: 'shàn',
+        meanings: [
+            'good; virtuous',
+            'skilful; adept',
+            'to be good at',
+            'kind; friendly'
+        ],
+        buddhist: 'Refers to wholesome actions that lead to good results and liberation.'
+    },
+    '哉': {
+        pinyin: 'zāi',
+        meanings: [
+            'final particle of exclamation',
+            'alas',
+            'beginning',
+            'year'
+        ],
+        buddhist: 'Used in exclamations praising the Buddha or Dharma.'
+    },
+    '汝': {
+        pinyin: 'rǔ',
+        meanings: [
+            'you (archaic)',
+            'your',
+            'Ru River'
+        ],
+        buddhist: 'The Buddha\'s affectionate or respectful address to disciples.'
+    },
+    '今': {
+        pinyin: 'jīn',
+        meanings: [
+            'now; present',
+            'modern',
+            'this',
+            'today'
+        ],
+        buddhist: 'Emphasizes the importance of present-moment awareness.'
+    },
+    '諦': {
+        pinyin: 'dì',
+        meanings: [
+            'careful; attentive',
+            'truth',
+            'to examine',
+            'Buddhist truth'
+        ],
+        buddhist: 'The Four Noble Truths or the truth realized through meditation.'
+    },
+    '聽': {
+        pinyin: 'tīng',
+        meanings: [
+            'to listen',
+            'to obey',
+            'to hear',
+            'to allow'
+        ],
+        buddhist: 'Right listening as the foundation for understanding the Dharma.'
+    },
+    '當': {
+        pinyin: 'dāng',
+        meanings: [
+            'ought to; should',
+            'to act as',
+            'to bear',
+            'at that time'
+        ],
+        buddhist: 'Indicates the appropriate action or understanding.'
+    },
+    '為': {
+        pinyin: 'wèi',
+        meanings: [
+            'for; for the sake of',
+            'because of',
+            'to do; to act as'
+        ],
+        buddhist: 'The Buddha\'s compassionate activity for beings\' welfare.'
+    },
+    '說': {
+        pinyin: 'shuō',
+        meanings: [
+            'to speak; to say',
+            'to explain',
+            'theory',
+            'to scold'
+        ],
+        buddhist: 'The Buddha\'s teaching adapted to listeners\' capacities.'
+    },
+    '願': {
+        pinyin: 'yuàn',
+        meanings: [
+            'wish; desire',
+            'to hope',
+            'vow',
+            'prayer'
+        ],
+        buddhist: 'The bodhisattva\'s vows to liberate all beings.'
+    },
+    '樂': {
+        pinyin: 'lè',
+        meanings: [
+            'happy; joyful',
+            'to enjoy',
+            'music',
+            'pleasure'
+        ],
+        buddhist: 'The joy of Dharma practice and liberation.'
+    },
+    '欲': {
+        pinyin: 'yù',
+        meanings: [
+            'desire; wish',
+            'about to',
+            'greed',
+            'lust'
+        ],
+        buddhist: 'Desire can be either wholesome (for liberation) or unwholesome (for sensual pleasures).'
+    },
+    '聞': {
+        pinyin: 'wén',
+        meanings: [
+            'to hear',
+            'news',
+            'well-known',
+            'smell'
+        ],
+        buddhist: 'Hearing the Dharma is the first step in the threefold training of hearing, reflection and meditation.'
+    },
+    '唯': {
+        pinyin: 'wéi',
+        meanings: [
+            'only; alone',
+            'yes',
+            'although',
+            'thought'
+        ],
+        buddhist: 'Indicates single-minded attention or affirmation of the teacher\'s words.'
+    },
+    '然': {
+        pinyin: 'rán',
+        meanings: [
+            'correct; right',
+            'so; thus',
+            'however',
+            'suffix indicating state'
+        ],
+        buddhist: 'Affirmation of understanding or agreement with the teaching.'
+    }
+};
+
+// 完整经文数据
+const scriptureData = [
+    {
+        id: 'section1',
+        text: '時，長老須菩提在大眾中，即從座起，偏袒右肩，右膝著地，合掌恭敬。',
+        readingText: '時，長老須菩提在大眾中，即從座起，偏袒右肩，右膝著地，合掌恭敬。',
+        pinyin: 'shí zhǎng lǎo xū pú tí zài dà zhòng zhōng jí cóng zuò qǐ piān tǎn yòu jiān yòu xī zhuó dì hé zhǎng gōng jìng',
+        english: 'At that time, the elder Subhūti was in the assembly. Rising from his seat, he bared his right shoulder, placed his right knee on the ground, and with palms joined in reverence',
+        annotation: '夫神鍾雖朗，非扣而不鳴，聖不孤應，影響唯仁，師尊道重，故尅敬盡恭也。\n○神鍾疏作鉅鐘，尅作克。',
+        annotationTranslations: {
+            '白话文': '神圣的钟虽然明亮，但不敲击就不会鸣响；圣者不会独自回应，只有仁德才能感召。师尊道德崇高，所以须菩提竭尽恭敬。\n注：神钟在疏文中写作"巨钟"，"尅"写作"克"。',
+            'English': 'Though a divine bell is bright, it does not sound without being struck; a sage does not respond alone, only to benevolence does he resonate. The master\'s virtue is lofty, therefore Subhūti shows utmost reverence.\nNote: "Divine bell" is written as "great bell" in commentaries, "尅" is written as "克".',
+            'Deutsch': 'Obwohl eine göttliche Glocke hell ist, erklingt sie nicht ohne angeschlagen zu werden; ein Weiser antwortet nicht allein, nur auf Güte reagiert er. Die Tugend des Meisters ist erhaben, daher zeigt Subhūti äußerste Ehrfurcht.\nAnmerkung: "Göttliche Glocke" wird in Kommentaren als "große Glocke" geschrieben, "尅" als "克".',
+            'Français': 'Bien qu\'une cloche divine soit brillante, elle ne sonne pas sans être frappée ; un sage ne répond pas seul, seulement à la bienveillance résonne-t-il. La vertu du maître est élevée, donc Subhūti montre la plus grande révérence.\nNote : "Cloche divine" est écrit comme "grande cloche" dans les commentaires, "尅" comme "克".',
+            'Русский': 'Хотя божественный колокол ярок, он не звучит без удара; мудрец не отвечает один, только на добродетель он отзывается. Добродетель учителя возвышенна, поэтому Субхути проявляет величайшее почтение.\nПримечание: "Божественный колокол" в комментариях пишется как "большой колокол", "尅" как "克".',
+            'Español': 'Aunque una campana divina es brillante, no suena sin ser golpeada; un sabio no responde solo, solo resuena con la benevolencia. La virtud del maestro es elevada, por lo tanto Subhūti muestra la mayor reverencia.\nNota: "Campana divina" se escribe como "gran campana" en los comentarios, "尅" como "克".',
+            'Italiano': 'Sebbene una campana divina sia luminosa, non suona senza essere colpita; un saggio non risponde da solo, risuona solo alla benevolenza. La virtù del maestro è elevata, quindi Subhūti mostra la massima reverenza.\nNota: "Campana divina" è scritta come "grande campana" nei commenti, "尅" come "克".',
+            'संस्कृतम्': 'दिव्यघण्टा प्रकाशमानापि आहतैव शब्दायते, सन्तः स्वयमेव न प्रतिबोधन्ते, केवलं सज्जनानां प्रेरणयैव। आचार्यस्य धर्मो महान्, अतः सुभूतिः परमं विनयं करोति।\nटिप्पणीः "दिव्यघण्टा" व्याख्यासु "महाघण्टा" इति, "尅" इति पदं "克" इति लिख्यते।',
+            'Pāli': 'Divyaghaṇṭā pabhāsamanāpi āhatāyeva saddāyati, santā sayameva na paṭibujjhanti, kevalaṃ sappurisānaṃ paṭipādānāya. Ācariyassa dhammo mahanto, tasmā Subhūti paramaṃ vinayaṃ karoti.\nNidassanaṃ: "Divyaghaṇṭā" aṭṭhakathāsu "mahāghaṇṭā" ti, "尅" ti padaṃ "克" ti likhyati.'
+        },
+        translations: {
+            '白话文': '这时，长老须菩提在大众中，从座位上站起来，偏袒右肩，右膝跪地，双手合十恭敬行礼。',
+            'English': 'At that time, the elder Subhūti was in the assembly. Rising from his seat, he bared his right shoulder, placed his right knee on the ground, and with palms joined in reverence',
+            'Deutsch': 'Zu dieser Zeit war der Älteste Subhūti in der Versammlung. Er erhob sich von seinem Sitz, entblößte seine rechte Schulter, setzte sein rechtes Knie auf den Boden und faltete ehrfurchtsvoll die Hände.',
+            'Français': 'À ce moment-là, l\'ancien Subhūti était dans l\'assemblée. Se levant de son siège, il découvrit son épaule droite, posa son genou droit à terre et joignit les mains en signe de révérence.',
+            'Русский': 'В то время старейшина Субхути находился в собрании. Поднявшись со своего места, он обнажил правое плечо, опустил правое колено на землю и сложил ладони в знак почтения.',
+            'Español': 'En ese momento, el anciano Subhūti estaba en la asamblea. Levantándose de su asiento, descubrió su hombro derecho, colocó su rodilla derecha en el suelo y juntó las palmas en reverencia.',
+            'Italiano': 'A quel tempo, l\'anziano Subhūti era nell\'assemblea. Alzatosi dal suo posto, scoprì la spalla destra, pose il ginocchio destro a terra e giunse le palme in segno di reverenza.',
+            'संस्कृतम्': 'तस्मिन् काले विहारे स्थितः स्थविरः सुभूतिः आसनात् उत्थाय दक्षिणं स्कन्धं विवृत्य दक्षिणं जानु भूमौ प्रणम्य अञ्जलिं बद्ध्वा नमस्कृतवान्।',
+            'Pāli': 'Tasmiṃ samaye vihāre nisinno thero Subhūti āsanā vuṭṭhāya dakkhiṇaṃ khandhaṃ vivaritvā dakkhiṇaṃ jānuṃ pathaviyaṃ nihantvā añjaliṃ paggahetvā namassati.'
+        }
+    },
+    {
+        id: 'section2',
+        text: '而白佛言：希有，世尊！',
+        readingText: '而白佛言：希有，世尊！',
+        pinyin: 'ér bái fó yán xī yǒu shì zūn',
+        english: 'and addressed the Buddha: "Rare indeed, World-Honored One!"',
+        annotation: '慈恩之重，豈可勝言。',
+        annotationTranslations: {
+            '白话文': '佛陀的慈悲恩德如此深重，怎能用言语表达得尽呢？',
+            'English': 'How can words fully express the profound kindness and grace of the Buddha?',
+            'Deutsch': 'Wie können Worte die tiefe Güte und Gnade des Buddha vollständig ausdrücken?',
+            'Français': 'Comment les mots peuvent-ils exprimer pleinement la profonde bonté et la grâce du Bouddha ?',
+            'Русский': 'Как слова могут полностью выразить глубокую доброту и милость Будды?',
+            'Español': '¿Cómo pueden las palabras expresar plenamente la profunda bondad y gracia del Buddha?',
+            'Italiano': 'Come possono le parole esprimere appieno la profonda gentilezza e grazia del Buddha?',
+            'संस्कृतम्': 'भगवतः करुणामहिमा कथं वाचा निरूपयितुं शक्यते?',
+            'Pāli': 'Bhagavato karuṇāmahimaṃ kathaṃ vācā nirūpetuṃ sakkā?'
+        },
+        translations: {
+            '白话文': '然后对佛陀说："稀有啊，世尊！"',
+            'English': 'and addressed the Buddha: "Rare indeed, World-Honored One!"',
+            'Deutsch': 'und sprach zum Buddha: "Wahrlich selten, Verehrungswürdiger!"',
+            'Français': 'et s\'adressa au Bouddha : "Rare en vérité, Honoré du monde !"',
+            'Русский': 'и обратился к Будде: "Поистине редкостно, Почитаемый в мире!"',
+            'Español': 'y se dirigió al Buddha: "¡Verdaderamente raro, Honrado por el mundo!"',
+            'Italiano': 'e si rivolse al Buddha: "Veramente raro, Onorato dal mondo!"',
+            'संस्कृतम्': 'भगवन्तं प्रत्युवाच - अत्यद्भुतं भगवन्!',
+            'Pāli': 'Bhagavantaṃ āmantesi - accheraṃ bhante!'
+        }
+    },
+    {
+        id: 'section3',
+        text: '如來善護念諸菩薩，善付囑諸菩薩。',
+        readingText: '如來善護念諸菩薩，善付囑諸菩薩。',
+        pinyin: 'rú lái shàn hù niàn zhū pú sà shàn fù zhǔ zhū pú sà',
+        english: 'The Tathāgata skillfully protects and cares for all bodhisattvas, and skillfully entrusts them with the Dharma.',
+        annotation: '護念．付囑，即希有事也。慈善將衛，令其行，令護念也。行立道成，委授弘通，付囑也。',
+        annotationTranslations: {
+            '白话文': '护念和付嘱，就是稀有之事。以慈悲心保护引导，使他们修行，这就是护念。修行成就后，委托他们弘扬佛法，这就是付嘱。',
+            'English': 'Protection and entrustment are indeed rare matters. With compassionate care and guidance, enabling their practice - this is protection. After their practice bears fruit, commissioning them to propagate the Dharma - this is entrustment.',
+            'Deutsch': 'Schutz und Anvertrauen sind wahrlich seltene Angelegenheiten. Mit mitfühlender Fürsorge und Führung, die ihre Praxis ermöglicht - dies ist Schutz. Nachdem ihre Praxis Früchte trägt, sie mit der Verbreitung des Dharma zu beauftragen - dies ist Anvertrauen.',
+            'Français': 'La protection et la transmission sont en vérité des choses rares. Avec des soins et des conseils compatissants, permettant leur pratique - c\'est la protection. Après que leur pratique porte ses fruits, les charger de propager le Dharma - c\'est la transmission.',
+            'Русский': 'Защита и поручение - поистине редкие вещи. С сострадательной заботой и руководством, позволяя им практиковать - это защита. После того, как их практика принесет плоды, поручить им распространять Дхарму - это поручение.',
+            'Español': 'Protección y encomienda son en verdad asuntos raros. Con cuidado y guía compasivos, permitiendo su práctica - esto es protección. Después de que su práctica dé frutos, encargarles propagar el Dharma - esto es encomienda.',
+            'Italiano': 'Protezione e affidamento sono veramente questioni rare. Con cura e guida compassionevoli, permettendo la loro pratica - questa è protezione. Dopo che la loro pratica porta frutto, incaricarli di propagare il Dharma - questo è affidamento.',
+            'संस्कृतम्': 'अनुग्रहः समर्पणं च अत्यद्भुतमेव। करुणया रक्षणं मार्गदर्शनं च, तेषां साधनाय - इदमनुग्रहः। साधनं सिद्धिं गतेषु, धर्मप्रचाराय नियोजनम् - इदं समर्पणम्।',
+            'Pāli': 'Anuggaho samāpanañca accheraṃyeva. Karuṇāya rakkhanaṃ maggadesanañca, tesā sādhanāya - idamanuggaho. Sādhanaṃ siddhiṃ gatesu, dhammapaccāraya niyojanaṃ - idaṃ samāpanan\'ti.'
+        },
+        translations: {
+            '白话文': '如来善于护念诸菩萨，善于付嘱诸菩萨。',
+            'English': 'The Tathāgata skillfully protects and cares for all bodhisattvas, and skillfully entrusts them with the Dharma.',
+            'Deutsch': 'Der Tathāgata beschützt und umsorgt geschickt alle Bodhisattvas und vertraut ihnen geschickt den Dharma an.',
+            'Français': 'Le Tathāgata protège et prend soin avec habileté de tous les bodhisattvas et leur confie habilement le Dharma.',
+            'Русский': 'Татхагата умело защищает и заботится обо всех бодхисаттвах и умело вверяет им Дхарму.',
+            'Español': 'El Tathāgata protege y cuida hábilmente a todos los bodhisattvas y les confía hábilmente el Dharma.',
+            'Italiano': 'Il Tathāgata protegge e si prende abilmente cura di tutti i bodhisattva e affida loro abilmente il Dharma.',
+            'संस्कृतम्': 'तथागतः बोधिसत्त्वानां सुखेनानुग्रहं करोति, बोधिसत्त्वानां सुखेन धर्मं समर्पयति।',
+            'Pāli': 'Tathāgato bodhisattānaṃ sukhena anuggahaṃ karoti, bodhisattānaṃ sukhena dhammaṃ samāpaneti.'
+        }
+    },
+    {
+        id: 'section4',
+        text: '世尊！善男子．善女人發阿耨多羅三藐三菩提心。',
+        readingText: '世尊！善男子．善女人發阿耨多羅三藐三菩提心。',
+        pinyin: 'shì zūn shàn nán zǐ shàn nǚ rén fā ā nòu duō luó sān miǎo sān pú tí xīn',
+        english: '"World-Honored One! When good men and good women develop the mind of anuttarā-samyak-saṃbodhi,',
+        annotation: '菩提，一切智也。標意擬向，遠期正覺，故言發心之也。\n○意，疏作心。',
+        annotationTranslations: {
+            '白话文': '菩提，就是一切智。立志趋向，远期成就正觉，所以说发心。\n注："意"在疏文中写作"心"。',
+            'English': 'Bodhi is omniscient wisdom. With resolute aspiration directed toward ultimate perfect enlightenment, therefore it is called developing the mind.\nNote: "Aspiration" is written as "mind" in commentaries.',
+            'Deutsch': 'Bodhi ist allwissende Weisheit. Mit entschlossenem Streben, das auf letztendliche vollkommene Erleuchtung gerichtet ist, daher wird es Entfaltung des Geistes genannt.\nAnmerkung: "Streben" wird in Kommentaren als "Geist" geschrieben.',
+            'Français': 'Bodhi est la sagesse omnisciente. Avec une aspiration résolue dirigée vers l\'éveil parfait ultime, c\'est pourquoi on appelle cela développer l\'esprit.\nNote : "Aspiration" est écrit comme "esprit" dans les commentaires.',
+            'Русский': 'Бодхи - это всеведущая мудрость. С решительным устремлением, направленным к окончательному совершенному просветлению, поэтому это называется развитием ума.\nПримечание: "Устремление" в комментариях пишется как "ум".',
+            'Español': 'Bodhi es la sabiduría omnisciente. Con aspiración resuelta dirigida hacia el despertar perfecto último, por eso se llama desarrollar la mente.\nNota: "Aspiración" se escribe como "mente" en los comentarios.',
+            'Italiano': 'Bodhi è la saggezza onnisciente. Con aspirazione risoluta diretta verso l\'illuminazione perfetta ultima, quindi si chiama sviluppo della mente.\nNota: "Aspirazione" è scritto come "mente" nei commentari.',
+            'संस्कृतम्': 'बोधिः सर्वज्ञता। अभिप्रायं निश्चित्य, दूरागतं सम्यक्सम्बोधिं प्रति, अतः चित्तोत्पाद इति उच्यते।\nटिप्पणीः "अभिप्रायः" व्याख्यासु "चित्तम्" इति लिख्यते।',
+            'Pāli': 'Bodhi sabbannutā. Adhippāyaṃ nisamma, dūragataṃ sammāsambodhiṃ pati, tasmā cittuppāda ti vuccati.\nNidassanaṃ: "Adhippāyo" aṭṭhakathāsu "cittaṃ" ti likhyati.'
+        },
+        translations: {
+            '白话文': '世尊！善男子、善女人发阿耨多罗三藐三菩提心。',
+            'English': '"World-Honored One! When good men and good women develop the mind of anuttarā-samyak-saṃbodhi,',
+            'Deutsch': '"Verehrungswürdiger! Wenn gute Männer und gute Frauen den Geist der anuttarā-samyak-saṃbodhi entfalten,',
+            'Français': '"Honoré du monde ! Lorsque de bons hommes et de bonnes femmes développent l\'esprit d\'anuttarā-samyak-saṃbodhi,',
+            'Русский': '"Почитаемый в мире! Когда добрые мужчины и добрые женщины развивают ум аннутара-самьяк-самбодхи,',
+            'Español': '"¡Honrado por el mundo! Cuando hombres y mujeres buenos desarrollan la mente de anuttarā-samyak-saṃbodhi,',
+            'Italiano': '"Onorato dal mondo! Quando uomini e donne buoni sviluppano la mente di anuttarā-samyak-saṃbodhi,',
+            'संस्कृतम्': 'भगवन्! कुलपुत्राः कुलदुहितरश्च अनुत्तरां सम्यक्सम्बोधिं चित्तमुत्पादयन्ति,',
+            'Pāli': 'Bhante! Kulaputtā kuladhītaro ca anuttaraṃ sammāsambodhiṃ cittaṃ uppādayanti,'
+        }
+    },
+    {
+        id: 'section5',
+        text: '應云何住？云何降伏其心？',
+        readingText: '應云何住？云何降伏其心？',
+        pinyin: 'yīng yún hé zhù yún hé xiáng fú qí xīn',
+        english: '"how should they abide? How should they subdue their minds?"',
+        annotation: '菩提妙果，非行不就，萬行雖曠，解有明昧，故有位降之異。始則抑心就理，漸習自調，謂之降伏；終能契解會宗，心不移去，謂之為住耳。\n○位疑住字。',
+        annotationTranslations: {
+            '白话文': '菩提的微妙果位，不修行就不能成就。虽然修行法门众多，但理解有明暗之分，所以有"住"和"降伏"的区别。开始时抑制妄心归于真理，渐渐习惯自然调伏，称为降伏；最终能够契合理解会通宗旨，心不再动摇，称为住。\n注："位"字可能是"住"字之误。',
+            'English': 'The wondrous fruit of bodhi cannot be attained without practice. Though practices are numerous, understanding varies in clarity, hence the distinction between "abiding" and "subduing." Initially restraining the mind to accord with truth, gradually habituating to natural taming - this is called subduing. Ultimately attaining harmonious understanding of the principle, with unwavering mind - this is called abiding.\nNote: "Position" may be a miswriting of "abiding."',
+            'Deutsch': 'Die wundersame Frucht des Bodhi kann ohne Praxis nicht erlangt werden. Obwohl die Praktiken zahlreich sind, variiert das Verständnis in Klarheit, daher die Unterscheidung zwischen "Verweilen" und "Bändigen". Anfänglich den Geist zügeln, um der Wahrheit zu entsprechen, sich allmählich an natürliche Zähmung gewöhnen - dies wird Bändigen genannt. Letztendlich ein harmonisches Verständnis des Prinzips erlangen, mit unerschütterlichem Geist - dies wird Verweilen genannt.\nAnmerkung: "Position" könnte eine fehlerhafte Schreibung von "Verweilen" sein.',
+            'Français': 'Le fruit merveilleux de bodhi ne peut être atteint sans pratique. Bien que les pratiques soient nombreuses, la compréhension varie en clarté, d\'où la distinction entre "demeurer" et "subjuguer". Initialement restreindre l\'esprit pour s\'accorder avec la vérité, s\'habituer progressivement à l\'apprivoisement naturel - cela s\'appelle subjuguer. Finalement atteindre une compréhension harmonieuse du principe, avec un esprit inébranlable - cela s\'appelle demeurer.\nNote : "Position" peut être une erreur d\'écriture pour "demeurer".',
+            'Русский': 'Чудесный плод бодхи не может быть достигнут без практики. Хотя практик много, понимание варьируется в ясности, отсюда различие между "пребыванием" и "усмирением". Первоначально сдерживая ум, чтобы соответствовать истине, постепенно привыкая к естественному укрощению - это называется усмирением. В конечном итоге достигая гармоничного понимания принципа, с непоколебимым умом - это называется пребыванием.\nПримечание: "Положение" может быть ошибочным написанием "пребывания".',
+            'Español': 'El fruto maravilloso de bodhi no puede alcanzarse sin práctica. Aunque las prácticas son numerosas, la comprensión varía en claridad, de ahí la distinción entre "morar" y "domar". Inicialmente restringiendo la mente para concordar con la verdad, habituándose gradualmente al doma natural - esto se llama domar. Finalmente alcanzar una comprensión armoniosa del principio, con mente inquebrantable - esto se llama morar.\nNota: "Posición" puede ser una escritura incorrecta de "morar".',
+            'Italiano': 'Il frutto meraviglioso del bodhi non può essere raggiunto senza pratica. Sebbene le pratiche siano numerose, la comprensione varia in chiarezza, da qui la distinzione tra "dimorare" e "domare". Inizialmente reprimendo la mente per accordarsi alla verità, abituandosi gradualmente all\'addomesticamento naturale - questo si chiama domare. Alla fine raggiungere una comprensione armoniosa del principio, con mente incrollabile - questo si chiama dimorare.\nNota: "Posizione" potrebbe essere una scrittura errata di "dimorare".',
+            'संस्कृतम्': 'बोधेः सूक्ष्मफलं साधनं विना न प्राप्यते। यद्यपि साधनानि बहूनि, तथापि बोधः प्रकाशतमसोः भेदेन, अतः "स्थितिः" "वशीकरणं" च इति भेदः। आदौ विकल्पचित्तं नियम्य तत्त्वानुसारं, क्रमेण स्वभावनियन्त्रणमभ्यस्य - इदं वशीकरणम्। अन्ते तत्त्वस्य सुसमञ्जसं बोधं प्राप्य, अचलचित्तः - इदं स्थितिः।\nटिप्पणीः "स्थानम्" इति पदं "स्थितिः" इति पदस्य त्रुटिरूपं स्यात्।',
+            'Pāli': 'Bodhiyaṃ sukhummaphalaṃ āhāraṃ vinā na pāpuṇāti. Yadipi āhārā bahū, tathāpi bodho pabhātamosānaṃ bhedena, tasmā "ṭhiti" "vasīkaraṇa" ca ti bhedo. Ādau vikalpacittaṃ niyamitvā tathānusāraṃ, kammena sabhāvaniyantanaṃ abhyasitvā - idaṃ vasīkaraṇaṃ. Ante tathassa susamaññasaṃ bodhaṃ patvā, acalacitto - idaṃ ṭhitīti.\nNidassanaṃ: "Ṭhāna" ti padaṃ "ṭhiti" ti padassa tuṭirūpaṃ siyā.'
+        },
+        translations: {
+            '白话文': '应当如何安住？如何降伏其心？',
+            'English': '"how should they abide? How should they subdue their minds?"',
+            'Deutsch': '"wie sollen sie verweilen? Wie sollen sie ihre Geister bändigen?"',
+            'Français': '"comment devraient-ils demeurer ? Comment devraient-ils subjuguer leurs esprits ?"',
+            'Русский': '"как им следует пребывать? Как им следует усмирять свои умы?"',
+            'Español': '"¿cómo deberían morar? ¿Cómo deberían domar sus mentes?"',
+            'Italiano': '"come dovrebbero dimorare? Come dovrebbero domare le loro menti?"',
+            'संस्कृतम्': 'कथं प्रतिष्ठितव्यं? कथं चित्तं वशीकर्तव्यम्?',
+            'Pāli': 'kathaṃ vihareyyuṃ? Kathaṃ cittaṃ vasīkareyyuṃ?'
+        }
+    },
+    {
+        id: 'section6',
+        text: '佛言：善哉，善哉！須菩提！如汝所說，如來善護念諸菩薩、善付囑諸菩薩。',
+        readingText: '佛言：善哉，善哉！須菩提！如汝所說，如來善護念諸菩薩、善付囑諸菩薩。',
+        pinyin: 'fó yán shàn zāi shàn zāi xū pú tí rú rǔ suǒ shuō rú lái shàn hù niàn zhū pú sà shàn fù zhǔ zhū pú sà',
+        english: 'The Buddha said: "Excellent, excellent! Subhūti, as you have said, the Tathāgata skillfully protects and cares for all bodhisattvas, and skillfully entrusts them with the Dharma."',
+        annotation: '讚諸之儀，當理會機。盡善之甚，誠如所言。\n○諸疏作請。',
+        annotationTranslations: {
+            '白话文': '赞叹的礼仪，应当契合根机。非常完善，确实如你所说。\n注："诸"在疏文中写作"请"。',
+            'English': 'The etiquette of praise should accord with capacity. Most excellent indeed, truly as you have said.\nNote: "All" is written as "request" in commentaries.',
+            'Deutsch': 'Die Etikette des Lobes sollte dem Vermögen entsprechen. Vorzüglich in der Tat, wahrlich wie du gesagt hast.\nAnmerkung: "Alle" wird in Kommentaren als "Bitte" geschrieben.',
+            'Français': 'L\'étiquette de l\'éloge doit s\'accorder avec la capacité. Très excellent en effet, vraiment comme vous l\'avez dit.\nNote : "Tous" est écrit comme "demande" dans les commentaires.',
+            'Русский': 'Этикет похвалы должен соответствовать способностям. Превосходно, действительно, как вы сказали.\nПримечание: "Все" в комментариях пишется как "просьба".',
+            'Español': 'La etiqueta del elogio debe concordar con la capacidad. Muy excelente en verdad, verdaderamente como has dicho.\nNota: "Todo" se escribe como "solicitud" en los comentarios.',
+            'Italiano': 'L\'etichetta della lode dovrebbe accordarsi con la capacità. Eccellentissimo davvero, veramente come hai detto.\nNota: "Tutti" è scritto come "richiesta" nei commentari.',
+            'संस्कृतम्': 'स्तुतिविधिः योग्यतानुसारेण भवितव्यः। अत्युत्तमम्, यथार्थमेव यथा भवान् उक्तवान्।\nटिप्पणीः "सर्वे" इति पदं व्याख्यासु "प्रार्थना" इति लिख्यते।',
+            'Pāli': 'Thomavidhi yuttatānusārena bhavitabbo. Accuttamaṃ, yathābhūtameva yathā bhavaṃ vutavā.\nNidassanaṃ: "Sabbe" ti padaṃ aṭṭhakathāsu "yācanā" ti likhyati.'
+        },
+        translations: {
+            '白话文': '佛说："善哉，善哉！须菩提！如你所说，如来善于护念诸菩萨，善于付嘱诸菩萨。"',
+            'English': 'The Buddha said: "Excellent, excellent! Subhūti, as you have said, the Tathāgata skillfully protects and cares for all bodhisattvas, and skillfully entrusts them with the Dharma."',
+            'Deutsch': 'Der Buddha sprach: "Vortrefflich, vortrefflich! Subhūti, wie du gesagt hast, beschützt und umsorgt der Tathāgata geschickt alle Bodhisattvas und vertraut ihnen geschickt den Dharma an."',
+            'Français': 'Le Bouddha dit : "Excellent, excellent ! Subhūti, comme vous l\'avez dit, le Tathāgata protège et prend soin avec habileté de tous les bodhisattvas et leur confie habilement le Dharma."',
+            'Русский': 'Будда сказал: "Превосходно, превосходно! Субхути, как ты сказал, Татхагата умело защищает и заботится обо всех бодхисаттвах и умело вверяет им Дхарму."',
+            'Español': 'El Buddha dijo: "¡Excelente, excelente! Subhūti, como has dicho, el Tathāgata protege y cuida hábilmente a todos los bodhisattvas y les confía hábilmente el Dharma."',
+            'Italiano': 'Il Buddha disse: "Eccellente, eccellente! Subhūti, come hai detto, il Tathāgata protegge e si prende abilmente cura di tutti i bodhisattva e affida loro abilmente il Dharma."',
+            'संस्कृतम्': 'भगवान् उवाच - साधु साधु सुभूते! यथा त्वयोक्तं, तथागतः बोधिसत्त्वानां सुखेनानुग्रहं करोति, बोधिसत्त्वानां सुखेन धर्मं समर्पयति।',
+            'Pāli': 'Bhagavā āha - sādhu sādhu Subhūti! Yathā tayā vuttaṃ, Tathāgato bodhisattānaṃ sukhena anuggahaṃ karoti, bodhisattānaṃ sukhena dhammaṃ samāpanetī\'ti.'
+        }
+    },
+    {
+        id: 'section7',
+        text: '汝今諦聽，當為汝說。善男子．善女人發阿耨多羅三藐三菩提心，應如是住，如是降伏其心。',
+        readingText: '汝今諦聽，當為汝說。善男子．善女人發阿耨多羅三藐三菩提心，應如是住，如是降伏其心。',
+        pinyin: 'rǔ jīn dì tīng dāng wèi rǔ shuō shàn nán zǐ shàn nǚ rén fā ā nòu duō luó sān miǎo sān pú tí xīn yīng rú shì zhù rú shì xiáng fú qí xīn',
+        english: '"Now listen attentively and I will explain to you. When good men and good women develop the mind of anuttarā-samyak-saṃbodhi, they should abide thus, and subdue their minds thus."',
+        annotation: '若聽不審，則漏言遺理。或令諦聽，言理弗虗也。\n○或疏作誡。',
+        annotationTranslations: {
+            '白话文': '如果听法不专注，就会遗漏言语和道理。所以让你谛听，说明所说的道理真实不虚。\n注："或"在疏文中写作"诫"。',
+            'English': 'If listening is not attentive, words and principles will be missed. Therefore you are told to listen carefully, showing the principles spoken are true and not empty.\nNote: "Or" is written as "admonition" in commentaries.',
+            'Deutsch': 'Wenn das Zuhören nicht aufmerksam ist, werden Worte und Prinzipien verpasst. Daher wird dir gesagt, genau zuzuhören, was zeigt, dass die gesprochenen Prinzipien wahr und nicht leer sind.\nAnmerkung: "Oder" wird in Kommentaren als "Ermahnung" geschrieben.',
+            'Français': 'Si l\'écoute n\'est pas attentive, les mots et les principes seront manqués. C\'est pourquoi on vous dit d\'écouter attentivement, montrant que les principes énoncés sont vrais et non vides.\nNote : "Ou" est écrit comme "avertissement" dans les commentaires.',
+            'Русский': 'Если слушание невнимательное, слова и принципы будут упущены. Поэтому вам велят слушать внимательно, показывая, что произнесенные принципы истинны и не пусты.\nПримечание: "Или" в комментариях пишется как "предостережение".',
+            'Español': 'Si la escucha no es atenta, se perderán palabras y principios. Por eso se te dice que escuches con atención, mostrando que los principios dichos son verdaderos y no vacíos.\nNota: "O" se escribe como "advertencia" en los comentarios.',
+            'Italiano': 'Se l\'ascolto non è attento, si perderanno parole e principi. Pertanto ti viene detto di ascoltare attentamente, mostrando che i principi enunciati sono veri e non vuoti.\nNota: "O" è scritto come "ammonimento" nei commentari.',
+            'संस्कृतम्': 'यदि श्रवणं सावधानं न भवति, तर्हि वाक्यार्थौ विलुप्येते। अतः त्वं सम्यक् शृणु इति उक्तम्, येन उक्तस्य तत्त्वस्य सत्यता प्रकटीक्रियते।\nटिप्पणीः "अथवा" इति पदं व्याख्यासु "उपदेशः" इति लिख्यते।',
+            'Pāli': 'Sace sotā na sampajānā, tadā vākyatthā viluppanti. Tasmā tvaṃ sammā suṇā ti vuttaṃ, yena vuttassa tathassa saccatā pākaṭīkarīyati.\nNidassanaṃ: "Athavā" ti padaṃ aṭṭhakathāsu "ovādo" ti likhyati.'
+        },
+        translations: {
+            '白话文': '你现在仔细听，我当为你解说。善男子、善女人发阿耨多罗三藐三菩提心，应当这样安住，这样降伏其心。',
+            'English': '"Now listen attentively and I will explain to you. When good men and good women develop the mind of anuttarā-samyak-saṃbodhi, they should abide thus, and subdue their minds thus."',
+            'Deutsch': '"Nun höre aufmerksam zu und ich werde es dir erklären. Wenn gute Männer und gute Frauen den Geist der anuttarā-samyak-saṃbodhi entfalten, sollen sie so verweilen und so ihre Geister bändigen."',
+            'Français': '"Maintenant écoute attentivement et je t\'expliquerai. Lorsque de bons hommes et de bonnes femmes développent l\'esprit d\'anuttarā-samyak-saṃbodhi, ils doivent demeurer ainsi et subjuguer ainsi leurs esprits."',
+            'Русский': '"Теперь слушай внимательно, и я объясню тебе. Когда добрые мужчины и добрые женщины развивают ум аннутара-самьяк-самбодхи, им следует так пребывать и так усмирять свои умы."',
+            'Español': '"Ahora escucha atentamente y te lo explicaré. Cuando hombres y mujeres buenos desarrollan la mente de anuttarā-samyak-saṃbodhi, deben morar así y domar así sus mentes."',
+            'Italiano': '"Ora ascolta attentamente e ti spiegherò. Quando uomini e donne buoni sviluppano la mente di anuttarā-samyak-saṃbodhi, devono dimorare così e domare così le loro menti."',
+            'संस्कृतम्': 'त्वं इदानीं सम्यक् शृणु, अहं तुभ्यं व्याख्यास्यामि। कुलपुत्राः कुलदुहितरश्च अनुत्तरां सम्यक्सम्बोधिं चित्तमुत्पादयन्ति, ते एवं प्रतिष्ठितव्याः, एवं चित्तं वशीकर्तव्यम्।',
+            'Pāli': 'Tvaṃ idāni sammā suṇāhi, ahaṃ tuyhaṃ vibhajissāmi. Kulaputtā kuladhītaro ca anuttaraṃ sammāsambodhiṃ cittaṃ uppādayanti, te evaṃ vihareyyuṃ, evaṃ cittaṃ vasīkareyyu\'nti.'
+        }
+    },
+    {
+        id: 'section8',
+        text: '唯然，世尊！願樂欲聞。',
+        readingText: '唯然，世尊！願樂欲聞。',
+        pinyin: 'wéi rán shì zūn yuàn lè yù wén',
+        english: '"Certainly, World-Honored One! We are eager to listen."',
+        annotation: '慈戒許說，敬肅傾心。\n○戒，疏作誡。',
+        annotationTranslations: {
+            '白话文': '慈悲地允许说法，恭敬肃穆专心倾听。\n注："戒"在疏文中写作"诫"。',
+            'English': 'Compassionately permitting the teaching, reverently and solemnly listening with full attention.\nNote: "Precept" is written as "admonition" in commentaries.',
+            'Deutsch': 'Mitfühlend die Lehre erlaubend, ehrfürchtig und feierlich mit voller Aufmerksamkeit zuhörend.\nAnmerkung: "Gebot" wird in Kommentaren als "Ermahnung" geschrieben.',
+            'Français': 'Permettant avec compassion l\'enseignement, écoutant avec révérence et solennité en toute attention.\nNote : "Précepte" est écrit comme "avertissement" dans les commentaires.',
+            'Русский': 'Сострадательно разрешая учение, почтительно и торжественно слушая с полным вниманием.\nПримечание: "Заповедь" в комментариях пишется как "предостережение".',
+            'Español': 'Permitiendo compasivamente la enseñanza, escuchando reverente y solemnemente con plena atención.\nNota: "Precepto" se escribe como "advertencia" en los comentarios.',
+            'Italiano': 'Permettendo con compassione l\'insegnamento, ascoltando riverente e solenne con piena attenzione.\nNota: "Precetto" è scritto come "ammonimento" nei commentari.',
+            'संस्कृतम्': 'करुणया उपदेशं अनुज्ञाप्य, विनीतभावेन समग्रचित्तेन श्रोतुम् इच्छन्ति।\nटिप्पणीः "शीलम्" इति पदं व्याख्यासु "उपदेशः" इति लिख्यते।',
+            'Pāli': 'Karuṇāya desanaṃ anujānitvā, vinītabhāvena samagga-cittena sotuṃ icchanti.\nNidassanaṃ: "Sīla" ti padaṃ aṭṭhakathāsu "ovādo" ti likhyati.'
+        },
+        translations: {
+            '白话文': '是的，世尊！我们很乐意听闻。',
+            'English': '"Certainly, World-Honored One! We are eager to listen."',
+            'Deutsch': '"Gewiss, Verehrungswürdiger! Wir sind begierig zuzuhören."',
+            'Français': '"Certainement, Honoré du monde ! Nous sommes impatients d\'écouter."',
+            'Русский': '"Конечно, Почитаемый в мире! Мы жаждем слушать."',
+            'Español': '"Ciertamente, ¡Honrado por el mundo! Estamos ansiosos por escuchar."',
+            'Italiano': '"Certamente, Onorato dal mondo! Siamo desiderosi di ascoltare."',
+            'संस्कृतम्': 'अवश्यं भगवन्! वयं श्रोतुम् इच्छामः।',
+            'Pāli': 'Avassaṃ bhante! Mayaṃ sotuṃ icchāmā\'ti.'
+        }
+    }
+];
+
+// 多语言选项
+const languages = [
+    '白话文', 'English', 'Deutsch', 'Français', 'Русский', 
+    'Español', 'Italiano', 'संस्कृतम्', 'Pāli'
+];
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 生成经文内容
+    const scriptureContent = document.getElementById('scriptureContent');
+    
+    scriptureData.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `text-section section-${index + 1}`;
+        
+        // 经文标题
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = `经文第${index + 1}段`;
+        sectionDiv.appendChild(sectionTitle);
+        
+        // 经文正文（带拼音注释）
+        const textDiv = document.createElement('div');
+        textDiv.className = 'text-content';
+        textDiv.innerHTML = processTextWithPinyin(section.text, section.pinyin, section.english, section.id);
+        
+        // 添加朗读按钮和纯文本
+        const textActions = document.createElement('div');
+        textActions.className = 'action-buttons';
+        textActions.innerHTML = `
+            <button class="action-btn speak" id="speakText-${section.id}">朗读经文</button>
+            <span class="plain-text">${section.readingText}</span>
+        `;
+        textDiv.appendChild(textActions);
+        
+        // 添加多语言翻译
+        addTranslations(textDiv, section.translations, `${section.id}-trans`);
+        
+        sectionDiv.appendChild(textDiv);
+        
+        // 注解内容
+        const annoDiv = document.createElement('div');
+        annoDiv.className = 'annotation-content';
+        
+        // 添加注解内容
+        const annotationP = document.createElement('div');
+        annotationP.className = 'annotation';
+        annotationP.id = `${section.id}-anno`;
+        annotationP.textContent = section.annotation;
+        annoDiv.appendChild(annotationP);
+        
+        // 添加朗读按钮
+        const annoActions = document.createElement('div');
+        annoActions.className = 'action-buttons';
+        annoActions.innerHTML = `
+            <button class="action-btn speak" id="speakAnno-${section.id}">朗读注解</button>
+        `;
+        annoDiv.appendChild(annoActions);
+        
+        // 添加注解的多语言翻译
+        addTranslations(annoDiv, section.annotationTranslations, `${section.id}-anno-trans`);
+        
+        sectionDiv.appendChild(annoDiv);
+        
+        scriptureContent.appendChild(sectionDiv);
+    });
+
+    // 设置朗读按钮事件
+    setupSpeakButtons();
+    
+    // 设置汉字点击事件
+    setupCharClickEvents();
+});
+
+// 处理文本添加拼音和英文提示
+function processTextWithPinyin(text, pinyin, english, sectionId) {
+    const pinyinArr = pinyin.split(' ');
+    const englishArr = english.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            const eng = englishArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}<br>${eng}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return `<span id="${sectionId}-text">${result}</span>`;
+}
+
+// 添加多语言翻译模块
+function addTranslations(container, translations, baseId) {
+    const transTabs = document.createElement('div');
+    transTabs.className = 'translation-tabs';
+    
+    const transContents = document.createElement('div');
+    
+    Object.entries(translations).forEach(([lang, content]) => {
+        // 翻译标签
+        const tab = document.createElement('div');
+        tab.className = 'translation-tab';
+        tab.textContent = lang;
+        tab.onclick = function() {
+            // 切换活跃标签
+            transTabs.querySelectorAll('.translation-tab').forEach(t => 
+                t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 显示对应语言内容
+            transContents.querySelectorAll('.translation-content').forEach(c => 
+                c.classList.remove('active'));
+            transContents.querySelector(`#${baseId}-${lang}`).classList.add('active');
+        };
+        transTabs.appendChild(tab);
+        
+        // 翻译内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'translation-content';
+        contentDiv.id = `${baseId}-${lang}`;
+        contentDiv.textContent = content;
+        transContents.appendChild(contentDiv);
+    });
+    
+    // 默认显示第一个语言
+    if (transTabs.firstChild) {
+        transTabs.firstChild.click();
+    }
+    
+    container.appendChild(transTabs);
+    container.appendChild(transContents);
+}
+
+// 设置所有朗读按钮事件
+function setupSpeakButtons() {
+    // 经文朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakText-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.readingText;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+    
+    // 注解朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakAnno-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.annotation;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+}
+
+// 设置汉字点击事件（显示详情弹窗）
+function setupCharClickEvents() {
+    document.addEventListener('click', function(e) {
+        const charElement = e.target.closest('.char');
+        if (charElement) {
+            const char = charElement.dataset.char;
+            showCharModal(char);
+        }
+    });
+    
+    // 关闭弹窗按钮
+    document.getElementById('closeCharModal').addEventListener('click', function() {
+        document.getElementById('charModal').style.display = 'none';
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('charModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+}
+
+// 显示汉字详情弹窗
+function showCharModal(char) {
+    const modal = document.getElementById('charModal');
+    const modalChar = document.getElementById('modalChar');
+    const modalPinyin = document.getElementById('modalPinyin');
+    const modalMeaning = document.getElementById('modalMeaning');
+    const modalBuddhistMeaning = document.getElementById('modalBuddhistMeaning');
+    
+    // 设置弹窗内容
+    modalChar.textContent = char;
+    
+    if (punctuationPinyin[char]) {
+        // 标点符号
+        modalPinyin.textContent = punctuationPinyin[char];
+        modalMeaning.textContent = 'This is a punctuation mark.';
+        modalBuddhistMeaning.textContent = 'Punctuation marks help structure the text and indicate pauses in recitation.';
+    } else if (charMeanings[char]) {
+        // 汉字
+        const charData = charMeanings[char];
+        modalPinyin.textContent = charData.pinyin;
+        modalMeaning.innerHTML = charData.meanings.map(m => `• ${m}`).join('<br>');
+        modalBuddhistMeaning.textContent = charData.buddhist;
+    } else {
+        // 未知字符
+        modalPinyin.textContent = 'Unknown';
+        modalMeaning.textContent = 'No detailed information available for this character.';
+        modalBuddhistMeaning.textContent = 'No specific Buddhist meaning recorded.';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 切换朗读/停止功能
+function toggleSpeech(text, button) {
+    if (currentUtterance && speechSynthesis.speaking) {
+        // 如果正在朗读，则停止
+        speechSynthesis.cancel();
+        button.classList.remove('stop');
+        button.classList.add('speak');
+        currentUtterance = null;
+    } else {
+        // 开始朗读
+        if ('speechSynthesis' in window) {
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 0.7; // 正常语速
+            
+            currentUtterance.onend = function() {
+                button.classList.remove('stop');
+                button.classList.add('speak');
+                currentUtterance = null;
+            };
+            
+            speechSynthesis.speak(currentUtterance);
+            button.classList.remove('speak');
+            button.classList.add('stop');
+        } else {
+            alert('您的浏览器不支持语音朗读功能');
+        }
+    }
+}
+</script>
+</body>
+</html>

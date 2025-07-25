@@ -1,0 +1,1931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金刚般若波罗蜜经（完整交互版）</title>
+    <style>
+        /* 保持原有样式不变 */
+        body {
+            font-family: "SimSun", "STKaiti", serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1.4em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 2.0em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d4a762;
+        }
+        
+        .author {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .preface-section {
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #d4a762;
+        }
+        
+        .preface-content {
+            margin-bottom: 20px;
+            line-height: 2.0;
+            color: #e0e0e0;
+        }
+        
+        .preface-annotation {
+            color: #999;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 3px solid #555;
+            margin-top: 15px;
+        }
+        
+        .text-section {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .text-section h3 {
+            margin-top: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            color: #d4a762;
+            background-color: #2a2a2a;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .annotation-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            color: #e0e0e0;
+        }
+        
+        .char-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #444;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .char:hover .char-tooltip {
+            display: block;
+        }
+        
+        .annotation {
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .plain-text {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.7em;
+            background-color: #444;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .action-btn:hover {
+            background-color: #555;
+        }
+        
+        .action-btn.speak {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .action-btn.stop {
+            background-color: #a76a6a;
+            color: #1a1a1a;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 15px 0;
+        }
+        
+        .translation-tab {
+            padding: 3px 8px;
+            background-color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .translation-tab.active {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        /* 修改后的弹窗样式 */
+        .char-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .char-modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 80%;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .char-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .char-modal-char {
+            font-size: 2.5em;
+            color: #d4a762;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-pinyin {
+            font-size: 1.3em;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .char-modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .char-modal-close:hover {
+            color: #e0e0e0;
+        }
+        
+        .char-modal-section {
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-section h3 {
+            color: #d4a762;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .char-modal-meaning {
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        
+        /* Color schemes for alternating sections */
+        .section-1 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-1 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #d4a762;
+        }
+        
+        .section-2 .text-content {
+            background-color: #333333;
+        }
+        .section-2 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #5d8aa8;
+        }
+        
+        .section-3 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-3 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a8d4a7;
+        }
+        
+        .section-4 .text-content {
+            background-color: #333333;
+        }
+        .section-4 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4a7a7;
+        }
+        
+        .section-5 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-5 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a7a7d4;
+        }
+        
+        .section-6 .text-content {
+            background-color: #333333;
+        }
+        .section-6 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4d4a7;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+            color: #d4a762;
+            font-weight: bold;
+        }
+        
+        .reading-text {
+            display: none; /* 不再需要单独显示 */
+        }
+        
+        .annotation-text {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            
+            .char-modal-content {
+                padding: 15px;
+            }
+            
+            .char-modal-char {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 汉字详情弹窗 -->
+<div class="char-modal" id="charModal">
+    <div class="char-modal-content">
+        <div class="char-modal-header">
+            <h2>汉字详情</h2>
+            <button class="char-modal-close" id="closeCharModal">&times;</button>
+        </div>
+        <div class="char-modal-char" id="modalChar"></div>
+        <div class="char-modal-pinyin" id="modalPinyin"></div>
+        <div class="char-modal-section">
+            <h3>基本释义</h3>
+            <div class="char-modal-meaning" id="modalMeaning"></div>
+        </div>
+        <div class="char-modal-section">
+            <h3>佛教释义</h3>
+            <div class="char-modal-meaning" id="modalBuddhistMeaning"></div>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="title">金刚般若波罗蜜经</div>
+    <div class="author">姚秦三藏法师鸠摩罗什译</div>
+</div>
+
+<!-- 第十品标题 -->
+<div class="section-title">第十品</div>
+
+<!-- 经文内容 -->
+<div id="scriptureContent"></div>
+
+<script>
+// 语音合成对象
+let currentUtterance = null;
+
+// 标点符号的拼音映射
+const punctuationPinyin = {
+    '，': 'dòu hào',
+    '。': 'jù hào',
+    '、': 'dùn hào',
+    '；': 'fēn hào',
+    '：': 'mào hào',
+    '！': 'tàn hào',
+    '？': 'wèn hào',
+    '「': 'zuǒ yǐn hào',
+    '」': 'yòu yǐn hào',
+    '『': 'zuǒ shuāng yǐn hào',
+    '』': 'yòu shuāng yǐn hào',
+    '（': 'zuǒ kuò hào',
+    '）': 'yòu kuò hào',
+    '《': 'zuǒ shū míng hào',
+    '》': 'yòu shū míng hào'
+};
+
+// 汉字的多义项解释（包含第十品新增汉字）
+const charMeanings = {
+    '如': {
+        pinyin: 'rú',
+        meanings: [
+            'like',
+            'as',
+            'such as'
+        ],
+        buddhist: 'Suchness or thusness in Buddhist philosophy.'
+    },
+    '來': {
+        pinyin: 'lái',
+        meanings: [
+            'come',
+            'arrive',
+            'future'
+        ],
+        buddhist: 'Coming or returning in spiritual context.'
+    },
+    '然': {
+        pinyin: 'rán',
+        meanings: [
+            'so',
+            'thus',
+            'correct'
+        ],
+        buddhist: 'Thus or correct in Buddhist context.'
+    },
+    '燈': {
+        pinyin: 'dēng',
+        meanings: [
+            'lamp',
+            'light'
+        ],
+        buddhist: 'Light or lamp symbolizing wisdom.'
+    },
+    '所': {
+        pinyin: 'suǒ',
+        meanings: [
+            'place',
+            'that which',
+            'what'
+        ],
+        buddhist: 'A relative pronoun in Buddhist texts.'
+    },
+    '法': {
+        pinyin: 'fǎ',
+        meanings: [
+            'law',
+            'method',
+            'Dharma'
+        ],
+        buddhist: 'Dharma or phenomena in Buddhist teachings.'
+    },
+    '得': {
+        pinyin: 'dé',
+        meanings: [
+            'obtain',
+            'gain',
+            'can'
+        ],
+        buddhist: 'Attainment or realization.'
+    },
+    '阿': {
+        pinyin: 'ā',
+        meanings: [
+            'prefix',
+            'exclamation'
+        ],
+        buddhist: 'Prefix in many Buddhist terms.'
+    },
+    '耨': {
+        pinyin: 'nòu',
+        meanings: [
+            'hoe',
+            'cultivate'
+        ],
+        buddhist: 'Part of "阿耨多罗三藐三菩提" (Anuttara-samyak-sambodhi).'
+    },
+    '多': {
+        pinyin: 'duō',
+        meanings: [
+            'many',
+            'much',
+            'excessive'
+        ],
+        buddhist: 'Part of "阿耨多罗三藐三菩提" (Anuttara-samyak-sambodhi).'
+    },
+    '羅': {
+        pinyin: 'luó',
+        meanings: [
+            'net',
+            'gauze',
+            'Buddhist term'
+        ],
+        buddhist: 'Part of "阿耨多罗三藐三菩提" (Anuttara-samyak-sambodhi).'
+    },
+    '三': {
+        pinyin: 'sān',
+        meanings: [
+            'three'
+        ],
+        buddhist: 'Three, often representing the Three Jewels.'
+    },
+    '藐': {
+        pinyin: 'miǎo',
+        meanings: [
+            'despise',
+            'small'
+        ],
+        buddhist: 'Part of "阿耨多罗三藐三菩提" (Anuttara-samyak-sambodhi).'
+    },
+    '菩': {
+        pinyin: 'pú',
+        meanings: [
+            'bodhi',
+            'enlightenment'
+        ],
+        buddhist: 'Bodhi, meaning awakening or enlightenment.'
+    },
+    '提': {
+        pinyin: 'tí',
+        meanings: [
+            'lift',
+            'carry',
+            'mention'
+        ],
+        buddhist: 'To lift up or elevate in spiritual context.'
+    },
+    '記': {
+        pinyin: 'jì',
+        meanings: [
+            'record',
+            'remember',
+            'prediction'
+        ],
+        buddhist: 'Prediction or prophecy of future Buddhahood.'
+    },
+    '解': {
+        pinyin: 'jiě',
+        meanings: [
+            'understand',
+            'explain',
+            'untie'
+        ],
+        buddhist: 'Understanding or liberation in Buddhist context.'
+    },
+    '義': {
+        pinyin: 'yì',
+        meanings: [
+            'meaning',
+            'righteousness',
+            'justice'
+        ],
+        buddhist: 'Meaning or principle in Buddhist teachings.'
+    },
+    '聖': {
+        pinyin: 'shèng',
+        meanings: [
+            'sage',
+            'holy',
+            'sacred'
+        ],
+        buddhist: 'Sage or holy one in Buddhist context.'
+    },
+    '心': {
+        pinyin: 'xīn',
+        meanings: [
+            'heart',
+            'mind',
+            'core'
+        ],
+        buddhist: 'Mind or heart in Buddhist psychology.'
+    },
+    '難': {
+        pinyin: 'nán',
+        meanings: [
+            'difficult',
+            'hard',
+            'trouble'
+        ],
+        buddhist: 'Difficulty or hardship in practice.'
+    },
+    '測': {
+        pinyin: 'cè',
+        meanings: [
+            'measure',
+            'guess',
+            'fathom'
+        ],
+        buddhist: 'To fathom or comprehend in spiritual context.'
+    },
+    '推': {
+        pinyin: 'tuī',
+        meanings: [
+            'push',
+            'deduce',
+            'infer'
+        ],
+        buddhist: 'To infer or deduce in Buddhist logic.'
+    },
+    '圖': {
+        pinyin: 'tú',
+        meanings: [
+            'picture',
+            'plan',
+            'map'
+        ],
+        buddhist: 'To plan or contemplate in practice.'
+    },
+    '相': {
+        pinyin: 'xiāng',
+        meanings: [
+            'appearance',
+            'mark',
+            'characteristic'
+        ],
+        buddhist: 'Marks or characteristics in Buddhist analysis.'
+    },
+    '中': {
+        pinyin: 'zhōng',
+        meanings: [
+            'middle',
+            'center',
+            'within'
+        ],
+        buddhist: 'Middle or center in Buddhist philosophy.'
+    },
+    '則': {
+        pinyin: 'zé',
+        meanings: [
+            'then',
+            'rule',
+            'standard'
+        ],
+        buddhist: 'Principle or standard in Buddhist teachings.'
+    },
+    '授': {
+        pinyin: 'shòu',
+        meanings: [
+            'give',
+            'grant',
+            'teach'
+        ],
+        buddhist: 'To confer or bestow in spiritual context.'
+    },
+    '汝': {
+        pinyin: 'rǔ',
+        meanings: [
+            'you',
+            'thou'
+        ],
+        buddhist: 'You or thou in Buddhist texts.'
+    },
+    '於': {
+        pinyin: 'yú',
+        meanings: [
+            'at',
+            'in',
+            'to'
+        ],
+        buddhist: 'A preposition indicating relation or connection.'
+    },
+    '來': {
+        pinyin: 'lái',
+        meanings: [
+            'come',
+            'arrive',
+            'future'
+        ],
+        buddhist: 'Coming or returning in spiritual context.'
+    },
+    '世': {
+        pinyin: 'shì',
+        meanings: [
+            'world',
+            'generation',
+            'lifetime'
+        ],
+        buddhist: 'World or lifetime in Buddhist cosmology.'
+    },
+    '當': {
+        pinyin: 'dāng',
+        meanings: [
+            'should',
+            'ought',
+            'bear'
+        ],
+        buddhist: 'Ought to or should in Buddhist ethics.'
+    },
+    '作': {
+        pinyin: 'zuò',
+        meanings: [
+            'do',
+            'make',
+            'compose'
+        ],
+        buddhist: 'Action or creation in Buddhist philosophy.'
+    },
+    '號': {
+        pinyin: 'hào',
+        meanings: [
+            'name',
+            'number',
+            'title'
+        ],
+        buddhist: 'Name or title in Buddhist context.'
+    },
+    '釋': {
+        pinyin: 'shì',
+        meanings: [
+            'explain',
+            'release',
+            'Sakyamuni'
+        ],
+        buddhist: 'Part of "释迦牟尼" (Sakyamuni), the historical Buddha.'
+    },
+    '迦': {
+        pinyin: 'jiā',
+        meanings: [
+            'Sanskrit transliteration'
+        ],
+        buddhist: 'Part of "释迦牟尼" (Sakyamuni), the historical Buddha.'
+    },
+    '牟': {
+        pinyin: 'móu',
+        meanings: [
+            'seek',
+            'obtain'
+        ],
+        buddhist: 'Part of "释迦牟尼" (Sakyamuni), the historical Buddha.'
+    },
+    '尼': {
+        pinyin: 'ní',
+        meanings: [
+            'nun',
+            'Sanskrit transliteration'
+        ],
+        buddhist: 'Part of "释迦牟尼" (Sakyamuni), the historical Buddha.'
+    },
+    '見': {
+        pinyin: 'jiàn',
+        meanings: [
+            'see',
+            'view',
+            'opinion'
+        ],
+        buddhist: 'View or perception in Buddhist psychology.'
+    },
+    '乖': {
+        pinyin: 'guāi',
+        meanings: [
+            'perverse',
+            'contrary',
+            'disobedient'
+        ],
+        buddhist: 'Contrary or opposed to truth.'
+    },
+    '何': {
+        pinyin: 'hé',
+        meanings: [
+            'what',
+            'why',
+            'how'
+        ],
+        buddhist: 'A question about Dharma.'
+    },
+    '容': {
+        pinyin: 'róng',
+        meanings: [
+            'contain',
+            'allow',
+            'appearance'
+        ],
+        buddhist: 'To allow or contain in Buddhist context.'
+    },
+    '故': {
+        pinyin: 'gù',
+        meanings: [
+            'reason',
+            'cause',
+            'therefore'
+        ],
+        buddhist: 'Reason or cause in Buddhist logic.'
+    },
+    '會': {
+        pinyin: 'huì',
+        meanings: [
+            'meet',
+            'understand',
+            'gather'
+        ],
+        buddhist: 'To understand or realize in practice.'
+    },
+    '理': {
+        pinyin: 'lǐ',
+        meanings: [
+            'principle',
+            'reason',
+            'truth'
+        ],
+        buddhist: 'Principle or truth in Buddhist philosophy.'
+    },
+    '向': {
+        pinyin: 'xiàng',
+        meanings: [
+            'toward',
+            'direction',
+            'former'
+        ],
+        buddhist: 'Direction or orientation in practice.'
+    },
+    '極': {
+        pinyin: 'jí',
+        meanings: [
+            'extreme',
+            'utmost',
+            'pole'
+        ],
+        buddhist: 'Ultimate or extreme in spiritual context.'
+    },
+    '宜': {
+        pinyin: 'yí',
+        meanings: [
+            'proper',
+            'suitable',
+            'ought'
+        ],
+        buddhist: 'Proper or suitable in Buddhist ethics.'
+    },
+    '之': {
+        pinyin: 'zhī',
+        meanings: [
+            'of',
+            'it',
+            'this'
+        ],
+        buddhist: 'A grammatical particle in Buddhist texts.'
+    },
+    '人': {
+        pinyin: 'rén',
+        meanings: [
+            'person',
+            'human',
+            'people'
+        ],
+        buddhist: 'Sentient being in Buddhist context.'
+    },
+    '言': {
+        pinyin: 'yán',
+        meanings: [
+            'speak',
+            'word',
+            'say'
+        ],
+        buddhist: 'Speech or words in Buddhist teachings.'
+    },
+    '俗': {
+        pinyin: 'sú',
+        meanings: [
+            'common',
+            'vulgar',
+            'secular'
+        ],
+        buddhist: 'Common or secular in Buddhist context.'
+    },
+    '聞': {
+        pinyin: 'wén',
+        meanings: [
+            'hear',
+            'smell',
+            'news'
+        ],
+        buddhist: 'Hearing or listening in practice.'
+    },
+    '語': {
+        pinyin: 'yǔ',
+        meanings: [
+            'language',
+            'speak',
+            'words'
+        ],
+        buddhist: 'Language or speech in Buddhist teachings.'
+    },
+    '非': {
+        pinyin: 'fēi',
+        meanings: [
+            'not',
+            'wrong',
+            'non-'
+        ],
+        buddhist: 'Negation or wrong in Buddhist logic.'
+    },
+    '中': {
+        pinyin: 'zhōng',
+        meanings: [
+            'middle',
+            'center',
+            'within'
+        ],
+        buddhist: 'Middle or center in Buddhist philosophy.'
+    },
+    '實': {
+        pinyin: 'shí',
+        meanings: [
+            'real',
+            'solid',
+            'truth'
+        ],
+        buddhist: 'Reality or truth in Buddhist philosophy.'
+    },
+    '虗': {
+        pinyin: 'xū',
+        meanings: [
+            'empty',
+            'false',
+            'weak'
+        ],
+        buddhist: 'Empty or false in Buddhist analysis.'
+    },
+    '辯': {
+        pinyin: 'biàn',
+        meanings: [
+            'argue',
+            'discuss',
+            'dispute'
+        ],
+        buddhist: 'Discussion or debate in Buddhist context.'
+    },
+    '為': {
+        pinyin: 'wéi',
+        meanings: [
+            'as',
+            'become',
+            'act'
+        ],
+        buddhist: 'To act or function as.'
+    },
+    '寄': {
+        pinyin: 'jì',
+        meanings: [
+            'send',
+            'entrust',
+            'rely'
+        ],
+        buddhist: 'To rely on or entrust in practice.'
+    },
+    '明': {
+        pinyin: 'míng',
+        meanings: [
+            'bright',
+            'clear',
+            'explain'
+        ],
+        buddhist: 'Brightness or clarity in Buddhist teachings.'
+    },
+    '尋': {
+        pinyin: 'xún',
+        meanings: [
+            'search',
+            'seek',
+            'ancient'
+        ],
+        buddhist: 'To seek or search in practice.'
+    },
+    '著': {
+        pinyin: 'zhuó',
+        meanings: [
+            'wear',
+            'attach',
+            'cling'
+        ],
+        buddhist: 'Attachment or clinging in Buddhist psychology.'
+    },
+    '復': {
+        pinyin: 'fù',
+        meanings: [
+            'again',
+            'repeat',
+            'return'
+        ],
+        buddhist: 'Again or return in Buddhist context.'
+    },
+    '遣': {
+        pinyin: 'qiǎn',
+        meanings: [
+            'dispatch',
+            'send away',
+            'eliminate'
+        ],
+        buddhist: 'To eliminate or send away in practice.'
+    },
+    '盡': {
+        pinyin: 'jìn',
+        meanings: [
+            'exhaust',
+            'end',
+            'all'
+        ],
+        buddhist: 'To exhaust or end in Buddhist analysis.'
+    },
+    '凡': {
+        pinyin: 'fán',
+        meanings: [
+            'ordinary',
+            'common',
+            'all'
+        ],
+        buddhist: 'Ordinary or common in Buddhist context.'
+    },
+    '夫': {
+        pinyin: 'fū',
+        meanings: [
+            'man',
+            'husband',
+            'those'
+        ],
+        buddhist: 'Man or those in Buddhist texts.'
+    },
+    '以': {
+        pinyin: 'yǐ',
+        meanings: [
+            'with',
+            'by',
+            'because'
+        ],
+        buddhist: 'With or by in Buddhist grammar.'
+    },
+    '違': {
+        pinyin: 'wéi',
+        meanings: [
+            'violate',
+            'disobey',
+            'contrary'
+        ],
+        buddhist: 'To violate or be contrary to truth.'
+    },
+    '耶': {
+        pinyin: 'yé',
+        meanings: [
+            'question particle',
+            'evil'
+        ],
+        buddhist: 'Question particle or evil in Buddhist context.'
+    },
+    '正': {
+        pinyin: 'zhèng',
+        meanings: [
+            'correct',
+            'right',
+            'straight'
+        ],
+        buddhist: 'Correct or right in Buddhist teachings.'
+    },
+    '覺': {
+        pinyin: 'jué',
+        meanings: [
+            'awaken',
+            'realize',
+            'enlightenment'
+        ],
+        buddhist: 'Awakening or enlightenment.'
+    },
+    '悟': {
+        pinyin: 'wù',
+        meanings: [
+            'realize',
+            'awaken',
+            'understand'
+        ],
+        buddhist: 'Realization or awakening in practice.'
+    },
+    '矣': {
+        pinyin: 'yǐ',
+        meanings: [
+            'final particle',
+            'already'
+        ],
+        buddhist: 'Final particle in Buddhist texts.'
+    },
+    '譬': {
+        pinyin: 'pì',
+        meanings: [
+            'example',
+            'analogy'
+        ],
+        buddhist: 'Example or analogy in Buddhist teachings.'
+    },
+    '如': {
+        pinyin: 'rú',
+        meanings: [
+            'like',
+            'as',
+            'such as'
+        ],
+        buddhist: 'Suchness or thusness in Buddhist philosophy.'
+    },
+    '身': {
+        pinyin: 'shēn',
+        meanings: [
+            'body',
+            'self',
+            'person'
+        ],
+        buddhist: 'Body or self in Buddhist analysis.'
+    },
+    '長': {
+        pinyin: 'cháng',
+        meanings: [
+            'long',
+            'length',
+            'always'
+        ],
+        buddhist: 'Long or always in Buddhist context.'
+    },
+    '大': {
+        pinyin: 'dà',
+        meanings: [
+            'big',
+            'great',
+            'large'
+        ],
+        buddhist: 'Great or large in Buddhist context.'
+    },
+    '類': {
+        pinyin: 'lèi',
+        meanings: [
+            'category',
+            'similar',
+            'kind'
+        ],
+        buddhist: 'Category or kind in Buddhist analysis.'
+    },
+    '上': {
+        pinyin: 'shàng',
+        meanings: [
+            'above',
+            'up',
+            'previous'
+        ],
+        buddhist: 'Above or superior in Buddhist context.'
+    },
+    '緣': {
+        pinyin: 'yuán',
+        meanings: [
+            'cause',
+            'condition',
+            'edge'
+        ],
+        buddhist: 'Cause or condition in Buddhist philosophy.'
+    },
+    '假': {
+        pinyin: 'jiǎ',
+        meanings: [
+            'false',
+            'borrow',
+            'temporary'
+        ],
+        buddhist: 'False or temporary in Buddhist analysis.'
+    },
+    '性': {
+        pinyin: 'xìng',
+        meanings: [
+            'nature',
+            'character',
+            'sex'
+        ],
+        buddhist: 'Nature or character in Buddhist philosophy.'
+    },
+    '又': {
+        pinyin: 'yòu',
+        meanings: [
+            'again',
+            'also',
+            'moreover'
+        ],
+        buddhist: 'Again or also in Buddhist texts.'
+    },
+    '況': {
+        pinyin: 'kuàng',
+        meanings: [
+            'moreover',
+            'especially',
+            'compare'
+        ],
+        buddhist: 'Moreover or especially in Buddhist texts.'
+    },
+    '下': {
+        pinyin: 'xià',
+        meanings: [
+            'below',
+            'down',
+            'next'
+        ],
+        buddhist: 'Below or inferior in Buddhist context.'
+    },
+    '眾': {
+        pinyin: 'zhòng',
+        meanings: [
+            'crowd',
+            'many',
+            'multitude'
+        ],
+        buddhist: 'Multitude or assembly in Buddhist context.'
+    },
+    '生': {
+        pinyin: 'shēng',
+        meanings: [
+            'life',
+            'birth',
+            'produce'
+        ],
+        buddhist: 'Birth or existence in samsara.'
+    },
+    '名': {
+        pinyin: 'míng',
+        meanings: [
+            'name',
+            'famous',
+            'reputation'
+        ],
+        buddhist: 'Name or designation in Buddhist logic.'
+    },
+    '可': {
+        pinyin: 'kě',
+        meanings: [
+            'can',
+            'may',
+            'approve'
+        ],
+        buddhist: 'Can or may in Buddhist ethics.'
+    },
+    '度': {
+        pinyin: 'dù',
+        meanings: [
+            'degree',
+            'cross over',
+            'liberate'
+        ],
+        buddhist: 'To cross over or liberate in practice.'
+    },
+    '自': {
+        pinyin: 'zì',
+        meanings: [
+            'self',
+            'from',
+            'since'
+        ],
+        buddhist: 'Self or from in Buddhist grammar.'
+    },
+    '滅': {
+        pinyin: 'miè',
+        meanings: [
+            'extinguish',
+            'destroy',
+            'nirvana'
+        ],
+        buddhist: 'Extinction or nirvana.'
+    },
+    '者': {
+        pinyin: 'zhě',
+        meanings: [
+            'one who',
+            'that which',
+            'person'
+        ],
+        buddhist: 'Suffix indicating a person or thing.'
+    },
+    '欲': {
+        pinyin: 'yù',
+        meanings: [
+            'desire',
+            'wish',
+            'lust'
+        ],
+        buddhist: 'Desire or craving as root of suffering.'
+    },
+    '化': {
+        pinyin: 'huà',
+        meanings: [
+            'transform',
+            'convert',
+            'educate'
+        ],
+        buddhist: 'To transform or educate in practice.'
+    }
+};
+
+// 第十品经文数据
+const scriptureData = [
+    {
+        id: 'section1',
+        text: '須菩提！於意云何？如來於然燈佛所，有法得阿耨多羅三藐三菩提不？',
+        readingText: '須菩提！於意云何？如來於然燈佛所，有法得阿耨多羅三藐三菩提不？',
+        pinyin: 'xū pú tí yú yì yún hé rú lái yú rán dēng fó suǒ yǒu fǎ dé ā nòu duō luó sān miǎo sān pú tí bù',
+        english: 'Subhuti, what do you think? Did the Tathagata attain any Dharma when he was with Dipankara Buddha to achieve Anuttara-samyak-sambodhi?',
+        annotation: '即引自得記之解，以證今記。\n○自下疏有昔字，今記作前說。',
+        annotationPinyin: 'jí yǐn zì dé jì zhī jiě yǐ zhèng jīn jì \n○ zì xià shū yǒu xī zì jīn jì zuò qián shuō',
+        annotationTranslations: {
+            '白话文': '引用自得记的解释，来证明现在的记说。\n注：下面的疏中有"昔"字，现在的记作"前说"。',
+            'English': 'Quoting from the explanation of receiving prediction to verify the current prediction.\nNote: The commentary below has the character "past", now recorded as "previous explanation".',
+            'Deutsch': 'Zitiert aus der Erklärung der Vorhersage, um die aktuelle Vorhersage zu bestätigen.\nAnmerkung: Der Kommentar unten enthält das Zeichen "Vergangenheit", jetzt aufgezeichnet als "vorherige Erklärung".',
+            'Français': 'Citation de l\'explication de la prédiction pour vérifier la prédiction actuelle.\nNote : Le commentaire ci-dessous a le caractère "passé", maintenant enregistré comme "explication précédente".',
+            'Русский': 'Цитируется из объяснения получения предсказания, чтобы подтвердить текущее предсказание.\nПримечание: В комментарии ниже есть символ "прошлое", теперь записанный как "предыдущее объяснение".',
+            'Español': 'Citando de la explicación de la predicción para verificar la predicción actual.\nNota: El comentario a continuación tiene el carácter "pasado", ahora registrado como "explicación anterior".',
+            'Italiano': 'Citando dalla spiegazione della predizione per verificare la predizione attuale.\nNota: Il commento qui sotto ha il carattere "passato", ora registrato come "spiegazione precedente".',
+            'संस्कृतम्': 'स्वयं प्राप्तव्याख्यानात् उद्धृत्य इदानीं व्याख्यानं प्रमाणयति।\nटिप्पणीः अधस्तात् व्याख्यायां "पूर्वम्" इति पदं, इदानीं "पूर्वव्याख्या" इति लिख्यते।',
+            'Pāli': 'Sayam pattavyañjanā uddharitvā etarahi vyākhyānaṃ pramāṇayati.\nNidassanaṃ: adhotāṭṭhakathāyaṃ "pubbe" ti padaṃ, etarahi "pubbaṭṭhakathā" ti likhyate.'
+        },
+        translations: {
+            '白话文': '须菩提！你的意思如何？如来在然灯佛那里，有得到阿耨多罗三藐三菩提的法吗？',
+            'English': 'Subhuti, what do you think? Did the Tathagata attain any Dharma when he was with Dipankara Buddha to achieve Anuttara-samyak-sambodhi?',
+            'Deutsch': 'Subhuti, was denkst du? Hatte der Tathagata irgendein Dharma erreicht, als er bei Dipankara Buddha war, um Anuttara-samyak-sambodhi zu erlangen?',
+            'Français': 'Subhuti, qu\'en penses-tu ? Le Tathagata a-t-il atteint un quelconque Dharma lorsqu\'il était avec le Bouddha Dipankara pour réaliser Anuttara-samyak-sambodhi ?',
+            'Русский': 'Субхути, как ты думаешь? Достиг ли Татхагата какого-либо Дхармы, когда он был с Буддой Дипанкарой, чтобы достичь Ануттара-самьяк-самбодхи?',
+            'Español': 'Subhuti, ¿qué opinas? ¿Alcanzó el Tathagata algún Dharma cuando estaba con el Buda Dipankara para lograr Anuttara-samyak-sambodhi?',
+            'Italiano': 'Subhuti, cosa ne pensi? Il Tathagata ha raggiunto qualche Dharma quando era con il Buddha Dipankara per realizzare Anuttara-samyak-sambodhi?',
+            'संस्कृतम्': 'सुभूते! तव मतं किम्? तथागतः दीपंकरबुद्धसमीपे अनुत्तरां सम्यक्संबोधिं प्राप्तुं किञ्चित् धर्मं प्राप्तवान् इति?',
+            'Pāli': 'Subhūti, taṃ kiṃ maññasi? Tathāgato Dīpaṅkarabuddhasantike anuttaraṃ sammāsambodhiṃ pattuṃ kiñci dhammaṃ patto ti?'
+        }
+    },
+    {
+        id: 'section2',
+        text: '不也，世尊。如我解佛所說義，佛於然燈佛所，無有法得阿耨多羅三藐三菩提。',
+        readingText: '不也，世尊。如我解佛所說義，佛於然燈佛所，無有法得阿耨多羅三藐三菩提。',
+        pinyin: 'bù yě shì zūn rú wǒ jiě fó suǒ shuō yì fó yú rán dēng fó suǒ wú yǒu fǎ dé ā nòu duō luó sān miǎo sān pú tí',
+        english: 'No, World-Honored One. As I understand the meaning of the Buddha\'s teaching, the Buddha did not attain any Dharma when he was with Dipankara Buddha to achieve Anuttara-samyak-sambodhi.',
+        annotation: '聖心難測，義推可圖。得記由於無相，無相之中，則無所得也。',
+        annotationPinyin: 'shèng xīn nán cè yì tuī kě tú dé jì yóu yú wú xiàng wú xiàng zhī zhōng zé wú suǒ dé yě',
+        annotationTranslations: {
+            '白话文': '圣人的心难以测度，通过义理推测可以明白。得到授记是因为无相，在无相之中，就无所获得。',
+            'English': 'The sage\'s mind is difficult to fathom, but can be understood through reasoning. The prediction was received due to formlessness—in formlessness, there is nothing attained.',
+            'Deutsch': 'Der Geist des Weisen ist schwer zu ergründen, kann aber durch Vernunft verstanden werden. Die Vorhersage wurde aufgrund von Formlosigkeit erhalten—in Formlosigkeit gibt es nichts Erreichtes.',
+            'Français': 'L\'esprit du sage est difficile à pénétrer, mais peut être compris par le raisonnement. La prédiction a été reçue en raison de l\'absence de forme—dans l\'absence de forme, il n\'y a rien d\'acquis.',
+            'Русский': 'Ум мудреца трудно постичь, но можно понять через рассуждение. Предсказание было получено из-за бесформенности—в бесформенности нет ничего достигнутого.',
+            'Español': 'La mente del sabio es difícil de comprender, pero puede entenderse mediante el razonamiento. La predicción se recibió debido a la ausencia de forma—en la ausencia de forma, no hay nada alcanzado.',
+            'Italiano': 'La mente del saggio è difficile da penetrare, ma può essere compresa attraverso il ragionamento. La predizione è stata ricevuta a causa dell\'assenza di forma—nell\'assenza di forma, non c\'è nulla di raggiunto.',
+            'संस्कृतम्': 'सन्तः चित्तं दुर्ज्ञेयं, तर्केण ज्ञातुं शक्यते। निराकारत्वात् व्याख्यानं प्राप्तम्, निराकारे तु न किञ्चित् प्राप्यते।',
+            'Pāli': 'Santānaṃ cittaṃ dujjānaṃ, takkena ñātuṃ sakkā. Animittatāya vyākhyānaṃ pattaṃ, animitte pana na kiñci pattabbaṃ.'
+        },
+        translations: {
+            '白话文': '不能，世尊。如我理解佛所说的义理，佛在然灯佛那里，没有法得到阿耨多罗三藐三菩提。',
+            'English': 'No, World-Honored One. As I understand the meaning of the Buddha\'s teaching, the Buddha did not attain any Dharma when he was with Dipankara Buddha to achieve Anuttara-samyak-sambodhi.',
+            'Deutsch': 'Nein, Weltgeehrter. Wie ich die Bedeutung der Lehre des Buddha verstehe, hat der Buddha kein Dharma erreicht, als er bei Dipankara Buddha war, um Anuttara-samyak-sambodhi zu erlangen.',
+            'Français': 'Non, Honoré du Monde. Tel que je comprends le sens de l\'enseignement du Bouddha, le Bouddha n\'a atteint aucun Dharma lorsqu\'il était avec le Bouddha Dipankara pour réaliser Anuttara-samyak-sambodhi.',
+            'Русский': 'Нет, Почитаемый Миром. Как я понимаю смысл учения Будды, Будда не достиг никакого Дхармы, когда он был с Буддой Дипанкарой, чтобы достичь Ануттара-самьяк-самбодхи.',
+            'Español': 'No, Honrado por el Mundo. Según entiendo el significado de las enseñanzas del Buda, el Buda no alcanzó ningún Dharma cuando estaba con el Buda Dipankara para lograr Anuttara-samyak-sambodhi.',
+            'Italiano': 'No, Onorato dal Mondo. Come io comprendo il significato dell\'insegnamento del Buddha, il Buddha non ha raggiunto alcun Dharma quando era con il Buddha Dipankara per realizzare Anuttara-samyak-sambodhi.',
+            'संस्कृतम्': 'न हि, भगवन्। यथा अहं बुद्धस्य उक्तार्थं जानामि, बुद्धः दीपंकरबुद्धसमीपे अनुत्तरां सम्यक्संबोधिं प्राप्तुं न किञ्चित् धर्मं प्राप्तवान्।',
+            'Pāli': 'Na hi, bhagavā. Yathāhaṃ buddhassa vuttatthaṃ jānāmi, buddho Dīpaṅkarabuddhasantike anuttaraṃ sammāsambodhiṃ pattuṃ na kiñci dhammaṃ patto.'
+        }
+    },
+    {
+        id: 'section3',
+        text: '佛言：如是，如是！須菩提！實無有法如來得阿耨多羅三藐三菩提。須菩提！若有法如來得阿耨多羅三藐三菩提者，然燈佛則不與我授記：汝於來世當得作佛，號釋迦牟尼。',
+        readingText: '佛言：如是，如是！須菩提！實無有法如來得阿耨多羅三藐三菩提。須菩提！若有法如來得阿耨多羅三藐三菩提者，然燈佛則不與我授記：汝於來世當得作佛，號釋迦牟尼。',
+        pinyin: 'fó yán rú shì rú shì xū pú tí shí wú yǒu fǎ rú lái dé ā nòu duō luó sān miǎo sān pú tí xū pú tí ruò yǒu fǎ rú lái dé ā nòu duō luó sān miǎo sān pú tí zhě rán dēng fó zé bù yǔ wǒ shòu jì rǔ yú lái shì dāng dé zuò fó hào shì jiā móu ní',
+        english: 'The Buddha said: So it is, so it is! Subhuti! Truly there is no Dharma by which the Tathagata attained Anuttara-samyak-sambodhi. Subhuti! If there were any Dharma by which the Tathagata attained Anuttara-samyak-sambodhi, Dipankara Buddha would not have given me the prediction: "You will become a Buddha in the future named Sakyamuni."',
+        annotation: '若見有法，則乖菩提，何容得記？',
+        annotationPinyin: 'ruò jiàn yǒu fǎ zé guāi pú tí hé róng dé jì',
+        annotationTranslations: {
+            '白话文': '如果见到有法可得，就违背了菩提，怎么能得到授记呢？',
+            'English': 'If one sees there is a Dharma to attain, this contradicts bodhi—how could one receive the prediction?',
+            'Deutsch': 'Wenn man sieht, dass es ein Dharma zu erreichen gibt, widerspricht dies Bodhi—wie könnte man die Vorhersage erhalten?',
+            'Français': 'Si l\'on voit qu\'il y a un Dharma à atteindre, cela contredit bodhi—comment pourrait-on recevoir la prédiction?',
+            'Русский': 'Если кто-то видит, что есть Дхарма для достижения, это противоречит бодхи—как можно получить предсказание?',
+            'Español': 'Si uno ve que hay un Dharma para alcanzar, esto contradice bodhi—¿cómo podría recibir la predicción?',
+            'Italiano': 'Se uno vede che c\'è un Dharma da raggiungere, questo contraddice bodhi—come potrebbe ricevere la predizione?',
+            'संस्कृतम्': 'यदि धर्मः प्राप्तुं दृश्यते, तर्हि बोधिः विरुद्ध्यते, कथं व्याख्यानं प्राप्यते?',
+            'Pāli': 'Sace dhammo pattuṃ dissati, atha bodhi virujjhati, kathaṃ vyākhyānaṃ pappoti?'
+        },
+        translations: {
+            '白话文': '佛说：是这样，是这样！须菩提！实际上没有法如来得到阿耨多罗三藐三菩提。须菩提！如果有法如来得到阿耨多罗三藐三菩提，然灯佛就不会给我授记："你将于来世当得作佛，号释迦牟尼。"',
+            'English': 'The Buddha said: So it is, so it is! Subhuti! Truly there is no Dharma by which the Tathagata attained Anuttara-samyak-sambodhi. Subhuti! If there were any Dharma by which the Tathagata attained Anuttara-samyak-sambodhi, Dipankara Buddha would not have given me the prediction: "You will become a Buddha in the future named Sakyamuni."',
+            'Deutsch': 'Der Buddha sagte: So ist es, so ist es! Subhuti! Wahrlich gibt es kein Dharma, durch das der Tathagata Anuttara-samyak-sambodhi erlangte. Subhuti! Wenn es irgendein Dharma gäbe, durch das der Tathagata Anuttara-samyak-sambodhi erlangte, hätte Dipankara Buddha mir nicht die Vorhersage gegeben: "Du wirst in der Zukunft ein Buddha werden namens Sakyamuni."',
+            'Français': 'Le Bouddha dit : Ainsi est-il, ainsi est-il ! Subhuti ! Vraiment il n\'y a pas de Dharma par lequel le Tathagata a atteint Anuttara-samyak-sambodhi. Subhuti ! S\'il y avait un Dharma par lequel le Tathagata a atteint Anuttara-samyak-sambodhi, le Bouddha Dipankara ne m\'aurait pas donné la prédiction : "Tu deviendras un Bouddha dans le futur nommé Sakyamuni."',
+            'Русский': 'Будда сказал: Так оно есть, так оно есть! Субхути! Воистину нет Дхармы, посредством которой Татхагата достиг Ануттара-самьяк-самбодхи. Субхути! Если бы была какая-либо Дхарма, посредством которой Татхагата достиг Ануттара-самьяк-самбодхи, Будда Дипанкара не дал бы мне предсказания: "Ты станешь Буддой в будущем по имени Шакьямуни."',
+            'Español': 'El Buda dijo: ¡Así es, así es! Subhuti! Verdaderamente no hay Dharma por el cual el Tathagata alcanzó Anuttara-samyak-sambodhi. Subhuti! Si hubiera algún Dharma por el cual el Tathagata alcanzó Anuttara-samyak-sambodhi, el Buda Dipankara no me habría dado la predicción: "Te convertirás en un Buda en el futuro llamado Sakyamuni."',
+            'Italiano': 'Il Buddha disse: Così è, così è! Subhuti! Veramente non c\'è Dharma mediante il quale il Tathagata ha raggiunto Anuttara-samyak-sambodhi. Subhuti! Se ci fosse un Dharma mediante il quale il Tathagata ha raggiunto Anuttara-samyak-sambodhi, il Buddha Dipankara non mi avrebbe dato la predizione: "Diventerai un Buddha in futuro chiamato Sakyamuni."',
+            'संस्कृतम्': 'बुद्धः अवदत् - एवम्, एवम्! सुभूते! न हि कोऽपि धर्मः येन तथागतः अनुत्तरां सम्यक्संबोधिं प्राप्तवान्। सुभूते! यदि कश्चित् धर्मः येन तथागतः अनुत्तरां सम्यक्संबोधिं प्राप्तवान्, तर्हि दीपंकरबुद्धः मम व्याख्यानं न दद्यात् - "त्वं अनागते बुद्धो भविष्यसि नाम्ना शाक्यमुनिः" इति।',
+            'Pāli': 'Buddho avadati - evaṃ, evaṃ! Subhūti! Na hi koci dhammo yena tathāgato anuttaraṃ sammāsambodhiṃ patto. Subhūti! Sace koci dhammo yena tathāgato anuttaraṃ sammāsambodhiṃ patto, atha Dīpaṅkarabuddho mama vyākhyānaṃ na dadeyya - "tvaṃ anāgate buddho bhavissasi nāmnā Sakyamunī" ti.'
+        }
+    },
+    {
+        id: 'section4',
+        text: '以實無有法得阿耨多羅三藐三菩提，是故然燈佛與我授記，作是言：汝於來世當得作佛，號釋迦牟尼。',
+        readingText: '以實無有法得阿耨多羅三藐三菩提，是故然燈佛與我授記，作是言：汝於來世當得作佛，號釋迦牟尼。',
+        pinyin: 'yǐ shí wú yǒu fǎ dé ā nòu duō luó sān miǎo sān pú tí shì gù rán dēng fó yǔ wǒ shòu jì zuò shì yán rǔ yú lái shì dāng dé zuò fó hào shì jiā móu ní',
+        english: 'Because truly there is no Dharma by which to attain Anuttara-samyak-sambodhi, therefore Dipankara Buddha gave me the prediction, saying: "You will become a Buddha in the future named Sakyamuni."',
+        annotation: '無法則會理，會理則向極，故得記也。',
+        annotationPinyin: 'wú fǎ zé huì lǐ huì lǐ zé xiàng jí gù dé jì yě',
+        annotationTranslations: {
+            '白话文': '没有法就能契合真理，契合真理就能趋向究竟，所以得到授记。',
+            'English': 'Without Dharma, one meets truth; meeting truth, one moves toward the ultimate—therefore receiving the prediction.',
+            'Deutsch': 'Ohne Dharma trifft man die Wahrheit; die Wahrheit treffend, bewegt man sich zum Ultimativen—daher die Vorhersage erhaltend.',
+            'Français': 'Sans Dharma, on rencontre la vérité; rencontrant la vérité, on se dirige vers l\'ultime—donc recevant la prédiction.',
+            'Русский': 'Без Дхармы человек встречает истину; встречая истину, движется к пределу—поэтому получая предсказание.',
+            'Español': 'Sin Dharma, uno encuentra la verdad; encontrando la verdad, uno se mueve hacia lo último—por lo tanto recibiendo la predicción.',
+            'Italiano': 'Senza Dharma, si incontra la verità; incontrando la verità, ci si dirige verso l\'ultimo—quindi ricevendo la predizione.',
+            'संस्कृतम्': 'धर्माभावे तत्त्वं प्रतिपद्यते, तत्त्वप्रतिपत्तौ परमं गच्छति, अतः व्याख्यानं प्राप्यते।',
+            'Pāli': 'Dhammābhāve tathataṃ paṭivijjhati, tathatāpaṭivedhe paramaṃ gacchati, tasmā vyākhyānaṃ pappoti.'
+        },
+        translations: {
+            '白话文': '因为实际上没有法得到阿耨多罗三藐三菩提，所以然灯佛给我授记，这样说："你将于来世当得作佛，号释迦牟尼。"',
+            'English': 'Because truly there is no Dharma by which to attain Anuttara-samyak-sambodhi, therefore Dipankara Buddha gave me the prediction, saying: "You will become a Buddha in the future named Sakyamuni."',
+            'Deutsch': 'Weil wahrlich kein Dharma ist, durch den man Anuttara-samyak-sambodhi erlangt, deshalb gab mir Dipankara Buddha die Vorhersage und sagte: "Du wirst in der Zukunft ein Buddha werden namens Sakyamuni."',
+            'Français': 'Parce que vraiment il n\'y a pas de Dharma par lequel atteindre Anuttara-samyak-sambodhi, donc le Bouddha Dipankara m\'a donné la prédiction, disant : "Tu deviendras un Bouddha dans le futur nommé Sakyamuni."',
+            'Русский': 'Поскольку воистину нет Дхармы, посредством которой достичь Ануттара-самьяк-самбодхи, поэтому Будда Дипанкара дал мне предсказание, сказав: "Ты станешь Буддой в будущем по имени Шакьямуни."',
+            'Español': 'Porque verdaderamente no hay Dharma por el cual alcanzar Anuttara-samyak-sambodhi, por lo tanto el Buda Dipankara me dio la predicción, diciendo: "Te convertirás en un Buda en el futuro llamado Sakyamuni."',
+            'Italiano': 'Perché veramente non c\'è Dharma mediante il quale raggiungere Anuttara-samyak-sambodhi, quindi il Buddha Dipankara mi ha dato la predizione, dicendo: "Diventerai un Buddha in futuro chiamato Sakyamuni."',
+            'संस्कृतम्': 'यतः न हि कोऽपि धर्मः येन अनुत्तरां सम्यक्संबोधिं प्राप्तुं शक्यते, अतः दीपंकरबुद्धः मम व्याख्यानं ददौ, एवं वदन् - "त्वं अनागते बुद्धो भविष्यसि नाम्ना शाक्यमुनिः" इति।',
+            'Pāli': 'Yato na hi koci dhammo yena anuttaraṃ sammāsambodhiṃ pattuṃ sakkā, tasmā Dīpaṅkarabuddho mama vyākhyānaṃ adāsi, evaṃ vadanto - "tvaṃ anāgate buddho bhavissasi nāmnā Sakyamunī" ti.'
+        }
+    },
+    {
+        id: 'section5',
+        text: '何以故？如來者，即諸法如義。',
+        readingText: '何以故？如來者，即諸法如義。',
+        pinyin: 'hé yǐ gù rú lái zhě jí zhū fǎ rú yì',
+        english: 'Why is this? "Tathagata" means the suchness of all dharmas.',
+        annotation: '何以故無法便得記耶？諸法性空，理無乖異，謂之為如。會如解極，故名如來。有相則違，無相則順，順必之極，故宜得記之也。',
+        annotationPinyin: 'hé yǐ gù wú fǎ biàn dé jì yē zhū fǎ xìng kōng lǐ wú guāi yì wèi zhī wéi rú huì rú jiě jí gù míng rú lái yǒu xiàng zé wéi wú xiàng zé shùn shùn bì zhī jí gù yí dé jì zhī yě',
+        annotationTranslations: {
+            '白话文': '为什么没有法就能得到授记呢？诸法本性空寂，真理没有违背差异，称为如。契合如而理解究竟，所以名为如来。有相就违背，无相就顺合，顺合必定趋向究竟，所以应该得到授记。',
+            'English': 'Why can one receive the prediction without Dharma? All dharmas are empty in nature, truth has no opposition or difference—this is called "suchness". Meeting suchness and understanding the ultimate, therefore called "Tathagata". With marks there is opposition, without marks there is accord—accord must reach the ultimate, therefore one should receive the prediction.',
+            'Deutsch': 'Warum kann man die Vorhersage ohne Dharma erhalten? Alle Dharmas sind von Natur aus leer, Wahrheit hat keinen Widerstand oder Unterschied—dies wird "Soheit" genannt. Die Soheit treffend und das Ultimative verstehend, daher "Tathagata" genannt. Mit Merkmalen gibt es Widerstand, ohne Merkmale gibt es Übereinstimmung—Übereinstimmung muss das Ultimative erreichen, daher sollte man die Vorhersage erhalten.',
+            'Français': 'Pourquoi peut-on recevoir la prédiction sans Dharma ? Tous les dharmas sont vides par nature, la vérité n\'a pas d\'opposition ou de différence—cela s\'appelle "ainsité". Rencontrant l\'ainsité et comprenant l\'ultime, donc appelé "Tathagata". Avec des marques il y a opposition, sans marques il y a accord—l\'accord doit atteindre l\'ultime, donc on devrait recevoir la prédiction.',
+            'Русский': 'Почему можно получить предсказание без Дхармы? Все дхармы по природе пусты, истина не имеет противодействия или различия—это называется "таковость". Встречая таковость и понимая предельное, поэтому называется "Татхагата". С признаками есть противодействие, без признаков есть согласие—согласие должно достичь предела, поэтому следует получить предсказание.',
+            'Español': '¿Por qué se puede recibir la predicción sin Dharma? Todos los dharmas son vacíos por naturaleza, la verdad no tiene oposición ni diferencia—esto se llama "talidad". Encontrando la talidad y comprendiendo lo último, por lo tanto llamado "Tathagata". Con marcas hay oposición, sin marcas hay acuerdo—el acuerdo debe alcanzar lo último, por lo tanto uno debería recibir la predicción.',
+            'Italiano': 'Perché si può ricevere la predizione senza Dharma? Tutti i dharma sono vuoti per natura, la verità non ha opposizione o differenza—questo si chiama "talità". Incontrando la talità e comprendendo l\'ultimo, quindi chiamato "Tathagata". Con segni c\'è opposizione, senza segni c\'è accordo—l\'accordo deve raggiungere l\'ultimo, quindi si dovrebbe ricevere la predizione.',
+            'संस्कृतम्': 'कस्मात् धर्माभावे व्याख्यानं प्राप्यते? सर्वधर्माः शून्यस्वभावाः, तत्त्वं न विरुद्धं न भिन्नम्, एतत् "तथता" इति उच्यते। तथतां प्रतिपद्य परमं जानाति, अतः "तथागतः" इति उच्यते। साकारेण विरोधः, निराकारेण अनुकूलता, अनुकूलता परमं गच्छति, अतः व्याख्यानं प्राप्तुं योग्यम्।',
+            'Pāli': 'Kasmā dhammābhāve vyākhyānaṃ pappoti? Sabbadhammā suññasabhāvā, tathatā na viruddhā na nānā, etaṃ "tathatā" ti vuccati. Tathataṃ paṭivijjhantaṃ paramaṃ jānāti, tasmā "tathāgato" ti vuccati. Sākārena virodho, nirākārena anukūlatā, anukūlatā paramaṃ gacchati, tasmā vyākhyānaṃ pattuṃ yuttan ti.'
+        },
+        translations: {
+            '白话文': '为什么呢？所谓如来，就是诸法如如不动的义理。',
+            'English': 'Why is this? "Tathagata" means the suchness of all dharmas.',
+            'Deutsch': 'Warum ist das so? "Tathagata" bedeutet die Soheit aller Dharmas.',
+            'Français': 'Pourquoi cela ? "Tathagata" signifie l\'ainsité de tous les dharmas.',
+            'Русский': 'Почему это? "Татхагата" означает таковость всех дхарм.',
+            'Español': '¿Por qué es esto? "Tathagata" significa la talidad de todos los dharmas.',
+            'Italiano': 'Perché questo? "Tathagata" significa la talità di tutti i dharma.',
+            'संस्कृतम्': 'तत्र किं कारणम्? "तथागतः" इति सर्वधर्माणां तथतायाः अर्थः।',
+            'Pāli': 'Tatra kiṃ kāraṇaṃ? "Tathāgato" ti sabbadhammānaṃ tathatāya attho.'
+        }
+    },
+    {
+        id: 'section6',
+        text: '若有人言：如來得阿耨多羅三藐三菩提。',
+        readingText: '若有人言：如來得阿耨多羅三藐三菩提。',
+        pinyin: 'ruò yǒu rén yán rú lái dé ā nòu duō luó sān miǎo sān pú tí',
+        english: 'If someone says: "The Tathagata attained Anuttara-samyak-sambodhi."',
+        annotation: '若說有如來得菩提者，此俗聞人語，非理中言也。\n○聞，疏作間。',
+        annotationPinyin: 'ruò shuō yǒu rú lái dé pú tí zhě cǐ sú wén rén yǔ fēi lǐ zhōng yán yě \n○ wén shū zuò jiān',
+        annotationTranslations: {
+            '白话文': '如果说有如来得到菩提，这是世俗听闻的人所说的话，不是真理中的言语。\n注："闻"，疏作"间"。',
+            'English': 'If one says there is a Tathagata who attains bodhi, this is the speech of worldly people who hear superficially, not words within truth.\nNote: "Hear" is written as "interval" in the commentary.',
+            'Deutsch': 'Wenn man sagt, es gibt einen Tathagata, der Bodhi erlangt, ist dies die Rede weltlicher Menschen, die oberflächlich hören, nicht Worte innerhalb der Wahrheit.\nAnmerkung: "Hören" wird als "Intervall" im Kommentar geschrieben.',
+            'Français': 'Si l\'on dit qu\'il y a un Tathagata qui atteint bodhi, c\'est le discours des gens mondains qui entendent superficiellement, pas des mots dans la vérité.\nNote : "Entendre" est écrit comme "intervalle" dans le commentaire.',
+            'Русский': 'Если кто-то говорит, что есть Татхагата, который достигает бодхи, это речь мирских людей, которые слышат поверхностно, не слова внутри истины.\nПримечание: "Слышать" написано как "интервал" в комментарии.',
+            'Español': 'Si uno dice que hay un Tathagata que alcanza bodhi, este es el discurso de la gente mundana que escucha superficialmente, no palabras dentro de la verdad.\nNota: "Escuchar" se escribe como "intervalo" en el comentario.',
+            'Italiano': 'Se si dice che c\'è un Tathagata che raggiunge bodhi, questo è il discorso della gente mondana che ascolta superficialmente, non parole dentro la verità.\nNota: "Ascoltare" è scritto come "intervallo" nel commentario.',
+            'संस्कृतम्': 'यदि कोऽपि वदति - "तथागतः बोधिं प्राप्तवान्", इदं लौकिकश्रुतजनवचनम्, न तु तत्त्वान्तर्गतवाक्यम्।\nटिप्पणीः "श्रुत" इति व्याख्यायां "अन्तराल" इति लिख्यते।',
+            'Pāli': 'Sace koci vadati - "tathāgato bodhiṃ patto", idaṃ lokikasutajanavacanaṃ, na tu tathatāantaragatavākyaṃ.\nNidassanaṃ: "suta" ti aṭṭhakathāyaṃ "antarāla" ti likhyati.'
+        },
+        translations: {
+            '白话文': '如果有人说：如来得到阿耨多罗三藐三菩提。',
+            'English': 'If someone says: "The Tathagata attained Anuttara-samyak-sambodhi."',
+            'Deutsch': 'Wenn jemand sagt: "Der Tathagata hat Anuttara-samyak-sambodhi erlangt."',
+            'Français': 'Si quelqu\'un dit : "Le Tathagata a atteint Anuttara-samyak-sambodhi."',
+            'Русский': 'Если кто-то говорит: "Татхагата достиг Ануттара-самьяк-самбодхи."',
+            'Español': 'Si alguien dice: "El Tathagata alcanzó Anuttara-samyak-sambodhi."',
+            'Italiano': 'Se qualcuno dice: "Il Tathagata ha raggiunto Anuttara-samyak-sambodhi."',
+            'संस्कृतम्': 'यदि कोऽपि वदति - "तथागतः अनुत्तरां सम्यक्संबोधिं प्राप्तवान्"।',
+            'Pāli': 'Sace koci vadati - "tathāgato anuttaraṃ sammāsambodhiṃ patto".'
+        }
+    },
+    {
+        id: 'section7',
+        text: '須菩提！實無有法佛得阿耨多羅三藐三菩提。',
+        readingText: '須菩提！實無有法佛得阿耨多羅三藐三菩提。',
+        pinyin: 'xū pú tí shí wú yǒu fǎ fó dé ā nòu duō luó sān miǎo sān pú tí',
+        english: 'Subhuti! Truly there is no Dharma by which the Buddha attained Anuttara-samyak-sambodhi.',
+        annotation: '佛，人也；菩提，道也。既無人法，誰得菩提乎？',
+        annotationPinyin: 'fó rén yě pú tí dào yě jì wú rén fǎ shuí dé pú tí hū',
+        annotationTranslations: {
+            '白话文': '佛是人；菩提是道。既然没有人法，谁得到菩提呢？',
+            'English': 'Buddha is a person; bodhi is the path. Since there is no person or dharma, who attains bodhi?',
+            'Deutsch': 'Buddha ist eine Person; Bodhi ist der Pfad. Da es keine Person oder Dharma gibt, wer erlangt Bodhi?',
+            'Français': 'Bouddha est une personne; bodhi est le chemin. Puisqu\'il n\'y a ni personne ni dharma, qui atteint bodhi?',
+            'Русский': 'Будда - это человек; бодхи - это путь. Поскольку нет ни человека, ни дхармы, кто достигает бодхи?',
+            'Español': 'Buda es una persona; bodhi es el camino. Como no hay persona ni dharma, ¿quién alcanza bodhi?',
+            'Italiano': 'Buddha è una persona; bodhi è il sentiero. Poiché non c\'è né persona né dharma, chi raggiunge bodhi?',
+            'संस्कृतम्': 'बुद्धः पुरुषः; बोधिः मार्गः। यतः न पुरुषः न धर्मः, कः बोधिं प्राप्नोति?',
+            'Pāli': 'Buddho puriso; bodhi maggo. Yato na puriso na dhammo, ko bodhiṃ pāpuṇāti?'
+        },
+        translations: {
+            '白话文': '须菩提！实际上没有法佛得到阿耨多罗三藐三菩提。',
+            'English': 'Subhuti! Truly there is no Dharma by which the Buddha attained Anuttara-samyak-sambodhi.',
+            'Deutsch': 'Subhuti! Wahrlich gibt es kein Dharma, durch das der Buddha Anuttara-samyak-sambodhi erlangte.',
+            'Français': 'Subhuti! Vraiment il n\'y a pas de Dharma par lequel le Bouddha a atteint Anuttara-samyak-sambodhi.',
+            'Русский': 'Субхути! Воистину нет Дхармы, посредством которой Будда достиг Ануттара-самьяк-самбодхи.',
+            'Español': 'Subhuti! Verdaderamente no hay Dharma por el cual el Buda alcanzó Anuttara-samyak-sambodhi.',
+            'Italiano': 'Subhuti! Veramente non c\'è Dharma mediante il quale il Buddha ha raggiunto Anuttara-samyak-sambodhi.',
+            'संस्कृतम्': 'सुभूते! न हि कोऽपि धर्मः येन बुद्धः अनुत्तरां सम्यक्संबोधिं प्राप्तवान्।',
+            'Pāli': 'Subhūti! Na hi koci dhammo yena buddho anuttaraṃ sammāsambodhiṃ patto.'
+        }
+    },
+    {
+        id: 'section8',
+        text: '須菩提！如來所得阿耨多羅三藐三菩提，於是中無實無虗。',
+        readingText: '須菩提！如來所得阿耨多羅三藐三菩提，於是中無實無虗。',
+        pinyin: 'xū pú tí rú lái suǒ dé ā nòu duō luó sān miǎo sān pú tí yú shì zhōng wú shí wú xū',
+        english: 'Subhuti! The Anuttara-samyak-sambodhi attained by the Tathagata is neither real nor unreal.',
+        annotation: '向來辯有得為非，無得為是。寄是以明非，非謂有是。尋言著是，故復遣之。是非既盡，則會菩提。菩提之中，不見是非。非實則無是，非虗無非也。',
+        annotationPinyin: 'xiàng lái biàn yǒu dé wéi fēi wú dé wéi shì jì shì yǐ míng fēi fēi wèi yǒu shì xún yán zhuó shì gù fù qiǎn zhī shì fēi jì jìn zé huì pú tí pú tí zhī zhōng bù jiàn shì fēi fēi shí zé wú shì fēi xū wú fēi yě',
+        annotationTranslations: {
+            '白话文': '向来辩论有得是错误的，无得是正确的。借助正确来说明错误，不是说有正确。执着言语认为有正确，所以再次遣除。是非既已穷尽，就会契合菩提。在菩提之中，不见是非。不是实有就没有正确，不是虚妄就没有错误。',
+            'English': 'Previously it was debated that attainment is wrong, non-attainment is right. Using right to clarify wrong does not mean there is right. Clinging to words as right, therefore again dismissed. When right and wrong are exhausted, one meets bodhi. In bodhi, right and wrong are not seen. Not real means no right, not false means no wrong.',
+            'Deutsch': 'Zuvor wurde diskutiert, dass Erlangen falsch ist, Nicht-Erlangen richtig ist. Richtig zu verwenden, um Falsch zu klären, bedeutet nicht, dass es Richtig gibt. An Wörtern als Richtig festhalten, daher wieder verworfen. Wenn Richtig und Falsch erschöpft sind, trifft man Bodhi. In Bodhi werden Richtig und Falsch nicht gesehen. Nicht real bedeutet kein Richtig, nicht falsch bedeutet kein Falsch.',
+            'Français': 'Auparavant, il était débattu que l\'obtention est fausse, la non-obtention est correcte. Utiliser le correct pour clarifier le faux ne signifie pas qu\'il y a correct. S\'accrocher aux mots comme correct, donc à nouveau rejeté. Lorsque le correct et le faux sont épuisés, on rencontre bodhi. Dans bodhi, le correct et le faux ne sont pas vus. Pas réel signifie pas correct, pas faux signifie pas faux.',
+            'Русский': 'Ранее обсуждалось, что достижение ошибочно, не-достижение правильно. Использование правильного для прояснения неправильного не означает, что есть правильное. Привязанность к словам как к правильным, поэтому снова отвергнута. Когда правильное и неправильное исчерпаны, человек встречает бодхи. В бодхи не видно правильного и неправильного. Не реальное означает не правильное, не ложное означает не неправильное.',
+            'Español': 'Anteriormente se debatió que el logro es incorrecto, el no logro es correcto. Usar lo correcto para aclarar lo incorrecto no significa que haya correcto. Aferrarse a las palabras como correctas, por lo tanto nuevamente descartadas. Cuando lo correcto y lo incorrecto se agotan, uno encuentra bodhi. En bodhi, no se ven lo correcto y lo incorrecto. No real significa no correcto, no falso significa no incorrecto.',
+            'Italiano': 'In precedenza si discuteva che il raggiungimento è sbagliato, il non raggiungimento è giusto. Usare il giusto per chiarire lo sbagliato non significa che ci sia giusto. Aggrapparsi alle parole come giuste, quindi nuovamente respinto. Quando giusto e sbagliato sono esauriti, si incontra bodhi. In bodhi, giusto e sbagliato non si vedono. Non reale significa non giusto, non falso significa non sbagliato.',
+            'संस्कृतम्': 'पूर्वं विवादितम् - प्राप्तिः अशुद्धिः, अप्राप्तिः शुद्धिः। शुद्ध्या अशुद्धिं प्रकाशयति, न तु शुद्धिः अस्ति इति। शब्देषु शुद्धिं गृह्णाति, अतः पुनः निरस्यति। शुद्ध्यशुद्धी समाप्ते, बोधिं प्रतिपद्यते। बोधौ शुद्ध्यशुद्धी न दृश्यते। न सत्यं तर्हि न शुद्धिः, न मिथ्या तर्हि न अशुद्धिः।',
+            'Pāli': 'Pubbe vivaditaṃ - patti asuddhi, appatti suddhi. Suddhiyā asuddhiṃ pakāseti, na tu suddhi atthi ti. Saddesu suddhiṃ gaṇhāti, tasmā puna nirasati. Suddhyasuddhī samāpte, bodhiṃ paṭivijjhati. Bodhimhi suddhyasuddhī na dissanti. Na saccaṃ tarhi na suddhi, na micchā tarhi na asuddhi.'
+        },
+        translations: {
+            '白话文': '须菩提！如来所得到的阿耨多罗三藐三菩提，在这当中没有实也没有虚。',
+            'English': 'Subhuti! The Anuttara-samyak-sambodhi attained by the Tathagata is neither real nor unreal.',
+            'Deutsch': 'Subhuti! Das von dem Tathagata erlangte Anuttara-samyak-sambodhi ist weder real noch unreal.',
+            'Français': 'Subhuti! L\'Anuttara-samyak-sambodhi atteint par le Tathagata n\'est ni réel ni irréel.',
+            'Русский': 'Субхути! Ануттара-самьяк-самбодхи, достигнутая Татхагатой, не является ни реальной, ни нереальной.',
+            'Español': 'Subhuti! El Anuttara-samyak-sambodhi alcanzado por el Tathagata no es ni real ni irreal.',
+            'Italiano': 'Subhuti! L\'Anuttara-samyak-sambodhi raggiunto dal Tathagata non è né reale né irreale.',
+            'संस्कृतम्': 'सुभूते! तथागतेन प्राप्ता अनुत्तरा सम्यक्संबोधिः, अस्मिन् न सत्यं न असत्यम्।',
+            'Pāli': 'Subhūti! Tathāgatena pattā anuttarā sammāsambodhi, asmiṃ na saccaṃ na asaccaṃ.'
+        }
+    },
+    {
+        id: 'section9',
+        text: '是故如來說一切法皆是佛法。',
+        readingText: '是故如來說一切法皆是佛法。',
+        pinyin: 'shì gù rú lái shuō yī qiē fǎ jiē shì fó fǎ',
+        english: 'Therefore the Tathagata says all dharmas are Buddha-dharmas.',
+        annotation: '凡夫以違一切法理為耶，聖人以順一切法理為正，正則覺悟，故皆佛法者矣。\n○耶疏：邪。',
+        annotationPinyin: 'fán fū yǐ wéi yī qiē fǎ lǐ wéi yē shèng rén yǐ shùn yī qiē fǎ lǐ wéi zhèng zhèng zé jué wù gù jiē fó fǎ zhě yǐ \n○ yē shū xié',
+        annotationTranslations: {
+            '白话文': '凡夫因为违背一切法理为邪，圣人因为随顺一切法理为正，正就能觉悟，所以都是佛法。\n注："耶"，疏作"邪"。',
+            'English': 'Ordinary people consider opposing all dharma principles as wrong, sages consider following all dharma principles as right—right leads to awakening, therefore all are Buddha-dharmas.\nNote: "Wrong" is written as "evil" in the commentary.',
+            'Deutsch': 'Gewöhnliche Menschen betrachten das Gegenteil aller Dharma-Prinzipien als falsch, Weisen betrachten das Folgen aller Dharma-Prinzipien als richtig—richtig führt zum Erwachen, daher alle sind Buddha-Dharmas.\nAnmerkung: "Falsch" ist als "böse" im Kommentar geschrieben.',
+            'Français': 'Les gens ordinaires considèrent s\'opposer à tous les principes du dharma comme faux, les sages considèrent suivre tous les principes du dharma comme juste—juste conduit à l\'éveil, donc tous sont des dharmas de Bouddha.\nNote : "Faux" est écrit comme "mal" dans le commentaire.',
+            'Русский': 'Обычные люди считают противоположность всем принципам дхармы неправильной, мудрецы считают следование всем принципам дхармы правильным—правильное ведет к пробуждению, поэтому все являются дхармами Будды.\nПримечание: "Неправильное" написано как "зло" в комментарии.',
+            'Español': 'La gente común considera oponerse a todos los principios del dharma como incorrecto, los sabios consideran seguir todos los principios del dharma como correcto—correcto conduce al despertar, por lo tanto todos son dharmas de Buda.\nNota: "Incorrecto" se escribe como "mal" en el comentario.',
+            'Italiano': 'Le persone comuni considerano opporsi a tutti i principi del dharma come sbagliato, i saggi considerano seguire tutti i principi del dharma come giusto—giusto conduce al risveglio, quindi tutti sono dharma del Buddha.\nNota: "Sbagliato" è scritto come "male" nel commentario.',
+            'संस्कृतम्': 'प्राकृतजनाः सर्वधर्मतत्त्वविरोधं अशुद्धिं मन्यन्ते, सन्तः सर्वधर्मतत्त्वानुकूलनं शुद्धिं मन्यन्ते - शुद्धिः बोधाय, अतः सर्वे बुद्धधर्माः।\nटिप्पणीः "अशुद्धिः" इति व्याख्यायां "पापम्" इति लिख्यते।',
+            'Pāli': 'Puthujjanā sabbadhammatathavirodhaṃ asuddhiṃ maññanti, santā sabbadhammatathānukūlanaṃ suddhiṃ maññanti - suddhi bodhāya, tasmā sabbe buddhadhammā.\nNidassanaṃ: "asuddhi" ti aṭṭhakathāyaṃ "pāpa" ti likhyati.'
+        },
+        translations: {
+            '白话文': '所以如来说一切法都是佛法。',
+            'English': 'Therefore the Tathagata says all dharmas are Buddha-dharmas.',
+            'Deutsch': 'Daher sagt der Tathagata, alle Dharmas sind Buddha-Dharmas.',
+            'Français': 'C\'est pourquoi le Tathagata dit que tous les dharmas sont des dharmas de Bouddha.',
+            'Русский': 'Поэтому Татхагата говорит, что все дхармы являются дхармами Будды.',
+            'Español': 'Por lo tanto, el Tathagata dice que todos los dharmas son dharmas de Buda.',
+            'Italiano': 'Perciò il Tathagata dice che tutti i dharma sono dharma del Buddha.',
+            'संस्कृतम्': 'अतः तथागतः वदति - सर्वधर्माः बुद्धधर्माः।',
+            'Pāli': 'Tasmā tathāgato vadati - sabbadhammā buddhadhammā.'
+        }
+    },
+    {
+        id: 'section10',
+        text: '須菩提！所言一切法者，即非一切法，是故名一切法。',
+        readingText: '須菩提！所言一切法者，即非一切法，是故名一切法。',
+        pinyin: 'xū pú tí suǒ yán yī qiē fǎ zhě jí fēi yī qiē fǎ shì gù míng yī qiē fǎ',
+        english: 'Subhuti! What are called all dharmas are not all dharmas, therefore they are called all dharmas.',
+        annotation: '一切法以何為理，而言皆佛法耶？諸法緣假，自性皆無，如假會而解者，名得一切法理，為悟佛法矣。\n○如假二字疑剩。',
+        annotationPinyin: 'yī qiē fǎ yǐ hé wéi lǐ ér yán jiē fó fǎ yē zhū fǎ yuán jiǎ zì xìng jiē wú rú jiǎ huì ér jiě zhě míng dé yī qiē fǎ lǐ wéi wù fó fǎ yǐ \n○ rú jiǎ èr zì yí shèng',
+        annotationTranslations: {
+            '白话文': '一切法以什么为理，而说都是佛法呢？诸法因缘假合，自性皆空，如果能够通过假合而理解，称为得到一切法理，就是觉悟佛法了。\n注："如假"二字可能是多余的。',
+            'English': 'What principle makes all dharmas called Buddha-dharmas? All dharmas are conditionally dependent and empty in nature. If one can understand through conditional dependence, this is called attaining the principle of all dharmas—this is awakening to Buddha-dharmas.\nNote: The two characters "as false" may be redundant.',
+            'Deutsch': 'Welches Prinzip macht alle Dharmas zu Buddha-Dharmas? Alle Dharmas sind bedingt abhängig und von Natur aus leer. Wenn man durch bedingte Abhängigkeit verstehen kann, wird dies als Erlangen des Prinzips aller Dharmas bezeichnet—dies ist das Erwachen zu Buddha-Dharmas.\nAnmerkung: Die beiden Zeichen "als falsch" können redundant sein.',
+            'Français': 'Quel principe fait que tous les dharmas sont appelés dharmas de Bouddha? Tous les dharmas sont conditionnellement dépendants et vides par nature. Si l\'on peut comprendre par dépendance conditionnelle, cela s\'appelle atteindre le principe de tous les dharmas—c\'est l\'éveil aux dharmas de Bouddha.\nNote : Les deux caractères "comme faux" peuvent être redondants.',
+            'Русский': 'Какой принцип делает все дхармы дхармами Будды? Все дхармы условно зависимы и пусты по природе. Если можно понять через условную зависимость, это называется достижением принципа всех дхарм—это пробуждение к дхармам Будды.\nПримечание: Два символа "как ложные" могут быть избыточными.',
+            'Español': '¿Qué principio hace que todos los dharmas se llamen dharmas de Buda? Todos los dharmas son condicionalmente dependientes y vacíos por naturaleza. Si uno puede entender a través de la dependencia condicional, esto se llama alcanzar el principio de todos los dharmas—este es el despertar a los dharmas de Buda.\nNota: Los dos caracteres "como falso" pueden ser redundantes.',
+            'Italiano': 'Quale principio fa sì che tutti i dharma siano chiamati dharma del Buddha? Tutti i dharma sono condizionatamente dipendenti e vuoti per natura. Se si può capire attraverso la dipendenza condizionale, questo si chiama raggiungere il principio di tutti i dharma—questo è il risveglio ai dharma del Buddha.\nNota: I due caratteri "come falsi" possono essere ridondanti.',
+            'संस्कृतम्': 'सर्वधर्माः किं तत्त्वं येन बुद्धधर्माः उच्यन्ते? सर्वधर्माः प्रतीत्यसमुत्पन्नाः, स्वभावशून्याः, यदि प्रतीत्यसमुत्पादेन ज्ञातुं शक्यते, इदम् सर्वधर्मतत्त्वप्राप्तिः इति उच्यते, बुद्धधर्मबोधः इति।\nटिप्पणीः "प्रतीत्यसमुत्पन्न" इति पदं अतिरिक्तं स्यात्।',
+            'Pāli': 'Sabbadhammā kiṃ tathataṃ yena buddhadhammā vuccanti? Sabbadhammā paṭiccasamuppannā, sabhāvasuññā, sace paṭiccasamuppādena ñātuṃ sakkā, idaṃ sabbadhammatathatāpaṭilābho ti vuccati, buddhadhammabodho ti.\nNidassanaṃ: "paṭiccasamuppanna" ti padaṃ atirekaṃ assa.'
+        },
+        translations: {
+            '白话文': '须菩提！所谓一切法，就不是一切法，所以才叫做一切法。',
+            'English': 'Subhuti! What are called all dharmas are not all dharmas, therefore they are called all dharmas.',
+            'Deutsch': 'Subhuti! Was alle Dharmas genannt wird, sind nicht alle Dharmas, daher werden sie alle Dharmas genannt.',
+            'Français': 'Subhuti! Ce qu\'on appelle tous les dharmas ne sont pas tous les dharmas, c\'est pourquoi ils sont appelés tous les dharmas.',
+            'Русский': 'Субхути! То, что называется всеми дхармами, не является всеми дхармами, поэтому они называются всеми дхармами.',
+            'Español': 'Subhuti! Lo que se llama todos los dharmas no son todos los dharmas, por lo tanto se llaman todos los dharmas.',
+            'Italiano': 'Subhuti! Ciò che si chiama tutti i dharma non sono tutti i dharma, quindi si chiamano tutti i dharma.',
+            'संस्कृतम्': 'सुभूते! यत् सर्वधर्माः इति उच्यते, तत् न सर्वधर्माः, अतः सर्वधर्माः इति उच्यते।',
+            'Pāli': 'Subhūti! Yaṃ sabbadhammā ti vuccati, taṃ na sabbadhammā, tasmā sabbadhammā ti vuccati.'
+        }
+    },
+    {
+        id: 'section11',
+        text: '須菩提！譬如人身長大。須菩提言：世尊！如來說人身長大，則為非大身，是名大身。',
+        readingText: '須菩提！譬如人身長大。須菩提言：世尊！如來說人身長大，則為非大身，是名大身。',
+        pinyin: 'xū pú tí pì rú rén shēn cháng dà xū pú tí yán shì zūn rú lái shuō rén shēn cháng dà zé wéi fēi dà shēn shì míng dà shēn',
+        english: 'Subhuti! It is like a person\'s body being tall and large. Subhuti said: World-Honored One! When the Tathagata speaks of a person\'s body being tall and large, it is not a large body, therefore it is called a large body.',
+        annotation: '旨舉人身類上諸法，緣假故長大，無性則非身。即又況下菩薩觀眾生如身，假名則可度，無自性故無滅者。若見實眾生而欲化者，則非菩薩者矣。\n○旨疏作直，即字疑衍。',
+        annotationPinyin: 'zhǐ jǔ rén shēn lèi shàng zhū fǎ yuán jiǎ gù cháng dà wú xìng zé fēi shēn jí yòu kuàng xià pú sà guān zhòng shēng rú shēn jiǎ míng zé kě dù wú zì xìng gù wú miè zhě ruò jiàn shí zhòng shēng ér yù huà zhě zé fēi pú sà zhě yǐ \n○ zhǐ shū zuò zhí jí zì yí yǎn',
+        annotationTranslations: {
+            '白话文': '主旨是以人身类比上面的诸法，因缘假合所以长大，没有自性就不是身。又比喻菩萨观众生如同身，假名就可以度化，没有自性所以没有灭者。如果见到实有的众生而想要度化，就不是菩萨了。\n注："旨"，疏作"直"；"即"字可能是多余的。',
+            'English': 'The main point is to use the human body as an analogy for the above dharmas—conditionally dependent thus tall and large, without nature thus not a body. Also analogizing how bodhisattvas view sentient beings as like a body—with provisional names they can be liberated, without self-nature thus no one to extinguish. If one sees real sentient beings and wishes to transform them, this is not a bodhisattva.\nNote: "Main point" is written as "direct" in the commentary; the character "then" may be redundant.',
+            'Deutsch': 'Der Hauptpunkt ist, den menschlichen Körper als Analogie für die oben genannten Dharmas zu verwenden—bedingt abhängig daher groß und groß, ohne Natur daher kein Körper. Auch analogisiert, wie Bodhisattvas fühlende Wesen wie einen Körper betrachten—mit vorläufigen Namen können sie befreit werden, ohne Selbstnatur daher niemand zu löschen. Wenn man echte fühlende Wesen sieht und sie verwandeln möchte, ist dies kein Bodhisattva.\nAnmerkung: "Hauptpunkt" ist als "direkt" im Kommentar geschrieben; das Zeichen "dann" kann redundant sein.',
+            'Français': 'Le point principal est d\'utiliser le corps humain comme une analogie pour les dharmas ci-dessus—conditionnellement dépendant donc grand et large, sans nature donc pas un corps. Analogisant également comment les bodhisattvas considèrent les êtres sensibles comme un corps—avec des noms provisoires, ils peuvent être libérés, sans nature propre donc personne à éteindre. Si l\'on voit de vrais êtres sensibles et souhaite les transformer, ce n\'est pas un bodhisattva.\nNote : "Point principal" est écrit comme "direct" dans le commentaire; le caractère "alors" peut être redondant.',
+            'Русский': 'Главная мысль состоит в том, чтобы использовать человеческое тело в качестве аналогии для вышеупомянутых дхарм—условно зависимых, поэтому высоких и больших, без природы, поэтому не тело. Также аналогия того, как бодхисаттвы рассматривают живых существ как тело—с условными именами они могут быть освобождены, без собственной природы, поэтому никто не угасает. Если кто-то видит реальных живых существ и желает преобразовать их, это не бодхисаттва.\nПримечание: "Главная мысль" написана как "прямая" в комментарии; символ "тогда" может быть избыточным.',
+            'Español': 'El punto principal es usar el cuerpo humano como una analogía para los dharmas anteriores—condicionalmente dependientes, por lo tanto altos y grandes, sin naturaleza, por lo tanto no un cuerpo. También analogizando cómo los bodhisattvas ven a los seres sintientes como un cuerpo—con nombres provisionales pueden ser liberados, sin naturaleza propia, por lo tanto nadie que extinguir. Si uno ve seres sintientes reales y desea transformarlos, esto no es un bodhisattva.\nNota: "Punto principal" está escrito como "directo" en el comentario; el carácter "entonces" puede ser redundante.',
+            'Italiano': 'Il punto principale è usare il corpo umano come un\'analogia per i dharma sopra—condizionatamente dipendenti quindi alti e grandi, senza natura quindi non un corpo. Anche analogizzando come i bodhisattva vedono gli esseri senzienti come un corpo—con nomi provvisori possono essere liberati, senza natura propria quindi nessuno da estinguere. Se uno vede veri esseri senzienti e desidera trasformarli, questo non è un bodhisattva.\nNota: "Punto principale" è scritto come "diretto" nel commento; il carattere "allora" può essere ridondante.',
+            'संस्कृतम्': 'तात्पर्यम् उपरितनधर्माणां उपमार्थं मनुष्यशरीरं निदर्शयति, प्रतीत्यसमुत्पादात् दीर्घं विशालं च, स्वभावाभावात् न शरीरम्। तथा बोधिसत्त्वाः सत्त्वान् शरीरवत् पश्यन्ति, प्रतीत्यसमुत्पन्ननामधेयानि तर्हि तारयितुं शक्यानि, स्वभावाभावात् नाशकर्ता। यदि सत्यसत्त्वान् पश्यति तर्हि तेषां परिणामनाय प्रयतते, स न बोधिसत्त्वः।\nटिप्पणीः "तात्पर्यम्" इति व्याख्यायां "साक्षात्" इति लिख्यते; "तथा" इति पदं अतिरिक्तं स्यात्।',
+            'Pāli': 'Tatparaṃ uparitanadhammānaṃ upamā atthaṃ manussasarīraṃ nidasseti, paṭiccasamuppādā dīghaṃ visālañ ca, sabhāvabhāvā na sarīraṃ. Tathā bodhisattvā sattve sarīravaṃ passanti, paṭiccasamuppannanāmadheyyāni tarhi tārayituṃ sakkāni, sabhāvabhāvā nāsakartā. Sace saccasattve passati tarhi tesānaṃ pariṇāmanāya payutte, so na bodhisatto.\nNidassanaṃ: "tatpara" ti aṭṭhakathāyaṃ "sākhat" ti likhyati; "tathā" ti padaṃ atirekaṃ assa.'
+        },
+        translations: {
+            '白话文': '须菩提！譬如人的身体高大。须菩提说：世尊！如来说人的身体高大，就不是大身，所以才叫做大身。',
+            'English': 'Subhuti! It is like a person\'s body being tall and large. Subhuti said: World-Honored One! When the Tathagata speaks of a person\'s body being tall and large, it is not a large body, therefore it is called a large body.',
+            'Deutsch': 'Subhuti! Es ist wie der Körper einer Person, der groß und groß ist. Subhuti sagte: Weltgeehrter! Wenn der Tathagata von einem Körper einer Person spricht, der groß und groß ist, ist es kein großer Körper, daher wird er ein großer Körper genannt.',
+            'Français': 'Subhuti! C\'est comme le corps d\'une personne qui est grand et large. Subhuti dit : Honoré du Monde! Lorsque le Tathagata parle du corps d\'une personne comme étant grand et large, ce n\'est pas un grand corps, c\'est pourquoi on l\'appelle un grand corps.',
+            'Русский': 'Субхути! Это как тело человека, которое высокое и большое. Субхути сказал: Почитаемый Миром! Когда Татхагата говорит о теле человека как о высоком и большом, это не большое тело, поэтому оно называется большим телом.',
+            'Español': 'Subhuti! Es como el cuerpo de una persona que es alto y grande. Subhuti dijo: ¡Honrado por el Mundo! Cuando el Tathagata habla del cuerpo de una persona como alto y grande, no es un cuerpo grande, por lo tanto se llama un cuerpo grande.',
+            'Italiano': 'Subhuti! È come il corpo di una persona che è alto e grande. Subhuti disse: Onorato dal Mondo! Quando il Tathagata parla del corpo di una persona come alto e grande, non è un corpo grande, quindi si chiama un corpo grande.',
+            'संस्कृतम्': 'सुभूते! यथा मनुष्यशरीरं दीर्घं विशालं च। सुभूतिः अवदत् - भगवन्! यदा तथागतः मनुष्यशरीरं दीर्घं विशालं च इति वदति, तत् न महाशरीरम्, अतः महाशरीरम् इति उच्यते।',
+            'Pāli': 'Subhūti! Yathā manussasarīraṃ dīghaṃ visālañ ca. Subhūti avadati - bhagavā! Yadā tathāgato manussasarīraṃ dīghaṃ visālañ ca ti vadati, taṃ na mahāsarīraṃ, tasmā mahāsarīraṃ ti vuccati.'
+        }
+    }
+];
+
+// 多语言选项
+const languages = [
+    '白话文', 'English', 'Deutsch', 'Français', 'Русский', 
+    'Español', 'Italiano', 'संस्कृतम्', 'Pāli'
+];
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 生成经文内容
+    const scriptureContent = document.getElementById('scriptureContent');
+    
+    scriptureData.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `text-section section-${(index % 6) + 1}`;
+        
+        // 经文标题
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = `经文第${index + 1}段`;
+        sectionDiv.appendChild(sectionTitle);
+        
+        // 经文正文（带拼音注释）
+        const textDiv = document.createElement('div');
+        textDiv.className = 'text-content';
+        textDiv.innerHTML = processTextWithPinyin(section.text, section.pinyin, section.id);
+        
+        // 添加朗读按钮和纯文本
+        const textActions = document.createElement('div');
+        textActions.className = 'action-buttons';
+        textActions.innerHTML = `
+            <button class="action-btn speak" id="speakText-${section.id}">朗读经文</button>
+            <span class="plain-text">${section.readingText}</span>
+        `;
+        textDiv.appendChild(textActions);
+        
+        // 添加多语言翻译
+        addTranslations(textDiv, section.translations, `${section.id}-trans`);
+        
+        sectionDiv.appendChild(textDiv);
+        
+        // 注解内容
+        const annoDiv = document.createElement('div');
+        annoDiv.className = 'annotation-content';
+        
+        // 添加注解内容（带拼音标注）
+        const annotationP = document.createElement('div');
+        annotationP.className = 'annotation';
+        annotationP.id = `${section.id}-anno`;
+        annotationP.innerHTML = processAnnotationWithPinyin(section.annotation, section.annotationPinyin);
+        annoDiv.appendChild(annotationP);
+        
+        // 添加朗读按钮和隐藏的注解文本
+        const annoActions = document.createElement('div');
+        annoActions.className = 'action-buttons';
+        annoActions.innerHTML = `
+            <button class="action-btn speak" id="speakAnno-${section.id}">朗读注解</button>
+            <span class="annotation-text">${section.annotation}</span>
+        `;
+        annoDiv.appendChild(annoActions);
+        
+        // 添加注解的多语言翻译
+        addTranslations(annoDiv, section.annotationTranslations, `${section.id}-anno-trans`);
+        
+        sectionDiv.appendChild(annoDiv);
+        
+        scriptureContent.appendChild(sectionDiv);
+    });
+
+    // 设置朗读按钮事件
+    setupSpeakButtons();
+    
+    // 设置汉字点击事件
+    setupCharClickEvents();
+});
+
+// 处理文本添加拼音
+function processTextWithPinyin(text, pinyin, sectionId) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return `<span id="${sectionId}-text">${result}</span>`;
+}
+
+// 处理注解文本添加拼音
+function processAnnotationWithPinyin(text, pinyin) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return result;
+}
+
+// 添加多语言翻译模块
+function addTranslations(container, translations, baseId) {
+    const transTabs = document.createElement('div');
+    transTabs.className = 'translation-tabs';
+    
+    const transContents = document.createElement('div');
+    
+    Object.entries(translations).forEach(([lang, content]) => {
+        // 翻译标签
+        const tab = document.createElement('div');
+        tab.className = 'translation-tab';
+        tab.textContent = lang;
+        tab.onclick = function() {
+            // 切换活跃标签
+            transTabs.querySelectorAll('.translation-tab').forEach(t => 
+                t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 显示对应语言内容
+            transContents.querySelectorAll('.translation-content').forEach(c => 
+                c.classList.remove('active'));
+            transContents.querySelector(`#${baseId}-${lang}`).classList.add('active');
+        };
+        transTabs.appendChild(tab);
+        
+        // 翻译内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'translation-content';
+        contentDiv.id = `${baseId}-${lang}`;
+        contentDiv.textContent = content;
+        transContents.appendChild(contentDiv);
+    });
+    
+    // 默认显示第一个语言
+    if (transTabs.firstChild) {
+        transTabs.firstChild.click();
+    }
+    
+    container.appendChild(transTabs);
+    container.appendChild(transContents);
+}
+
+// 设置所有朗读按钮事件
+function setupSpeakButtons() {
+    // 经文朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakText-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.readingText;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+    
+    // 注解朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakAnno-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = this.nextElementSibling.textContent; // 获取隐藏的注解文本
+                toggleSpeech(text, this);
+            });
+        }
+    });
+}
+
+// 设置汉字点击事件（显示详情弹窗）
+function setupCharClickEvents() {
+    document.addEventListener('click', function(e) {
+        const charElement = e.target.closest('.char');
+        if (charElement) {
+            const char = charElement.dataset.char;
+            showCharModal(char);
+        }
+    });
+    
+    // 关闭弹窗按钮
+    document.getElementById('closeCharModal').addEventListener('click', function() {
+        document.getElementById('charModal').style.display = 'none';
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('charModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+}
+
+// 显示汉字详情弹窗
+function showCharModal(char) {
+    const modal = document.getElementById('charModal');
+    const modalChar = document.getElementById('modalChar');
+    const modalPinyin = document.getElementById('modalPinyin');
+    const modalMeaning = document.getElementById('modalMeaning');
+    const modalBuddhistMeaning = document.getElementById('modalBuddhistMeaning');
+    
+    // 设置弹窗内容
+    modalChar.textContent = char;
+    
+    if (punctuationPinyin[char]) {
+        // 标点符号
+        modalPinyin.textContent = punctuationPinyin[char];
+        modalMeaning.textContent = 'This is a punctuation mark.';
+        modalBuddhistMeaning.textContent = 'Punctuation marks help structure the text and indicate pauses in recitation.';
+    } else if (charMeanings[char]) {
+        // 汉字
+        const charData = charMeanings[char];
+        modalPinyin.textContent = charData.pinyin;
+        modalMeaning.innerHTML = charData.meanings.map(m => `• ${m}`).join('<br>');
+        modalBuddhistMeaning.textContent = charData.buddhist;
+    } else {
+        // 未知字符
+        modalPinyin.textContent = 'Unknown';
+        modalMeaning.textContent = 'No detailed information available for this character.';
+        modalBuddhistMeaning.textContent = 'No specific Buddhist meaning recorded.';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 切换朗读/停止功能
+function toggleSpeech(text, button) {
+    if (currentUtterance && speechSynthesis.speaking) {
+        // 如果正在朗读，则停止
+        speechSynthesis.cancel();
+        button.classList.remove('stop');
+        button.classList.add('speak');
+        currentUtterance = null;
+    } else {
+        // 开始朗读
+        if ('speechSynthesis' in window) {
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 0.7; // 正常语速
+            
+            currentUtterance.onend = function() {
+                button.classList.remove('stop');
+                button.classList.add('speak');
+                currentUtterance = null;
+            };
+            
+            speechSynthesis.speak(currentUtterance);
+            button.classList.remove('speak');
+            button.classList.add('stop');
+        } else {
+            alert('您的浏览器不支持语音朗读功能');
+        }
+    }
+}
+</script>
+</body>
+</html>

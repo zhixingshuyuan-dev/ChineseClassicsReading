@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金刚般若波罗蜜经（完整交互版）</title>
+    <style>
+        /* 保持原有样式不变 */
+        body {
+            font-family: "SimSun", "STKaiti", serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1.4em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 2.0em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d4a762;
+        }
+        
+        .author {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .preface-section {
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #d4a762;
+        }
+        
+        .preface-content {
+            margin-bottom: 20px;
+            line-height: 2.0;
+            color: #e0e0e0;
+        }
+        
+        .preface-annotation {
+            color: #999;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 3px solid #555;
+            margin-top: 15px;
+        }
+        
+        .text-section {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .text-section h3 {
+            margin-top: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            color: #d4a762;
+            background-color: #2a2a2a;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .annotation-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            color: #e0e0e0;
+        }
+        
+        .char-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #444;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .char:hover .char-tooltip {
+            display: block;
+        }
+        
+        .annotation {
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .plain-text {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.7em;
+            background-color: #444;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .action-btn:hover {
+            background-color: #555;
+        }
+        
+        .action-btn.speak {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .action-btn.stop {
+            background-color: #a76a6a;
+            color: #1a1a1a;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 15px 0;
+        }
+        
+        .translation-tab {
+            padding: 3px 8px;
+            background-color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .translation-tab.active {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        /* 修改后的弹窗样式 */
+        .char-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .char-modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 80%;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .char-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .char-modal-char {
+            font-size: 2.5em;
+            color: #d4a762;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-pinyin {
+            font-size: 1.3em;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .char-modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .char-modal-close:hover {
+            color: #e0e0e0;
+        }
+        
+        .char-modal-section {
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-section h3 {
+            color: #d4a762;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .char-modal-meaning {
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        
+        /* Color schemes for alternating sections */
+        .section-1 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-1 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #d4a762;
+        }
+        
+        .section-2 .text-content {
+            background-color: #333333;
+        }
+        .section-2 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #5d8aa8;
+        }
+        
+        .section-3 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-3 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a8d4a7;
+        }
+        
+        .section-4 .text-content {
+            background-color: #333333;
+        }
+        .section-4 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4a7a7;
+        }
+        
+        .section-5 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-5 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a7a7d4;
+        }
+        
+        .section-6 .text-content {
+            background-color: #333333;
+        }
+        .section-6 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4d4a7;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+            color: #d4a762;
+            font-weight: bold;
+        }
+        
+        .reading-text {
+            display: none; /* 不再需要单独显示 */
+        }
+        
+        .annotation-text {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            
+            .char-modal-content {
+                padding: 15px;
+            }
+            
+            .char-modal-char {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 汉字详情弹窗 -->
+<div class="char-modal" id="charModal">
+    <div class="char-modal-content">
+        <div class="char-modal-header">
+            <h2>汉字详情</h2>
+            <button class="char-modal-close" id="closeCharModal">&times;</button>
+        </div>
+        <div class="char-modal-char" id="modalChar"></div>
+        <div class="char-modal-pinyin" id="modalPinyin"></div>
+        <div class="char-modal-section">
+            <h3>基本释义</h3>
+            <div class="char-modal-meaning" id="modalMeaning"></div>
+        </div>
+        <div class="char-modal-section">
+            <h3>佛教释义</h3>
+            <div class="char-modal-meaning" id="modalBuddhistMeaning"></div>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="title">金刚般若波罗蜜经</div>
+    <div class="author">姚秦三藏法师鸠摩罗什译</div>
+</div>
+
+<!-- 第九品标题 -->
+<div class="section-title">第九品</div>
+
+<!-- 经文内容 -->
+<div id="scriptureContent"></div>
+
+<script>
+// 语音合成对象
+let currentUtterance = null;
+
+// 标点符号的拼音映射
+const punctuationPinyin = {
+    '，': 'dòu hào',
+    '。': 'jù hào',
+    '、': 'dùn hào',
+    '；': 'fēn hào',
+    '：': 'mào hào',
+    '！': 'tàn hào',
+    '？': 'wèn hào',
+    '「': 'zuǒ yǐn hào',
+    '」': 'yòu yǐn hào',
+    '『': 'zuǒ shuāng yǐn hào',
+    '』': 'yòu shuāng yǐn hào',
+    '（': 'zuǒ kuò hào',
+    '）': 'yòu kuò hào',
+    '《': 'zuǒ shū míng hào',
+    '》': 'yòu shū míng hào'
+};
+
+// 汉字的多义项解释（包含第九品新增汉字）
+const charMeanings = {
+    '須': {
+        pinyin: 'xū',
+        meanings: [
+            'must',
+            'necessary',
+            'beard'
+        ],
+        buddhist: 'Necessity or essential quality in Buddhist teachings.'
+    },
+    '菩': {
+        pinyin: 'pú',
+        meanings: [
+            'bodhi',
+            'enlightenment'
+        ],
+        buddhist: 'Bodhi, meaning awakening or enlightenment.'
+    },
+    '提': {
+        pinyin: 'tí',
+        meanings: [
+            'lift',
+            'carry',
+            'mention'
+        ],
+        buddhist: 'To lift up or elevate in spiritual context.'
+    },
+    '於': {
+        pinyin: 'yú',
+        meanings: [
+            'at',
+            'in',
+            'to'
+        ],
+        buddhist: 'A preposition indicating relation or connection.'
+    },
+    '意': {
+        pinyin: 'yì',
+        meanings: [
+            'meaning',
+            'intention',
+            'thought'
+        ],
+        buddhist: 'Intention or thought in Buddhist psychology.'
+    },
+    '云': {
+        pinyin: 'yún',
+        meanings: [
+            'say',
+            'cloud',
+            'speak'
+        ],
+        buddhist: 'To say or express in teachings.'
+    },
+    '何': {
+        pinyin: 'hé',
+        meanings: [
+            'what',
+            'why',
+            'how'
+        ],
+        buddhist: 'A question about Dharma.'
+    },
+    '陀': {
+        pinyin: 'tuó',
+        meanings: [
+            'steep bank',
+            'Buddhist term'
+        ],
+        buddhist: 'Part of Buddhist terms like "须陀洹" (Srotāpanna).'
+    },
+    '洹': {
+        pinyin: 'huán',
+        meanings: [
+            'river name',
+            'Buddhist term'
+        ],
+        buddhist: 'Part of "须陀洹" (Srotāpanna), meaning stream-enterer.'
+    },
+    '能': {
+        pinyin: 'néng',
+        meanings: [
+            'can',
+            'able',
+            'energy'
+        ],
+        buddhist: 'Capability or potential in practice.'
+    },
+    '作': {
+        pinyin: 'zuò',
+        meanings: [
+            'do',
+            'make',
+            'compose'
+        ],
+        buddhist: 'Action or creation in Buddhist philosophy.'
+    },
+    '念': {
+        pinyin: 'niàn',
+        meanings: [
+            'thought',
+            'recite',
+            'remember'
+        ],
+        buddhist: 'Thought or mindfulness in practice.'
+    },
+    '我': {
+        pinyin: 'wǒ',
+        meanings: [
+            'I',
+            'me',
+            'self'
+        ],
+        buddhist: 'The ego or self in Buddhist analysis.'
+    },
+    '得': {
+        pinyin: 'dé',
+        meanings: [
+            'obtain',
+            'gain',
+            'can'
+        ],
+        buddhist: 'Attainment or realization.'
+    },
+    '果': {
+        pinyin: 'guǒ',
+        meanings: [
+            'fruit',
+            'result',
+            'effect'
+        ],
+        buddhist: 'Fruit or result of spiritual practice.'
+    },
+    '不': {
+        pinyin: 'bù',
+        meanings: [
+            'not',
+            'no',
+            'negation'
+        ],
+        buddhist: 'Negation in Dharma teachings.'
+    },
+    '名': {
+        pinyin: 'míng',
+        meanings: [
+            'name',
+            'famous',
+            'reputation'
+        ],
+        buddhist: 'Name or designation in Buddhist logic.'
+    },
+    '為': {
+        pinyin: 'wéi',
+        meanings: [
+            'as',
+            'become',
+            'act'
+        ],
+        buddhist: 'To act or function as.'
+    },
+    '入': {
+        pinyin: 'rù',
+        meanings: [
+            'enter',
+            'join',
+            'income'
+        ],
+        buddhist: 'To enter or attain in spiritual context.'
+    },
+    '流': {
+        pinyin: 'liú',
+        meanings: [
+            'flow',
+            'stream',
+            'current'
+        ],
+        buddhist: 'Stream or current in spiritual progress.'
+    },
+    '色': {
+        pinyin: 'sè',
+        meanings: [
+            'color',
+            'form',
+            'appearance'
+        ],
+        buddhist: 'Form or matter as one of the five skandhas.'
+    },
+    '聲': {
+        pinyin: 'shēng',
+        meanings: [
+            'sound',
+            'voice',
+            'noise'
+        ],
+        buddhist: 'Sound as one of the sense objects.'
+    },
+    '香': {
+        pinyin: 'xiāng',
+        meanings: [
+            'fragrance',
+            'incense',
+            'smell'
+        ],
+        buddhist: 'Smell as one of the sense objects.'
+    },
+    '味': {
+        pinyin: 'wèi',
+        meanings: [
+            'taste',
+            'flavor',
+            'meaning'
+        ],
+        buddhist: 'Taste as one of the sense objects.'
+    },
+    '觸': {
+        pinyin: 'chù',
+        meanings: [
+            'touch',
+            'contact',
+            'feel'
+        ],
+        buddhist: 'Touch as one of the sense objects.'
+    },
+    '法': {
+        pinyin: 'fǎ',
+        meanings: [
+            'law',
+            'method',
+            'Dharma'
+        ],
+        buddhist: 'Dharma or phenomena in Buddhist teachings.'
+    },
+    '斯': {
+        pinyin: 'sī',
+        meanings: [
+            'this',
+            'thus',
+            'then'
+        ],
+        buddhist: 'Demonstrative pronoun in Buddhist texts.'
+    },
+    '含': {
+        pinyin: 'hán',
+        meanings: [
+            'contain',
+            'include',
+            'hold'
+        ],
+        buddhist: 'Part of "斯陀含" (Sakadāgāmin), meaning once-returner.'
+    },
+    '往': {
+        pinyin: 'wǎng',
+        meanings: [
+            'go',
+            'past',
+            'toward'
+        ],
+        buddhist: 'Going or movement in spiritual context.'
+    },
+    '來': {
+        pinyin: 'lái',
+        meanings: [
+            'come',
+            'arrive',
+            'future'
+        ],
+        buddhist: 'Coming or returning in spiritual context.'
+    },
+    '阿': {
+        pinyin: 'ā',
+        meanings: [
+            'prefix',
+            'exclamation'
+        ],
+        buddhist: 'Prefix in many Buddhist terms.'
+    },
+    '那': {
+        pinyin: 'nà',
+        meanings: [
+            'that',
+            'which',
+            'there'
+        ],
+        buddhist: 'Part of "阿那含" (Anāgāmin), meaning non-returner.'
+    },
+    '羅': {
+        pinyin: 'luó',
+        meanings: [
+            'net',
+            'gauze',
+            'Buddhist term'
+        ],
+        buddhist: 'Part of "阿羅漢" (Arhat), the perfected one.'
+    },
+    '漢': {
+        pinyin: 'hàn',
+        meanings: [
+            'Han',
+            'man',
+            'Buddhist term'
+        ],
+        buddhist: 'Part of "阿羅漢" (Arhat), the perfected one.'
+    },
+    '道': {
+        pinyin: 'dào',
+        meanings: [
+            'way',
+            'path',
+            'Tao'
+        ],
+        buddhist: 'The path to enlightenment.'
+    },
+    '著': {
+        pinyin: 'zhuó',
+        meanings: [
+            'wear',
+            'attach',
+            'cling'
+        ],
+        buddhist: 'Attachment or clinging in Buddhist psychology.'
+    },
+    '人': {
+        pinyin: 'rén',
+        meanings: [
+            'person',
+            'human',
+            'people'
+        ],
+        buddhist: 'Sentient being in Buddhist context.'
+    },
+    '眾': {
+        pinyin: 'zhòng',
+        meanings: [
+            'crowd',
+            'many',
+            'multitude'
+        ],
+        buddhist: 'Multitude or assembly in Buddhist context.'
+    },
+    '生': {
+        pinyin: 'shēng',
+        meanings: [
+            'life',
+            'birth',
+            'produce'
+        ],
+        buddhist: 'Birth or existence in samsara.'
+    },
+    '壽': {
+        pinyin: 'shòu',
+        meanings: [
+            'longevity',
+            'age',
+            'life span'
+        ],
+        buddhist: 'Life span or duration of life.'
+    },
+    '者': {
+        pinyin: 'zhě',
+        meanings: [
+            'one who',
+            'that which',
+            'person'
+        ],
+        buddhist: 'Suffix indicating a person or thing.'
+    },
+    '佛': {
+        pinyin: 'fó',
+        meanings: [
+            'Buddha',
+            'enlightened one'
+        ],
+        buddhist: 'The Buddha or enlightenment.'
+    },
+    '說': {
+        pinyin: 'shuō',
+        meanings: [
+            'speak',
+            'explain',
+            'teach'
+        ],
+        buddhist: 'To expound or teach the Dharma.'
+    },
+    '無': {
+        pinyin: 'wú',
+        meanings: [
+            'not have',
+            'without',
+            'none'
+        ],
+        buddhist: 'Non-existence or emptiness.'
+    },
+    '諍': {
+        pinyin: 'zhèng',
+        meanings: [
+            'dispute',
+            'argue',
+            'contention'
+        ],
+        buddhist: 'Dispute or contention in spiritual context.'
+    },
+    '三': {
+        pinyin: 'sān',
+        meanings: [
+            'three'
+        ],
+        buddhist: 'Three, often representing the Three Jewels.'
+    },
+    '昧': {
+        pinyin: 'mèi',
+        meanings: [
+            'ignorant',
+            'dark',
+            'samadhi'
+        ],
+        buddhist: 'Part of "三昧" (samadhi), meditative absorption.'
+    },
+    '最': {
+        pinyin: 'zuì',
+        meanings: [
+            'most',
+            'extreme',
+            'utmost'
+        ],
+        buddhist: 'Supreme or highest in spiritual context.'
+    },
+    '為': {
+        pinyin: 'wèi',
+        meanings: [
+            'for',
+            'because',
+            'purpose'
+        ],
+        buddhist: 'Purpose or intention in practice.'
+    },
+    '第': {
+        pinyin: 'dì',
+        meanings: [
+            'sequence',
+            'grade',
+            'number'
+        ],
+        buddhist: 'Ordinal number in Buddhist classifications.'
+    },
+    '一': {
+        pinyin: 'yī',
+        meanings: [
+            'one',
+            'first',
+            'single'
+        ],
+        buddhist: 'One or first in spiritual context.'
+    },
+    '離': {
+        pinyin: 'lí',
+        meanings: [
+            'leave',
+            'separate',
+            'free from'
+        ],
+        buddhist: 'To be free from or transcend.'
+    },
+    '欲': {
+        pinyin: 'yù',
+        meanings: [
+            'desire',
+            'wish',
+            'lust'
+        ],
+        buddhist: 'Desire or craving as root of suffering.'
+    },
+    '樂': {
+        pinyin: 'lè',
+        meanings: [
+            'joy',
+            'happy',
+            'pleasure'
+        ],
+        buddhist: 'Joy or delight in spiritual practice.'
+    },
+    '蘭': {
+        pinyin: 'lán',
+        meanings: [
+            'orchid',
+            'fragrant plant'
+        ],
+        buddhist: 'Part of "阿蘭那" (araṇya), meaning forest or secluded place.'
+    },
+    '行': {
+        pinyin: 'xíng',
+        meanings: [
+            'walk',
+            'conduct',
+            'practice'
+        ],
+        buddhist: 'Practice or conduct in spiritual path.'
+    },
+    '實': {
+        pinyin: 'shí',
+        meanings: [
+            'real',
+            'solid',
+            'truth'
+        ],
+        buddhist: 'Reality or truth in Buddhist philosophy.'
+    },
+    '所': {
+        pinyin: 'suǒ',
+        meanings: [
+            'place',
+            'that which',
+            'what'
+        ],
+        buddhist: 'A relative pronoun in Buddhist texts.'
+    }
+};
+
+// 第九品经文数据
+const scriptureData = [
+    {
+        id: 'section1',
+        text: '須菩提！於意云何？須陀洹能作是念：我得須陀洹果。不？',
+        readingText: '須菩提！於意云何？須陀洹能作是念：我得須陀洹果。不？',
+        pinyin: 'xū pú tí yú yì yún hé xū tuó huán néng zuò shì niàn wǒ dé xū tuó huán guǒ bù',
+        english: 'Subhuti, what do you think? Can a Srotapanna have the thought: "I have attained the fruit of Srotapanna"?',
+        annotation: '例訪眾聖，求之諸心，優劣雖異，忘懷必同。',
+        annotationPinyin: 'lì fǎng zhòng shèng qiú zhī zhū xīn yōu liè suī yì wàng huái bì tóng',
+        annotationTranslations: {
+            '白话文': '例如访问众多圣者，求问他们的心境，虽然境界有优劣差异，但忘怀执着的境界必定相同。',
+            'English': 'For example, visiting many saints and inquiring about their states of mind, although their levels may differ, the state of letting go attachments must be the same.',
+            'Deutsch': 'Zum Beispiel, viele Heilige zu besuchen und nach ihren Geisteszuständen zu fragen, obwohl ihre Stufen unterschiedlich sein mögen, muss der Zustand des Loslassens von Anhaftungen derselbe sein.',
+            'Français': 'Par exemple, visiter de nombreux saints et s\'enquérir de leurs états d\'esprit, bien que leurs niveaux puissent différer, l\'état de lâcher prise des attachements doit être le même.',
+            'Русский': 'Например, посещение многих святых и расспросы об их состояниях ума, хотя их уровни могут различаться, состояние отпускания привязанностей должно быть одинаковым.',
+            'Español': 'Por ejemplo, visitar a muchos santos e indagar sobre sus estados mentales, aunque sus niveles puedan diferir, el estado de soltar apegos debe ser el mismo.',
+            'Italiano': 'Ad esempio, visitare molti santi e chiedere dei loro stati mentali, sebbene i loro livelli possano differire, lo stato di abbandono degli attaccamenti deve essere lo stesso.',
+            'संस्कृतम्': 'यथा सन्तः परीक्ष्यन्ते, तेषां चित्तानि पृच्छ्यन्ते, उत्कृष्टाधमभावेऽपि, विस्मृतिसमता भवति।',
+            'Pāli': 'Yathā santā parikkhipanti, tesaṃ cittāni pucchanti, ukkaṭṭha-hīnabhāve pi, vismutisamatā hoti.'
+        },
+        translations: {
+            '白话文': '须菩提！你的意思如何？须陀洹能这样想："我得到了须陀洹果位"吗？',
+            'English': 'Subhuti, what do you think? Can a Srotapanna have the thought: "I have attained the fruit of Srotapanna"?',
+            'Deutsch': 'Subhuti, was denkst du? Kann ein Srotapanna den Gedanken haben: "Ich habe die Frucht des Srotapanna erreicht"?',
+            'Français': 'Subhuti, qu\'en penses-tu ? Un Srotapanna peut-il avoir la pensée : "J\'ai atteint le fruit de Srotapanna" ?',
+            'Русский': 'Субхути, как ты думаешь? Может ли Сротапанна иметь мысль: "Я достиг плода Сротапанны"?',
+            'Español': 'Subhuti, ¿qué opinas? ¿Puede un Srotapanna tener el pensamiento: "He alcanzado el fruto de Srotapanna"?',
+            'Italiano': 'Subhuti, cosa ne pensi? Può un Srotapanna avere il pensiero: "Ho raggiunto il frutto di Srotapanna"?',
+            'संस्कृतम्': 'सुभूते! तव मतं किम्? श्रोतापन्नः एवं वक्तुं शक्नोति - "अहं श्रोतापत्तिफलं प्राप्तवान्" इति?',
+            'Pāli': 'Subhūti, taṃ kiṃ maññasi? Sotāpanno evaṃ vattuṃ sakkoti - "ahaṃ sotāpattiphalaṃ patto" ti?'
+        }
+    },
+    {
+        id: 'section2',
+        text: '須菩提言：不也，世尊！何以故？須陀洹名為入流。',
+        readingText: '須菩提言：不也，世尊！何以故？須陀洹名為入流。',
+        pinyin: 'xū pú tí yán bù yě shì zūn hé yǐ gù xū tuó huán míng wéi rù liú',
+        english: 'Subhuti said: No, World-Honored One! Why? Srotapanna means "stream-enterer".',
+        annotation: '海為眾流之川，菩提神極之淵。始會無生，終必盡源。',
+        annotationPinyin: 'hǎi wéi zhòng liú zhī chuān pú tí shén jí zhī yuān shǐ huì wú shēng zhōng bì jìn yuán',
+        annotationTranslations: {
+            '白话文': '大海是众多河流的归宿，菩提是精神极致的深渊。最初领悟无生，最终必定穷尽源头。',
+            'English': 'The ocean is the destination of all rivers; bodhi is the abyss of spiritual perfection. Initially realizing non-birth, ultimately exhausting the source.',
+            'Deutsch': 'Der Ozean ist das Ziel aller Flüsse; Bodhi ist der Abgrund spiritueller Vollkommenheit. Anfänglich die Nicht-Geburt verwirklichend, letztlich die Quelle erschöpfend.',
+            'Français': 'L\'océan est la destination de toutes les rivières; bodhi est l\'abîme de la perfection spirituelle. Réalisant initialement la non-naissance, épuisant finalement la source.',
+            'Русский': 'Океан - это место назначения всех рек; бодхи - это бездна духовного совершенства. Первоначально осознавая не-рождение, в конечном итоге исчерпывая источник.',
+            'Español': 'El océano es el destino de todos los ríos; bodhi es el abismo de la perfección espiritual. Realizando inicialmente el no-nacimiento, agotando finalmente la fuente.',
+            'Italiano': 'L\'oceano è la destinazione di tutti i fiumi; bodhi è l\'abisso della perfezione spirituale. Inizialmente realizzando la non-nascita, alla fine esaurendo la fonte.',
+            'संस्कृतम्': 'सागरः सर्वनदीनां प्रवाहाणां समुद्रः, बोधिः आत्मनः परमं गम्भीरम्। आदौ अनुत्पादं प्रतिपद्यते, अन्ते मूलं समापयति।',
+            'Pāli': 'Samuddo sabbasaṅkhārānaṃ sāgaraṃ, bodhi attano paramaṃ gambhīraṃ. Ādau anuppādaṃ paṭivijjhati, ante mūlaṃ samāpeti.'
+        },
+        translations: {
+            '白话文': '须菩提说：不能，世尊！为什么呢？须陀洹名为入流。',
+            'English': 'Subhuti said: No, World-Honored One! Why? Srotapanna means "stream-enterer".',
+            'Deutsch': 'Subhuti sagte: Nein, Weltgeehrter! Warum? Srotapanna bedeutet "Stromeingetretener".',
+            'Français': 'Subhuti dit : Non, Honoré du Monde ! Pourquoi ? Srotapanna signifie "entrant dans le courant".',
+            'Русский': 'Субхути сказал: Нет, Почитаемый Миром! Почему? Сротапанна означает "вошедший в поток".',
+            'Español': 'Subhuti dijo: No, ¡Honrado por el Mundo! ¿Por qué? Srotapanna significa "entrante en la corriente".',
+            'Italiano': 'Subhuti disse: No, Onorato dal Mondo! Perché? Srotapanna significa "entrante nella corrente".',
+            'संस्कृतम्': 'सुभूतिः अवदत् - न हि, भगवन्! तत्र किं कारणम्? श्रोतापन्नः इति प्रव्रजितः इति उच्यते।',
+            'Pāli': 'Subhūti avadati - na hi, bhagavā! Tatra kiṃ kāraṇaṃ? Sotāpanno ti pabbajito ti vuccati.'
+        }
+    },
+    {
+        id: 'section3',
+        text: '而無所入。',
+        readingText: '而無所入。',
+        pinyin: 'ér wú suǒ rù',
+        english: 'Yet there is nothing to enter.',
+        annotation: '理無乖順，何入之有？',
+        annotationPinyin: 'lǐ wú guāi shùn hé rù zhī yǒu',
+        annotationTranslations: {
+            '白话文': '真理没有违背与顺从的区别，哪里有入与不入呢？',
+            'English': 'Truth has no distinction of opposition or compliance—what entering could there be?',
+            'Deutsch': 'Wahrheit hat keine Unterscheidung von Gegensatz oder Übereinstimmung—welches Eintreten könnte es geben?',
+            'Français': 'La vérité n\'a pas de distinction d\'opposition ou de conformité—quel entrée pourrait-il y avoir?',
+            'Русский': 'Истина не имеет различия противоположности или соответствия—какое вхождение может быть?',
+            'Español': 'La verdad no tiene distinción de oposición o conformidad—¿qué entrada podría haber?',
+            'Italiano': 'La verità non ha distinzione di opposizione o conformità—quale ingresso potrebbe esserci?',
+            'संस्कृतम्': 'तत्त्वं न विरुद्धं नानुकूलं, कः प्रवेशः अस्ति?',
+            'Pāli': 'Tathatā na viruddhā nānukūlā, ko paveso atthi?'
+        },
+        translations: {
+            '白话文': '而实际上无所入。',
+            'English': 'Yet there is nothing to enter.',
+            'Deutsch': 'Doch gibt es nichts einzutreten.',
+            'Français': 'Pourtant il n\'y a rien à entrer.',
+            'Русский': 'Но нечего входить.',
+            'Español': 'Sin embargo, no hay nada que entrar.',
+            'Italiano': 'Eppure non c\'è nulla da entrare.',
+            'संस्कृतम्': 'तथा च न किञ्चित् प्रविशति।',
+            'Pāli': 'Tathā ca na kiñci pavesati.'
+        }
+    },
+    {
+        id: 'section4',
+        text: '不入色、聲、香、味、觸、法，是名須陀洹。',
+        readingText: '不入色、聲、香、味、觸、法，是名須陀洹。',
+        pinyin: 'bù rù sè shēng xiāng wèi chù fǎ shì míng xū tuó huán',
+        english: 'Not entering forms, sounds, smells, tastes, touches, or dharmas—this is called Srotapanna.',
+        annotation: '違理故入色聲，背色聲則會於理，理會無入，非入色聲也。自下眾果類可知。',
+        annotationPinyin: 'wéi lǐ gù rù sè shēng bèi sè shēng zé huì yú lǐ lǐ huì wú rù fēi rù sè shēng yě zì xià zhòng guǒ lèi kě zhī',
+        annotationTranslations: {
+            '白话文': '违背真理所以执着色声，背离色声就会契合真理，契合真理就无所谓入，不是真的入色声。以下的各个果位都可以此类推。',
+            'English': 'Opposing truth, one enters forms and sounds; turning away from forms and sounds, one meets truth. Meeting truth, there is no entering—it is not truly entering forms and sounds. The following fruits can be understood similarly.',
+            'Deutsch': 'Der Wahrheit entgegenwirkend, tritt man in Formen und Klänge ein; sich von Formen und Klängen abwendend, begegnet man der Wahrheit. Die Wahrheit begegnend, gibt es kein Eintreten—es ist nicht wahrhaftiges Eintreten in Formen und Klänge. Die folgenden Früchte können ähnlich verstanden werden.',
+            'Français': 'S\'opposant à la vérité, on entre dans les formes et les sons; se détournant des formes et des sons, on rencontre la vérité. Rencontrant la vérité, il n\'y a pas d\'entrée—ce n\'est pas vraiment entrer dans les formes et les sons. Les fruits suivants peuvent être compris de la même manière.',
+            'Русский': 'Противодействуя истине, человек входит в формы и звуки; отворачиваясь от форм и звуков, он встречает истину. Встречая истину, нет вхождения—это не настоящее вхождение в формы и звуки. Следующие плоды можно понять аналогично.',
+            'Español': 'Opuesto a la verdad, uno entra en formas y sonidos; alejándose de formas y sonidos, uno encuentra la verdad. Encontrando la verdad, no hay entrada—no es verdaderamente entrar en formas y sonidos. Los siguientes frutos pueden entenderse de manera similar.',
+            'Italiano': 'Opponendosi alla verità, si entra nelle forme e nei suoni; allontanandosi dalle forme e dai suoni, si incontra la verità. Incontrando la verità, non c\'è ingresso—non è veramente entrare nelle forme e nei suoni. I seguenti frutti possono essere compresi in modo simile.',
+            'संस्कृतम्': 'तत्त्वविरुद्धं च रूपशब्देषु प्रविशति, रूपशब्दान् परित्यज्य तत्त्वं प्रतिपद्यते। तत्त्वप्रतिपत्तौ न प्रवेशः, न हि रूपशब्देषु प्रवेशः। अधस्तनानि फलानि एवं ज्ञेयानि।',
+            'Pāli': 'Tathatāviruddhañ ca rūpasaddesu pavesati, rūpasaddā pariccajitvā tathataṃ paṭivijjhati. Tathatāpaṭivedhe na paveso, na hi rūpasaddesu paveso. Adhokatānāni phalāni evaṃ ñātabbāni.'
+        },
+        translations: {
+            '白话文': '不执着于色、声、香、味、触、法，这才叫做须陀洹。',
+            'English': 'Not entering forms, sounds, smells, tastes, touches, or dharmas—this is called Srotapanna.',
+            'Deutsch': 'Nicht eintretend in Formen, Klänge, Gerüche, Geschmäcke, Berührungen oder Dharmas—dies wird Srotapanna genannt.',
+            'Français': 'N\'entrant pas dans les formes, les sons, les odeurs, les goûts, les touches ou les dharmas—ceci est appelé Srotapanna.',
+            'Русский': 'Не входя в формы, звуки, запахи, вкусы, прикосновения или дхармы—это называется Сротапанна.',
+            'Español': 'No entrando en formas, sonidos, olores, sabores, tactos o dharmas—esto se llama Srotapanna.',
+            'Italiano': 'Non entrando nelle forme, suoni, odori, sapori, tocchi o dharma—questo è chiamato Srotapanna.',
+            'संस्कृतम्': 'रूपशब्दगन्धरसस्पर्शधर्मेषु न प्रविशति, एतत् श्रोतापन्नः इति उच्यते।',
+            'Pāli': 'Rūpasaddagandharasaphaṭṭhabbadhammesu na pavesati, etaṃ sotāpanno ti vuccati.'
+        }
+    },
+    {
+        id: 'section5',
+        text: '須菩提！於意云何？斯陀含能作是念：我得斯陀含果。不？須菩提言：不也，世尊！何以故？斯陀含名一往來，而實無往來，是名斯陀含。須菩提！於意云何？阿那含能作是念：我得阿那含果。不？須菩提言：不也，世尊！何以故？阿那含名為不來，而無不來，是故名阿那含。須菩提！於意云何？阿羅漢能作是念：我得阿羅漢道。不？須菩提言：不也，世尊！何以故？實無有法名阿羅漢。世尊！若阿羅漢作是念：我得阿羅漢道。即為著我、人、眾生、壽者。',
+        readingText: '須菩提！於意云何？斯陀含能作是念：我得斯陀含果。不？須菩提言：不也，世尊！何以故？斯陀含名一往來，而實無往來，是名斯陀含。須菩提！於意云何？阿那含能作是念：我得阿那含果。不？須菩提言：不也，世尊！何以故？阿那含名為不來，而無不來，是故名阿那含。須菩提！於意云何？阿羅漢能作是念：我得阿羅漢道。不？須菩提言：不也，世尊！何以故？實無有法名阿羅漢。世尊！若阿羅漢作是念：我得阿羅漢道。即為著我、人、眾生、壽者。',
+        pinyin: 'xū pú tí yú yì yún hé sī tuó hán néng zuò shì niàn wǒ dé sī tuó hán guǒ bù xū pú tí yán bù yě shì zūn hé yǐ gù sī tuó hán míng yī wǎng lái ér shí wú wǎng lái shì míng sī tuó hán xū pú tí yú yì yún hé ā nà hán néng zuò shì niàn wǒ dé ā nà hán guǒ bù xū pú tí yán bù yě shì zūn hé yǐ gù ā nà hán míng wéi bù lái ér wú bù lái shì gù míng ā nà hán xū pú tí yú yì yún hé ā luó hàn néng zuò shì niàn wǒ dé ā luó hàn dào bù xū pú tí yán bù yě shì zūn hé yǐ gù shí wú yǒu fǎ míng ā luó hàn shì zūn ruò ā luó hàn zuò shì niàn wǒ dé ā luó hàn dào jí wéi zhuó wǒ rén zhòng shēng shòu zhě',
+        english: 'Subhuti, what do you think? Can a Sakadagamin have the thought: "I have attained the fruit of Sakadagamin"? Subhuti said: No, World-Honored One! Why? Sakadagamin means "once-returner", yet there is no returning—this is called Sakadagamin. Subhuti, what do you think? Can an Anagamin have the thought: "I have attained the fruit of Anagamin"? Subhuti said: No, World-Honored One! Why? Anagamin means "non-returner", yet there is no non-returning—therefore it is called Anagamin. Subhuti, what do you think? Can an Arhat have the thought: "I have attained the path of Arhat"? Subhuti said: No, World-Honored One! Why? Truly there is no dharma called Arhat. World-Honored One! If an Arhat has the thought: "I have attained the path of Arhat", then there is clinging to self, person, sentient being, and life span.',
+        annotation: '阿羅漢者，無生也。相滅生盡，謂之無生。若計念，則見我人起相受生，非謂羅漢。諸果類亦應爾，但隨義異明耳。',
+        annotationPinyin: 'ā luó hàn zhě wú shēng yě xiàng miè shēng jìn wèi zhī wú shēng ruò jì niàn zé jiàn wǒ rén qǐ xiàng shòu shēng fēi wèi luó hàn zhū guǒ lèi yì yīng ěr dàn suí yì yì míng ěr',
+        annotationTranslations: {
+            '白话文': '阿罗汉就是无生。相灭尽、生灭尽，称为无生。如果有计度分别之念，就会见到我人相而起受生之想，这就不是阿罗汉了。其他果位也应该这样理解，只是根据意义不同而说明。',
+            'English': 'An Arhat is "non-born". With extinction of marks and exhaustion of birth, it is called non-born. If there is calculating thought, then the mark of self arises and birth is perceived—this is not called Arhat. The other fruits should be understood similarly, only explained differently according to their meanings.',
+            'Deutsch': 'Ein Arhat ist "nicht-geboren". Mit dem Erlöschen der Merkmale und der Erschöpfung der Geburt wird es Nicht-Geboren genannt. Wenn es berechnenden Gedanken gibt, dann entsteht das Merkmal des Selbst und Geburt wird wahrgenommen—dies wird nicht Arhat genannt. Die anderen Früchte sollten ähnlich verstanden werden, nur entsprechend ihren Bedeutungen unterschiedlich erklärt.',
+            'Français': 'Un Arhat est "non-né". Avec l\'extinction des marques et l\'épuisement de la naissance, cela s\'appelle non-né. S\'il y a une pensée calculatrice, alors la marque du soi surgit et la naissance est perçue—ceci n\'est pas appelé Arhat. Les autres fruits doivent être compris de la même manière, seulement expliqués différemment selon leurs significations.',
+            'Русский': 'Архат - это "не-рожденный". С угасанием признаков и исчерпанием рождения это называется не-рожденным. Если есть расчетливая мысль, то возникает признак себя и воспринимается рождение—это не называется Архатом. Другие плоды должны пониматься аналогично, только объясняются по-разному в соответствии с их значениями.',
+            'Español': 'Un Arhat es "no-nacido". Con la extinción de las marcas y el agotamiento del nacimiento, se llama no-nacido. Si hay pensamiento calculador, entonces surge la marca del yo y se percibe el nacimiento—esto no se llama Arhat. Los otros frutos deben entenderse de manera similar, solo se explican de manera diferente según sus significados.',
+            'Italiano': 'Un Arhat è "non-nato". Con l\'estinzione dei segni e l\'esaurimento della nascita, si chiama non-nato. Se c\'è un pensiero calcolante, allora il segno del sé sorge e la nascita è percepita—questo non si chiama Arhat. Gli altri frutti dovrebbero essere compresi in modo simile, solo spiegati in modo diverso secondo i loro significati.',
+            'संस्कृतम्': 'अर्हन् इति अनुत्पन्नः। लक्षणक्षये जन्मक्षये च अनुत्पादः उच्यते। यदि संकल्पना, तदा अहंकरः उत्पद्यते जन्म च प्रतीयते, न तु अर्हन् इति। अन्यानि फलानि अपि एवं ज्ञेयानि, केवलं अर्थभेदेन व्याख्यातानि।',
+            'Pāli': 'Arahan ti anuppanno. Lakkhakkhaye jātikkhaye ca anuppādo vuccati. Sace saṅkappana, tadā ahaṅkāro uppajjati jāti ca paṭisaṃvediyati, na tu arahan ti. Aññāni phalāni pi evaṃ ñātabbāni, kevaṃ atthabhedena vuttāni.'
+        },
+        translations: {
+            '白话文': '须菩提！你的意思如何？斯陀含能这样想："我得到了斯陀含果位"吗？须菩提说：不能，世尊！为什么呢？斯陀含名为一来，而实际上没有来去，这才叫做斯陀含。须菩提！你的意思如何？阿那含能这样想："我得到了阿那含果位"吗？须菩提说：不能，世尊！为什么呢？阿那含名为不来，而实际上没有不来，所以叫做阿那含。须菩提！你的意思如何？阿罗汉能这样想："我得到了阿罗汉道"吗？须菩提说：不能，世尊！为什么呢？实际上没有法叫做阿罗汉。世尊！如果阿罗汉这样想："我得到了阿罗汉道"，那就是执着于我、人、众生、寿者。',
+            'English': 'Subhuti, what do you think? Can a Sakadagamin have the thought: "I have attained the fruit of Sakadagamin"? Subhuti said: No, World-Honored One! Why? Sakadagamin means "once-returner", yet there is no returning—this is called Sakadagamin. Subhuti, what do you think? Can an Anagamin have the thought: "I have attained the fruit of Anagamin"? Subhuti said: No, World-Honored One! Why? Anagamin means "non-returner", yet there is no non-returning—therefore it is called Anagamin. Subhuti, what do you think? Can an Arhat have the thought: "I have attained the path of Arhat"? Subhuti said: No, World-Honored One! Why? Truly there is no dharma called Arhat. World-Honored One! If an Arhat has the thought: "I have attained the path of Arhat", then there is clinging to self, person, sentient being, and life span.',
+            'Deutsch': 'Subhuti, was denkst du? Kann ein Sakadagamin den Gedanken haben: "Ich habe die Frucht des Sakadagamin erreicht"? Subhuti sagte: Nein, Weltgeehrter! Warum? Sakadagamin bedeutet "Einmal-Wiederkehrer", doch gibt es kein Wiederkehren—dies wird Sakadagamin genannt. Subhuti, was denkst du? Kann ein Anagamin den Gedanken haben: "Ich habe die Frucht des Anagamin erreicht"? Subhuti sagte: Nein, Weltgeehrter! Warum? Anagamin bedeutet "Nicht-Wiederkehrer", doch gibt es kein Nicht-Wiederkehren—daher wird es Anagamin genannt. Subhuti, was denkst du? Kann ein Arhat den Gedanken haben: "Ich habe den Pfad des Arhat erreicht"? Subhuti sagte: Nein, Weltgeehrter! Warum? Wahrlich gibt es kein Dharma namens Arhat. Weltgeehrter! Wenn ein Arhat den Gedanken hat: "Ich habe den Pfad des Arhat erreicht", dann gibt es ein Festhalten an Selbst, Person, fühlendem Wesen und Lebensspanne.',
+            'Français': 'Subhuti, qu\'en penses-tu ? Un Sakadagamin peut-il avoir la pensée : "J\'ai atteint le fruit de Sakadagamin" ? Subhuti dit : Non, Honoré du Monde ! Pourquoi ? Sakadagamin signifie "retournant une fois", pourtant il n\'y a pas de retour—ceci est appelé Sakadagamin. Subhuti, qu\'en penses-tu ? Un Anagamin peut-il avoir la pensée : "J\'ai atteint le fruit d\'Anagamin" ? Subhuti dit : Non, Honoré du Monde ! Pourquoi ? Anagamin signifie "non-retournant", pourtant il n\'y a pas de non-retour—c\'est pourquoi il est appelé Anagamin. Subhuti, qu\'en penses-tu ? Un Arhat peut-il avoir la pensée : "J\'ai atteint la voie d\'Arhat" ? Subhuti dit : Non, Honoré du Monde ! Pourquoi ? Vraiment il n\'y a pas de dharma appelé Arhat. Honoré du Monde ! Si un Arhat a la pensée : "J\'ai atteint la voie d\'Arhat", alors il y a attachement à soi, personne, être sensible et durée de vie.',
+            'Русский': 'Субхути, как ты думаешь? Может ли Сакадагамин иметь мысль: "Я достиг плода Сакадагамина"? Субхути сказал: Нет, Почитаемый Миром! Почему? Сакадагамин означает "возвращающийся один раз", но нет возвращения—это называется Сакадагамин. Субхути, как ты думаешь? Может ли Анагамин иметь мысль: "Я достиг плода Анагамина"? Субхути сказал: Нет, Почитаемый Миром! Почему? Анагамин означает "не возвращающийся", но нет не-возвращения—поэтому это называется Анагамин. Субхути, как ты думаешь? Может ли Архат иметь мысль: "Я достиг пути Архата"? Субхути сказал: Нет, Почитаемый Миром! Почему? Воистину нет дхармы под названием Архат. Почитаемый Миром! Если Архат имеет мысль: "Я достиг пути Архата", тогда есть привязанность к себе, личности, существу и сроку жизни.',
+            'Español': 'Subhuti, ¿qué opinas? ¿Puede un Sakadagamin tener el pensamiento: "He alcanzado el fruto de Sakadagamin"? Subhuti dijo: No, ¡Honrado por el Mundo! ¿Por qué? Sakadagamin significa "retornador una vez", sin embargo no hay retorno—esto se llama Sakadagamin. Subhuti, ¿qué opinas? ¿Puede un Anagamin tener el pensamiento: "He alcanzado el fruto de Anagamin"? Subhuti dijo: No, ¡Honrado por el Mundo! ¿Por qué? Anagamin significa "no retornador", sin embargo no hay no retorno—por lo tanto se llama Anagamin. Subhuti, ¿qué opinas? ¿Puede un Arhat tener el pensamiento: "He alcanzado el camino de Arhat"? Subhuti dijo: No, ¡Honrado por el Mundo! ¿Por qué? Verdaderamente no hay dharma llamado Arhat. ¡Honrado por el Mundo! Si un Arhat tiene el pensamiento: "He alcanzado el camino de Arhat", entonces hay apego a sí mismo, persona, ser sensible y lapso de vida.',
+            'Italiano': 'Subhuti, cosa ne pensi? Può un Sakadagamin avere il pensiero: "Ho raggiunto il frutto di Sakadagamin"? Subhuti disse: No, Onorato dal Mondo! Perché? Sakadagamin significa "ritornante una volta", eppure non c\'è ritorno—questo si chiama Sakadagamin. Subhuti, cosa ne pensi? Può un Anagamin avere il pensiero: "Ho raggiunto il frutto di Anagamin"? Subhuti disse: No, Onorato dal Mondo! Perché? Anagamin significa "non ritornante", eppure non c\'è non ritorno—quindi si chiama Anagamin. Subhuti, cosa ne pensi? Può un Arhat avere il pensiero: "Ho raggiunto il sentiero di Arhat"? Subhuti disse: No, Onorato dal Mondo! Perché? Veramente non c\'è dharma chiamato Arhat. Onorato dal Mondo! Se un Arhat ha il pensiero: "Ho raggiunto il sentiero di Arhat", allora c\'è attaccamento a sé, persona, essere senziente e durata di vita.',
+            'संस्कृतम्': 'सुभूते! तव मतं किम्? सकृदागामी एवं वक्तुं शक्नोति - "अहं सकृदागामिफलं प्राप्तवान्" इति? सुभूतिः अवदत् - न हि, भगवन्! तत्र किं कारणम्? सकृदागामी इति एकवारं आगच्छति इति उच्यते, तथा च न किञ्चित् आगच्छति, एतत् सकृदागामी इति उच्यते। सुभूते! तव मतं किम्? अनागामी एवं वक्तुं शक्नोति - "अहं अनागामिफलं प्राप्तवान्" इति? सुभूतिः अवदत् - न हि, भगवन्! तत्र किं कारणम्? अनागामी इति न आगच्छति इति उच्यते, तथा च न किञ्चित् न आगच्छति, अतः अनागामी इति उच्यते। सुभूते! तव मतं किम्? अर्हन् एवं वक्तुं शक्नोति - "अहं अर्हत्पथं प्राप्तवान्" इति? सुभूतिः अवदत् - न हि, भगवन्! तत्र किं कारणम्? न हि कोऽपि धर्मः अर्हन् इति उच्यते। भगवन्! यदि अर्हन् एवं वक्ति - "अहं अर्हत्पथं प्राप्तवान्", तर्हि अहङ्कारः जनः सत्त्वः जीवितं च इति उपादानं भवति।',
+            'Pāli': 'Subhūti, taṃ kiṃ maññasi? Sakadāgāmī evaṃ vattuṃ sakkoti - "ahaṃ sakadāgāmiphalaṃ patto" ti? Subhūti avadati - na hi, bhagavā! Tatra kiṃ kāraṇaṃ? Sakadāgāmī ti ekavāraṃ āgacchati ti vuccati, tathā ca na kiñci āgacchati, etaṃ sakadāgāmī ti vuccati. Subhūti, taṃ kiṃ maññasi? Anāgāmī evaṃ vattuṃ sakkoti - "ahaṃ anāgāmiphalaṃ patto" ti? Subhūti avadati - na hi, bhagavā! Tatra kiṃ kāraṇaṃ? Anāgāmī ti na āgacchati ti vuccati, tathā ca na kiñci na āgacchati, tasmā anāgāmī ti vuccati. Subhūti, taṃ kiṃ maññasi? Arahaṃ evaṃ vattuṃ sakkoti - "ahaṃ arahattaṃ patto" ti? Subhūti avadati - na hi, bhagavā! Tatra kiṃ kāraṇaṃ? Na hi koci dhammo arahan ti vuccati. Bhagavā! Sace arahaṃ evaṃ vadeti - "ahaṃ arahattaṃ patto", atha ahaṅkāro puggalo satto jīvitañ cā ti upādānaṃ hoti.'
+        }
+    },
+    {
+        id: 'section6',
+        text: '世尊！佛說我得無諍三昧人中最為第一，是第一離欲阿羅漢。',
+        readingText: '世尊！佛說我得無諍三昧人中最為第一，是第一離欲阿羅漢。',
+        pinyin: 'shì zūn fó shuō wǒ dé wú zhèng sān mèi rén zhōng zuì wéi dì yī shì dì yī lí yù ā luó hàn',
+        english: 'World-Honored One! The Buddha has said I am foremost among those who have attained the samadhi of non-contention, the foremost Arhat free from desire.',
+        annotation: '以[A7]己所解，驗理非虗，心宣恒靜，諍從何起？\n○宣疏：作空。',
+        annotationPinyin: 'yǐ jǐ suǒ jiě yàn lǐ fēi xū xīn xuān héng jìng zhèng cóng hé qǐ \n○ xuān shū zuò kōng',
+        annotationTranslations: {
+            '白话文': '以自己所理解的，验证真理并非虚假，心常宣说恒静，争论从何而起？\n注："宣疏"：作空。',
+            'English': 'With what one has understood, verifying truth is not false; the mind constantly proclaims eternal stillness—from where could contention arise?\nNote: "Commentary": act as empty.',
+            'Deutsch': 'Mit dem, was man verstanden hat, ist die Überprüfung der Wahrheit nicht falsch; der Geist verkündet ständig ewige Stille—woher könnte Streit entstehen?\nAnmerkung: "Kommentar": handle als leer.',
+            'Français': 'Avec ce que l\'on a compris, vérifier la vérité n\'est pas faux; l\'esprit proclame constamment un calme éternel—d\'où pourrait naître la contention?\nNote : "Commentaire": agir comme vide.',
+            'Русский': 'С тем, что понял, проверяя истину не ложно; ум постоянно провозглашает вечное спокойствие—откуда может возникнуть спор?\nПримечание: "Комментарий": действовать как пустота.',
+            'Español': 'Con lo que uno ha entendido, verificando la verdad no es falso; la mente proclama constantemente quietud eterna—¿de dónde podría surgir la contención?\nNota: "Comentario": actuar como vacío.',
+            'Italiano': 'Con ciò che si è compreso, verificare la verità non è falso; la mente proclama costantemente quiete eterna—da dove potrebbe sorgere la contesa?\nNota: "Commentario": agire come vuoto.',
+            'संस्कृतम्': 'यत् स्वयम् अवगतं, तत् तत्त्वं अनृतं न, चित्तं निरन्तरं शान्तं प्रकटयति, विवादः कुतः उत्पद्यते?\nटिप्पणीः "व्याख्या": शून्यतया आचर।',
+            'Pāli': 'Yaṃ sayam avagataṃ, taṃ tathataṃ amosadhammaṃ, cittaṃ niccalaṃ santaṃ pākaṭeti, vivādo kutuppajjati?\nNidassanaṃ: "aṭṭhakathā": suññatāya ācarati.'
+        },
+        translations: {
+            '白话文': '世尊！佛说我得到了无诤三昧，在所有人中最为第一，是第一离欲阿罗汉。',
+            'English': 'World-Honored One! The Buddha has said I am foremost among those who have attained the samadhi of non-contention, the foremost Arhat free from desire.',
+            'Deutsch': 'Weltgeehrter! Der Buddha hat gesagt, ich bin der Erste unter denen, die das Samadhi des Nicht-Streitens erreicht haben, der erste Arhat frei von Begierde.',
+            'Français': 'Honoré du Monde ! Le Bouddha a dit que je suis le premier parmi ceux qui ont atteint le samadhi de non-contention, le premier Arhat libre de désir.',
+            'Русский': 'Почитаемый Миром! Будда сказал, что я первый среди достигших самадхи не-спора, первый Архат, свободный от желаний.',
+            'Español': '¡Honrado por el Mundo! El Buddha ha dicho que soy el primero entre los que han alcanzado el samadhi de no-contienda, el primer Arhat libre de deseo.',
+            'Italiano': 'Onorato dal Mondo! Il Buddha ha detto che sono il primo tra coloro che hanno raggiunto il samadhi della non-contesa, il primo Arhat libero dal desiderio.',
+            'संस्कृतम्': 'भगवन्! बुद्धः अवदत् - अहं अविवादसमाधौ प्राप्तेषु जनेषु प्रथमः, प्रथमः विरागः अर्हन् इति।',
+            'Pāli': 'Bhagavā! Buddha avadati - ahaṃ araṇasamādhismiṃ pattesu manussesu paṭhamaṃ, paṭhamaṃ virāgo arahan ti.'
+        }
+    },
+    {
+        id: 'section7',
+        text: '我不作是念：我是離欲阿羅漢。世尊！若作是念：我得阿羅漢道。世尊！則不說須菩提是樂阿蘭那行者。',
+        readingText: '我不作是念：我是離欲阿羅漢。世尊！若作是念：我得阿羅漢道。世尊！則不說須菩提是樂阿蘭那行者。',
+        pinyin: 'wǒ bù zuò shì niàn wǒ shì lí yù ā luó hàn shì zūn ruò zuò shì niàn wǒ dé ā luó hàn dào shì zūn zé bù shuō xū pú tí shì lè ā lán nà xíng zhě',
+        english: 'I do not have the thought: "I am an Arhat free from desire." World-Honored One! If I had the thought: "I have attained the path of Arhat", the World-Honored One would not say Subhuti is one who delights in the practice of Aranya.',
+        annotation: '阿蘭那行者，寂靜行也。相盡於外，心息於內，內外俱寂，何時不靜也？',
+        annotationPinyin: 'ā lán nà xíng zhě jì jìng xíng yě xiàng jìn yú wài xīn xī yú nèi nèi wài jù jì hé shí bù jìng yě',
+        annotationTranslations: {
+            '白话文': '阿兰那行者，就是寂静行。外在的相灭尽，内在的心止息，内外都寂静，何时不静呢？',
+            'English': 'A practitioner of Aranya is one who practices stillness. With external marks exhausted and inner mind at rest, both inside and outside are still—when is it not tranquil?',
+            'Deutsch': 'Ein Praktizierender von Aranya ist einer, der Stille praktiziert. Mit äußeren Merkmalen erschöpft und innerem Geist zur Ruhe gekommen, sind sowohl innen als auch außen still—wann ist es nicht friedvoll?',
+            'Français': 'Un pratiquant d\'Aranya est celui qui pratique la quiétude. Avec les marques externes épuisées et l\'esprit intérieur au repos, à la fois à l\'intérieur et à l\'extérieur sont calmes—quand est-ce que ce n\'est pas tranquille?',
+            'Русский': 'Практикующий Аранью - это тот, кто практикует покой. С исчерпанными внешними признаками и успокоенным внутренним умом, и внутри, и снаружи тихо—когда это не спокойно?',
+            'Español': 'Un practicante de Aranya es aquel que practica la quietud. Con las marcas externas agotadas y la mente interior en reposo, tanto dentro como fuera están en calma—¿cuándo no es tranquilo?',
+            'Italiano': 'Un praticante di Aranya è colui che pratica la quiete. Con i segni esterni esauriti e la mente interiore a riposo, sia dentro che fuori sono calmi—quando non è tranquillo?',
+            'संस्कृतम्': 'अरण्यचारी इति शान्तचर्यः। बाह्यलक्षणक्षये अन्तःचित्तशान्तौ, अन्तर्बाह्यं शान्तं, कदा न शान्तम्?',
+            'Pāli': 'Araññacārī ti santacariyā. Bāhyalakkhaṇakkhaye ajjhattacittasantau, ajjhattabāhiraṃ santaṃ, kadā na santaṃ?'
+        },
+        translations: {
+            '白话文': '我不这样想："我是离欲阿罗汉。"世尊！如果这样想："我得到了阿罗汉道。"世尊！就不会说须菩提是乐阿兰那行者。',
+            'English': 'I do not have the thought: "I am an Arhat free from desire." World-Honored One! If I had the thought: "I have attained the path of Arhat", the World-Honored One would not say Subhuti is one who delights in the practice of Aranya.',
+            'Deutsch': 'Ich habe nicht den Gedanken: "Ich bin ein Arhat frei von Begierde." Weltgeehrter! Wenn ich den Gedanken hätte: "Ich habe den Pfad des Arhat erreicht", würde der Weltgeehrte nicht sagen, dass Subhuti einer ist, der die Praxis von Aranya erfreut.',
+            'Français': 'Je n\'ai pas la pensée : "Je suis un Arhat libre de désir." Honoré du Monde ! Si j\'avais la pensée : "J\'ai atteint la voie d\'Arhat", l\'Honoré du Monde ne dirait pas que Subhuti est celui qui se délecte dans la pratique d\'Aranya.',
+            'Русский': 'У меня нет мысли: "Я Архат, свободный от желаний." Почитаемый Миром! Если бы у меня была мысль: "Я достиг пути Архата", Почитаемый Миром не сказал бы, что Субхути - это тот, кто радуется практике Араньи.',
+            'Español': 'No tengo el pensamiento: "Soy un Arhat libre de deseo." ¡Honrado por el Mundo! Si tuviera el pensamiento: "He alcanzado el camino de Arhat", el Honrado por el Mundo no diría que Subhuti es uno que se deleita en la práctica de Aranya.',
+            'Italiano': 'Non ho il pensiero: "Sono un Arhat libero dal desiderio." Onorato dal Mondo! Se avessi il pensiero: "Ho raggiunto il sentiero di Arhat", l\'Onorato dal Mondo non direbbe che Subhuti è uno che si diletta nella pratica di Aranya.',
+            'संस्कृतम्': 'अहं न एवं वदामि - "अहं विरागः अर्हन् अस्मि"। भगवन्! यदि अहं एवं वदेयम् - "अहं अर्हत्पथं प्राप्तवान्", भगवान् न वदेत् - सुभूतिः अरण्यचारी इति।',
+            'Pāli': 'Ahaṃ na evaṃ vadāmi - "ahaṃ virāgo arahan asmi". Bhagavā! Sace ahaṃ evaṃ vadeyyaṃ - "ahaṃ arahattaṃ patto", bhagavā na vadeyya - subhūti araññacārī ti.'
+        }
+    },
+    {
+        id: 'section8',
+        text: '以須菩提實無所行，而名須菩提是樂阿蘭那行。',
+        readingText: '以須菩提實無所行，而名須菩提是樂阿蘭那行。',
+        pinyin: 'yǐ xū pú tí shí wú suǒ xíng ér míng xū pú tí shì lè ā lán nà xíng',
+        english: 'Because Subhuti truly practices nothing, therefore he is called one who delights in the practice of Aranya.',
+        annotation: '得名不虗，必積實也。\n○積疏稱：',
+        annotationPinyin: 'dé míng bù xū bì jī shí yě \n○ jī shū chēng',
+        annotationTranslations: {
+            '白话文': '得到的名号不虚，必定积累了真实的功德。\n注："积疏"称：',
+            'English': 'The name obtained is not empty—it must have accumulated true merit.\nNote: "Commentary" says:',
+            'Deutsch': 'Der erhaltene Name ist nicht leer—er muss wahres Verdienst angesammelt haben.\nAnmerkung: "Kommentar" sagt:',
+            'Français': 'Le nom obtenu n\'est pas vide—il doit avoir accumulé un vrai mérite.\nNote : "Commentaire" dit :',
+            'Русский': 'Полученное имя не пусто—оно должно было накопить истинную заслугу.\nПримечание: "Комментарий" говорит:',
+            'Español': 'El nombre obtenido no es vacío—debe haber acumulado verdadero mérito.\nNota: "Comentario" dice:',
+            'Italiano': 'Il nome ottenuto non è vuoto—deve aver accumulato vero merito.\nNota: "Commentario" dice:',
+            'संस्कृतम्': 'नाम प्राप्तं न शून्यं, अवश्यं सत्यपुण्यं संचितम्।\nटिप्पणीः "व्याख्या" वदति:',
+            'Pāli': 'Nāmaṃ pattaṃ na suññaṃ, avassaṃ saccapuññaṃ sañcitaṃ.\nNidassanaṃ "aṭṭhakathā" vadati:'
+        },
+        translations: {
+            '白话文': '因为须菩提实际上无所行，所以才称须菩提是乐阿兰那行者。',
+            'English': 'Because Subhuti truly practices nothing, therefore he is called one who delights in the practice of Aranya.',
+            'Deutsch': 'Weil Subhuti wahrhaft nichts praktiziert, wird er daher einer genannt, der die Praxis von Aranya erfreut.',
+            'Français': 'Parce que Subhuti ne pratique véritablement rien, il est donc appelé celui qui se délecte dans la pratique d\'Aranya.',
+            'Русский': 'Поскольку Субхути действительно ничего не практикует, поэтому он называется тем, кто радуется практике Араньи.',
+            'Español': 'Porque Subhuti verdaderamente no practica nada, por lo tanto se le llama uno que se deleita en la práctica de Aranya.',
+            'Italiano': 'Perché Subhuti veramente non pratica nulla, quindi è chiamato uno che si diletta nella pratica di Aranya.',
+            'संस्कृतम्': 'यतः सुभूतिः न किञ्चित् आचरति, अतः सुभूतिः अरण्यचारी इति उच्यते।',
+            'Pāli': 'Yato subhūti na kiñci ācarati, tasmā subhūti araññacārī ti vuccati.'
+        }
+    }
+];
+
+// 多语言选项
+const languages = [
+    '白话文', 'English', 'Deutsch', 'Français', 'Русский', 
+    'Español', 'Italiano', 'संस्कृतम्', 'Pāli'
+];
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 生成经文内容
+    const scriptureContent = document.getElementById('scriptureContent');
+    
+    scriptureData.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `text-section section-${(index % 6) + 1}`;
+        
+        // 经文标题
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = `经文第${index + 1}段`;
+        sectionDiv.appendChild(sectionTitle);
+        
+        // 经文正文（带拼音注释）
+        const textDiv = document.createElement('div');
+        textDiv.className = 'text-content';
+        textDiv.innerHTML = processTextWithPinyin(section.text, section.pinyin, section.id);
+        
+        // 添加朗读按钮和纯文本
+        const textActions = document.createElement('div');
+        textActions.className = 'action-buttons';
+        textActions.innerHTML = `
+            <button class="action-btn speak" id="speakText-${section.id}">朗读经文</button>
+            <span class="plain-text">${section.readingText}</span>
+        `;
+        textDiv.appendChild(textActions);
+        
+        // 添加多语言翻译
+        addTranslations(textDiv, section.translations, `${section.id}-trans`);
+        
+        sectionDiv.appendChild(textDiv);
+        
+        // 注解内容
+        const annoDiv = document.createElement('div');
+        annoDiv.className = 'annotation-content';
+        
+        // 添加注解内容（带拼音标注）
+        const annotationP = document.createElement('div');
+        annotationP.className = 'annotation';
+        annotationP.id = `${section.id}-anno`;
+        annotationP.innerHTML = processAnnotationWithPinyin(section.annotation, section.annotationPinyin);
+        annoDiv.appendChild(annotationP);
+        
+        // 添加朗读按钮和隐藏的注解文本
+        const annoActions = document.createElement('div');
+        annoActions.className = 'action-buttons';
+        annoActions.innerHTML = `
+            <button class="action-btn speak" id="speakAnno-${section.id}">朗读注解</button>
+            <span class="annotation-text">${section.annotation}</span>
+        `;
+        annoDiv.appendChild(annoActions);
+        
+        // 添加注解的多语言翻译
+        addTranslations(annoDiv, section.annotationTranslations, `${section.id}-anno-trans`);
+        
+        sectionDiv.appendChild(annoDiv);
+        
+        scriptureContent.appendChild(sectionDiv);
+    });
+
+    // 设置朗读按钮事件
+    setupSpeakButtons();
+    
+    // 设置汉字点击事件
+    setupCharClickEvents();
+});
+
+// 处理文本添加拼音
+function processTextWithPinyin(text, pinyin, sectionId) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return `<span id="${sectionId}-text">${result}</span>`;
+}
+
+// 处理注解文本添加拼音
+function processAnnotationWithPinyin(text, pinyin) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return result;
+}
+
+// 添加多语言翻译模块
+function addTranslations(container, translations, baseId) {
+    const transTabs = document.createElement('div');
+    transTabs.className = 'translation-tabs';
+    
+    const transContents = document.createElement('div');
+    
+    Object.entries(translations).forEach(([lang, content]) => {
+        // 翻译标签
+        const tab = document.createElement('div');
+        tab.className = 'translation-tab';
+        tab.textContent = lang;
+        tab.onclick = function() {
+            // 切换活跃标签
+            transTabs.querySelectorAll('.translation-tab').forEach(t => 
+                t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 显示对应语言内容
+            transContents.querySelectorAll('.translation-content').forEach(c => 
+                c.classList.remove('active'));
+            transContents.querySelector(`#${baseId}-${lang}`).classList.add('active');
+        };
+        transTabs.appendChild(tab);
+        
+        // 翻译内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'translation-content';
+        contentDiv.id = `${baseId}-${lang}`;
+        contentDiv.textContent = content;
+        transContents.appendChild(contentDiv);
+    });
+    
+    // 默认显示第一个语言
+    if (transTabs.firstChild) {
+        transTabs.firstChild.click();
+    }
+    
+    container.appendChild(transTabs);
+    container.appendChild(transContents);
+}
+
+// 设置所有朗读按钮事件
+function setupSpeakButtons() {
+    // 经文朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakText-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.readingText;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+    
+    // 注解朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakAnno-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = this.nextElementSibling.textContent; // 获取隐藏的注解文本
+                toggleSpeech(text, this);
+            });
+        }
+    });
+}
+
+// 设置汉字点击事件（显示详情弹窗）
+function setupCharClickEvents() {
+    document.addEventListener('click', function(e) {
+        const charElement = e.target.closest('.char');
+        if (charElement) {
+            const char = charElement.dataset.char;
+            showCharModal(char);
+        }
+    });
+    
+    // 关闭弹窗按钮
+    document.getElementById('closeCharModal').addEventListener('click', function() {
+        document.getElementById('charModal').style.display = 'none';
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('charModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+}
+
+// 显示汉字详情弹窗
+function showCharModal(char) {
+    const modal = document.getElementById('charModal');
+    const modalChar = document.getElementById('modalChar');
+    const modalPinyin = document.getElementById('modalPinyin');
+    const modalMeaning = document.getElementById('modalMeaning');
+    const modalBuddhistMeaning = document.getElementById('modalBuddhistMeaning');
+    
+    // 设置弹窗内容
+    modalChar.textContent = char;
+    
+    if (punctuationPinyin[char]) {
+        // 标点符号
+        modalPinyin.textContent = punctuationPinyin[char];
+        modalMeaning.textContent = 'This is a punctuation mark.';
+        modalBuddhistMeaning.textContent = 'Punctuation marks help structure the text and indicate pauses in recitation.';
+    } else if (charMeanings[char]) {
+        // 汉字
+        const charData = charMeanings[char];
+        modalPinyin.textContent = charData.pinyin;
+        modalMeaning.innerHTML = charData.meanings.map(m => `• ${m}`).join('<br>');
+        modalBuddhistMeaning.textContent = charData.buddhist;
+    } else {
+        // 未知字符
+        modalPinyin.textContent = 'Unknown';
+        modalMeaning.textContent = 'No detailed information available for this character.';
+        modalBuddhistMeaning.textContent = 'No specific Buddhist meaning recorded.';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 切换朗读/停止功能
+function toggleSpeech(text, button) {
+    if (currentUtterance && speechSynthesis.speaking) {
+        // 如果正在朗读，则停止
+        speechSynthesis.cancel();
+        button.classList.remove('stop');
+        button.classList.add('speak');
+        currentUtterance = null;
+    } else {
+        // 开始朗读
+        if ('speechSynthesis' in window) {
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 0.7; // 正常语速
+            
+            currentUtterance.onend = function() {
+                button.classList.remove('stop');
+                button.classList.add('speak');
+                currentUtterance = null;
+            };
+            
+            speechSynthesis.speak(currentUtterance);
+            button.classList.remove('speak');
+            button.classList.add('stop');
+        } else {
+            alert('您的浏览器不支持语音朗读功能');
+        }
+    }
+}
+</script>
+</body>
+</html>

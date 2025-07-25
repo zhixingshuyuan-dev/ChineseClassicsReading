@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金刚般若波罗蜜经（完整交互版）</title>
+    <style>
+        body {
+            font-family: "SimSun", "STKaiti", serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1.4em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 2.0em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d4a762;
+        }
+        
+        .author {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .preface-section {
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #d4a762;
+        }
+        
+        .preface-content {
+            margin-bottom: 20px;
+            line-height: 2.0;
+            color: #e0e0e0;
+        }
+        
+        .preface-annotation {
+            color: #999;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 3px solid #555;
+            margin-top: 15px;
+        }
+        
+        .text-section {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .text-section h3 {
+            margin-top: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            color: #d4a762;
+            background-color: #2a2a2a;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .annotation-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            color: #e0e0e0;
+        }
+        
+        .char-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #444;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .char:hover .char-tooltip {
+            display: block;
+        }
+        
+        .annotation {
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .plain-text {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.7em;
+            background-color: #444;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .action-btn:hover {
+            background-color: #555;
+        }
+        
+        .action-btn.speak {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .action-btn.stop {
+            background-color: #a76a6a;
+            color: #1a1a1a;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 15px 0;
+        }
+        
+        .translation-tab {
+            padding: 3px 8px;
+            background-color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .translation-tab.active {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        /* 修改后的弹窗样式 */
+        .char-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .char-modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 80%;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .char-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .char-modal-char {
+            font-size: 2.5em;
+            color: #d4a762;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-pinyin {
+            font-size: 1.3em;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .char-modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .char-modal-close:hover {
+            color: #e0e0e0;
+        }
+        
+        .char-modal-section {
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-section h3 {
+            color: #d4a762;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .char-modal-meaning {
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        
+        /* Color schemes for alternating sections */
+        .section-1 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-1 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #d4a762;
+        }
+        
+        .section-2 .text-content {
+            background-color: #333333;
+        }
+        .section-2 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #5d8aa8;
+        }
+        
+        .section-3 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-3 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a8d4a7;
+        }
+        
+        .section-4 .text-content {
+            background-color: #333333;
+        }
+        .section-4 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4a7a7;
+        }
+        
+        .section-5 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-5 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a7a7d4;
+        }
+        
+        .section-6 .text-content {
+            background-color: #333333;
+        }
+        .section-6 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4d4a7;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+            color: #d4a762;
+            font-weight: bold;
+        }
+        
+        .reading-text {
+            display: none; /* 不再需要单独显示 */
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            
+            .char-modal-content {
+                padding: 15px;
+            }
+            
+            .char-modal-char {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 汉字详情弹窗 -->
+<div class="char-modal" id="charModal">
+    <div class="char-modal-content">
+        <div class="char-modal-header">
+            <h2>汉字详情</h2>
+            <button class="char-modal-close" id="closeCharModal">&times;</button>
+        </div>
+        <div class="char-modal-char" id="modalChar"></div>
+        <div class="char-modal-pinyin" id="modalPinyin"></div>
+        <div class="char-modal-section">
+            <h3>基本释义</h3>
+            <div class="char-modal-meaning" id="modalMeaning"></div>
+        </div>
+        <div class="char-modal-section">
+            <h3>佛教释义</h3>
+            <div class="char-modal-meaning" id="modalBuddhistMeaning"></div>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="title">金刚般若波罗蜜经</div>
+    <div class="author">姚秦三藏法师鸠摩罗什译</div>
+</div>
+
+<!-- 第三品标题 -->
+<div class="section-title">第三品</div>
+
+<!-- 经文内容 -->
+<div id="scriptureContent"></div>
+
+<script>
+// 语音合成对象
+let currentUtterance = null;
+
+// 标点符号的拼音映射
+const punctuationPinyin = {
+    '，': 'dòu hào',
+    '。': 'jù hào',
+    '、': 'dùn hào',
+    '；': 'fēn hào',
+    '：': 'mào hào',
+    '！': 'tàn hào',
+    '？': 'wèn hào',
+    '「': 'zuǒ yǐn hào',
+    '」': 'yòu yǐn hào',
+    '『': 'zuǒ shuāng yǐn hào',
+    '』': 'yòu shuāng yǐn hào',
+    '（': 'zuǒ kuò hào',
+    '）': 'yòu kuò hào',
+    '《': 'zuǒ shū míng hào',
+    '》': 'yòu shū míng hào'
+};
+
+// 汉字的多义项解释
+const charMeanings = {
+    '佛': {
+        pinyin: 'fó',
+        meanings: [
+            'Buddha',
+            'Buddhism',
+            'awakened one'
+        ],
+        buddhist: 'The fully enlightened one who has awakened from the sleep of ignorance.'
+    },
+    '告': {
+        pinyin: 'gào',
+        meanings: [
+            'to tell',
+            'to inform',
+            'to announce'
+        ],
+        buddhist: 'The Buddha\'s compassionate teaching to sentient beings.'
+    },
+    '須': {
+        pinyin: 'xū',
+        meanings: [
+            'must; have to',
+            'necessary; essential',
+            'beard; whiskers',
+            'await'
+        ],
+        buddhist: 'Indicates necessity in practice, often used in names like Subhūti (须菩提).'
+    },
+    '菩': {
+        pinyin: 'pú',
+        meanings: [
+            'bodhi (awakening)',
+            'used in transliteration of Buddhist terms'
+        ],
+        buddhist: 'Short for "bodhi" (awakening), the supreme enlightenment sought in Buddhism.'
+    },
+    '提': {
+        pinyin: 'tí',
+        meanings: [
+            'to carry; to lift',
+            'to put forward; to mention',
+            'to extract; to draw out'
+        ],
+        buddhist: 'Part of Subhūti\'s name, meaning "well-extracted" or "well-born".'
+    },
+    '諸': {
+        pinyin: 'zhū',
+        meanings: [
+            'all; various',
+            'many',
+            'the (plural)',
+            'to go to'
+        ],
+        buddhist: 'Refers to all beings or all phenomena in Buddhist texts.'
+    },
+    '薩': {
+        pinyin: 'sà',
+        meanings: [
+            'short for bodhisattva',
+            'used in transliteration'
+        ],
+        buddhist: 'Part of "bodhisattva" (菩萨), one who seeks awakening for the benefit of all beings.'
+    },
+    '摩': {
+        pinyin: 'mó',
+        meanings: [
+            'rub; scour',
+            'study; investigate',
+            'used in transliteration'
+        ],
+        buddhist: 'Part of "mahā" (摩诃), meaning great or vast.'
+    },
+    '訶': {
+        pinyin: 'hē',
+        meanings: [
+            'scold loudly',
+            'used in transliteration'
+        ],
+        buddhist: 'Part of "mahā" (摩诃), meaning great or vast.'
+    },
+    '應': {
+        pinyin: 'yīng',
+        meanings: [
+            'ought to; should',
+            'to answer',
+            'to respond',
+            'to suit'
+        ],
+        buddhist: 'The appropriate way to practice according to one\'s capacity.'
+    },
+    '降': {
+        pinyin: 'xiáng',
+        meanings: [
+            'to surrender',
+            'to subdue',
+            'to tame',
+            'to descend'
+        ],
+        buddhist: 'The taming of the mind through meditation and wisdom.'
+    },
+    '伏': {
+        pinyin: 'fú',
+        meanings: [
+            'to bend over',
+            'to subdue',
+            'to conceal',
+            'volt'
+        ],
+        buddhist: 'The complete pacification of disturbing emotions.'
+    },
+    '心': {
+        pinyin: 'xīn',
+        meanings: [
+            'heart; mind',
+            'core; center',
+            'intention',
+            'feeling'
+        ],
+        buddhist: 'The mind is the source of all experience and the key to liberation in Buddhism.'
+    },
+    '虗': {
+        pinyin: 'xū',
+        meanings: [
+            'empty; void',
+            'false'
+        ],
+        buddhist: 'Same as 虚, representing emptiness (śūnyatā), the ultimate nature of reality.'
+    },
+    '履': {
+        pinyin: 'lǚ',
+        meanings: [
+            'to tread on',
+            'to carry out',
+            'shoe'
+        ],
+        buddhist: 'The practice of walking the path of Dharma.'
+    },
+    '道': {
+        pinyin: 'dào',
+        meanings: [
+            'way; path',
+            'doctrine',
+            'to say'
+        ],
+        buddhist: 'The path to enlightenment, the Dharma.'
+    },
+    '曠': {
+        pinyin: 'kuàng',
+        meanings: [
+            'vast; spacious',
+            'free from worries',
+            'neglect'
+        ],
+        buddhist: 'The boundless compassion of bodhisattvas.'
+    },
+    '濟': {
+        pinyin: 'jì',
+        meanings: [
+            'to cross a river',
+            'to aid; to help',
+            'to accomplish'
+        ],
+        buddhist: 'The act of saving sentient beings from suffering.'
+    },
+    '萬': {
+        pinyin: 'wàn',
+        meanings: [
+            'ten thousand',
+            'myriad',
+            'all'
+        ],
+        buddhist: 'Represents the countless beings to be saved.'
+    },
+    '物': {
+        pinyin: 'wù',
+        meanings: [
+            'thing; object',
+            'matter',
+            'others'
+        ],
+        buddhist: 'All phenomena in the world.'
+    },
+    '方': {
+        pinyin: 'fāng',
+        meanings: [
+            'square',
+            'direction',
+            'method'
+        ],
+        buddhist: 'The methods or skillful means (upāya) in Buddhist practice.'
+    },
+    '眾': {
+        pinyin: 'zhòng',
+        meanings: [
+            'crowd; multitude',
+            'many; numerous',
+            'common people',
+            'all; everyone'
+        ],
+        buddhist: 'Refers to the sangha or assembly of practitioners.'
+    },
+    '生': {
+        pinyin: 'shēng',
+        meanings: [
+            'to be born',
+            'life',
+            'student'
+        ],
+        buddhist: 'Sentient beings trapped in samsara.'
+    },
+    '類': {
+        pinyin: 'lèi',
+        meanings: [
+            'kind; type',
+            'similar',
+            'category'
+        ],
+        buddhist: 'The various categories of sentient beings.'
+    },
+    '卵': {
+        pinyin: 'luǎn',
+        meanings: [
+            'egg',
+            'oval'
+        ],
+        buddhist: 'Oviparous birth, one of the four types of birth.'
+    },
+    '胎': {
+        pinyin: 'tāi',
+        meanings: [
+            'embryo',
+            'tire'
+        ],
+        buddhist: 'Viviparous birth, one of the four types of birth.'
+    },
+    '濕': {
+        pinyin: 'shī',
+        meanings: [
+            'wet; damp',
+            'humidity'
+        ],
+        buddhist: 'Moisture-born beings, one of the four types of birth.'
+    },
+    '化': {
+        pinyin: 'huà',
+        meanings: [
+            'to change',
+            'to transform',
+            '-ize'
+        ],
+        buddhist: 'Miraculously born beings, one of the four types of birth.'
+    },
+    '色': {
+        pinyin: 'sè',
+        meanings: [
+            'color',
+            'look',
+            'form'
+        ],
+        buddhist: 'Form (rūpa), the first of the five aggregates.'
+    },
+    '想': {
+        pinyin: 'xiǎng',
+        meanings: [
+            'to think',
+            'to miss',
+            'conception'
+        ],
+        buddhist: 'Perception (saṃjñā), the third of the five aggregates.'
+    },
+    '無': {
+        pinyin: 'wú',
+        meanings: [
+            'not have',
+            'no',
+            'without'
+        ],
+        buddhist: 'Emptiness (śūnyatā), the ultimate nature of all phenomena.'
+    },
+    '非': {
+        pinyin: 'fēi',
+        meanings: [
+            'not; non-',
+            'wrong',
+            'blame'
+        ],
+        buddhist: 'Negation, used to describe the nature of reality.'
+    },
+    '皆': {
+        pinyin: 'jiē',
+        meanings: [
+            'all; each and every',
+            'universally'
+        ],
+        buddhist: 'The universal nature of Buddha\'s compassion.'
+    },
+    '令': {
+        pinyin: 'lìng',
+        meanings: [
+            'to cause',
+            'order',
+            'season'
+        ],
+        buddhist: 'The Buddha\'s power to guide beings to liberation.'
+    },
+    '入': {
+        pinyin: 'rù',
+        meanings: [
+            'to enter',
+            'income'
+        ],
+        buddhist: 'Entering nirvana or the path to enlightenment.'
+    },
+    '餘': {
+        pinyin: 'yú',
+        meanings: [
+            'surplus',
+            'remaining',
+            'other'
+        ],
+        buddhist: 'The remainderless nirvana (nirupadhiśeṣa-nirvāṇa).'
+    },
+    '涅': {
+        pinyin: 'niè',
+        meanings: [
+            'used in Buddhist terms'
+        ],
+        buddhist: 'Part of nirvana (涅槃), the state of liberation.'
+    },
+    '槃': {
+        pinyin: 'pán',
+        meanings: [
+            'tray',
+            'used in Buddhist terms'
+        ],
+        buddhist: 'Part of nirvana (涅槃), the state of liberation.'
+    },
+    '滅': {
+        pinyin: 'miè',
+        meanings: [
+            'to extinguish',
+            'to destroy',
+            'to die out'
+        ],
+        buddhist: 'The cessation of suffering and defilements.'
+    },
+    '度': {
+        pinyin: 'dù',
+        meanings: [
+            'degree',
+            'to pass',
+            'to save'
+        ],
+        buddhist: 'Liberation from samsara, or the act of saving beings.'
+    },
+    '之': {
+        pinyin: 'zhī',
+        meanings: [
+            'of',
+            'him; her; it',
+            'this'
+        ],
+        buddhist: 'A grammatical particle often used in Buddhist texts.'
+    },
+    '正': {
+        pinyin: 'zhèng',
+        meanings: [
+            'straight',
+            'correct',
+            'main'
+        ],
+        buddhist: 'The right or correct path (samyak) in Buddhism.'
+    },
+    '答': {
+        pinyin: 'dá',
+        meanings: [
+            'to answer',
+            'to reply'
+        ],
+        buddhist: 'The Buddha\'s responses to questions about Dharma.'
+    },
+    '行': {
+        pinyin: 'xíng',
+        meanings: [
+            'to walk',
+            'conduct',
+            'practice'
+        ],
+        buddhist: 'Spiritual practice or conduct (caryā).'
+    },
+    '法': {
+        pinyin: 'fǎ',
+        meanings: [
+            'law',
+            'method',
+            'dharma'
+        ],
+        buddhist: 'The teachings of the Buddha or phenomena in general.'
+    },
+    '陰': {
+        pinyin: 'yīn',
+        meanings: [
+            'shade',
+            'negative',
+            'the five aggregates'
+        ],
+        buddhist: 'The five aggregates (skandhas) that constitute a person.'
+    },
+    '因': {
+        pinyin: 'yīn',
+        meanings: [
+            'cause',
+            'because of',
+            'follow'
+        ],
+        buddhist: 'Cause in the chain of dependent origination.'
+    },
+    '緣': {
+        pinyin: 'yuán',
+        meanings: [
+            'edge',
+            'reason',
+            'condition'
+        ],
+        buddhist: 'Condition in the chain of dependent origination.'
+    },
+    '自': {
+        pinyin: 'zì',
+        meanings: [
+            'self',
+            'from',
+            'since'
+        ],
+        buddhist: 'Self or intrinsic nature (svabhāva), which is empty.'
+    },
+    '性': {
+        pinyin: 'xìng',
+        meanings: [
+            'nature',
+            'character',
+            'gender'
+        ],
+        buddhist: 'Nature or essence, which is empty of inherent existence.'
+    },
+    '順': {
+        pinyin: 'shùn',
+        meanings: [
+            'to obey',
+            'along',
+            'favorable'
+        ],
+        buddhist: 'Following the Dharma or the natural order.'
+    },
+    '理': {
+        pinyin: 'lǐ',
+        meanings: [
+            'reason',
+            'principle',
+            'texture'
+        ],
+        buddhist: 'The principle or truth of Dharma.'
+    },
+    '解': {
+        pinyin: 'jiě',
+        meanings: [
+            'to understand',
+            'to explain',
+            'to untie'
+        ],
+        buddhist: 'Understanding or liberation from ignorance.'
+    },
+    '乖': {
+        pinyin: 'guāi',
+        meanings: [
+            'perverse',
+            'clever',
+            'to deviate'
+        ],
+        buddhist: 'Going against the Dharma or truth.'
+    },
+    '宗': {
+        pinyin: 'zōng',
+        meanings: [
+            'ancestor',
+            'sect',
+            'aim'
+        ],
+        buddhist: 'The essential teaching or school of Buddhism.'
+    },
+    '惑': {
+        pinyin: 'huò',
+        meanings: [
+            'to confuse',
+            'delusion'
+        ],
+        buddhist: 'Delusion or ignorance that binds beings to samsara.'
+    },
+    '生': {
+        pinyin: 'shēng',
+        meanings: [
+            'to be born',
+            'life',
+            'student'
+        ],
+        buddhist: 'Birth in samsara, the cycle of existence.'
+    },
+    '死': {
+        pinyin: 'sǐ',
+        meanings: [
+            'death',
+            'rigid'
+        ],
+        buddhist: 'Death in samsara, part of the cycle of existence.'
+    },
+    '流': {
+        pinyin: 'liú',
+        meanings: [
+            'to flow',
+            'current',
+            'spread'
+        ],
+        buddhist: 'The flow of samsaric existence.'
+    },
+    '轉': {
+        pinyin: 'zhuǎn',
+        meanings: [
+            'to turn',
+            'to change',
+            'to transfer'
+        ],
+        buddhist: 'The turning of the wheel of samsara or Dharma.'
+    },
+    '累': {
+        pinyin: 'lèi',
+        meanings: [
+            'tired',
+            'accumulate',
+            'involve'
+        ],
+        buddhist: 'The accumulation of karma and defilements.'
+    },
+    '為': {
+        pinyin: 'wéi',
+        meanings: [
+            'to do',
+            'as',
+            'to act as'
+        ],
+        buddhist: 'The state of being or acting in samsara.'
+    },
+    '身': {
+        pinyin: 'shēn',
+        meanings: [
+            'body',
+            'oneself',
+            'life'
+        ],
+        buddhist: 'The physical body, one of the five aggregates.'
+    },
+    '苦': {
+        pinyin: 'kǔ',
+        meanings: [
+            'bitter',
+            'suffering',
+            'hardship'
+        ],
+        buddhist: 'Dukkha, the first noble truth of suffering.'
+    },
+    '盡': {
+        pinyin: 'jìn',
+        meanings: [
+            'to exhaust',
+            'all',
+            'to the utmost'
+        ],
+        buddhist: 'The cessation or ending of suffering.'
+    },
+    '樂': {
+        pinyin: 'lè',
+        meanings: [
+            'happy',
+            'joy',
+            'music'
+        ],
+        buddhist: 'The bliss of nirvana or enlightenment.'
+    },
+    '唯': {
+        pinyin: 'wéi',
+        meanings: [
+            'only',
+            'alone',
+            'yes'
+        ],
+        buddhist: 'The exclusive or ultimate nature of Dharma.'
+    },
+    '大': {
+        pinyin: 'dà',
+        meanings: [
+            'big',
+            'great',
+            'main'
+        ],
+        buddhist: 'Great or vast, as in Mahayana (大乘).'
+    },
+    '假': {
+        pinyin: 'jiǎ',
+        meanings: [
+            'fake',
+            'borrow',
+            'vacation'
+        ],
+        buddhist: 'Conventional or provisional truth (saṃvṛti-satya).'
+    },
+    '名': {
+        pinyin: 'míng',
+        meanings: [
+            'name',
+            'fame',
+            'to call'
+        ],
+        buddhist: 'Conceptual designation or labeling.'
+    },
+    '麤': {
+        pinyin: 'cū',
+        meanings: [
+            'coarse',
+            'rough',
+            'negligent'
+        ],
+        buddhist: 'The coarse level of understanding or practice.'
+    },
+    '抑': {
+        pinyin: 'yì',
+        meanings: [
+            'to restrain',
+            'to press down',
+            'or'
+        ],
+        buddhist: 'The suppression or control of defilements.'
+    },
+    '始': {
+        pinyin: 'shǐ',
+        meanings: [
+            'begin',
+            'start',
+            'then'
+        ],
+        buddhist: 'The initial stage of practice or understanding.'
+    },
+    '就': {
+        pinyin: 'jiù',
+        meanings: [
+            'at once',
+            'to approach',
+            'with regard to'
+        ],
+        buddhist: 'Approaching or engaging in practice.'
+    },
+    '空': {
+        pinyin: 'kōng',
+        meanings: [
+            'empty',
+            'sky',
+            'void'
+        ],
+        buddhist: 'Śūnyatā, the emptiness of inherent existence.'
+    },
+    '明': {
+        pinyin: 'míng',
+        meanings: [
+            'bright',
+            'clear',
+            'understand'
+        ],
+        buddhist: 'Wisdom or clear understanding of reality.'
+    },
+    '量': {
+        pinyin: 'liàng',
+        meanings: [
+            'measure',
+            'quantity',
+            'capacity'
+        ],
+        buddhist: 'Immeasurable or infinite, as in immeasurable beings.'
+    },
+    '數': {
+        pinyin: 'shù',
+        meanings: [
+            'number',
+            'count',
+            'fate'
+        ],
+        buddhist: 'Countless or innumerable, as in countless beings.'
+    },
+    '邊': {
+        pinyin: 'biān',
+        meanings: [
+            'side',
+            'edge',
+            'border'
+        ],
+        buddhist: 'Boundless or limitless, as in limitless beings.'
+    },
+    '實': {
+        pinyin: 'shí',
+        meanings: [
+            'real',
+            'solid',
+            'fruit'
+        ],
+        buddhist: 'Ultimate reality as opposed to conventional reality.'
+    },
+    '得': {
+        pinyin: 'dé',
+        meanings: [
+            'to obtain',
+            'can',
+            'must'
+        ],
+        buddhist: 'Attainment or achievement in practice.'
+    },
+    '者': {
+        pinyin: 'zhě',
+        meanings: [
+            'person',
+            '-er',
+            'this'
+        ],
+        buddhist: 'A grammatical particle indicating the subject.'
+    },
+    '何': {
+        pinyin: 'hé',
+        meanings: [
+            'what',
+            'why',
+            'how'
+        ],
+        buddhist: 'A question about the nature of reality.'
+    },
+    '故': {
+        pinyin: 'gù',
+        meanings: [
+            'reason',
+            'old',
+            'therefore'
+        ],
+        buddhist: 'The reason or cause behind phenomena.'
+    },
+    '我': {
+        pinyin: 'wǒ',
+        meanings: [
+            'I',
+            'me',
+            'self'
+        ],
+        buddhist: 'The illusion of a permanent self (ātman).'
+    },
+    '相': {
+        pinyin: 'xiāng',
+        meanings: [
+            'mutual',
+            'appearance',
+            'phase'
+        ],
+        buddhist: 'Characteristics or signs (lakṣaṇa) of phenomena.'
+    },
+    '人': {
+        pinyin: 'rén',
+        meanings: [
+            'person',
+            'human',
+            'others'
+        ],
+        buddhist: 'The concept of a person or human being.'
+    },
+    '壽': {
+        pinyin: 'shòu',
+        meanings: [
+            'longevity',
+            'age',
+            'life span'
+        ],
+        buddhist: 'The concept of lifespan or duration of life.'
+    },
+    '即': {
+        pinyin: 'jí',
+        meanings: [
+            'namely',
+            'at once',
+            'even if'
+        ],
+        buddhist: 'The immediate or non-dual nature of reality.'
+    },
+    '釋': {
+        pinyin: 'shì',
+        meanings: [
+            'explain',
+            'release',
+            'Sakyamuni'
+        ],
+        buddhist: 'Explanation or commentary on Dharma.'
+    },
+    '誰': {
+        pinyin: 'shuí',
+        meanings: [
+            'who',
+            'whom'
+        ],
+        buddhist: 'Questioning the existence of a self.'
+    },
+    '乎': {
+        pinyin: 'hū',
+        meanings: [
+            'question particle',
+            'at',
+            'in'
+        ],
+        buddhist: 'A grammatical particle in classical Chinese.'
+    },
+    '但': {
+        pinyin: 'dàn',
+        meanings: [
+            'but',
+            'only',
+            'merely'
+        ],
+        buddhist: 'Merely or only, indicating conventional truth.'
+    },
+    '橫': {
+        pinyin: 'héng',
+        meanings: [
+            'horizontal',
+            'across',
+            'unreasonable'
+        ],
+        buddhist: 'Wrong or perverse views.'
+    },
+    '計': {
+        pinyin: 'jì',
+        meanings: [
+            'calculate',
+            'plan',
+            'meter'
+        ],
+        buddhist: 'Conceptual proliferation or false reckoning.'
+    },
+    '執': {
+        pinyin: 'zhí',
+        meanings: [
+            'hold',
+            'persist',
+            'execute'
+        ],
+        buddhist: 'Attachment or clinging to views.'
+    },
+    '忘': {
+        pinyin: 'wàng',
+        meanings: [
+            'forget',
+            'neglect'
+        ],
+        buddhist: 'Forgetting the true nature of reality.'
+    },
+    '是': {
+        pinyin: 'shì',
+        meanings: [
+            'be',
+            'this',
+            'correct'
+        ],
+        buddhist: 'Truth or reality as opposed to falsehood.'
+    },
+    '彰': {
+        pinyin: 'zhāng',
+        meanings: [
+            'clear',
+            'manifest',
+            'praise'
+        ],
+        buddhist: 'The manifestation or clarity of truth.'
+    },
+    '失': {
+        pinyin: 'shī',
+        meanings: [
+            'lose',
+            'miss',
+            'mistake'
+        ],
+        buddhist: 'The loss or mistake in understanding Dharma.'
+    },
+    '矣': {
+        pinyin: 'yǐ',
+        meanings: [
+            'classical final particle',
+            'already'
+        ],
+        buddhist: 'A classical Chinese grammatical particle.'
+    }
+};
+
+// 完整经文数据
+const scriptureData = [
+    {
+        id: 'section1',
+        text: '佛告須菩提：諸菩薩摩訶薩應如是降伏其心。',
+        readingText: '佛告須菩提：諸菩薩摩訶薩應如是降伏其心。',
+        pinyin: 'fó gào xū pú tí zhū pú sà mó hē sà yīng rú shì xiáng fú qí xīn',
+        english: 'The Buddha said to Subhūti: "All bodhisattva-mahāsattvas should subdue their minds thus."',
+        annotation: '虗心履道謂之菩薩，曠濟萬物摩訶薩也。應如下所說，則是降伏之方也。問：降在後而答在前，何耶？住深降淺，故問者標深於初；降淺易習，故答之於前。問答有指，非其謬也。',
+        annotationTranslations: {
+            '白话文': '虚心践行佛道者称为菩萨，广济万物者称为摩诃萨。应如下文所说，这就是降伏心的方法。问：降伏的问题在后面而回答在前面，为什么？因为安住的心境深奥而降伏的方法浅显，所以提问者一开始就提出深奥的问题；降伏的方法较浅容易修习，所以先回答。问答都有所指，并非错误。',
+            'English': 'Those who practice the path with an empty mind are called bodhisattvas; those who universally aid all beings are called mahāsattvas. As explained below, this is the method to subdue the mind. Question: Why is the answer about subduing given before the question? Because abiding is profound while subduing is superficial, thus the questioner raises the profound point first; subduing being easier to practice, it is answered first. Both question and answer have their purposes, this is not a mistake.',
+            'Deutsch': 'Diejenigen, die den Weg mit leerem Geist praktizieren, werden Bodhisattvas genannt; diejenigen, die allen Wesen universell helfen, werden Mahāsattvas genannt. Wie unten erklärt, ist dies die Methode, den Geist zu zähmen. Frage: Warum wird die Antwort über das Zähmen vor der Frage gegeben? Weil das Verweilen tiefgründig ist, während das Zähmen oberflächlich ist, daher stellt der Fragende den tiefen Punkt zuerst dar; da das Zähmen leichter zu praktizieren ist, wird es zuerst beantwortet. Sowohl Frage als auch Antwort haben ihre Zwecke, dies ist kein Fehler.',
+            'Français': 'Ceux qui pratiquent la voie avec un esprit vide sont appelés bodhisattvas ; ceux qui aident universellement tous les êtres sont appelés mahāsattvas. Comme expliqué ci-dessous, c\'est la méthode pour subjuguer l\'esprit. Question : Pourquoi la réponse sur la subjugation est-elle donnée avant la question ? Parce que demeurer est profond alors que subjuguer est superficiel, ainsi le questionneur soulève le point profond en premier ; la subjugation étant plus facile à pratiquer, elle est répondue en premier. La question et la réponse ont toutes deux leurs buts, ce n\'est pas une erreur.',
+            'Русский': 'Те, кто практикует путь с пустым умом, называются бодхисаттвами; те, кто всеобъемлюще помогает всем существам, называются махасаттвами. Как объясняется ниже, это метод усмирения ума. Вопрос: Почему ответ об усмирении дан до вопроса? Потому что пребывание глубоко, а усмирение поверхностно, поэтому спрашивающий сначала поднимает глубокий вопрос; усмирение, будучи легче для практики, отвечается первым. И вопрос, и ответ имеют свои цели, это не ошибка.',
+            'Español': 'Aquellos que practican el camino con una mente vacía se llaman bodhisattvas; aquellos que ayudan universalmente a todos los seres se llaman mahāsattvas. Como se explica a continuación, este es el método para subyugar la mente. Pregunta: ¿Por qué la respuesta sobre la subyugación se da antes de la pregunta? Porque morar es profundo mientras que subyugar es superficial, por lo tanto el que pregunta plantea el punto profundo primero; como subyugar es más fácil de practicar, se responde primero. Tanto la pregunta como la respuesta tienen sus propósitos, esto no es un error.',
+            'Italiano': 'Coloro che praticano il sentiero con una mente vuota sono chiamati bodhisattva; coloro che aiutano universalmente tutti gli esseri sono chiamati mahāsattva. Come spiegato di seguito, questo è il metodo per domare la mente. Domanda: Perché la risposta sul domare è data prima della domanda? Perché dimorare è profondo mentre domare è superficiale, quindi chi domanda solleva il punto profondo per primo; domare essendo più facile da praticare, è risposto per primo. Sia la domanda che la risposta hanno i loro scopi, questo non è un errore.',
+            'संस्कृतम्': 'शून्यचित्तेन मार्गं प्रतिपद्यमानाः बोधिसत्त्वाः उच्यन्ते; सर्वप्राणिनां सार्वत्रिकं सहायं कुर्वन्तः महासत्त्वाः इति। यथा अधो व्याख्यातम्, एषः चित्तवशीकरणोपायः। प्रश्नः - वशीकरणस्य उत्तरं प्रश्नात् पूर्वं कुतः? यतः स्थितिः गम्भीरा वशीकरणं तु सरलम्, अतः प्रश्नकर्ता आदौ गम्भीरं विषयं उत्थापयति; वशीकरणं सुकरं अतः पूर्वं उत्तरितम्। प्रश्नोत्तरयोः स्वकीयाः प्रयोजनाः सन्ति, न तु दोषः।',
+            'Pāli': 'Suññatacittena maggaṃ paṭipajjamānā bodhisattā vuccanti; sabbapāṇīnaṃ sāvatthikaṃ upakāraṃ karontā mahāsattā ti. Yathā heṭṭhā vuttaṃ, ayaṃ cittavasiṃ karaṇūpāyo. Pucchā - vasīkaraṇassa uttaraṃ pucchāto pubbaṃ kuto? Yato ṭhiti gambhīrā vasīkaraṇaṃ tu saralaṃ, tasmā pucchakārā ādau gambhīraṃ visayaṃ uṭṭhāpayati; vasīkaraṇaṃ sukaraṃ tasmā pubbaṃ uttaritaṃ. Pucchottarānaṃ sakkāni prayojanāni honti, no ca doso.'
+        },
+        translations: {
+            '白话文': '佛告诉须菩提："诸位菩萨摩诃萨应当这样降伏其心。"',
+            'English': 'The Buddha said to Subhūti: "All bodhisattva-mahāsattvas should subdue their minds thus."',
+            'Deutsch': 'Der Buddha sprach zu Subhūti: "Alle Bodhisattva-Mahāsattvas sollten ihre Geister auf diese Weise zähmen."',
+            'Français': 'Le Bouddha dit à Subhūti : "Tous les bodhisattva-mahāsattva devraient subjuguer leurs esprits ainsi."',
+            'Русский': 'Будда сказал Субхути: "Все бодхисаттвы-махасаттвы должны так усмирять свои умы."',
+            'Español': 'El Buddha dijo a Subhūti: "Todos los bodhisattva-mahāsattva deben subyugar sus mentes así."',
+            'Italiano': 'Il Buddha disse a Subhūti: "Tutti i bodhisattva-mahāsattva dovrebbero domare le loro menti così."',
+            'संस्कृतम्': 'भगवान् सुभूतिम् उवाच - सर्वे बोधिसत्त्वमहासत्त्वाः एवं चित्तं वशीकुर्युः।',
+            'Pāli': 'Bhagavā Subhūtiṃ āha - sabbe bodhisattamahāsattā evaṃ cittaṃ vasīkareyyu\'nti.'
+        }
+    },
+    {
+        id: 'section2',
+        text: '所有一切眾生之類，若卵生．若胎生．若濕生．若化生，若有色．若無色，若有想．若無想，若非有想非無想，我皆令入無餘涅槃而滅度之。',
+        readingText: '所有一切眾生之類，若卵生．若胎生．若濕生．若化生，若有色．若無色，若有想．若無想，若非有想非無想，我皆令入無餘涅槃而滅度之。',
+        pinyin: 'suǒ yǒu yī qiè zhòng shēng zhī lèi ruò luǎn shēng ruò tāi shēng ruò shī shēng ruò huà shēng ruò yǒu sè ruò wú sè ruò yǒu xiǎng ruò wú xiǎng ruò fēi yǒu xiǎng fēi wú xiǎng wǒ jiē lìng rù wú yú niè pán ér miè dù zhī',
+        english: '"All classes of beings - whether born from eggs, from wombs, from moisture, or by transformation; whether with form or without form; whether with perception or without perception or neither with nor without perception - I cause them all to enter nirvana without remainder and liberate them."',
+        annotation: '正答降伏之行也。萬法雖曠，略為二科：一眾生法，二五陰法。法不自起，因緣故生，但是因緣，自性皆無。斯則順理為解，乖宗成惑，惑故生死流轉，解則累滅無為。身心為苦，苦盡為樂，盡苦之道，其唯大解。解極惑盡，身心俱忘，寂然永樂，謂之滅度。非我弘化，群生豈濟？凡解不自生，要由漸習，假名法麤，抑心則易，故始就眾生空以明降伏也。\n○皆無作，皆空惑，故作惑即，解則作即。',
+        annotationTranslations: {
+            '白话文': '这是正式回答降伏心的方法。虽然万法广大，但可以简略分为两类：一是众生法，二是五阴法。诸法不会自己生起，因缘和合而生，只是因缘和合，自性本空。这样顺理就是觉悟，违背宗旨就成为迷惑，迷惑就会生死流转，觉悟就能灭除烦恼达到无为。身心是苦，苦尽就是乐，灭苦之道唯有大觉悟。觉悟至极迷惑尽除，身心俱忘，寂然永乐，称为灭度。如果不是我弘扬教化，众生怎能得度？凡夫的觉悟不会自然产生，需要逐渐修习，假名法较粗浅，抑制心念较容易，所以先从众生空的角度说明降伏。\n注："皆无作"意为都不执着，"皆空惑"意为都是空性的迷惑，"故作惑即"意为造作迷惑就是，"解则作即"意为觉悟就是造作。',
+            'English': 'This is the proper answer about the practice of subduing. Though all phenomena are vast, they can be briefly divided into two categories: beings and the five aggregates. Phenomena do not arise by themselves but through causes and conditions; they are merely dependently arisen and lack intrinsic nature. Accordance with this principle is understanding, while deviation creates delusion. Delusion leads to the cycle of birth and death, while understanding brings the cessation of defilements and attainment of the unconditioned. Body and mind are suffering; the end of suffering is bliss. The path to end suffering is only through great understanding. When understanding reaches its peak and delusion is exhausted, body and mind are both forgotten, and there is tranquil eternal bliss - this is called liberation. Without my propagation of the teaching, how could beings be saved? Understanding does not arise spontaneously in ordinary people but requires gradual cultivation. Conventional designations are coarse and restraining the mind is easier, thus beginning with the emptiness of beings to explain subduing.\nNote: "None are created" means non-attachment; "all are empty delusions" means all are empty in nature; "thus delusion is creation" means delusion is fabrication; "understanding is thus creation" means understanding is thus fabrication.',
+            'Deutsch': 'Dies ist die eigentliche Antwort über die Praxis des Zähmens. Obwohl alle Phänomene weitreichend sind, können sie kurz in zwei Kategorien eingeteilt werden: Wesen und die fünf Aggregate. Phänomene entstehen nicht von selbst, sondern durch Ursachen und Bedingungen; sie sind lediglich abhängig entstanden und haben keine inhärente Natur. Übereinstimmung mit diesem Prinzip ist Verstehen, während Abweichung Verblendung erzeugt. Verblendung führt zum Kreislauf von Geburt und Tod, während Verstehen die Beendigung der Befleckungen und die Verwirklichung des Unbedingten bringt. Körper und Geist sind Leiden; das Ende des Leidens ist Glückseligkeit. Der Weg, das Leiden zu beenden, ist nur durch großes Verstehen. Wenn das Verstehen seinen Höhepunkt erreicht und die Verblendung erschöpft ist, werden Körper und Geist beide vergessen, und es gibt stilles ewiges Glück - dies wird Befreiung genannt. Ohne meine Verbreitung der Lehre, wie könnten Wesen gerettet werden? Verstehen entsteht nicht spontan in gewöhnlichen Menschen, sondern erfordert allmähliche Kultivierung. Konventionelle Bezeichnungen sind grob und die Zügelung des Geistes ist einfacher, daher beginnend mit der Leerheit der Wesen, um das Zähmen zu erklären.\nAnmerkung: "Keine sind erschaffen" bedeutet Nicht-Anhaften; "alle sind leere Täuschungen" bedeutet alle sind von Natur aus leer; "also ist Täuschung Schöpfung" bedeutet Täuschung ist Fabrikation; "Verstehen ist also Schöpfung" bedeutet Verstehen ist also Fabrikation.',
+            'Français': 'Ceci est la réponse appropriée concernant la pratique de la subjugation. Bien que tous les phénomènes soient vastes, ils peuvent être brièvement divisés en deux catégories : les êtres et les cinq agrégats. Les phénomènes ne surgissent pas par eux-mêmes mais à travers des causes et des conditions ; ils sont simplement dépendamment apparus et dépourvus de nature intrinsèque. L\'accord avec ce principe est la compréhension, tandis que la déviation crée l\'illusion. L\'illusion mène au cycle des naissances et des morts, tandis que la compréhension apporte la cessation des souillures et la réalisation de l\'inconditionné. Le corps et l\'esprit sont souffrance ; la fin de la souffrance est la félicité. Le chemin pour mettre fin à la souffrance est seulement à travers une grande compréhension. Lorsque la compréhension atteint son apogée et que l\'illusion est épuisée, le corps et l\'esprit sont tous deux oubliés, et il y a une tranquille félicité éternelle - ceci est appelé libération. Sans ma propagation de l\'enseignement, comment les êtres pourraient-ils être sauvés ? La compréhension ne surgit pas spontanément chez les gens ordinaires mais nécessite une cultivation graduelle. Les désignations conventionnelles sont grossières et la retenue de l\'esprit est plus facile, commençant donc par la vacuité des êtres pour expliquer la subjugation.\nNote : "Aucun n\'est créé" signifie non-attachement ; "tous sont des illusions vides" signifie que tous sont vides par nature ; "ainsi l\'illusion est création" signifie que l\'illusion est fabrication ; "la compréhension est ainsi création" signifie que la compréhension est ainsi fabrication.',
+            'Русский': 'Это правильный ответ о практике усмирения. Хотя все явления обширны, их можно кратко разделить на две категории: существа и пять совокупностей. Явления не возникают сами по себе, а через причины и условия; они просто зависимо возникшие и лишены внутренней природы. Согласие с этим принципом - это понимание, а отклонение создает заблуждение. Заблуждение ведет к циклу рождения и смерти, а понимание приносит прекращение омрачений и достижение безусловного. Тело и ум - это страдание; конец страдания - блаженство. Путь к прекращению страдания - только через великое понимание. Когда понимание достигает своего пика, а заблуждение исчерпано, тело и ум оба забыты, и есть безмятежное вечное блаженство - это называется освобождением. Без моего распространения учения, как существа могли бы быть спасены? Понимание не возникает спонтанно у обычных людей, а требует постепенного культивирования. Условные обозначения грубы, а сдерживание ума проще, поэтому, начиная с пустотности существ, объясняется усмирение.\nПримечание: "Ничто не создано" означает не-привязанность; "все - пустые заблуждения" означает, что все по природе пусты; "таким образом, заблуждение - это создание" означает, что заблуждение - это fabrication; "понимание - это thus создание" означает, что понимание - это thus fabrication.',
+            'Español': 'Esta es la respuesta adecuada sobre la práctica de la subyugación. Aunque todos los fenómenos son vastos, pueden dividirse brevemente en dos categorías: seres y los cinco agregados. Los fenómenos no surgen por sí mismos sino a través de causas y condiciones; son meramente surgidos dependientemente y carecen de naturaleza intrínseca. La conformidad con este principio es comprensión, mientras que la desviación crea ilusión. La ilusión lleva al ciclo de nacimiento y muerte, mientras que la comprensión trae el cese de las contaminaciones y la realización de lo incondicionado. El cuerpo y la mente son sufrimiento; el fin del sufrimiento es la dicha. El camino para terminar el sufrimiento es solo a través de la gran comprensión. Cuando la comprensión alcanza su punto máximo y la ilusión se agota, el cuerpo y la mente son ambos olvidados, y hay una dicha eterna tranquila - esto se llama liberación. Sin mi propagación de la enseñanza, ¿cómo podrían los seres ser salvados? La comprensión no surge espontáneamente en las personas ordinarias sino que requiere cultivo gradual. Las designaciones convencionales son burdas y la restricción de la mente es más fácil, por lo tanto comenzando con la vacuidad de los seres para explicar la subyugación.\nNota: "Ninguno es creado" significa no-apego; "todos son ilusiones vacías" significa que todos son vacíos por naturaleza; "así la ilusión es creación" significa que la ilusión es fabricación; "la comprensión es así creación" significa que la comprensión es así fabricación.',
+            'Italiano': 'Questa è la risposta appropriata riguardo alla pratica del domare. Sebbene tutti i fenomeni siano vasti, possono essere brevemente divisi in due categorie: esseri e i cinque aggregati. I fenomeni non sorgono da soli ma attraverso cause e condizioni; sono semplicemente sorti in modo dipendente e privi di natura intrinseca. La conformità con questo principio è comprensione, mentre la deviazione crea illusione. L\'illusione conduce al ciclo di nascita e morte, mentre la comprensione porta alla cessazione delle contaminazioni e alla realizzazione dell\'incondizionato. Corpo e mente sono sofferenza; la fine della sofferenza è beatitudine. Il percorso per porre fine alla sofferenza è solo attraverso la grande comprensione. Quando la comprensione raggiunge il suo apice e l\'illusione è esaurita, corpo e mente sono entrambi dimenticati, e c\'è una tranquilla beatitudine eterna - questo è chiamato liberazione. Senza la mia propagazione dell\'insegnamento, come potrebbero gli esseri essere salvati? La comprensione non sorge spontaneamente nelle persone ordinarie ma richiede una coltivazione graduale. Le designazioni convenzionali sono grossolane e la restrizione della mente è più facile, quindi iniziando con la vacuità degli esseri per spiegare il domare.\nNota: "Nessuno è creato" significa non-attaccamento; "tutti sono illusioni vuote" significa che tutti sono vuoti per natura; "così l\'illusione è creazione" significa che l\'illusione è fabbricazione; "la comprensione è così creazione" significa che la comprensione è così fabbricazione.',
+            'संस्कृतम्': 'एषः चित्तवशीकरणसाधनस्य यथार्थः उत्तरम्। यद्यपि धर्माः अपरिमिताः, तथापि ते द्विविधाः - सत्त्वधर्माः पञ्चस्कन्धाश्च। धर्माः स्वतः न उत्पद्यन्ते, हेतुप्रत्ययैः उत्पद्यन्ते, केवलं प्रतीत्यसमुत्पन्नाः स्वभावशून्याः च। एवं युक्त्या अनुसृत्य बोधः, मिथ्यादृष्ट्या विपरीतं मोहः। मोहात् संसारचक्रं, बोधात् क्लेशक्षयः निर्वाणं च। शरीरचित्तं दुःखम्, दुःखक्षयः सुखम्, दुःखनिरोधमार्गः केवलं महाबोधः। बोधः परमं गत्वा मोहः क्षीणः, शरीरचित्तं विस्मृतं, शान्तं नित्यसुखं - इदं निर्वाणम्। मम प्रचारं विना, कथं प्राणिनः तारिताः स्युः? प्राकृतजनानां बोधः स्वतः न उत्पद्यते, क्रमशः अभ्यासेन आवश्यकः। संज्ञामात्रं स्थूलम्, चित्तनिग्रहः सुकरः, अतः आदौ सत्त्वशून्यतां प्रति वशीकरणं व्याख्यातम्।\nटिप्पणीः "सर्वे अनभिनिर्वृत्ताः" इति निरुपादानता, "सर्वे शून्यमोहाः" इति शून्यस्वभावता, "तस्मात् मोहः अभिनिर्वृत्तिः" इति मोहः उपादानम्, "बोधः तु अभिनिर्वृत्तिः" इति बोधः उपादानम्।',
+            'Pāli': 'Ayaṃ cittavasiṃkaraṇasādhānassa yathā uttaraṃ. Yadipi dhammā aparimitā, tathāpi te duvidhā - sattadhammā pañcakkhandhā ca. Dhammā svato na uppajjanti, hetupaccayā uppajjanti, kevalaṃ paṭiccasamuppannā sabhāvasuññā ca. Evaṃ yuttiyā anusaritvā bodho, micchādiṭṭhiyā viparītaṃ moho. Mohā saṃsāracakkaṃ, bodhā kilesakkhayo nibbānañca. Kāyacittaṃ dukkhaṃ, dukkhakkhayo sukhaṃ, dukkhanirodhamaggo kevalaṃ mahābodho. Bodho paramaṃ gantvā moho khīṇo, kāyacittaṃ vismutaṃ, santaṃ niccasukhaṃ - idaṃ nibbānaṃ. Mama pavattanaṃ vinā, kathaṃ pāṇino tāritā siyuṃ? Puthujjanānaṃ bodho svato na uppajjati, kammena āyūhanena āvassako. Saññāmattaṃ thūlaṃ, cittaniggaho sukaro, tasmā ādau sattasuññataṃ pati vasīkaraṇaṃ vibhajitaṃ.\nNidassanaṃ: "Sabbe anabhinibbattā" ti anupādānatā, "sabbe suññamohā" ti suññasabhāvatā, "tasmā moho abhinibbatti" ti moho upādānaṃ, "bodho tu abhinibbatti" ti bodho upādānan\'ti.'
+        },
+        translations: {
+            '白话文': '所有一切众生的种类，无论是卵生、胎生、湿生、化生，无论是有色、无色，有想、无想，非有想非无想，我都使他们进入无余涅槃而灭度。',
+            'English': '"All classes of beings - whether born from eggs, from wombs, from moisture, or by transformation; whether with form or without form; whether with perception or without perception or neither with nor without perception - I cause them all to enter nirvana without remainder and liberate them."',
+            'Deutsch': '"Alle Klassen von Wesen - ob aus Eiern geboren, aus Gebärmüttern, aus Feuchtigkeit oder durch Verwandlung; ob mit Form oder ohne Form; ob mit Wahrnehmung oder ohne Wahrnehmung oder weder mit noch ohne Wahrnehmung - ich veranlasse sie alle, das Nirvana ohne Rest zu erreichen und befreie sie."',
+            'Français': '"Toutes les classes d\'êtres - qu\'ils soient nés d\'œufs, de matrices, d\'humidité ou par transformation ; qu\'ils aient une forme ou n\'en aient pas ; qu\'ils aient une perception ou n\'en aient pas ou ni l\'un ni l\'autre - je les fais tous entrer dans le nirvana sans reste et les libère."',
+            'Русский': '"Все классы существ - рожденные ли из яиц, из утроб, из влаги или путем превращения; имеющие ли форму или не имеющие формы; имеющие ли восприятие, не имеющие восприятия или ни то, ни другое - я заставляю их всех войти в нирвану без остатка и освобождаю их."',
+            'Español': '"Todas las clases de seres - ya sean nacidos de huevos, de matrices, de humedad o por transformación; ya sea con forma o sin forma; ya sea con percepción o sin percepción o ni con ni sin percepción - hago que todos entren en el nirvana sin resto y los libero."',
+            'Italiano': '"Tutte le classi di esseri - che siano nati da uova, da uteri, da umidità o per trasformazione; che abbiano forma o non abbiano forma; che abbiano percezione o non abbiano percezione o né l\'uno né l\'altro - faccio sì che tutti entrino nel nirvana senza resto e li libero."',
+            'संस्कृतम्': 'सर्वे सत्त्ववर्गाः - अण्डजाः योनिजाः संस्वेदजाः उपपादुकाः वा, रूपिणः अरूपिणः वा, संज्ञिनः असंज्ञिनः वा नैवसंज्ञिनाश्च नासंज्ञिनः वा - तान् अहम् अनुपादिशेषनिर्वाणधातुं प्रवेश्य परिनिर्वापयामि।',
+            'Pāli': 'Sabbe sattākārā - aṇḍajā yonijā saṃsedajā opapātikā vā, rūpino arūpino vā, saññino asaññino vā nevasaññināsaññino vā - te ahaṃ anupādisesanibbānadhātuṃ pavesetvā parinibbāpemī\'ti.'
+        }
+    },
+    {
+        id: 'section3',
+        text: '如是滅度無量無數無邊眾生，實無眾生得滅度者。',
+        readingText: '如是滅度無量無數無邊眾生，實無眾生得滅度者。',
+        pinyin: 'rú shì miè dù wú liàng wú shù wú biān zhòng shēng shí wú zhòng shēng dé miè dù zhě',
+        english: '"Thus, though I liberate countless beings, in reality no being is liberated."',
+        annotation: '解會中道，不有不無。無性故不有，假名則不無。非無假名，故恒度眾生。自性空，故實無滅者矣。',
+        annotationTranslations: {
+            '白话文': '理解中道，不执着有也不执着无。因为无自性所以不有，假名安立所以不无。不是没有假名，所以恒常度众生。因为自性本空，所以实际上没有灭度者。',
+            'English': 'Understanding the Middle Way, neither clinging to existence nor non-existence. Because there is no intrinsic nature, there is no existence; because of conventional designation, there is no non-existence. It is not that there are no conventional designations, thus there is constant liberation of beings. Because intrinsic nature is empty, in reality there is no one liberated.',
+            'Deutsch': 'Das Verstehen des Mittleren Weges, weder an Existenz noch an Nicht-Existenz haftend. Weil es keine inhärente Natur gibt, gibt es keine Existenz; wegen konventioneller Bezeichnung gibt es keine Nicht-Existenz. Es ist nicht so, dass es keine konventionellen Bezeichnungen gibt, daher gibt es ständige Befreiung von Wesen. Weil inhärente Natur leer ist, gibt es in Wirklichkeit niemanden, der befreit wird.',
+            'Français': 'Comprendre la Voie du Milieu, ne s\'accrochant ni à l\'existence ni à la non-existence. Parce qu\'il n\'y a pas de nature intrinsèque, il n\'y a pas d\'existence ; à cause de la désignation conventionnelle, il n\'y a pas de non-existence. Ce n\'est pas qu\'il n\'y a pas de désignations conventionnelles, donc il y a une libération constante des êtres. Parce que la nature intrinsèque est vide, en réalité il n\'y a personne de libéré.',
+            'Русский': 'Понимание Срединного Пути, не цепляясь ни за существование, ни за несуществование. Поскольку нет внутренней природы, нет существования; из-за условного обозначения нет несуществования. Не то чтобы не было условных обозначений, поэтому есть постоянное освобождение существ. Поскольку внутренняя природа пуста, на самом деле нет никого освобожденного.',
+            'Español': 'Entendiendo el Camino Medio, sin aferrarse a la existencia ni a la no existencia. Porque no hay naturaleza intrínseca, no hay existencia; debido a la designación convencional, no hay no existencia. No es que no haya designaciones convencionales, por lo tanto hay liberación constante de seres. Porque la naturaleza intrínseca es vacía, en realidad no hay nadie liberado.',
+            'Italiano': 'Comprendendo la Via di Mezzo, non aggrappandosi né all\'esistenza né alla non esistenza. Poiché non c\'è natura intrinseca, non c\'è esistenza; a causa della designazione convenzionale, non c\'è non esistenza. Non è che non ci siano designazioni convenzionali, quindi c\'è una costante liberazione degli esseri. Poiché la natura intrinseca è vuota, in realtà non c\'è nessuno liberato.',
+            'संस्कृतम्': 'मध्यमार्गं बुध्वा, न सत्त्वं न च असत्त्वं गृह्णाति। स्वभावशून्यतया न सत्त्वम्, संज्ञामात्रेण न असत्त्वम्। न तु संज्ञामात्रं नास्ति, अतः नित्यं सत्त्वानां तारणम्। स्वभावशून्यतया, तत्त्वतः न कोऽपि तारितः अस्ति।',
+            'Pāli': 'Majjhimapaṭipadaṃ buddhvā, na sattaṃ na ca asattaṃ gaṇhāti. Sabhāvasuññatāya na sattaṃ, saññāmātreṇa na asattaṃ. No ca saññāmātraṃ natthi, tasmā niccaṃ sattānaṃ tāraṇaṃ. Sabhāvasuññatāya, tathato na koci tārito atthī\'ti.'
+        },
+        translations: {
+            '白话文': '这样灭度无量无数无边众生，实际上没有众生得到灭度。',
+            'English': '"Thus, though I liberate countless beings, in reality no being is liberated."',
+            'Deutsch': '"So, obwohl ich zahllose Wesen befreie, ist in Wirklichkeit kein Wesen befreit."',
+            'Français': '"Ainsi, bien que je libère d\'innombrables êtres, en réalité aucun être n\'est libéré."',
+            'Русский': '"Таким образом, хотя я освобождаю бесчисленные существа, на самом деле ни одно существо не освобождено."',
+            'Español': '"Así, aunque libero innumerables seres, en realidad ningún ser es liberado."',
+            'Italiano': '"Così, sebbene io liberi innumerevoli esseri, in realtà nessun essere è liberato."',
+            'संस्कृतम्': 'एवम् अपरिमितान् असंख्येयान् अनन्तान् सत्त्वान् परिनिर्वाप्य, तत्त्वतः न कोऽपि सत्त्वः परिनिर्वाणं प्राप्नोति।',
+            'Pāli': 'Evaṃ aparimite asaṅkhyeye anante satte parinibbāpetvā, tathato na koci satto parinibbānaṃ pāpunātī\'ti.'
+        }
+    },
+    {
+        id: 'section4',
+        text: '何以故？須菩提！若有我相、人相、眾生相、壽者相，即非菩薩。',
+        readingText: '何以故？須菩提！若有我相、人相、眾生相、壽者相，即非菩薩。',
+        pinyin: 'hé yǐ gù xū pú tí ruò yǒu wǒ xiāng rén xiāng zhòng shēng xiāng shòu zhě xiāng jí fēi pú sà',
+        english: '"Why is this? Subhūti, if a bodhisattva holds the notion of a self, a person, a being, or a life span, that person is not a true bodhisattva."',
+        annotation: '釋何故無滅者，若有我相，可言有滅，既無我人，其誰滅乎？但是假名而橫計我，執我為非，忘我為是，是非既彰，得失明矣也。',
+        annotationTranslations: {
+            '白话文': '解释为什么没有灭度者：如果有我相，可以说有灭度，既然无我无人，谁被灭度呢？只是假名而错误地执着为我，执着我是错误的，忘我才是正确的，是非既然分明，得失也就清楚了。',
+            'English': 'Explaining why there is no one liberated: If there were a notion of self, one could speak of liberation; since there is no self or person, who is liberated? It is merely a conventional designation mistakenly taken as self. Clinging to self is wrong, forgetting self is right. Since right and wrong are thus clear, gain and loss are evident.',
+            'Deutsch': 'Erklärt, warum es niemanden gibt, der befreit wird: Wenn es eine Vorstellung von Selbst gäbe, könnte man von Befreiung sprechen; da es kein Selbst oder Person gibt, wer wird befreit? Es ist lediglich eine konventionelle Bezeichnung, die fälschlicherweise als Selbst genommen wird. Am Selbst zu haften ist falsch, das Selbst zu vergessen ist richtig. Da richtig und falsch somit klar sind, sind Gewinn und Verlust offensichtlich.',
+            'Français': 'Expliquant pourquoi il n\'y a personne de libéré : S\'il y avait une notion de soi, on pourrait parler de libération ; puisqu\'il n\'y a ni soi ni personne, qui est libéré ? Ce n\'est qu\'une désignation conventionnelle prise à tort comme soi. S\'accrocher au soi est erroné, oublier le soi est correct. Puisque le bien et le mal sont ainsi clairs, le gain et la perte sont évidents.',
+            'Русский': 'Объяснение того, почему нет освобожденного: если бы было представление о себе, можно было бы говорить об освобождении; поскольку нет ни себя, ни личности, кто освобожден? Это просто условное обозначение, ошибочно принятое за себя. Привязанность к себе ошибочна, забывание себя правильно. Поскольку правильное и неправильное таким образом ясны, приобретение и потеря очевидны.',
+            'Español': 'Explicando por qué no hay nadie liberado: Si hubiera una noción de sí mismo, se podría hablar de liberación; ya que no hay sí mismo ni persona, ¿quién es liberado? Es meramente una designación convencional tomada erróneamente como sí mismo. Aferrarse al sí mismo es incorrecto, olvidar el sí mismo es correcto. Ya que lo correcto y lo incorrecto son así claros, la ganancia y la pérdida son evidentes.',
+            'Italiano': 'Spiegando perché non c\'è nessuno liberato: Se ci fosse una nozione di sé, si potrebbe parlare di liberazione; poiché non c\'è né sé né persona, chi è liberato? È semplicemente una designazione convenzionale scambiata erroneamente per sé. Aggrapparsi al sé è sbagliato, dimenticare il sé è giusto. Poiché giusto e sbagliato sono così chiari, guadagno e perdita sono evidenti.',
+            'संस्कृतम्': 'निर्वाणप्राप्तस्य अभावस्य कारणं व्याख्यातुम् - यदि आत्मसंज्ञा स्यात्, तर्हि निर्वाणप्राप्तिः उच्येत, यतः न आत्मा न पुरुषः, कः निर्वाणं प्राप्नोति? केवलं संज्ञामात्रं यथा आत्मा इति मिथ्यागृहीतम्। आत्मग्रहणं मिथ्या, आत्मविस्मरणं तु यथार्थम्। यथार्थमिथ्ययोः स्पष्टतायां, लाभालाभौ अपि स्पष्टौ।',
+            'Pāli': 'Nibbānappattassa abhāvassa kāraṇaṃ vibhajituṃ - sace attasaññā siyā, tarhi nibbānappatti vuceyya, yato na attā na puriso, ko nibbānaṃ pāpuṇāti? Kevalaṃ saññāmattaṃ yathā attā ti micchāgaṇhitaṃ. Attaggahaṇaṃ micchā, attavismaraṇaṃ tathaṃ. Tathamicchānaṃ pakatatāya, lābhālābhāpi pakata\'ti.'
+        },
+        translations: {
+            '白话文': '为什么呢？须菩提！如果有我相、人相、众生相、寿者相，就不是菩萨。',
+            'English': '"Why is this? Subhūti, if a bodhisattva holds the notion of a self, a person, a being, or a life span, that person is not a true bodhisattva."',
+            'Deutsch': '"Warum ist das so? Subhūti, wenn ein Bodhisattva die Vorstellung eines Selbst, einer Person, eines Wesens oder einer Lebensspanne hat, ist diese Person kein wahrer Bodhisattva."',
+            'Français': '"Pourquoi cela ? Subhūti, si un bodhisattva détient la notion d\'un soi, d\'une personne, d\'un être ou d\'une durée de vie, cette personne n\'est pas un vrai bodhisattva."',
+            'Русский': '"Почему это? Субхути, если бодхисаттва держится представления о себе, личности, существе или сроке жизни, этот человек не является истинным бодхисаттвой."',
+            'Español': '"¿Por qué es esto? Subhūti, si un bodhisattva sostiene la noción de un yo, una persona, un ser o un lapso de vida, esa persona no es un verdadero bodhisattva."',
+            'Italiano': '"Perché questo? Subhūti, se un bodhisattva detiene la nozione di un sé, una persona, un essere o una durata di vita, quella persona non è un vero bodhisattva."',
+            'संस्कृतम्': 'तत्र किं कारणम्? सुभूते! यदि आत्मसंज्ञा पुरुषसंज्ञा सत्त्वसंज्ञा जीवसंज्ञा वा अस्ति, सः बोधिसत्त्वः न भवति।',
+            'Pāli': 'Tatra kiṃ kāraṇaṃ? Subhūti! Sace attasaññā purisasaññā sattasaññā jīvasaññā vā atthi, so bodhisatto na hotī\'ti.'
+        }
+    }
+];
+
+// 多语言选项
+const languages = [
+    '白话文', 'English', 'Deutsch', 'Français', 'Русский', 
+    'Español', 'Italiano', 'संस्कृतम्', 'Pāli'
+];
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 生成经文内容
+    const scriptureContent = document.getElementById('scriptureContent');
+    
+    scriptureData.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `text-section section-${index + 1}`;
+        
+        // 经文标题
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = `经文第${index + 1}段`;
+        sectionDiv.appendChild(sectionTitle);
+        
+        // 经文正文（带拼音注释）
+        const textDiv = document.createElement('div');
+        textDiv.className = 'text-content';
+        textDiv.innerHTML = processTextWithPinyin(section.text, section.pinyin, section.id);
+        
+        // 添加朗读按钮和纯文本
+        const textActions = document.createElement('div');
+        textActions.className = 'action-buttons';
+        textActions.innerHTML = `
+            <button class="action-btn speak" id="speakText-${section.id}">朗读经文</button>
+            <span class="plain-text">${section.readingText}</span>
+        `;
+        textDiv.appendChild(textActions);
+        
+        // 添加多语言翻译
+        addTranslations(textDiv, section.translations, `${section.id}-trans`);
+        
+        sectionDiv.appendChild(textDiv);
+        
+        // 注解内容
+        const annoDiv = document.createElement('div');
+        annoDiv.className = 'annotation-content';
+        
+        // 添加注解内容
+        const annotationP = document.createElement('div');
+        annotationP.className = 'annotation';
+        annotationP.id = `${section.id}-anno`;
+        annotationP.textContent = section.annotation;
+        annoDiv.appendChild(annotationP);
+        
+        // 添加朗读按钮
+        const annoActions = document.createElement('div');
+        annoActions.className = 'action-buttons';
+        annoActions.innerHTML = `
+            <button class="action-btn speak" id="speakAnno-${section.id}">朗读注解</button>
+        `;
+        annoDiv.appendChild(annoActions);
+        
+        // 添加注解的多语言翻译
+        addTranslations(annoDiv, section.annotationTranslations, `${section.id}-anno-trans`);
+        
+        sectionDiv.appendChild(annoDiv);
+        
+        scriptureContent.appendChild(sectionDiv);
+    });
+
+    // 设置朗读按钮事件
+    setupSpeakButtons();
+    
+    // 设置汉字点击事件
+    setupCharClickEvents();
+});
+
+// 处理文本添加拼音（去掉英文提示）
+function processTextWithPinyin(text, pinyin, sectionId) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return `<span id="${sectionId}-text">${result}</span>`;
+}
+
+// 添加多语言翻译模块
+function addTranslations(container, translations, baseId) {
+    const transTabs = document.createElement('div');
+    transTabs.className = 'translation-tabs';
+    
+    const transContents = document.createElement('div');
+    
+    Object.entries(translations).forEach(([lang, content]) => {
+        // 翻译标签
+        const tab = document.createElement('div');
+        tab.className = 'translation-tab';
+        tab.textContent = lang;
+        tab.onclick = function() {
+            // 切换活跃标签
+            transTabs.querySelectorAll('.translation-tab').forEach(t => 
+                t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 显示对应语言内容
+            transContents.querySelectorAll('.translation-content').forEach(c => 
+                c.classList.remove('active'));
+            transContents.querySelector(`#${baseId}-${lang}`).classList.add('active');
+        };
+        transTabs.appendChild(tab);
+        
+        // 翻译内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'translation-content';
+        contentDiv.id = `${baseId}-${lang}`;
+        contentDiv.textContent = content;
+        transContents.appendChild(contentDiv);
+    });
+    
+    // 默认显示第一个语言
+    if (transTabs.firstChild) {
+        transTabs.firstChild.click();
+    }
+    
+    container.appendChild(transTabs);
+    container.appendChild(transContents);
+}
+
+// 设置所有朗读按钮事件
+function setupSpeakButtons() {
+    // 经文朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakText-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.readingText;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+    
+    // 注解朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakAnno-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.annotation;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+}
+
+// 设置汉字点击事件（显示详情弹窗）
+function setupCharClickEvents() {
+    document.addEventListener('click', function(e) {
+        const charElement = e.target.closest('.char');
+        if (charElement) {
+            const char = charElement.dataset.char;
+            showCharModal(char);
+        }
+    });
+    
+    // 关闭弹窗按钮
+    document.getElementById('closeCharModal').addEventListener('click', function() {
+        document.getElementById('charModal').style.display = 'none';
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('charModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+}
+
+// 显示汉字详情弹窗
+function showCharModal(char) {
+    const modal = document.getElementById('charModal');
+    const modalChar = document.getElementById('modalChar');
+    const modalPinyin = document.getElementById('modalPinyin');
+    const modalMeaning = document.getElementById('modalMeaning');
+    const modalBuddhistMeaning = document.getElementById('modalBuddhistMeaning');
+    
+    // 设置弹窗内容
+    modalChar.textContent = char;
+    
+    if (punctuationPinyin[char]) {
+        // 标点符号
+        modalPinyin.textContent = punctuationPinyin[char];
+        modalMeaning.textContent = 'This is a punctuation mark.';
+        modalBuddhistMeaning.textContent = 'Punctuation marks help structure the text and indicate pauses in recitation.';
+    } else if (charMeanings[char]) {
+        // 汉字
+        const charData = charMeanings[char];
+        modalPinyin.textContent = charData.pinyin;
+        modalMeaning.innerHTML = charData.meanings.map(m => `• ${m}`).join('<br>');
+        modalBuddhistMeaning.textContent = charData.buddhist;
+    } else {
+        // 未知字符
+        modalPinyin.textContent = 'Unknown';
+        modalMeaning.textContent = 'No detailed information available for this character.';
+        modalBuddhistMeaning.textContent = 'No specific Buddhist meaning recorded.';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 切换朗读/停止功能
+function toggleSpeech(text, button) {
+    if (currentUtterance && speechSynthesis.speaking) {
+        // 如果正在朗读，则停止
+        speechSynthesis.cancel();
+        button.classList.remove('stop');
+        button.classList.add('speak');
+        currentUtterance = null;
+    } else {
+        // 开始朗读
+        if ('speechSynthesis' in window) {
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 0.7; // 正常语速
+            
+            currentUtterance.onend = function() {
+                button.classList.remove('stop');
+                button.classList.add('speak');
+                currentUtterance = null;
+            };
+            
+            speechSynthesis.speak(currentUtterance);
+            button.classList.remove('speak');
+            button.classList.add('stop');
+        } else {
+            alert('您的浏览器不支持语音朗读功能');
+        }
+    }
+}
+</script>
+</body>
+</html>

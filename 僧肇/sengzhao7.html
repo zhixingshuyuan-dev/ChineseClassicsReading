@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金刚般若波罗蜜经（完整交互版）</title>
+    <style>
+        /* 保持原有样式不变 */
+        body {
+            font-family: "SimSun", "STKaiti", serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1.4em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 2.0em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d4a762;
+        }
+        
+        .author {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .preface-section {
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #d4a762;
+        }
+        
+        .preface-content {
+            margin-bottom: 20px;
+            line-height: 2.0;
+            color: #e0e0e0;
+        }
+        
+        .preface-annotation {
+            color: #999;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 3px solid #555;
+            margin-top: 15px;
+        }
+        
+        .text-section {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .text-section h3 {
+            margin-top: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            color: #d4a762;
+            background-color: #2a2a2a;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .annotation-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            color: #e0e0e0;
+        }
+        
+        .char-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #444;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .char:hover .char-tooltip {
+            display: block;
+        }
+        
+        .annotation {
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .plain-text {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.7em;
+            background-color: #444;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .action-btn:hover {
+            background-color: #555;
+        }
+        
+        .action-btn.speak {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .action-btn.stop {
+            background-color: #a76a6a;
+            color: #1a1a1a;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 15px 0;
+        }
+        
+        .translation-tab {
+            padding: 3px 8px;
+            background-color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .translation-tab.active {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        /* 修改后的弹窗样式 */
+        .char-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .char-modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 80%;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .char-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .char-modal-char {
+            font-size: 2.5em;
+            color: #d4a762;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-pinyin {
+            font-size: 1.3em;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .char-modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .char-modal-close:hover {
+            color: #e0e0e0;
+        }
+        
+        .char-modal-section {
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-section h3 {
+            color: #d4a762;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .char-modal-meaning {
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        
+        /* Color schemes for alternating sections */
+        .section-1 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-1 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #d4a762;
+        }
+        
+        .section-2 .text-content {
+            background-color: #333333;
+        }
+        .section-2 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #5d8aa8;
+        }
+        
+        .section-3 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-3 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a8d4a7;
+        }
+        
+        .section-4 .text-content {
+            background-color: #333333;
+        }
+        .section-4 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4a7a7;
+        }
+        
+        .section-5 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-5 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a7a7d4;
+        }
+        
+        .section-6 .text-content {
+            background-color: #333333;
+        }
+        .section-6 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4d4a7;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+            color: #d4a762;
+            font-weight: bold;
+        }
+        
+        .reading-text {
+            display: none; /* 不再需要单独显示 */
+        }
+        
+        .annotation-text {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            
+            .char-modal-content {
+                padding: 15px;
+            }
+            
+            .char-modal-char {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 汉字详情弹窗 -->
+<div class="char-modal" id="charModal">
+    <div class="char-modal-content">
+        <div class="char-modal-header">
+            <h2>汉字详情</h2>
+            <button class="char-modal-close" id="closeCharModal">&times;</button>
+        </div>
+        <div class="char-modal-char" id="modalChar"></div>
+        <div class="char-modal-pinyin" id="modalPinyin"></div>
+        <div class="char-modal-section">
+            <h3>基本释义</h3>
+            <div class="char-modal-meaning" id="modalMeaning"></div>
+        </div>
+        <div class="char-modal-section">
+            <h3>佛教释义</h3>
+            <div class="char-modal-meaning" id="modalBuddhistMeaning"></div>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="title">金刚般若波罗蜜经</div>
+    <div class="author">姚秦三藏法师鸠摩罗什译</div>
+</div>
+
+<!-- 第七品标题 -->
+<div class="section-title">第七品</div>
+
+<!-- 经文内容 -->
+<div id="scriptureContent"></div>
+
+<script>
+// 语音合成对象
+let currentUtterance = null;
+
+// 标点符号的拼音映射
+const punctuationPinyin = {
+    '，': 'dòu hào',
+    '。': 'jù hào',
+    '、': 'dùn hào',
+    '；': 'fēn hào',
+    '：': 'mào hào',
+    '！': 'tàn hào',
+    '？': 'wèn hào',
+    '「': 'zuǒ yǐn hào',
+    '」': 'yòu yǐn hào',
+    '『': 'zuǒ shuāng yǐn hào',
+    '』': 'yòu shuāng yǐn hào',
+    '（': 'zuǒ kuò hào',
+    '）': 'yòu kuò hào',
+    '《': 'zuǒ shū míng hào',
+    '》': 'yòu shū míng hào'
+};
+
+// 汉字的多义项解释
+const charMeanings = {
+    '須': {
+        pinyin: 'xū',
+        meanings: [
+            'must',
+            'necessary',
+            'beard'
+        ],
+        buddhist: 'Necessity or essential quality in Buddhist teachings.'
+    },
+    '菩': {
+        pinyin: 'pú',
+        meanings: [
+            'bodhi',
+            'enlightenment'
+        ],
+        buddhist: 'Bodhi, meaning awakening or enlightenment.'
+    },
+    '提': {
+        pinyin: 'tí',
+        meanings: [
+            'lift',
+            'carry',
+            'mention'
+        ],
+        buddhist: 'To lift up or elevate in spiritual context.'
+    },
+    '於': {
+        pinyin: 'yú',
+        meanings: [
+            'at',
+            'in',
+            'to'
+        ],
+        buddhist: 'A preposition indicating relation or connection.'
+    },
+    '意': {
+        pinyin: 'yì',
+        meanings: [
+            'meaning',
+            'intention',
+            'thought'
+        ],
+        buddhist: 'Intention or thought in Buddhist psychology.'
+    },
+    '云': {
+        pinyin: 'yún',
+        meanings: [
+            'say',
+            'cloud',
+            'speak'
+        ],
+        buddhist: 'To say or express in teachings.'
+    },
+    '何': {
+        pinyin: 'hé',
+        meanings: [
+            'what',
+            'why',
+            'how'
+        ],
+        buddhist: 'A question about Dharma.'
+    },
+    '如': {
+        pinyin: 'rú',
+        meanings: [
+            'as',
+            'like',
+            'such as'
+        ],
+        buddhist: 'Thusness or suchness (tathatā).'
+    },
+    '來': {
+        pinyin: 'lái',
+        meanings: [
+            'come',
+            'arrive',
+            'future'
+        ],
+        buddhist: 'One who has come (Tathāgata), an epithet of Buddha.'
+    },
+    '得': {
+        pinyin: 'dé',
+        meanings: [
+            'obtain',
+            'gain',
+            'can'
+        ],
+        buddhist: 'Attainment or realization.'
+    },
+    '阿': {
+        pinyin: 'ā',
+        meanings: [
+            'prefix',
+            'first letter of Sanskrit alphabet'
+        ],
+        buddhist: 'A prefix meaning "not" or "non-" in Buddhist terms.'
+    },
+    '耨': {
+        pinyin: 'nòu',
+        meanings: [
+            'to weed',
+            'to hoe'
+        ],
+        buddhist: 'Part of "Anuttara" meaning unsurpassed.'
+    },
+    '多': {
+        pinyin: 'duō',
+        meanings: [
+            'many',
+            'much',
+            'more'
+        ],
+        buddhist: 'Part of "Anuttara" meaning unsurpassed.'
+    },
+    '羅': {
+        pinyin: 'luó',
+        meanings: [
+            'net',
+            'gauze',
+            'collect'
+        ],
+        buddhist: 'Part of "Anuttara" meaning unsurpassed.'
+    },
+    '三': {
+        pinyin: 'sān',
+        meanings: [
+            'three'
+        ],
+        buddhist: 'Three, often representing the Three Jewels.'
+    },
+    '藐': {
+        pinyin: 'miǎo',
+        meanings: [
+            'despise',
+            'small'
+        ],
+        buddhist: 'Part of "Samyak" meaning correct or perfect.'
+    },
+    '耶': {
+        pinyin: 'yé',
+        meanings: [
+            'question particle',
+            'final particle'
+        ],
+        buddhist: 'Question particle in Buddhist texts.'
+    },
+    '所': {
+        pinyin: 'suǒ',
+        meanings: [
+            'place',
+            'that which',
+            'what'
+        ],
+        buddhist: 'A relative pronoun in Buddhist texts.'
+    },
+    '說': {
+        pinyin: 'shuō',
+        meanings: [
+            'speak',
+            'explain',
+            'teach'
+        ],
+        buddhist: 'To expound or teach the Dharma.'
+    },
+    '法': {
+        pinyin: 'fǎ',
+        meanings: [
+            'law',
+            'method',
+            'Dharma'
+        ],
+        buddhist: 'The Dharma, Buddhist teachings.'
+    },
+    '言': {
+        pinyin: 'yán',
+        meanings: [
+            'speak',
+            'word',
+            'say'
+        ],
+        buddhist: 'Speech or verbal expression.'
+    },
+    '我': {
+        pinyin: 'wǒ',
+        meanings: [
+            'I',
+            'self',
+            'ego'
+        ],
+        buddhist: 'Self or ego.'
+    },
+    '解': {
+        pinyin: 'jiě',
+        meanings: [
+            'understand',
+            'untie',
+            'explain'
+        ],
+        buddhist: 'Understanding or liberation.'
+    },
+    '義': {
+        pinyin: 'yì',
+        meanings: [
+            'meaning',
+            'righteousness',
+            'justice'
+        ],
+        buddhist: 'Meaning or principle in Buddhist context.'
+    },
+    '無': {
+        pinyin: 'wú',
+        meanings: [
+            'not have',
+            'without',
+            'non-'
+        ],
+        buddhist: 'Non-existence or emptiness.'
+    },
+    '有': {
+        pinyin: 'yǒu',
+        meanings: [
+            'have',
+            'exist',
+            'possess'
+        ],
+        buddhist: 'Existence or possession.'
+    },
+    '定': {
+        pinyin: 'dìng',
+        meanings: [
+            'fixed',
+            'certain',
+            'concentration'
+        ],
+        buddhist: 'Fixed or concentration (samadhi).'
+    },
+    '名': {
+        pinyin: 'míng',
+        meanings: [
+            'name',
+            'fame',
+            'term'
+        ],
+        buddhist: 'Name or designation in Buddhist logic.'
+    },
+    '可': {
+        pinyin: 'kě',
+        meanings: [
+            'can',
+            'may',
+            'possible'
+        ],
+        buddhist: 'Possibility or permission.'
+    },
+    '取': {
+        pinyin: 'qǔ',
+        meanings: [
+            'take',
+            'grasp',
+            'adopt'
+        ],
+        buddhist: 'To grasp or cling.'
+    },
+    '非': {
+        pinyin: 'fēi',
+        meanings: [
+            'not',
+            'wrong',
+            'non-'
+        ],
+        buddhist: 'Negation in Dharma.'
+    },
+    '賢': {
+        pinyin: 'xián',
+        meanings: [
+            'worthy',
+            'virtuous',
+            'sage'
+        ],
+        buddhist: 'Worthy or virtuous ones.'
+    },
+    '聖': {
+        pinyin: 'shèng',
+        meanings: [
+            'holy',
+            'sage',
+            'sacred'
+        ],
+        buddhist: 'Saints or holy ones.'
+    },
+    '皆': {
+        pinyin: 'jiē',
+        meanings: [
+            'all',
+            'each',
+            'every'
+        ],
+        buddhist: 'Universal or all-inclusive.'
+    },
+    '以': {
+        pinyin: 'yǐ',
+        meanings: [
+            'with',
+            'by',
+            'because'
+        ],
+        buddhist: 'A preposition indicating means.'
+    },
+    '為': {
+        pinyin: 'wéi',
+        meanings: [
+            'as',
+            'become',
+            'act'
+        ],
+        buddhist: 'To act or function as.'
+    },
+    '差': {
+        pinyin: 'chā',
+        meanings: [
+            'difference',
+            'error',
+            'discrepancy'
+        ],
+        buddhist: 'Difference or distinction.'
+    },
+    '別': {
+        pinyin: 'bié',
+        meanings: [
+            'separate',
+            'other',
+            'difference'
+        ],
+        buddhist: 'Distinction or separation.'
+    }
+};
+
+// 第七品经文数据
+const scriptureData = [
+    {
+        id: 'section1',
+        text: '須菩提！於意云何？如來得阿耨多羅三藐三菩提耶？如來有所說法耶？',
+        readingText: '須菩提！於意云何？如來得阿耨多羅三藐三菩提耶？如來有所說法耶？',
+        pinyin: 'xū pú tí yú yì yún hé rú lái dé ā nòu duō luó sān miǎo sān pú tí yé rú lái yǒu suǒ shuō fǎ yé',
+        english: 'Subhuti, what do you think? Has the Tathagata attained the supreme enlightenment? Has the Tathagata spoken any Dharma?',
+        annotation: '竟尊重弟子，引眾聖同解，以證理之必然。',
+        annotationPinyin: 'jìng zūn zhòng dì zǐ yǐn zhòng shèng tóng jiě yǐ zhèng lǐ zhī bì rán',
+        annotationTranslations: {
+            '白话文': '最终尊重弟子，引导众圣共同理解，以证明真理的必然性。',
+            'English': 'Ultimately respecting disciples, guiding all sages to common understanding, proving the inevitability of truth.',
+            'Deutsch': 'Letztlich die Schüler respektierend, alle Weisen zu gemeinsamem Verständnis führend, die Unvermeidlichkeit der Wahrheit beweisend.',
+            'Français': 'Finalement respectant les disciples, guidant tous les sages vers une compréhension commune, prouvant l\'inévitabilité de la vérité.',
+            'Русский': 'В конечном итоге уважая учеников, направляя всех мудрецов к общему пониманию, доказывая неизбежность истины.',
+            'Español': 'Finalmente respetando a los discípulos, guiando a todos los sabios hacia un entendimiento común, probando la inevitabilidad de la verdad.',
+            'Italiano': 'Infine rispettando i discepoli, guidando tutti i saggi verso una comprensione comune, dimostrando l\'inevitabilità della verità.',
+            'संस्कृतम्': 'अन्ततः शिष्यान् सम्मानयन्, सर्वान् ऋषीन् सामान्यबोधं प्रति नेतुं, सत्यस्य अनिवार्यतां प्रमाणयन्।',
+            'Pāli': 'Accantaṃ sāvake garuṃ katvā, sabbe isī samānabodhaṃ netuṃ, saccassa avaṭṭhitiṃ paccāgaṇhanto.'
+        },
+        translations: {
+            '白话文': '须菩提！你的意思如何？如来证得了无上正等正觉吗？如来有所说法吗？',
+            'English': 'Subhuti, what do you think? Has the Tathagata attained the supreme enlightenment? Has the Tathagata spoken any Dharma?',
+            'Deutsch': 'Subhuti, was denkst du? Hat der Tathagata die höchste Erleuchtung erlangt? Hat der Tathagata irgendein Dharma gesprochen?',
+            'Français': 'Subhuti, qu\'en penses-tu ? Le Tathagata a-t-il atteint l\'éveil suprême ? Le Tathagata a-t-il prononcé un quelconque Dharma ?',
+            'Русский': 'Субхути, как ты думаешь? Достиг ли Татхагата высшего просветления? Говорил ли Татхагата какую-либо Дхарму?',
+            'Español': 'Subhuti, ¿qué opinas? ¿Ha alcanzado el Tathagata el supremo despertar? ¿Ha hablado el Tathagata algún Dharma?',
+            'Italiano': 'Subhuti, cosa ne pensi? Il Tathagata ha raggiunto la suprema illuminazione? Il Tathagata ha esposto qualche Dharma?',
+            'संस्कृतम्': 'सुभूते! तव मतं किम्? किं तथागतः अनुत्तरां सम्यक्सम्बोधिं प्राप्तः? किं तथागतेन कश्चित् धर्मः उक्तः?',
+            'Pāli': 'Subhūti, taṃ kiṃ maññasi? Kiṃ tathāgatena anuttarā sammāsambodhi pattabbā? Kiṃ tathāgatena koci dhammo bhāsito?'
+        }
+    },
+    {
+        id: 'section2',
+        text: '須菩提言：如我解佛所說義，無有定法名阿耨多羅三藐三菩提，亦無有定法如來可說。',
+        readingText: '須菩提言：如我解佛所說義，無有定法名阿耨多羅三藐三菩提，亦無有定法如來可說。',
+        pinyin: 'xū pú tí yán rú wǒ jiě fó suǒ shuō yì wú yǒu dìng fǎ míng ā nòu duō luó sān miǎo sān pú tí yì wú yǒu dìng fǎ rú lái kě shuō',
+        english: 'Subhuti said: As I understand the meaning of what the Buddha has said, there is no fixed Dharma called the supreme enlightenment, nor is there any fixed Dharma that the Tathagata can expound.',
+        annotation: '如我於佛所說義中而作解，窮相盡謂之菩提，無相故不有，假名則不無，不有不無，何實可得？何定可說也？\n○窮相之上疑脫解字。',
+        annotationPinyin: 'rú wǒ yú fó suǒ shuō yì zhōng ér zuò jiě qióng xiāng jìn wèi zhī pú tí wú xiāng gù bù yǒu jiǎ míng zé bù wú bù yǒu bù wú hé shí kě dé hé dìng kě shuō yě \n○ qióng xiāng zhī shàng yí tuō jiě zì',
+        annotationTranslations: {
+            '白话文': '如我在佛所说的义理中作理解，穷尽一切相称为菩提，无相故不存在，假名则不无，不有不无，什么真实可得？什么固定可说？\n注："穷相"之上疑脱"解"字。',
+            'English': 'As I understand within the meaning of what the Buddha has said, exhausting all characteristics is called enlightenment. Without characteristics, it does not exist; with provisional names, it is not nonexistent. Neither existing nor nonexistent, what reality can be obtained? What fixed thing can be spoken?\nNote: The character "解" (understand) seems to be missing above "穷相" (exhausting characteristics).',
+            'Deutsch': 'Wie ich innerhalb der Bedeutung dessen, was der Buddha gesagt hat, verstehe, das Erschöpfen aller Merkmale wird Erleuchtung genannt. Ohne Merkmale existiert es nicht; mit vorläufigen Namen ist es nicht nichtexistent. Weder existierend noch nichtexistierend, welche Realität kann erlangt werden? Welches feste Ding kann gesprochen werden?\nAnmerkung: Das Zeichen "解" (verstehen) scheint über "穷相" (Merkmale erschöpfend) zu fehlen.',
+            'Français': 'Comme je comprends dans le sens de ce que le Bouddha a dit, épuiser toutes les caractéristiques s\'appelle illumination. Sans caractéristiques, cela n\'existe pas; avec des noms provisoires, ce n\'est pas inexistant. Ni existant ni inexistant, quelle réalité peut être obtenue? Quelle chose fixe peut être parlée?\nNote : Le caractère "解" (comprendre) semble manquer au-dessus de "穷相" (épuisant les caractéristiques).',
+            'Русский': 'Как я понимаю в значении того, что сказал Будда, исчерпание всех характеристик называется просветлением. Без характеристик оно не существует; с условными именами оно не несуществующее. Ни существующее, ни несуществующее, какую реальность можно получить? Какая фиксированная вещь может быть сказана?\nПримечание: Иероглиф "解" (понимать), кажется, отсутствует над "穷相" (исчерпывающий характеристики).',
+            'Español': 'Como entiendo dentro del significado de lo que el Buddha ha dicho, agotar todas las características se llama iluminación. Sin características, no existe; con nombres provisionales, no es inexistente. Ni existente ni inexistente, ¿qué realidad puede obtenerse? ¿Qué cosa fija puede hablarse?\nNota: El carácter "解" (entender) parece faltar encima de "穷相" (agotando características).',
+            'Italiano': 'Come comprendo all\'interno del significato di ciò che il Buddha ha detto, esaurire tutte le caratteristiche si chiama illuminazione. Senza caratteristiche, non esiste; con nomi provvisori, non è inesistente. Né esistente né inesistente, quale realtà può essere ottenuta? Quale cosa fissa può essere detta?\nNota: Il carattere "解" (capire) sembra mancare sopra "穷相" (esaurire caratteristiche).',
+            'संस्कृतम्': 'यथा अहं बुद्धस्य उक्तार्थेषु अवगच्छामि, सर्वलक्षणक्षयः बोधिः इति उच्यते। लक्षणाभावात् न अस्ति, उपाधितः न नास्ति, न अस्ति न नास्ति, कः वास्तवः लभ्यः? कः निश्चितः वक्तव्यः?\nटिप्पणीः "क्षय" इति पदस्य उपरि "अवगच्छामि" इति पदं लुप्तम् इति शङ्क्यते।',
+            'Pāli': 'Yathāhaṃ buddhassa vuttatthesu avagacchāmi, sabbalakkhaṇakkhayo bodhī ti vuccati. Lakkhanaabhāvā na atthi, upādhito na natthi, na atthi na natthi, ko vatthu laddhabbo? Ko nicchito vattabbo?\nNidassanaṃ: "khayo" ti pādassa upari "avagacchāmi" ti padaṃ luttan ti saṅkhyāyati.'
+        },
+        translations: {
+            '白话文': '须菩提说：如我理解佛所说的义理，没有固定的法名为无上正等正觉，也没有固定的法如来可说。',
+            'English': 'Subhuti said: As I understand the meaning of what the Buddha has said, there is no fixed Dharma called the supreme enlightenment, nor is there any fixed Dharma that the Tathagata can expound.',
+            'Deutsch': 'Subhuti sagte: Wie ich die Bedeutung dessen verstehe, was der Buddha gesagt hat, gibt es kein festes Dharma, das die höchste Erleuchtung genannt wird, noch gibt es irgendein festes Dharma, das der Tathagata auslegen kann.',
+            'Français': 'Subhuti dit: Tel que je comprends le sens de ce que le Bouddha a dit, il n\'y a pas de Dharma fixe appelé l\'éveil suprême, ni aucun Dharma fixe que le Tathagata puisse exposer.',
+            'Русский': 'Субхути сказал: Как я понимаю смысл того, что сказал Будда, нет фиксированной Дхармы, называемой высшим просветлением, и нет никакой фиксированной Дхармы, которую Татхагата мог бы изложить.',
+            'Español': 'Subhuti dijo: Según entiendo el significado de lo que el Buddha ha dicho, no hay un Dharma fijo llamado el supremo despertar, ni hay ningún Dharma fijo que el Tathagata pueda exponer.',
+            'Italiano': 'Subhuti disse: Come io comprendo il significato di ciò che il Buddha ha detto, non c\'è un Dharma fisso chiamato suprema illuminazione, né c\'è alcun Dharma fisso che il Tathagata possa esporre.',
+            'संस्कृतम्': 'सुभूतिः अवदत् - यथा अहं बुद्धस्य उक्तस्य अर्थं प्रतिपद्ये, न कोऽपि निश्चितः धर्मः अनुत्तरा सम्यक्सम्बोधिः इति नाम, नापि कोऽपि निश्चितः धर्मः यः तथागतेन वक्तुं शक्यः।',
+            'Pāli': 'Subhūti avadati - yathāhaṃ bhagavatā bhāsitassa atthaṃ pajānāmi, natthi koci nicchito dhammo anuttarā sammāsambodhī ti nāma, nāpi koci nicchito dhammo yaṃ tathāgatena vattabbo.'
+        }
+    },
+    {
+        id: 'section3',
+        text: '何以故？如來所說法皆不可取、不可說。',
+        readingText: '何以故？如來所說法皆不可取、不可說。',
+        pinyin: 'hé yǐ gù rú lái suǒ shuō fǎ jiē bù kě qǔ bù kě shuō',
+        english: 'Why is this? All Dharmas spoken by the Tathagata cannot be grasped and cannot be spoken.',
+        annotation: '菩提無相可取，諸法空不可說，故無定實。',
+        annotationPinyin: 'pú tí wú xiāng kě qǔ zhū fǎ kōng bù kě shuō gù wú dìng shí',
+        annotationTranslations: {
+            '白话文': '菩提无相可取，诸法空性不可说，故无固定实相。',
+            'English': 'Enlightenment has no characteristics to grasp; all dharmas are empty and cannot be spoken of, therefore there is no fixed reality.',
+            'Deutsch': 'Erleuchtung hat keine Merkmale zu ergreifen; alle Dharmas sind leer und können nicht besprochen werden, daher gibt es keine feste Realität.',
+            'Français': 'L\'illumination n\'a pas de caractéristiques à saisir; tous les dharma sont vides et ne peuvent être parlés, donc il n\'y a pas de réalité fixe.',
+            'Русский': 'Просветление не имеет характеристик для схватывания; все дхармы пусты и не могут быть высказаны, поэтому нет фиксированной реальности.',
+            'Español': 'La iluminación no tiene características que agarrar; todos los dharmas son vacíos y no pueden hablarse, por lo tanto no hay realidad fija.',
+            'Italiano': 'L\'illuminazione non ha caratteristiche da afferrare; tutti i dharma sono vuoti e non possono essere detti, quindi non c\'è realtà fissa.',
+            'संस्कृतम्': 'बोधिः निराकारः ग्रहीतुं न शक्यते, सर्वधर्माः शून्याः वक्तुं न शक्यन्ते, अतः न कोऽपि निश्चितः वास्तवः।',
+            'Pāli': 'Bodhi animitto gahetuṃ na sakkā, sabbe dhammā suññā vattuṃ na sakkā, tasmā natthi koci nicchito vatthu.'
+        },
+        translations: {
+            '白话文': '为什么呢？如来所说的法都不可执取、不可言说。',
+            'English': 'Why is this? All Dharmas spoken by the Tathagata cannot be grasped and cannot be spoken.',
+            'Deutsch': 'Warum ist das so? Alle vom Tathagata gesprochenen Dharmas können nicht ergriffen und nicht gesprochen werden.',
+            'Français': 'Pourquoi cela? Tous les Dharma prononcés par le Tathagata ne peuvent être saisis et ne peuvent être parlés.',
+            'Русский': 'Почему это? Все Дхармы, произнесенные Татхагатой, не могут быть схвачены и не могут быть высказаны.',
+            'Español': '¿Por qué es esto? Todos los Dharmas hablados por el Tathagata no pueden ser agarrados y no pueden ser hablados.',
+            'Italiano': 'Perché questo? Tutti i Dharma pronunciati dal Tathagata non possono essere afferrati e non possono essere detti.',
+            'संस्कृतम्': 'तत्र किं कारणम्? तथागतेन उक्ताः सर्वे धर्माः न ग्रहीतव्याः, न वक्तव्याः।',
+            'Pāli': 'Tatra kiṃ kāraṇaṃ? Tathāgatena bhāsitā sabbe dhammā na gahetabbā, na vattabbā.'
+        }
+    },
+    {
+        id: 'section4',
+        text: '非法非非法。',
+        readingText: '非法非非法。',
+        pinyin: 'fēi fǎ fēi fēi fǎ',
+        english: 'They are neither dharmas nor non-dharmas.',
+        annotation: '非法則不有，非非法故不無。有無並無，理之極也。\n○有無之上，疏有故不可說四字。',
+        annotationPinyin: 'fēi fǎ zé bù yǒu fēi fēi fǎ gù bù wú yǒu wú bìng wú lǐ zhī jí yě \n○ yǒu wú zhī shàng shū yǒu gù bù kě shuō sì zì',
+        annotationTranslations: {
+            '白话文': '非法则不存在，非非法故不无。有无俱无，是理的极致。\n注："有无"之上，疏中有"故不可说"四字。',
+            'English': 'Not dharmas means they do not exist; not non-dharmas means they are not nonexistent. Both existence and nonexistence are negated—this is the ultimate principle.\nNote: Above "existence and nonexistence", the commentary has the four characters "故不可说" (therefore cannot be spoken).',
+            'Deutsch': 'Nicht Dharmas bedeutet, sie existieren nicht; nicht Nicht-Dharmas bedeutet, sie sind nicht nichtexistent. Sowohl Existenz als auch Nichtexistenz werden negiert—dies ist das ultimative Prinzip.\nAnmerkung: Über "Existenz und Nichtexistenz" hat der Kommentar die vier Zeichen "故不可说" (daher kann nicht gesprochen werden).',
+            'Français': 'Pas dharma signifie qu\'ils n\'existent pas; pas non-dharma signifie qu\'ils ne sont pas inexistants. L\'existence et la non-existence sont toutes deux niées—c\'est le principe ultime.\nNote : Au-dessus de "existence et non-existence", le commentaire a les quatre caractères "故不可说" (donc ne peut être parlé).',
+            'Русский': 'Не дхармы означает, что они не существуют; не не-дхармы означает, что они не несуществующие. И существование, и несуществование отрицаются—это высший принцип.\nПримечание: Над "существованием и несуществованием" в комментарии есть четыре иероглифа "故不可说" (поэтому не может быть сказано).',
+            'Español': 'No dharmas significa que no existen; no no-dharmas significa que no son inexistentes. Tanto la existencia como la inexistencia son negadas—este es el principio último.\nNota: Encima de "existencia e inexistencia", el comentario tiene los cuatro caracteres "故不可说" (por lo tanto no se puede hablar).',
+            'Italiano': 'Non dharma significa che non esistono; non non-dharma significa che non sono inesistenti. Sia l\'esistenza che la non-esistenza sono negate—questo è il principio ultimo.\nNota: Sopra "esistenza e non-esistenza", il commento ha i quattro caratteri "故不可说" (quindi non può essere detto).',
+            'संस्कृतम्': 'अधर्माः न, न अधर्माः च। अधर्माः इति न अस्ति, अधर्माभावात् न नास्ति। अस्तित्वाभावौ उभौ अपि न, एतत् तत्त्वस्य परमं।\nटिप्पणीः "अस्तित्वाभावौ" इति पदस्य उपरि व्याख्यायां "अतः वक्तुं न शक्यते" इति चत्वारः अक्षराः सन्ति।',
+            'Pāli': 'Adhammā na, na adhammā ca. Adhammā ti na atthi, adhammābhāvā na natthi. Atthitvābhāvā ubho pi na, etaṃ tathāya paramaṃ.\nNidassanaṃ: "atthitvābhāvā" ti pādassa upari aṭṭhakathāyaṃ "tasmā vattuṃ na sakkā" ti cattāro akkharā honti.'
+        },
+        translations: {
+            '白话文': '不是法，也不是非法。',
+            'English': 'They are neither dharmas nor non-dharmas.',
+            'Deutsch': 'Sie sind weder Dharmas noch Nicht-Dharmas.',
+            'Français': 'Ils ne sont ni dharma ni non-dharma.',
+            'Русский': 'Они ни дхармы, ни не-дхармы.',
+            'Español': 'No son dharmas ni no-dharmas.',
+            'Italiano': 'Non sono dharma né non-dharma.',
+            'संस्कृतम्': 'न धर्माः, न अधर्माः।',
+            'Pāli': 'Na dhammā, na adhammā.'
+        }
+    },
+    {
+        id: 'section5',
+        text: '所以者何？一切賢聖皆以無為法而有差別。',
+        readingText: '所以者何？一切賢聖皆以無為法而有差別。',
+        pinyin: 'suǒ yǐ zhě hé yī qiè xián shèng jiē yǐ wú wéi fǎ ér yǒu chā bié',
+        english: 'Why is this? All sages and saints differ based on the unconditioned Dharma.',
+        annotation: '理無生滅，謂之無為。無為之理，眾聖同解，解會無為，結盡道成，所謂一解脫義，同入法性者也。然無為雖一，解有明昧，明深昧淺，優劣差者也。',
+        annotationPinyin: 'lǐ wú shēng miè wèi zhī wú wéi wú wéi zhī lǐ zhòng shèng tóng jiě jiě huì wú wéi jié jìn dào chéng suǒ wèi yī jiě tuō yì tóng rù fǎ xìng zhě yě rán wú wéi suī yī jiě yǒu míng mèi míng shēn mèi qiǎn yōu liè chā zhě yě',
+        annotationTranslations: {
+            '白话文': '理体无生无灭，称为无为。无为之理，众圣共同理解，理解体会无为，结缚尽除道业成就，所谓一解脱义，同入法性。然而无为虽是一理，理解有明有暗，明深暗浅，优劣差别。',
+            'English': 'The principle is without birth or cessation—this is called the unconditioned. The principle of the unconditioned is commonly understood by all sages. Understanding and realizing the unconditioned, bonds are exhausted and the path is accomplished—this is called the single meaning of liberation, all equally entering Dharma-nature. However, although the unconditioned is one principle, understanding has clarity and obscurity—deep clarity and shallow obscurity create superior and inferior differences.',
+            'Deutsch': 'Das Prinzip ist ohne Geburt oder Aufhören—dies wird das Unbedingte genannt. Das Prinzip des Unbedingten wird von allen Weisen gemeinsam verstanden. Das Unbedingte verstehend und verwirklichend, sind Fesseln erschöpft und der Weg vollbracht—dies wird die einzige Bedeutung der Befreiung genannt, alle gleichermaßen in die Dharma-Natur eintretend. Jedoch, obwohl das Unbedingte ein Prinzip ist, hat Verständnis Klarheit und Verdunkelung—tiefe Klarheit und flache Verdunkelung schaffen überlegene und unterlegene Unterschiede.',
+            'Français': 'Le principe est sans naissance ni cessation—ceci est appelé l\'inconditionné. Le principe de l\'inconditionné est communément compris par tous les sages. Comprendre et réaliser l\'inconditionné, les liens sont épuisés et la voie accomplie—ceci est appelé la signification unique de la libération, tous entrant également dans la nature du Dharma. Cependant, bien que l\'inconditionné soit un principe, la compréhension a clarté et obscurité—clarté profonde et obscurité superficielle créent des différences supérieures et inférieures.',
+            'Русский': 'Принцип без рождения и прекращения—это называется необусловленным. Принцип необусловленного обычно понимается всеми мудрецами. Понимая и осознавая необусловленное, оковы исчерпаны и путь осуществлен—это называется единственным значением освобождения, все одинаково входят в природу Дхармы. Однако, хотя необусловленное является одним принципом, понимание имеет ясность и неясность—глубокая ясность и поверхностная неясность создают превосходные и неполноценные различия.',
+            'Español': 'El principio es sin nacimiento ni cesación—esto se llama lo incondicionado. El principio de lo incondicionado es comúnmente entendido por todos los sabios. Entendiendo y realizando lo incondicionado, los lazos se agotan y el camino se logra—esto se llama el único significado de la liberación, todos entrando igualmente en la naturaleza del Dharma. Sin embargo, aunque lo incondicionado es un principio, el entendimiento tiene claridad y oscuridad—claridad profunda y oscuridad superficial crean diferencias superiores e inferiores.',
+            'Italiano': 'Il principio è senza nascita o cessazione—questo è chiamato l\'incondizionato. Il principio dell\'incondizionato è comunemente compreso da tutti i saggi. Comprendendo e realizzando l\'incondizionato, i legami sono esauriti e il sentiero è compiuto—questo è chiamato il singolo significato della liberazione, tutti entrando ugualmente nella natura del Dharma. Tuttavia, sebbene l\'incondizionato sia un principio, la comprensione ha chiarezza e oscurità—chiarezza profonda e oscurità superficiale creano differenze superiori e inferiori.',
+            'संस्कृतम्': 'तत्त्वं न उत्पद्यते न निरुध्यते - इदम् असंस्कृतम् इति उच्यते। असंस्कृतस्य तत्त्वं, सर्वैः ऋषिभिः सामान्यं प्रतिपादितम्, असंस्कृतं प्रतिपद्य, बन्धनानि क्षीणानि मार्गः सिद्धः - इदम् एकम् मोक्षार्थम् इति उच्यते, सर्वे समानं धर्मतां प्रविशन्ति। तथापि असंस्कृतम् एकं तत्त्वम् अपि, प्रतिपत्तौ प्रकाशतमसो भवतः - गम्भीरप्रकाशं सूक्ष्मतमसम्, उत्तमाधमभेदाः भवन्ति।',
+            'Pāli': 'Tathā na uppajjati na nirujjhati - idaṃ asaṅkhataṃ ti vuccati. Asaṅkhatassa tathā, sabbehi isīhi samānaṃ paṭipajjitaṃ, asaṅkhataṃ paṭipajja, bandhanāni khīṇāni maggo siddho - idaṃ ekaṃ vimuttatthaṃ ti vuccati, sabbe samānaṃ dhammataṃ pavisanti. Tathāpi asaṅkhataṃ ekaṃ tathāpi, paṭivedhe pabhātamosā honti - gambhīrapabhātaṃ sukhumatamasaṃ, uttamādhamabhedā honti.'
+        },
+        translations: {
+            '白话文': '为什么呢？一切贤圣都因无为法而有差别。',
+            'English': 'Why is this? All sages and saints differ based on the unconditioned Dharma.',
+            'Deutsch': 'Warum ist das so? Alle Weisen und Heiligen unterscheiden sich basierend auf dem unbedingten Dharma.',
+            'Français': 'Pourquoi cela? Tous les sages et saints diffèrent en fonction du Dharma inconditionné.',
+            'Русский': 'Почему это? Все мудрецы и святые отличаются на основе необусловленной Дхармы.',
+            'Español': '¿Por qué es esto? Todos los sabios y santos difieren según el Dharma incondicionado.',
+            'Italiano': 'Perché questo? Tutti i saggi e i santi differiscono in base al Dharma incondizionato.',
+            'संस्कृतम्': 'तत्र किं कारणम्? सर्वे ऋषयः सन्तः असंस्कृतधर्मेण भेदं प्रतिपद्यन्ते।',
+            'Pāli': 'Tatra kiṃ kāraṇaṃ? Sabbe isī santo asaṅkhatadhammena bhedaṃ paṭipajjanti.'
+        }
+    }
+];
+
+// 多语言选项
+const languages = [
+    '白话文', 'English', 'Deutsch', 'Français', 'Русский', 
+    'Español', 'Italiano', 'संस्कृतम्', 'Pāli'
+];
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 生成经文内容
+    const scriptureContent = document.getElementById('scriptureContent');
+    
+    scriptureData.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `text-section section-${(index % 6) + 1}`;
+        
+        // 经文标题
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = `经文第${index + 1}段`;
+        sectionDiv.appendChild(sectionTitle);
+        
+        // 经文正文（带拼音注释）
+        const textDiv = document.createElement('div');
+        textDiv.className = 'text-content';
+        textDiv.innerHTML = processTextWithPinyin(section.text, section.pinyin, section.id);
+        
+        // 添加朗读按钮和纯文本
+        const textActions = document.createElement('div');
+        textActions.className = 'action-buttons';
+        textActions.innerHTML = `
+            <button class="action-btn speak" id="speakText-${section.id}">朗读经文</button>
+            <span class="plain-text">${section.readingText}</span>
+        `;
+        textDiv.appendChild(textActions);
+        
+        // 添加多语言翻译
+        addTranslations(textDiv, section.translations, `${section.id}-trans`);
+        
+        sectionDiv.appendChild(textDiv);
+        
+        // 注解内容
+        const annoDiv = document.createElement('div');
+        annoDiv.className = 'annotation-content';
+        
+        // 添加注解内容（带拼音标注）
+        const annotationP = document.createElement('div');
+        annotationP.className = 'annotation';
+        annotationP.id = `${section.id}-anno`;
+        annotationP.innerHTML = processAnnotationWithPinyin(section.annotation, section.annotationPinyin);
+        annoDiv.appendChild(annotationP);
+        
+        // 添加朗读按钮和隐藏的注解文本
+        const annoActions = document.createElement('div');
+        annoActions.className = 'action-buttons';
+        annoActions.innerHTML = `
+            <button class="action-btn speak" id="speakAnno-${section.id}">朗读注解</button>
+            <span class="annotation-text">${section.annotation}</span>
+        `;
+        annoDiv.appendChild(annoActions);
+        
+        // 添加注解的多语言翻译
+        addTranslations(annoDiv, section.annotationTranslations, `${section.id}-anno-trans`);
+        
+        sectionDiv.appendChild(annoDiv);
+        
+        scriptureContent.appendChild(sectionDiv);
+    });
+
+    // 设置朗读按钮事件
+    setupSpeakButtons();
+    
+    // 设置汉字点击事件
+    setupCharClickEvents();
+});
+
+// 处理文本添加拼音
+function processTextWithPinyin(text, pinyin, sectionId) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return `<span id="${sectionId}-text">${result}</span>`;
+}
+
+// 处理注解文本添加拼音
+function processAnnotationWithPinyin(text, pinyin) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return result;
+}
+
+// 添加多语言翻译模块
+function addTranslations(container, translations, baseId) {
+    const transTabs = document.createElement('div');
+    transTabs.className = 'translation-tabs';
+    
+    const transContents = document.createElement('div');
+    
+    Object.entries(translations).forEach(([lang, content]) => {
+        // 翻译标签
+        const tab = document.createElement('div');
+        tab.className = 'translation-tab';
+        tab.textContent = lang;
+        tab.onclick = function() {
+            // 切换活跃标签
+            transTabs.querySelectorAll('.translation-tab').forEach(t => 
+                t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 显示对应语言内容
+            transContents.querySelectorAll('.translation-content').forEach(c => 
+                c.classList.remove('active'));
+            transContents.querySelector(`#${baseId}-${lang}`).classList.add('active');
+        };
+        transTabs.appendChild(tab);
+        
+        // 翻译内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'translation-content';
+        contentDiv.id = `${baseId}-${lang}`;
+        contentDiv.textContent = content;
+        transContents.appendChild(contentDiv);
+    });
+    
+    // 默认显示第一个语言
+    if (transTabs.firstChild) {
+        transTabs.firstChild.click();
+    }
+    
+    container.appendChild(transTabs);
+    container.appendChild(transContents);
+}
+
+// 设置所有朗读按钮事件
+function setupSpeakButtons() {
+    // 经文朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakText-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.readingText;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+    
+    // 注解朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakAnno-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = this.nextElementSibling.textContent; // 获取隐藏的注解文本
+                toggleSpeech(text, this);
+            });
+        }
+    });
+}
+
+// 设置汉字点击事件（显示详情弹窗）
+function setupCharClickEvents() {
+    document.addEventListener('click', function(e) {
+        const charElement = e.target.closest('.char');
+        if (charElement) {
+            const char = charElement.dataset.char;
+            showCharModal(char);
+        }
+    });
+    
+    // 关闭弹窗按钮
+    document.getElementById('closeCharModal').addEventListener('click', function() {
+        document.getElementById('charModal').style.display = 'none';
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('charModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+}
+
+// 显示汉字详情弹窗
+function showCharModal(char) {
+    const modal = document.getElementById('charModal');
+    const modalChar = document.getElementById('modalChar');
+    const modalPinyin = document.getElementById('modalPinyin');
+    const modalMeaning = document.getElementById('modalMeaning');
+    const modalBuddhistMeaning = document.getElementById('modalBuddhistMeaning');
+    
+    // 设置弹窗内容
+    modalChar.textContent = char;
+    
+    if (punctuationPinyin[char]) {
+        // 标点符号
+        modalPinyin.textContent = punctuationPinyin[char];
+        modalMeaning.textContent = 'This is a punctuation mark.';
+        modalBuddhistMeaning.textContent = 'Punctuation marks help structure the text and indicate pauses in recitation.';
+    } else if (charMeanings[char]) {
+        // 汉字
+        const charData = charMeanings[char];
+        modalPinyin.textContent = charData.pinyin;
+        modalMeaning.innerHTML = charData.meanings.map(m => `• ${m}`).join('<br>');
+        modalBuddhistMeaning.textContent = charData.buddhist;
+    } else {
+        // 未知字符
+        modalPinyin.textContent = 'Unknown';
+        modalMeaning.textContent = 'No detailed information available for this character.';
+        modalBuddhistMeaning.textContent = 'No specific Buddhist meaning recorded.';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 切换朗读/停止功能
+function toggleSpeech(text, button) {
+    if (currentUtterance && speechSynthesis.speaking) {
+        // 如果正在朗读，则停止
+        speechSynthesis.cancel();
+        button.classList.remove('stop');
+        button.classList.add('speak');
+        currentUtterance = null;
+    } else {
+        // 开始朗读
+        if ('speechSynthesis' in window) {
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 0.7; // 正常语速
+            
+            currentUtterance.onend = function() {
+                button.classList.remove('stop');
+                button.classList.add('speak');
+                currentUtterance = null;
+            };
+            
+            speechSynthesis.speak(currentUtterance);
+            button.classList.remove('speak');
+            button.classList.add('stop');
+        } else {
+            alert('您的浏览器不支持语音朗读功能');
+        }
+    }
+}
+</script>
+</body>
+</html>

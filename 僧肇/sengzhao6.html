@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金刚般若波罗蜜经（完整交互版）</title>
+    <style>
+        body {
+            font-family: "SimSun", "STKaiti", serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1.4em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 2.0em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d4a762;
+        }
+        
+        .author {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .preface-section {
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #d4a762;
+        }
+        
+        .preface-content {
+            margin-bottom: 20px;
+            line-height: 2.0;
+            color: #e0e0e0;
+        }
+        
+        .preface-annotation {
+            color: #999;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 3px solid #555;
+            margin-top: 15px;
+        }
+        
+        .text-section {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .text-section h3 {
+            margin-top: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            color: #d4a762;
+            background-color: #2a2a2a;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .annotation-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            color: #e0e0e0;
+        }
+        
+        .char-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #444;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .char:hover .char-tooltip {
+            display: block;
+        }
+        
+        .annotation {
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .plain-text {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.7em;
+            background-color: #444;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .action-btn:hover {
+            background-color: #555;
+        }
+        
+        .action-btn.speak {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .action-btn.stop {
+            background-color: #a76a6a;
+            color: #1a1a1a;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 15px 0;
+        }
+        
+        .translation-tab {
+            padding: 3px 8px;
+            background-color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .translation-tab.active {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        /* 修改后的弹窗样式 */
+        .char-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .char-modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 80%;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .char-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .char-modal-char {
+            font-size: 2.5em;
+            color: #d4a762;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-pinyin {
+            font-size: 1.3em;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .char-modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .char-modal-close:hover {
+            color: #e0e0e0;
+        }
+        
+        .char-modal-section {
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-section h3 {
+            color: #d4a762;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .char-modal-meaning {
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        
+        /* Color schemes for alternating sections */
+        .section-1 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-1 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #d4a762;
+        }
+        
+        .section-2 .text-content {
+            background-color: #333333;
+        }
+        .section-2 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #5d8aa8;
+        }
+        
+        .section-3 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-3 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a8d4a7;
+        }
+        
+        .section-4 .text-content {
+            background-color: #333333;
+        }
+        .section-4 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4a7a7;
+        }
+        
+        .section-5 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-5 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a7a7d4;
+        }
+        
+        .section-6 .text-content {
+            background-color: #333333;
+        }
+        .section-6 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4d4a7;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+            color: #d4a762;
+            font-weight: bold;
+        }
+        
+        .reading-text {
+            display: none; /* 不再需要单独显示 */
+        }
+        
+        .annotation-text {
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            
+            .char-modal-content {
+                padding: 15px;
+            }
+            
+            .char-modal-char {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 汉字详情弹窗 -->
+<div class="char-modal" id="charModal">
+    <div class="char-modal-content">
+        <div class="char-modal-header">
+            <h2>汉字详情</h2>
+            <button class="char-modal-close" id="closeCharModal">&times;</button>
+        </div>
+        <div class="char-modal-char" id="modalChar"></div>
+        <div class="char-modal-pinyin" id="modalPinyin"></div>
+        <div class="char-modal-section">
+            <h3>基本释义</h3>
+            <div class="char-modal-meaning" id="modalMeaning"></div>
+        </div>
+        <div class="char-modal-section">
+            <h3>佛教释义</h3>
+            <div class="char-modal-meaning" id="modalBuddhistMeaning"></div>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="title">金刚般若波罗蜜经</div>
+    <div class="author">姚秦三藏法师鸠摩罗什译</div>
+</div>
+
+<!-- 第五品标题 -->
+<div class="section-title">第五品</div>
+
+<!-- 经文内容 -->
+<div id="scriptureContent"></div>
+
+<script>
+// 语音合成对象
+let currentUtterance = null;
+
+// 标点符号的拼音映射
+const punctuationPinyin = {
+    '，': 'dòu hào',
+    '。': 'jù hào',
+    '、': 'dùn hào',
+    '；': 'fēn hào',
+    '：': 'mào hào',
+    '！': 'tàn hào',
+    '？': 'wèn hào',
+    '「': 'zuǒ yǐn hào',
+    '」': 'yòu yǐn hào',
+    '『': 'zuǒ shuāng yǐn hào',
+    '』': 'yòu shuāng yǐn hào',
+    '（': 'zuǒ kuò hào',
+    '）': 'yòu kuò hào',
+    '《': 'zuǒ shū míng hào',
+    '》': 'yòu shū míng hào'
+};
+
+// 汉字的多义项解释
+const charMeanings = {
+    '須': {
+        pinyin: 'xū',
+        meanings: [
+            'must',
+            'necessary',
+            'beard'
+        ],
+        buddhist: 'Necessity or essential quality in Buddhist teachings.'
+    },
+    '菩': {
+        pinyin: 'pú',
+        meanings: [
+            'bodhi',
+            'enlightenment'
+        ],
+        buddhist: 'Bodhi, meaning awakening or enlightenment.'
+    },
+    '提': {
+        pinyin: 'tí',
+        meanings: [
+            'lift',
+            'carry',
+            'mention'
+        ],
+        buddhist: 'To lift up or elevate in spiritual context.'
+    },
+    '於': {
+        pinyin: 'yú',
+        meanings: [
+            'at',
+            'in',
+            'to'
+        ],
+        buddhist: 'A preposition indicating relation or connection.'
+    },
+    '意': {
+        pinyin: 'yì',
+        meanings: [
+            'meaning',
+            'intention',
+            'thought'
+        ],
+        buddhist: 'Intention or thought in Buddhist psychology.'
+    },
+    '云': {
+        pinyin: 'yún',
+        meanings: [
+            'say',
+            'cloud',
+            'speak'
+        ],
+        buddhist: 'To say or express in teachings.'
+    },
+    '何': {
+        pinyin: 'hé',
+        meanings: [
+            'what',
+            'why',
+            'how'
+        ],
+        buddhist: 'A question about Dharma.'
+    },
+    '可': {
+        pinyin: 'kě',
+        meanings: [
+            'can',
+            'may',
+            'possible'
+        ],
+        buddhist: 'Possibility or permission.'
+    },
+    '以': {
+        pinyin: 'yǐ',
+        meanings: [
+            'with',
+            'by',
+            'because'
+        ],
+        buddhist: 'A preposition indicating means.'
+    },
+    '身': {
+        pinyin: 'shēn',
+        meanings: [
+            'body',
+            'self',
+            'person'
+        ],
+        buddhist: 'The physical body or self in Buddhist context.'
+    },
+    '相': {
+        pinyin: 'xiāng',
+        meanings: [
+            'mutual',
+            'appearance',
+            'characteristic'
+        ],
+        buddhist: 'Characteristics or signs of phenomena.'
+    },
+    '見': {
+        pinyin: 'jiàn',
+        meanings: [
+            'see',
+            'view',
+            'meet'
+        ],
+        buddhist: 'To perceive or have insight.'
+    },
+    '如': {
+        pinyin: 'rú',
+        meanings: [
+            'as',
+            'like',
+            'such as'
+        ],
+        buddhist: 'Thusness or suchness (tathatā).'
+    },
+    '來': {
+        pinyin: 'lái',
+        meanings: [
+            'come',
+            'arrive',
+            'future'
+        ],
+        buddhist: 'One who has come (Tathāgata), an epithet of Buddha.'
+    },
+    '不': {
+        pinyin: 'bù',
+        meanings: [
+            'not',
+            'no',
+            'un-'
+        ],
+        buddhist: 'Negation in Dharma teachings.'
+    },
+    '也': {
+        pinyin: 'yě',
+        meanings: [
+            'also',
+            'too',
+            'final particle'
+        ],
+        buddhist: 'A final particle in Buddhist texts.'
+    },
+    '世': {
+        pinyin: 'shì',
+        meanings: [
+            'world',
+            'generation',
+            'age'
+        ],
+        buddhist: 'The world or realm of existence.'
+    },
+    '尊': {
+        pinyin: 'zūn',
+        meanings: [
+            'honor',
+            'respect',
+            'venerate'
+        ],
+        buddhist: 'Honorable one, an epithet of Buddha.'
+    },
+    '得': {
+        pinyin: 'dé',
+        meanings: [
+            'obtain',
+            'gain',
+            'can'
+        ],
+        buddhist: 'Attainment or realization.'
+    },
+    '佛': {
+        pinyin: 'fó',
+        meanings: [
+            'Buddha',
+            'Buddhism',
+            'awakened'
+        ],
+        buddhist: 'The awakened one.'
+    },
+    '告': {
+        pinyin: 'gào',
+        meanings: [
+            'tell',
+            'inform',
+            'announce'
+        ],
+        buddhist: 'To teach or proclaim Dharma.'
+    },
+    '凡': {
+        pinyin: 'fán',
+        meanings: [
+            'ordinary',
+            'all',
+            'every'
+        ],
+        buddhist: 'Ordinary or mundane phenomena.'
+    },
+    '所': {
+        pinyin: 'suǒ',
+        meanings: [
+            'place',
+            'that which',
+            'what'
+        ],
+        buddhist: 'A relative pronoun in Buddhist texts.'
+    },
+    '有': {
+        pinyin: 'yǒu',
+        meanings: [
+            'have',
+            'exist',
+            'possess'
+        ],
+        buddhist: 'Existence or possession.'
+    },
+    '皆': {
+        pinyin: 'jiē',
+        meanings: [
+            'all',
+            'each',
+            'every'
+        ],
+        buddhist: 'Universal or all-inclusive.'
+    },
+    '虗': {
+        pinyin: 'xū',
+        meanings: [
+            'empty',
+            'false',
+            'humble'
+        ],
+        buddhist: 'Same as 虚, representing emptiness.'
+    },
+    '妄': {
+        pinyin: 'wàng',
+        meanings: [
+            'false',
+            'vain',
+            'wild'
+        ],
+        buddhist: 'Falsehood or delusion.'
+    },
+    '若': {
+        pinyin: 'ruò',
+        meanings: [
+            'if',
+            'like',
+            'seem'
+        ],
+        buddhist: 'Conditional or hypothetical.'
+    },
+    '諸': {
+        pinyin: 'zhū',
+        meanings: [
+            'all',
+            'various',
+            'many'
+        ],
+        buddhist: 'All or many, referring to phenomena.'
+    },
+    '非': {
+        pinyin: 'fēi',
+        meanings: [
+            'not',
+            'wrong',
+            'non-'
+        ],
+        buddhist: 'Negation in Dharma.'
+    },
+    '則': {
+        pinyin: 'zé',
+        meanings: [
+            'rule',
+            'then',
+            'standard'
+        ],
+        buddhist: 'A principle or rule in Dharma.'
+    },
+    '深': {
+        pinyin: 'shēn',
+        meanings: [
+            'deep',
+            'profound',
+            'dark'
+        ],
+        buddhist: 'Profound understanding in Buddhist context.'
+    },
+    '識': {
+        pinyin: 'shí',
+        meanings: [
+            'know',
+            'recognize',
+            'consciousness'
+        ],
+        buddhist: 'Consciousness or cognition in Buddhist psychology.'
+    },
+    '法': {
+        pinyin: 'fǎ',
+        meanings: [
+            'law',
+            'method',
+            'Dharma'
+        ],
+        buddhist: 'The Dharma, Buddhist teachings.'
+    },
+    '故': {
+        pinyin: 'gù',
+        meanings: [
+            'reason',
+            'cause',
+            'therefore'
+        ],
+        buddhist: 'Cause or reason in Buddhist causality.'
+    },
+    '言': {
+        pinyin: 'yán',
+        meanings: [
+            'speak',
+            'word',
+            'say'
+        ],
+        buddhist: 'Speech or verbal expression.'
+    },
+    '不': {
+        pinyin: 'bù',
+        meanings: [
+            'not',
+            'no',
+            'un-'
+        ],
+        buddhist: 'Negation in Dharma teachings.'
+    },
+    '可': {
+        pinyin: 'kě',
+        meanings: [
+            'can',
+            'may',
+            'possible'
+        ],
+        buddhist: 'Possibility or permission.'
+    },
+    '以': {
+        pinyin: 'yǐ',
+        meanings: [
+            'with',
+            'by',
+            'because'
+        ],
+        buddhist: 'A preposition indicating means.'
+    },
+    '實': {
+        pinyin: 'shí',
+        meanings: [
+            'real',
+            'solid',
+            'fruit'
+        ],
+        buddhist: 'Substantial or real in contrast to empty.'
+    },
+    '而': {
+        pinyin: 'ér',
+        meanings: [
+            'and',
+            'yet',
+            'but'
+        ],
+        buddhist: 'A conjunction in Buddhist texts.'
+    },
+    '見': {
+        pinyin: 'jiàn',
+        meanings: [
+            'see',
+            'view',
+            'meet'
+        ],
+        buddhist: 'To perceive or have insight.'
+    },
+    '引': {
+        pinyin: 'yǐn',
+        meanings: [
+            'lead',
+            'pull',
+            'quote'
+        ],
+        buddhist: 'To quote or cite scriptures.'
+    },
+    '語': {
+        pinyin: 'yǔ',
+        meanings: [
+            'language',
+            'speech',
+            'word'
+        ],
+        buddhist: 'Speech or verbal expression.'
+    },
+    '釋': {
+        pinyin: 'shì',
+        meanings: [
+            'explain',
+            'release',
+            'interpret'
+        ],
+        buddhist: 'Explanation or interpretation of Dharma.'
+    },
+    '萬': {
+        pinyin: 'wàn',
+        meanings: [
+            'ten thousand',
+            'all',
+            'myriad'
+        ],
+        buddhist: 'A large number or all-inclusive.'
+    },
+    '善': {
+        pinyin: 'shàn',
+        meanings: [
+            'good',
+            'virtue',
+            'skillful'
+        ],
+        buddhist: 'Wholesome or skillful actions.'
+    },
+    '之': {
+        pinyin: 'zhī',
+        meanings: [
+            'of',
+            'this',
+            'it'
+        ],
+        buddhist: 'A possessive or descriptive particle.'
+    },
+    '極': {
+        pinyin: 'jí',
+        meanings: [
+            'extreme',
+            'utmost',
+            'pole'
+        ],
+        buddhist: 'The ultimate or highest point.'
+    },
+    '體': {
+        pinyin: 'tǐ',
+        meanings: [
+            'body',
+            'substance',
+            'essence'
+        ],
+        buddhist: 'Substance or essence of phenomena.'
+    },
+    '含': {
+        pinyin: 'hán',
+        meanings: [
+            'contain',
+            'include',
+            'hold'
+        ],
+        buddhist: 'To contain or embrace.'
+    },
+    '妙': {
+        pinyin: 'miào',
+        meanings: [
+            'wonderful',
+            'subtle',
+            'mysterious'
+        ],
+        buddhist: 'Subtle or marvelous in Buddhist teachings.'
+    },
+    '集': {
+        pinyin: 'jí',
+        meanings: [
+            'gather',
+            'collect',
+            'compile'
+        ],
+        buddhist: 'Aggregate or collection (skandha).'
+    },
+    '成': {
+        pinyin: 'chéng',
+        meanings: [
+            'become',
+            'complete',
+            'accomplish'
+        ],
+        buddhist: 'To accomplish or perfect.'
+    },
+    '緣': {
+        pinyin: 'yuán',
+        meanings: [
+            'cause',
+            'condition',
+            'edge'
+        ],
+        buddhist: 'Condition or dependent origination.'
+    },
+    '構': {
+        pinyin: 'gòu',
+        meanings: [
+            'construct',
+            'form',
+            'frame'
+        ],
+        buddhist: 'To construct or form.'
+    },
+    '無': {
+        pinyin: 'wú',
+        meanings: [
+            'not have',
+            'without',
+            'non-'
+        ],
+        buddhist: 'Non-existence or emptiness.'
+    },
+    '性': {
+        pinyin: 'xìng',
+        meanings: [
+            'nature',
+            'character',
+            'gender'
+        ],
+        buddhist: 'Inherent nature or essence.'
+    },
+    '即': {
+        pinyin: 'jí',
+        meanings: [
+            'namely',
+            'immediately',
+            'then'
+        ],
+        buddhist: 'Identity or non-duality.'
+    },
+    '述': {
+        pinyin: 'shù',
+        meanings: [
+            'state',
+            'narrate',
+            'describe'
+        ],
+        buddhist: 'To explain or describe teachings.'
+    },
+    '成': {
+        pinyin: 'chéng',
+        meanings: [
+            'become',
+            'complete',
+            'accomplish'
+        ],
+        buddhist: 'To accomplish or perfect.'
+    },
+    '又': {
+        pinyin: 'yòu',
+        meanings: [
+            'again',
+            'also',
+            'moreover'
+        ],
+        buddhist: 'Furthermore or additionally.'
+    },
+    '理': {
+        pinyin: 'lǐ',
+        meanings: [
+            'principle',
+            'reason',
+            'truth'
+        ],
+        buddhist: 'Principle or ultimate truth.'
+    },
+    '假': {
+        pinyin: 'jiǎ',
+        meanings: [
+            'false',
+            'borrow',
+            'temporary'
+        ],
+        buddhist: 'Provisional or conventional truth.'
+    },
+    '名': {
+        pinyin: 'míng',
+        meanings: [
+            'name',
+            'fame',
+            'term'
+        ],
+        buddhist: 'Name or designation in Buddhist logic.'
+    },
+    '計': {
+        pinyin: 'jì',
+        meanings: [
+            'calculate',
+            'plan',
+            'consider'
+        ],
+        buddhist: 'To conceive or grasp at.'
+    },
+    '為': {
+        pinyin: 'wéi',
+        meanings: [
+            'as',
+            'become',
+            'act'
+        ],
+        buddhist: 'To act or function as.'
+    },
+    '行': {
+        pinyin: 'xíng',
+        meanings: [
+            'go',
+            'practice',
+            'conduct'
+        ],
+        buddhist: 'Practice or conduct in Buddhism.'
+    },
+    '合': {
+        pinyin: 'hé',
+        meanings: [
+            'combine',
+            'join',
+            'agree'
+        ],
+        buddhist: 'Union or harmony in practice.'
+    },
+    '解': {
+        pinyin: 'jiě',
+        meanings: [
+            'understand',
+            'untie',
+            'explain'
+        ],
+        buddhist: 'Understanding or liberation.'
+    },
+    '通': {
+        pinyin: 'tōng',
+        meanings: [
+            'pass through',
+            'connect',
+            'understand'
+        ],
+        buddhist: 'Penetration or comprehensive understanding.'
+    },
+    '則': {
+        pinyin: 'zé',
+        meanings: [
+            'rule',
+            'then',
+            'standard'
+        ],
+        buddhist: 'A principle or rule in Dharma.'
+    },
+    '見': {
+        pinyin: 'jiàn',
+        meanings: [
+            'see',
+            'view',
+            'meet'
+        ],
+        buddhist: 'To perceive or have insight.'
+    },
+    '佛': {
+        pinyin: 'fó',
+        meanings: [
+            'Buddha',
+            'Buddhism',
+            'awakened'
+        ],
+        buddhist: 'The awakened one.'
+    },
+    '頗': {
+        pinyin: 'pō',
+        meanings: [
+            'rather',
+            'quite',
+            'inclined'
+        ],
+        buddhist: 'To incline or be partial.'
+    },
+    '眾': {
+        pinyin: 'zhòng',
+        meanings: [
+            'crowd',
+            'many',
+            'multitude'
+        ],
+        buddhist: 'Sentient beings or the multitude.'
+    },
+    '生': {
+        pinyin: 'shēng',
+        meanings: [
+            'birth',
+            'life',
+            'produce'
+        ],
+        buddhist: 'Birth or sentient beings.'
+    },
+    '聞': {
+        pinyin: 'wén',
+        meanings: [
+            'hear',
+            'smell',
+            'learn'
+        ],
+        buddhist: 'To hear or learn the Dharma.'
+    },
+    '信': {
+        pinyin: 'xìn',
+        meanings: [
+            'believe',
+            'trust',
+            'faith'
+        ],
+        buddhist: 'Faith or confidence in the Dharma.'
+    },
+    '滅': {
+        pinyin: 'miè',
+        meanings: [
+            'extinguish',
+            'destroy',
+            'nirvana'
+        ],
+        buddhist: 'Nirvana or cessation.'
+    },
+    '後': {
+        pinyin: 'hòu',
+        meanings: [
+            'after',
+            'later',
+            'behind'
+        ],
+        buddhist: 'Later or subsequent time.'
+    },
+    '持': {
+        pinyin: 'chí',
+        meanings: [
+            'hold',
+            'maintain',
+            'uphold'
+        ],
+        buddhist: 'To uphold or maintain precepts.'
+    },
+    '戒': {
+        pinyin: 'jiè',
+        meanings: [
+            'precept',
+            'discipline',
+            'abstain'
+        ],
+        buddhist: 'Moral precepts or discipline.'
+    },
+    '修': {
+        pinyin: 'xiū',
+        meanings: [
+            'cultivate',
+            'practice',
+            'repair'
+        ],
+        buddhist: 'To cultivate or practice.'
+    },
+    '福': {
+        pinyin: 'fú',
+        meanings: [
+            'blessing',
+            'fortune',
+            'merit'
+        ],
+        buddhist: 'Merit or blessedness.'
+    },
+    '念': {
+        pinyin: 'niàn',
+        meanings: [
+            'thought',
+            'remember',
+            'recite'
+        ],
+        buddhist: 'Mindfulness or recollection.'
+    },
+    '淨': {
+        pinyin: 'jìng',
+        meanings: [
+            'pure',
+            'clean',
+            'purify'
+        ],
+        buddhist: 'Purity or purification.'
+    },
+    '知': {
+        pinyin: 'zhī',
+        meanings: [
+            'know',
+            'realize',
+            'wisdom'
+        ],
+        buddhist: 'Knowledge or wisdom.'
+    },
+    '悉': {
+        pinyin: 'xī',
+        meanings: [
+            'all',
+            'completely',
+            'know'
+        ],
+        buddhist: 'Complete knowledge or omniscience.'
+    },
+    '量': {
+        pinyin: 'liàng',
+        meanings: [
+            'measure',
+            'quantity',
+            'capacity'
+        ],
+        buddhist: 'Measurement or extent.'
+    },
+    '復': {
+        pinyin: 'fù',
+        meanings: [
+            'again',
+            'return',
+            'repeat'
+        ],
+        buddhist: 'Again or returning.'
+    },
+    '我': {
+        pinyin: 'wǒ',
+        meanings: [
+            'I',
+            'self',
+            'ego'
+        ],
+        buddhist: 'Self or ego.'
+    },
+    '人': {
+        pinyin: 'rén',
+        meanings: [
+            'person',
+            'human',
+            'others'
+        ],
+        buddhist: 'Person or human being.'
+    },
+    '壽': {
+        pinyin: 'shòu',
+        meanings: [
+            'longevity',
+            'life span',
+            'age'
+        ],
+        buddhist: 'Life span or longevity.'
+    },
+    '者': {
+        pinyin: 'zhě',
+        meanings: [
+            'one who',
+            'that which',
+            'person'
+        ],
+        buddhist: 'One who or that which.'
+    },
+    '取': {
+        pinyin: 'qǔ',
+        meanings: [
+            'take',
+            'grasp',
+            'adopt'
+        ],
+        buddhist: 'To grasp or cling.'
+    },
+    '著': {
+        pinyin: 'zhuó',
+        meanings: [
+            'attach',
+            'cling',
+            'wear'
+        ],
+        buddhist: 'Attachment or clinging.'
+    },
+    '筏': {
+        pinyin: 'fá',
+        meanings: [
+            'raft',
+            'ferry',
+            'boat'
+        ],
+        buddhist: 'Raft as a metaphor for Dharma.'
+    },
+    '喻': {
+        pinyin: 'yù',
+        meanings: [
+            'analogy',
+            'metaphor',
+            'explain'
+        ],
+        buddhist: 'Analogy or metaphor.'
+    }
+};
+
+// 完整经文数据
+const scriptureData = [
+    {
+        id: 'section1',
+        text: '須菩提白佛言：世尊！頗有眾生得聞如是言說章句生實信不？',
+        readingText: '須菩提白佛言：世尊！頗有眾生得聞如是言說章句生實信不？',
+        pinyin: 'xū pú tí bái fó yán shì zūn pō yǒu zhòng shēng dé wén rú shì yán shuō zhāng jù shēng shí xìn fǒu',
+        english: 'Subhūti said to the Buddha: "World-Honored One, will there be any sentient beings who, upon hearing such words and phrases, will give rise to true faith?"',
+        annotation: '理空無相，奇心無所。時聽昧然，未即於心。示同未悟，諮問云爾。訖法尚應捨，何況非法。以信驗理身。\n○奇疏作寄。',
+        annotationPinyin: 'lǐ kōng wú xiāng qí xīn wú suǒ shí tīng mèi rán wèi jí yú xīn shì tóng wèi wù zī wèn yún ěr qì fǎ shàng yīng shě hé kuàng fēi fǎ yǐ xìn yàn lǐ shēn \n○ qí shū zuò jì',
+        annotationTranslations: {
+            '白话文': '真理空寂无相，奇特之心无所寄托。当时听闻却茫然不解，未能立即领悟于心。示现如同未悟，故有此问。究竟法尚且应舍，何况非法。以信心验证理体。\n注："奇"在疏中作"寄"。',
+            'English': 'The principle is empty and without marks, the wondrous mind has no abode. At the time of hearing, one is dimly unaware, not immediately comprehending in the mind. Manifesting as if unawakened, thus the inquiry is made. Even the Dharma should be relinquished, how much more so non-Dharma. Using faith to verify the principle-body.\nNote: "奇" is written as "寄" in the commentary.',
+            'Deutsch': 'Das Prinzip ist leer und ohne Merkmale, der wundersame Geist hat keinen Ort. Zum Zeitpunkt des Hörens ist man dumpf unbewusst, nicht unmittelbar im Geist begreifend. Sich zeigend als ob unerwacht, daher wird die Anfrage gemacht. Sogar das Dharma sollte aufgegeben werden, wie viel mehr Nicht-Dharma. Den Prinzip-Körper mit Glauben verifizierend.\nAnmerkung: "奇" ist als "寄" im Kommentar geschrieben.',
+            'Français': 'Le principe est vide et sans marque, l\'esprit merveilleux n\'a pas de demeure. Au moment de l\'écoute, on est vaguement inconscient, ne comprenant pas immédiatement dans l\'esprit. Se manifestant comme si non éveillé, ainsi la question est posée. Même le Dharma devrait être abandonné, à plus forte raison le non-Dharma. Utiliser la foi pour vérifier le corps du principe.\nNote : "奇" est écrit comme "寄" dans le commentaire.',
+            'Русский': 'Принцип пуст и не имеет признаков, удивительный ум не имеет места. Во время слушания человек смутно не осознает, не сразу постигает в уме. Проявляя себя как будто не пробужденный, поэтому задается вопрос. Даже Дхарму следует оставить, тем более не-Дхарму. Используя веру для проверки тела принципа.\nПримечание: "奇" написано как "寄" в комментарии.',
+            'Español': 'El principio está vacío y sin marcas, la mente maravillosa no tiene morada. En el momento de escuchar, uno está vagamente inconsciente, sin comprender inmediatamente en la mente. Manifestándose como si no estuviera despierto, por lo tanto se hace la pregunta. Incluso el Dharma debería ser abandonado, cuanto más el no-Dharma. Usando la fe para verificar el cuerpo del principio.\nNota: "奇" está escrito como "寄" en el comentario.',
+            'Italiano': 'Il principio è vuoto e senza segni, la mente meravigliosa non ha dimora. Al momento dell\'ascolto, si è vagamente inconsapevoli, non comprendendo immediatamente nella mente. Manifestandosi come se non risvegliati, quindi viene posta la domanda. Anche il Dharma dovrebbe essere abbandonato, tanto più il non-Dharma. Usando la fede per verificare il corpo del principio.\nNota: "奇" è scritto come "寄" nel commento.',
+            'संस्कृतम्': 'तत्त्वं शून्यं निराकारम्, अद्भुतचित्तम् अनाश्रयम्। श्रवणकाले मूढः, न तत्क्षणम् हृदि अवगच्छति। अज्ञानिनाम् इव प्रकटयन्, एवं पृच्छति। धर्मः अपि त्याज्यः, किं पुनः अधर्मः। श्रद्धया तत्त्वकायं परीक्षते।\nटिप्पणीः "奇" इति व्याख्यायां "寄" इति लिखितम्।',
+            'Pāli': 'Tathā suññaṃ animittaṃ, abbhutacittaṃ anissitaṃ. Savanakāle mūḷho, na taṃ khaṇaṃ hadaye avagacchati. Aññānīnaṃ iva pakaṭayanto, evaṃ pucchati. Dhammo pi cajitabbo, kiṃ puna adhammo. Saddhāya tathākāyaṃ parīkassati.\nNidassanaṃ: "奇" ti aṭṭhakathāyaṃ "寄" ti likhitaṃ.'
+        },
+        translations: {
+            '白话文': '须菩提对佛说：世尊！可有众生听闻这样的言说章句而生起真实信心吗？',
+            'English': 'Subhūti said to the Buddha: "World-Honored One, will there be any sentient beings who, upon hearing such words and phrases, will give rise to true faith?"',
+            'Deutsch': 'Subhūti sagte zum Buddha: "Weltgeehrter, wird es irgendwelche fühlenden Wesen geben, die, beim Hören solcher Worte und Sätze, wahres Vertrauen erwecken?"',
+            'Français': 'Subhūti dit au Bouddha : "Honoré du Monde, y aura-t-il des êtres sensibles qui, en entendant de tels mots et phrases, feront naître une foi véritable ?"',
+            'Русский': 'Субхути сказал Будде: "Почитаемый Миром, будут ли какие-либо существа, которые, услышав такие слова и фразы, породят истинную веру?"',
+            'Español': 'Subhūti le dijo al Buddha: "Honrado por el Mundo, ¿habrá seres sensibles que, al escuchar tales palabras y frases, darán surgimiento a una fe verdadera?"',
+            'Italiano': 'Subhūti disse al Buddha: "Onorato dal Mondo, ci saranno esseri senzienti che, udendo tali parole e frasi, faranno sorgere una fede vera?"',
+            'संस्कृतम्': 'सुभूतिः बुद्धम् अवदत् - भगवन्! किंचित् सत्त्वाः एतादृशानि वाक्यानि श्रुत्वा सत्यश्रद्धां जनयिष्यन्ति?',
+            'Pāli': 'Subhūti buddhaṃ avadati - bhante! Kacci sattā evarūpāni vākyāni sutvā saccasaddhaṃ janessanti?'
+        }
+    },
+    {
+        id: 'section2',
+        text: '佛言：須菩提！莫作是說。',
+        readingText: '佛言：須菩提！莫作是說。',
+        pinyin: 'fó yán xū pú tí mò zuò shì shuō',
+        english: 'The Buddha said: "Subhūti, do not speak thus."',
+        annotation: '聖不空言，稟悟如流。方問：有是何言也？',
+        annotationPinyin: 'shèng bù kōng yán bǐng wù rú liú fāng wèn yǒu shì hé yán yě',
+        annotationTranslations: {
+            '白话文': '圣者不会空言，领悟如流水般自然。方才问：有这样的说法吗？',
+            'English': 'The sage does not speak idly, realization flows naturally. Just now asking: "Is there such a saying?"',
+            'Deutsch': 'Der Heilige spricht nicht unnötig, Verwirklichung fließt natürlich. Gerade fragend: "Gibt es solch ein Sprichwort?"',
+            'Français': 'Le sage ne parle pas vainement, la réalisation coule naturellement. Venant juste de demander : "Y a-t-il un tel dicton ?"',
+            'Русский': 'Святой не говорит напрасно, осознание течет естественно. Только что спросил: "Есть ли такая поговорка?"',
+            'Español': 'El sabio no habla en vano, la realización fluye naturalmente. Acaba de preguntar: "¿Hay tal dicho?"',
+            'Italiano': 'Il saggio non parla invano, la realizzazione scorre naturalmente. Appena chiesto: "C\'è un tale detto?"',
+            'संस्कृतम्': 'आर्याः निष्फलं न वदन्ति, प्रतिपत्तिः प्रवाह इव। इदानीं पृच्छति - अस्ति किम् एतादृशम् उक्तम्?',
+            'Pāli': 'Ariyā nissāraṃ na vadanti, paṭivedho paggharanto viya. Idāni pucchati - atthi nu kho evarūpaṃ vuttaṃ?'
+        },
+        translations: {
+            '白话文': '佛说：须菩提！不要这样说。',
+            'English': 'The Buddha said: "Subhūti, do not speak thus."',
+            'Deutsch': 'Der Buddha sagte: "Subhūti, sprich nicht so."',
+            'Français': 'Le Bouddha dit : "Subhūti, ne parle pas ainsi."',
+            'Русский': 'Будда сказал: "Субхути, не говори так."',
+            'Español': 'El Buddha dijo: "Subhūti, no hables así."',
+            'Italiano': 'Il Buddha disse: "Subhūti, non parlare così."',
+            'संस्कृतम्': 'बुद्धः अवदत् - सुभूते! मा एवम् उक्तवान्।',
+            'Pāli': 'Buddho avadati - Subhūti! Mā evaṃ avaca.'
+        }
+    },
+    {
+        id: 'section3',
+        text: '如來滅後後五百歲，有持戒修福者，此於章句能生信心，以此為實。',
+        readingText: '如來滅後後五百歲，有持戒修福者，此於章句能生信心，以此為實。',
+        pinyin: 'rú lái miè hòu hòu wǔ bǎi suì yǒu chí jiè xiū fú zhě cǐ yú zhāng jù néng shēng xìn xīn yǐ cǐ wéi shí',
+        english: '"After the Tathāgata\'s parinirvāṇa, in the latter five hundred years, there will be those who uphold the precepts and cultivate merit. Regarding these phrases, they will be able to give rise to faith, taking this as real."',
+        annotation: '後五百歲，像法之中，人衰道喪，尚有信者，況今大聖感興，英慧雲集，從化如林，何謂無信乎？後世能信，要具戒德。今之未悟，無福愚闇，自為疑滯，非理不實之也。',
+        annotationPinyin: 'hòu wǔ bǎi suì xiàng fǎ zhī zhōng rén shuāi dào sàng shàng yǒu xìn zhě kuàng jīn dà shèng gǎn xīng yīng huì yún jí cóng huà rú lín hé wèi wú xìn hū hòu shì néng xìn yào jù jiè dé jīn zhī wèi wù wú fú yú àn zì wéi yí zhì fēi lǐ bù shí zhī yě',
+        annotationTranslations: {
+            '白话文': '后五百岁，像法时期，人道衰微，仍有信者，何况现今大圣感应兴起，英才智慧如云聚集，随从教化如林，怎能说无信？后世能信者，须具足戒德。现今未悟者，无福愚暗，自生疑惑滞碍，并非理不真实。',
+            'English': '"In the latter five hundred years, during the period of the semblance Dharma, when human virtue declines and the path is lost, there will still be those with faith, how much more so now when the great sage\'s influence arises, with the wise and intelligent gathering like clouds, followers of the teaching like a forest—how can one say there is no faith? Those in later ages who can have faith must possess precept virtue. Those today who are unawakened, lacking merit and foolishly ignorant, create their own doubts and obstructions—it is not that the principle is unreal."',
+            'Deutsch': '"In den letzten fünfhundert Jahren, während der Zeit des scheinbaren Dharma, wenn die menschliche Tugend abnimmt und der Weg verloren geht, wird es immer noch diejenigen mit Glauben geben, wie viel mehr jetzt, wenn der Einfluss des großen Weisen entsteht, mit den Weisen und Intelligenten, die sich wie Wolken versammeln, Anhänger der Lehre wie ein Wald - wie kann man sagen, es gibt keinen Glauben? Diejenigen in späteren Zeitaltern, die Glauben haben können, müssen Tugend der Gebote besitzen. Die heute Unerwachten, ohne Verdienst und töricht unwissend, schaffen ihre eigenen Zweifel und Hindernisse - es ist nicht, dass das Prinzip unwirklich ist."',
+            'Français': '"Dans les cinq cents dernières années, pendant la période du Dharma semblant, lorsque la vertu humaine décline et que la voie est perdue, il y aura encore ceux qui ont la foi, à plus forte raison maintenant que l\'influence du grand sage se lève, avec les sages et intelligents se rassemblant comme des nuages, les disciples de l\'enseignement comme une forêt - comment peut-on dire qu\'il n\'y a pas de foi ? Ceux des âges ultérieurs qui peuvent avoir la foi doivent posséder la vertu des préceptes. Ceux d\'aujourd\'hui qui ne sont pas éveillés, sans mérite et stupidement ignorants, créent leurs propres doutes et obstructions - ce n\'est pas que le principe est irréel."',
+            'Русский': '"В последние пятьсот лет, в период подобия Дхармы, когда человеческая добродетель приходит в упадок и путь теряется, все еще будут те, у кого есть вера, тем более сейчас, когда возникает влияние великого мудреца, с мудрыми и интеллигентными, собирающимися, как облака, последователями учения, как лес - как можно сказать, что нет веры? Те, кто в более поздние века может иметь веру, должны обладать добродетелью предписаний. Те, кто сегодня не пробужден, без заслуг и глупо невежественны, создают свои собственные сомнения и препятствия - это не значит, что принцип нереален."',
+            'Español': '"En los últimos quinientos años, durante el período del Dharma aparente, cuando la virtud humana declina y el camino se pierde, todavía habrá aquellos con fe, cuánto más ahora cuando surge la influencia del gran sabio, con los sabios e inteligentes reuniéndose como nubes, seguidores de la enseñanza como un bosque—¿cómo se puede decir que no hay fe? Aquellos en edades posteriores que pueden tener fe deben poseer virtud de preceptos. Los no despiertos de hoy, sin mérito y tontamente ignorantes, crean sus propias dudas y obstrucciones—no es que el principio sea irreal."',
+            'Italiano': '"Negli ultimi cinquecento anni, durante il periodo del Dharma apparente, quando la virtù umana declina e il sentiero è perduto, ci saranno ancora quelli con fede, quanto più ora quando l\'influenza del grande saggio sorge, con i saggi e intelligenti che si radunano come nuvole, seguaci dell\'insegnamento come una foresta—come si può dire che non c\'è fede? Quelli nelle epoche successive che possono avere fede devono possedere virtù dei precetti. I non risvegliati di oggi, senza meriti e stupidamente ignoranti, creano i propri dubbi e ostruzioni—non è che il principio sia irreale."',
+            'संस्कृतम्': 'पञ्चशतवर्षेषु अन्त्येषु, सद्धर्मप्रतिरूपककाले, मनुष्याणां ह्रासे धर्मविनाशे च, श्रद्दधानाः भविष्यन्ति, किं पुनर् अधुना महताम् आर्याणाम् प्रभावे उदिते, प्राज्ञानाम् मेघवत् समूहीभूतानाम्, शासनानुयायिनाम् वनवत् सताम्, कथम् अश्रद्दधानाः इति उच्यते? परकाले श्रद्दधानाः, शीलगुणसम्पन्नाः भवितव्याः। अधुनातनाः अज्ञाः, पुण्यहीनाः मूढाः, स्वयम् संशयानाम् आलम्बनं कुर्वन्ति, न तु तत्त्वम् असत्यम्।',
+            'Pāli': 'Pañcasatavassehi accantesu, saddhammapaṭirūpakakāle, manussānaṃ hāse dhammavināse ca, saddahantā bhavissanti, kiṃ punar ajjuna mahantānaṃ ariyānaṃ pabhāve udite, paññānaṃ meghavatā samūhībhūtānaṃ, sāsanānuyāyīnaṃ vanavatā satānaṃ, kathaṃ assaddahantā ti vuccati? Parakāle saddahantā, sīlaguṇasampannā bhavitabbā. Ajjatanā aññā, puññahīnā mūḷhā, sayameva saṃsayānaṃ ālambanaṃ karonti, na tu tathā asaccaṃ.'
+        },
+        translations: {
+            '白话文': '如来灭度后五百岁，有持戒修福的人，对这些章句能生信心，以此为真实。',
+            'English': '"After the Tathāgata\'s parinirvāṇa, in the latter five hundred years, there will be those who uphold the precepts and cultivate merit. Regarding these phrases, they will be able to give rise to faith, taking this as real."',
+            'Deutsch': '"Nach dem Parinirvāṇa des Tathāgata, in den letzten fünfhundert Jahren, wird es diejenigen geben, die die Gebote halten und Verdienst kultivieren. In Bezug auf diese Sätze werden sie Glauben erwecken können, dies als real nehmend."',
+            'Français': '"Après le parinirvāṇa du Tathāgata, dans les cinq cents dernières années, il y aura ceux qui observeront les préceptes et cultiveront le mérite. Concernant ces phrases, ils pourront faire naître la foi, prenant cela comme réel."',
+            'Русский': '"После паринирваны Татхагаты, в последние пятьсот лет, будут те, кто соблюдает предписания и накапливает заслуги. Относительно этих фраз они смогут породить веру, принимая это как реальное."',
+            'Español': '"Después del parinirvāṇa del Tathāgata, en los últimos quinientos años, habrá aquellos que sostengan los preceptos y cultiven mérito. Respecto a estas frases, podrán dar surgimiento a la fe, tomando esto como real."',
+            'Italiano': '"Dopo il parinirvāṇa del Tathāgata, negli ultimi cinquecento anni, ci saranno quelli che osserveranno i precetti e coltiveranno merito. Riguardo a queste frasi, potranno far sorgere la fede, prendendo questo come reale."',
+            'संस्कृतम्': 'तथागतस्य परिनिर्वाणात् पञ्चशतवर्षेषु अन्त्येषु, शीलधारकाः पुण्यकर्माणः भविष्यन्ति, एतेषु वाक्येषु श्रद्धां जनयितुं शक्ष्यन्ति, एतत् सत्यम् इति मन्यमानाः।',
+            'Pāli': 'Tathāgatassa parinibbānā pañcasatavassehi accantesu, sīladharā puññakammantā bhavissanti, etesu vākyesu saddhaṃ janetuṃ sakkhissanti, etaṃ saccaṃ ti maññamānā.'
+        }
+    },
+    {
+        id: 'section4',
+        text: '當知是人不於一佛、二佛、三、四、五佛而種善根，已於無量千萬佛所種諸善根。',
+        readingText: '當知是人不於一佛、二佛、三、四、五佛而種善根，已於無量千萬佛所種諸善根。',
+        pinyin: 'dāng zhī shì rén bù yú yī fó èr fó sān sì wǔ fó ér zhòng shàn gēn yǐ yú wú liàng qiān wàn fó suǒ zhòng zhū shàn gēn',
+        english: '"You should know that such people have not merely planted roots of virtue with one buddha, two buddhas, three, four, or five buddhas, but have planted roots of virtue with immeasurable hundreds of thousands of buddhas."',
+        annotation: '見佛聞法，積德已久，然後能信，明法之深妙也。',
+        annotationPinyin: 'jiàn fó wén fǎ jī dé yǐ jiǔ rán hòu néng xìn míng fǎ zhī shēn miào yě',
+        annotationTranslations: {
+            '白话文': '见佛闻法，积德已久，然后能信，说明法的深奥微妙。',
+            'English': '"Having seen buddhas and heard the Dharma, accumulating virtue for a long time, only then can they have faith—this shows the profundity and subtlety of the Dharma."',
+            'Deutsch': '"Buddhas gesehen und das Dharma gehört habend, Tugend für lange Zeit ansammelnd, nur dann können sie Glauben haben—dies zeigt die Tiefe und Subtilität des Dharma."',
+            'Français': '"Ayant vu des bouddhas et entendu le Dharma, accumulant la vertu pendant longtemps, alors seulement peuvent-ils avoir la foi—cela montre la profondeur et la subtilité du Dharma."',
+            'Русский': '"Увидев будд и услышав Дхарму, накапливая добродетель в течение долгого времени, только тогда они могут обрести веру - это показывает глубину и тонкость Дхармы."',
+            'Español': '"Habiendo visto buddhas y escuchado el Dharma, acumulando virtud por mucho tiempo, solo entonces pueden tener fe—esto muestra la profundidad y sutileza del Dharma."',
+            'Italiano': '"Avendo visto buddha e ascoltato il Dharma, accumulando virtù per lungo tempo, solo allora possono avere fede—questo mostra la profondità e sottigliezza del Dharma."',
+            'संस्कृतम्': 'बुद्धान् दृष्ट्वा धर्मं श्रुत्वा, चिरं पुण्यं संचित्य, ततः श्रद्धां कर्तुं शक्नुवन्ति - एतत् धर्मस्य गम्भीरत्वं सूक्ष्मत्वं च प्रकटयति।',
+            'Pāli': 'Buddhe disvā dhammaṃ sutvā, ciraṃ puññaṃ sañcitvā, atha saddhaṃ kattuṃ sakkonti - etaṃ dhammassa gambhīratthaṃ sukhumatthañca pakāseti.'
+        },
+        translations: {
+            '白话文': '应当知道这些人不是在一佛、二佛、三、四、五佛处种下善根，而是在无量千万佛处种下诸善根。',
+            'English': '"You should know that such people have not merely planted roots of virtue with one buddha, two buddhas, three, four, or five buddhas, but have planted roots of virtue with immeasurable hundreds of thousands of buddhas."',
+            'Deutsch': '"Ihr solltet wissen, dass solche Menschen nicht nur Wurzeln der Tugend mit einem Buddha, zwei Buddhas, drei, vier oder fünf Buddhas gepflanzt haben, sondern Wurzeln der Tugend mit unermesslichen Hunderttausenden von Buddhas gepflanzt haben."',
+            'Français': '"Vous devez savoir que ces personnes n\'ont pas simplement planté des racines de vertu avec un bouddha, deux bouddhas, trois, quatre ou cinq bouddhas, mais ont planté des racines de vertu avec d\'innombrables centaines de milliers de bouddhas."',
+            'Русский': '"Вы должны знать, что такие люди посадили корни добродетели не просто с одним буддой, двумя буддами, тремя, четырьмя или пятью буддами, а посадили корни добродетели с неизмеримыми сотнями тысяч будд."',
+            'Español': '"Debes saber que tales personas no han plantado raíces de virtud meramente con un buddha, dos buddhas, tres, cuatro o cinco buddhas, sino que han plantado raíces de virtud con inconmensurables cientos de miles de buddhas."',
+            'Italiano': '"Dovete sapere che tali persone non hanno piantato radici di virtù semplicemente con un buddha, due buddha, tre, quattro o cinque buddha, ma hanno piantato radici di virtù con innumerevoli centinaia di migliaia di buddha."',
+            'संस्कृतम्': 'एतादृशाः जनाः न एकस्मिन् बुद्धे, न द्वयोः बुद्धयोः, न त्रिषु, न चतुर्षु, न पञ्चसु बुद्धेषु कुशलमूलानि रोपितवन्तः, अपि तु असंख्येयसु बुद्धकोटिषु कुशलमूलानि रोपितवन्तः इति ज्ञातव्यम्।',
+            'Pāli': 'Evarūpā puggalā na ekassa buddhassa, na dvīnaṃ buddhānaṃ, na tīṇiṃ, na catunnaṃ, na pañcannaṃ buddhānaṃ kusalamūlāni ropessanti, api kho asaṅkheyyesu buddhakoṭīsu kusalamūlāni ropessanti ti ñātabbaṃ.'
+        }
+    },
+    {
+        id: 'section5',
+        text: '聞是章句乃至一念生淨信者，須菩提！如來悉知悉見是諸眾生得如是無量福德。',
+        readingText: '聞是章句乃至一念生淨信者，須菩提！如來悉知悉見是諸眾生得如是無量福德。',
+        pinyin: 'wén shì zhāng jù nǎi zhì yī niàn shēng jìng xìn zhě xū pú tí rú lái xī zhī xī jiàn shì zhū zhòng shēng dé rú shì wú liàng fú dé',
+        english: '"Subhūti, the Tathāgata fully knows and fully sees that all sentient beings who, upon hearing these phrases, give rise to even a single thought of pure faith will obtain such immeasurable merit."',
+        annotation: '即以如來知見，明理非虗，一念淨信，其福無量，推功測理，豈不信之乎？',
+        annotationPinyin: 'jí yǐ rú lái zhī jiàn míng lǐ fēi xū yī niàn jìng xìn qí fú wú liàng tuī gōng cè lǐ qǐ bù xìn zhī hū',
+        annotationTranslations: {
+            '白话文': '即以如来的知见，说明理非虚妄，一念净信，其福无量，推究功德测度理体，岂能不信？',
+            'English': '"Using the Tathāgata\'s knowledge and vision to clarify that the principle is not empty, a single thought of pure faith brings immeasurable merit—investigating the merit and measuring the principle, how could one not believe it?"',
+            'Deutsch': '"Mit dem Wissen und der Vision des Tathāgata klärend, dass das Prinzip nicht leer ist, ein einziger Gedanke reinen Glaubens bringt unermessliches Verdienst—das Verdienst erforschend und das Prinzip messend, wie könnte man es nicht glauben?"',
+            'Français': '"Utilisant la connaissance et la vision du Tathāgata pour clarifier que le principe n\'est pas vide, une seule pensée de foi pure apporte un mérite incommensurable—examinant le mérite et mesurant le principe, comment ne pas y croire ?"',
+            'Русский': '"Используя знание и видение Татхагаты, чтобы прояснить, что принцип не пуст, одна мысль чистой веры приносит неизмеримые заслуги—исследуя заслуги и измеряя принцип, как можно не верить в это?"',
+            'Español': '"Usando el conocimiento y la visión del Tathāgata para aclarar que el principio no está vacío, un solo pensamiento de fe pura trae mérito inconmensurable—investigando el mérito y midiendo el principio, ¿cómo no creerlo?"',
+            'Italiano': '"Usando la conoscenza e la visione del Tathāgata per chiarire che il principio non è vuoto, un singolo pensiero di fede pura porta merito incommensurabile—esaminando il merito e misurando il principio, come non crederci?"',
+            'संस्कृतम्': 'तथागतज्ञानदर्शनैः एतत् प्रकटीकृतम् - तत्त्वम् अशून्यम्, एकक्षणिका शुद्धश्रद्धा अपरिमितं पुण्यं जनयति - पुण्यम् अनुसन्धाय तत्त्वं परीक्ष्य, कथम् अश्रद्दध्यात्?',
+            'Pāli': 'Tathāgatañāṇadassanehi etaṃ pakaṭīkataṃ - tathā asuññaṃ, ekakkhaṇikā suddhasaddhāpi aparimitaṃ puññaṃ janeti - puññaṃ anusandhayitvā tathāya parikkhipitvā, kathaṃ assaddahissati?'
+        },
+        translations: {
+            '白话文': '听闻这些章句乃至生起一念净信的人，须菩提！如来完全知道完全看见这些众生得到如是无量福德。',
+            'English': '"Subhūti, the Tathāgata fully knows and fully sees that all sentient beings who, upon hearing these phrases, give rise to even a single thought of pure faith will obtain such immeasurable merit."',
+            'Deutsch': '"Subhūti, der Tathāgata weiß vollständig und sieht vollständig, dass alle fühlenden Wesen, die beim Hören dieser Sätze sogar einen einzigen Gedanken reinen Glaubens erwecken, solch unermessliches Verdienst erlangen werden."',
+            'Français': '"Subhūti, le Tathāgata sait pleinement et voit pleinement que tous les êtres sensibles qui, en entendant ces phrases, font naître même une seule pensée de foi pure obtiendront un tel mérite incommensurable."',
+            'Русский': '"Субхути, Татхагата полностью знает и полностью видит, что все существа, которые, услышав эти фразы, породят даже одну мысль чистой веры, обретут такие неизмеримые заслуги."',
+            'Español': '"Subhūti, el Tathāgata sabe completamente y ve completamente que todos los seres sensibles que, al escuchar estas frases, den surgimiento incluso a un solo pensamiento de fe pura obtendrán tal mérito inconmensurable."',
+            'Italiano': '"Subhūti, il Tathāgata sa pienamente e vede pienamente che tutti gli esseri senzienti che, udendo queste frasi, faranno sorgere anche un solo pensiero di fede pura otterranno un tale merito incommensurabile."',
+            'संस्कृतम्': 'एतानि वाक्यानि श्रुत्वा एकम् अपि शुद्धम् श्रद्धाचित्तम् उत्पादयितुं शीलवन्तः सत्त्वाः, सुभूते! तथागतेन सर्वज्ञातं सर्वदृष्टम् - एते सत्त्वाः एतावत् अपरिमितं पुण्यं प्राप्स्यन्ति इति।',
+            'Pāli': 'Imāni vākyāni sutvā ekampi suddhaṃ saddhācittaṃ uppādetuṃ sīlavantā sattā, Subhūti! Tathāgatena sabbaññātaṃ sabbaditthaṃ - ete sattā ettakaṃ aparimitaṃ puññaṃ pāpuṇissantī\'ti.'
+        }
+    },
+    {
+        id: 'section6',
+        text: '何以故？是諸眾生無復我相、人相、眾生相、壽者相。',
+        readingText: '何以故？是諸眾生無復我相、人相、眾生相、壽者相。',
+        pinyin: 'hé yǐ gù shì zhū zhòng shēng wú fù wǒ xiāng rén xiāng zhòng shēng xiāng shòu zhě xiāng',
+        english: '"Why is this? These sentient beings no longer have the notions of self, person, sentient being, or life span."',
+        annotation: '釋：一念至促而福德無量，何耶？政以無或我人理解為弘。',
+        annotationPinyin: 'shì yī niàn zhì cù ér fú dé wú liàng hé yē zhèng yǐ wú huò wǒ rén lǐ jiě wéi hóng',
+        annotationTranslations: {
+            '白话文': '解释：一念极其短暂而福德无量，为什么？正是因为无我人见解，理体广大。',
+            'English': '"Explanation: A single thought is extremely brief yet the merit is immeasurable—why? Precisely because of the absence of self and person views, the principle is vast."',
+            'Deutsch': '"Erklärung: Ein einziger Gedanke ist äußerst kurz, doch das Verdienst ist unermesslich—warum? Gerade wegen der Abwesenheit von Selbst- und Personenansichten ist das Prinzip weit."',
+            'Français': '"Explication : Une seule pensée est extrêmement brève mais le mérite est incommensurable—pourquoi ? Précisément en raison de l\'absence de vues sur le soi et la personne, le principe est vaste."',
+            'Русский': '"Объяснение: Одна мысль чрезвычайно кратковременна, но заслуги неизмеримы—почему? Именно из-за отсутствия взглядов на себя и личность принцип обширен."',
+            'Español': '"Explicación: Un solo pensamiento es extremadamente breve pero el mérito es inconmensurable—¿por qué? Precisamente por la ausencia de puntos de vista sobre el yo y la persona, el principio es vasto."',
+            'Italiano': '"Spiegazione: Un singolo pensiero è estremamente breve ma il merito è incommensurabile—perché? Proprio a causa dell\'assenza di visioni del sé e della persona, il principio è vasto."',
+            'संस्कृतम्': 'व्याख्या - एकक्षणः अतीव लघुः, तथापि पुण्यम् अपरिमितम् - किम् कारणम्? निरात्मनिर्जनदर्शनत्वात् तत्त्वं विशालम् इति।',
+            'Pāli': 'Vibhaṅgo - ekakkhaṇo ativa lahu, tathāpi puññaṃ aparimitaṃ - kiṃ kāraṇaṃ? Nirattanirjanadassanatāya tathā vipulaṃ iti.'
+        },
+        translations: {
+            '白话文': '为什么呢？这些众生不再有我相、人相、众生相、寿者相。',
+            'English': '"Why is this? These sentient beings no longer have the notions of self, person, sentient being, or life span."',
+            'Deutsch': '"Warum ist das so? Diese fühlenden Wesen haben nicht länger die Vorstellungen von Selbst, Person, fühlendem Wesen oder Lebensspanne."',
+            'Français': '"Pourquoi cela ? Ces êtres sensibles n\'ont plus les notions de soi, de personne, d\'être sensible ou de durée de vie."',
+            'Русский': '"Почему это? Эти существа больше не имеют представлений о себе, личности, существе или продолжительности жизни."',
+            'Español': '"¿Por qué es esto? Estos seres sensibles ya no tienen las nociones de yo, persona, ser sensible o vida."',
+            'Italiano': '"Perché questo? Questi esseri senzienti non hanno più le nozioni di sé, persona, essere senziente o durata della vita."',
+            'संस्कृतम्': 'तत्र किं कारणम्? एते सत्त्वाः न आत्मसंज्ञां, न पुरुषसंज्ञां, न सत्त्वसंज्ञां, न जीवितसंज्ञां धारयन्ति।',
+            'Pāli': 'Tatra kiṃ kāraṇaṃ? Ete sattā na attasaññaṃ, na purisasaññaṃ, na sattasaññaṃ, na jīvitasaññaṃ dhārenti.'
+        }
+    },
+    {
+        id: 'section7',
+        text: '無法相，亦無非法相。',
+        readingText: '無法相，亦無非法相。',
+        pinyin: 'wú fǎ xiāng yì wú fēi fǎ xiāng',
+        english: '"They have no notion of dharmas, nor any notion of non-dharmas."',
+        annotation: '無因緣法相，亦無無因緣之非法相。',
+        annotationPinyin: 'wú yīn yuán fǎ xiāng yì wú wú yīn yuán zhī fēi fǎ xiāng',
+        annotationTranslations: {
+            '白话文': '没有因缘法相，也没有无因缘的非法相。',
+            'English': '"They have no notion of conditioned dharmas, nor any notion of unconditioned non-dharmas."',
+            'Deutsch': '"Sie haben keine Vorstellung von bedingten Dharmas, noch irgendeine Vorstellung von unbedingten Nicht-Dharmas."',
+            'Français': '"Ils n\'ont pas la notion de dharmas conditionnés, ni aucune notion de non-dharmas non conditionnés."',
+            'Русский': '"У них нет представления об обусловленных дхармах, ни какого-либо представления об необусловленных не-дхармах."',
+            'Español': '"No tienen noción de dharmas condicionados, ni ninguna noción de no-dharmas no condicionados."',
+            'Italiano': '"Non hanno nozione di dharma condizionati, né alcuna nozione di non-dharma non condizionati."',
+            'संस्कृतम्': 'न हेतुप्रत्ययधर्मसंज्ञा, न अहेतुप्रत्ययाधर्मसंज्ञा।',
+            'Pāli': 'Na hetupaccayadhammasaññā, na ahetupaccayādhammasaññā.'
+        },
+        translations: {
+            '白话文': '没有法相，也没有非法相。',
+            'English': '"They have no notion of dharmas, nor any notion of non-dharmas."',
+            'Deutsch': '"Sie haben keine Vorstellung von Dharmas, noch irgendeine Vorstellung von Nicht-Dharmas."',
+            'Français': '"Ils n\'ont pas la notion de dharma, ni aucune notion de non-dharma."',
+            'Русский': '"У них нет представления о дхармах, ни какого-либо представления о не-дхармах."',
+            'Español': '"No tienen noción de dharmas, ni ninguna noción de no-dharmas."',
+            'Italiano': '"Non hanno nozione di dharma, né alcuna nozione di non-dharma."',
+            'संस्कृतम्': 'न धर्मसंज्ञा, न अधर्मसंज्ञा।',
+            'Pāli': 'Na dhammasaññā, na adhammasaññā.'
+        }
+    },
+    {
+        id: 'section8',
+        text: '何以故？是諸眾生若心取相，則為著我、人、眾生、壽者。',
+        readingText: '何以故？是諸眾生若心取相，則為著我、人、眾生、壽者。',
+        pinyin: 'hé yǐ gù shì zhū zhòng shēng ruò xīn qǔ xiāng zé wéi zhuó wǒ rén zhòng shēng shòu zhě',
+        english: '"Why is this? If these sentient beings\' minds grasp at appearances, they will be attached to self, person, sentient being, and life span."',
+        annotation: '我人橫計理，故宜忘諸法。是理何故復無耶？正以心緣四大，假名諸法而計我人，見假名空，我人息矣，故應無也。',
+        annotationPinyin: 'wǒ rén héng jì lǐ gù yí wàng zhū fǎ shì lǐ hé gù fù wú yē zhèng yǐ xīn yuán sì dà jiǎ míng zhū fǎ ér jì wǒ rén jiàn jiǎ míng kōng wǒ rén xī yǐ gù yīng wú yě',
+        annotationTranslations: {
+            '白话文': '我人妄计理体，故应忘诸法。这理为何又无？正因为心缘四大，假名诸法而计我人，见假名空，我人息灭，故应无。',
+            'English': '"Self and person falsely conceive the principle, therefore one should forget all dharmas. Why is this principle also nonexistent? Precisely because the mind conditions the four great elements, provisionally names all dharmas and conceives self and person—seeing the emptiness of provisional names, self and person cease, therefore they should be nonexistent."',
+            'Deutsch': '"Selbst und Person fassen das Prinzip falsch auf, daher sollte man alle Dharmas vergessen. Warum ist dieses Prinzip auch nichtexistent? Gerade weil der Geist die vier großen Elemente bedingt, vorläufig alle Dharmas benennt und Selbst und Person auffasst—die Leerheit der vorläufigen Namen sehend, hören Selbst und Person auf, daher sollten sie nichtexistent sein."',
+            'Français': '"Le soi et la personne conçoivent faussement le principe, donc on devrait oublier tous les dharma. Pourquoi ce principe est-il aussi inexistant ? Précisément parce que l\'esprit conditionne les quatre grands éléments, nomme provisoirement tous les dharma et conçoit le soi et la personne—voyant la vacuité des noms provisoires, le soi et la personne cessent, donc ils devraient être inexistants."',
+            'Русский': '"Я и личность ошибочно воспринимают принцип, поэтому следует забыть все дхармы. Почему этот принцип также несуществующий? Именно потому, что ум обусловливает четыре великих элемента, временно называет все дхармы и воспринимает я и личность—видя пустотность временных имен, я и личность прекращаются, поэтому они должны быть несуществующими."',
+            'Español': '"El yo y la persona conciben falsamente el principio, por lo tanto uno debería olvidar todos los dharmas. ¿Por qué este principio también es inexistente? Precisamente porque la mente condiciona los cuatro grandes elementos, nombra provisionalmente todos los dharmas y concibe el yo y la persona—viendo la vacuidad de los nombres provisionales, el yo y la persona cesan, por lo tanto deberían ser inexistentes."',
+            'Italiano': '"Il sé e la persona concepiscono falsamente il principio, quindi si dovrebbero dimenticare tutti i dharma. Perché questo principio è anche inesistente? Proprio perché la mente condiziona i quattro grandi elementi, nomina provvisoriamente tutti i dharma e concepisce il sé e la persona—vedendo la vacuità dei nomi provvisori, il sé e la persona cessano, quindi dovrebbero essere inesistenti."',
+            'संस्कृतम्': 'आत्मपुरुषाः मिथ्याज्ञानेन तत्त्वं गृह्णन्ति, अतः सर्वधर्मान् विस्मर्तव्याः। किम् कारणम् एतत् तत्त्वम् अपि अस्ति न इति? यतः चित्तं चतुर्महाभूतानि प्रत्ययीकृत्य, उपाधिभिः धर्मान् आहत्य आत्मपुरुषान् गृह्णाति, उपाधीनाम् शून्यतां दृष्ट्वा, आत्मपुरुषाः शाम्यन्ति, अतः अस्ति न इति।',
+            'Pāli': 'Attapurisā micchāñāṇena tathaṃ gaṇhanti, tasmā sabbadhamme vismaretabbā. Kiṃ kāraṇaṃ etaṃ tathāpi atthi no ti? Yato cittaṃ catumahābhūte paccayīkaritvā, upādhibhi dhammā āhatvā attapurise gaṇhāti, upādīnaṃ suññataṃ disvā, attapurisā samanti, tasmā atthi no ti.'
+        },
+        translations: {
+            '白话文': '为什么呢？这些众生如果心取相，就是执着我、人、众生、寿者。',
+            'English': '"Why is this? If these sentient beings\' minds grasp at appearances, they will be attached to self, person, sentient being, and life span."',
+            'Deutsch': '"Warum ist das so? Wenn die Geister dieser fühlenden Wesen Erscheinungen ergreifen, werden sie an Selbst, Person, fühlendem Wesen und Lebensspanne haften."',
+            'Français': '"Pourquoi cela ? Si les esprits de ces êtres sensibles saisissent les apparences, ils s\'attacheront au soi, à la personne, à l\'être sensible et à la durée de vie."',
+            'Русский': '"Почему это? Если умы этих существ схватывают формы, они будут привязаны к себе, личности, существу и продолжительности жизни."',
+            'Español': '"¿Por qué es esto? Si las mentes de estos seres sensibles se aferran a las apariencias, se apegarán al yo, la persona, el ser sensible y la vida."',
+            'Italiano': '"Perché questo? Se le menti di questi esseri senzienti afferrano le apparenze, si attaccheranno al sé, alla persona, all\'essere senziente e alla durata della vita."',
+            'संस्कृतम्': 'तत्र किं कारणम्? एते सत्त्वाः यदि चित्तेन रूपाणि गृह्णन्ति, तर्हि आत्मपुरुषसत्त्वजीवितग्रहणं भवति।',
+            'Pāli': 'Tatra kiṃ kāraṇaṃ? Ete sattā sace cittena rūpāni gaṇhanti, atha attapurisasattajīvitagahaṇaṃ bhavati.'
+        }
+    },
+    {
+        id: 'section9',
+        text: '若取法相，即著我、人、眾生、壽者。',
+        readingText: '若取法相，即著我、人、眾生、壽者。',
+        pinyin: 'ruò qǔ fǎ xiāng jí zhuó wǒ rén zhòng shēng shòu zhě',
+        english: '"If they grasp at the appearances of dharmas, they will be attached to self, person, sentient being, and life span."',
+        annotation: '若取色聲香等實法相者，亦起我人等見，故應無之耳。',
+        annotationPinyin: 'ruò qǔ sè shēng xiāng děng shí fǎ xiāng zhě yì qǐ wǒ rén děng jiàn gù yīng wú zhī ěr',
+        annotationTranslations: {
+            '白话文': '如果执取色声香等实法相，也会生起我人等见解，故应无。',
+            'English': '"If one grasps at the appearances of real dharmas such as form, sound, and smell, views of self and person will also arise, therefore they should be nonexistent."',
+            'Deutsch': '"Wenn man die Erscheinungen wirklicher Dharmas wie Form, Klang und Geruch ergreift, werden auch Ansichten von Selbst und Person entstehen, daher sollten sie nichtexistent sein."',
+            'Français': '"Si l\'on saisit les apparences de dharma réels tels que la forme, le son et l\'odeur, les vues du soi et de la personne surgiront également, donc elles devraient être inexistantes."',
+            'Русский': '"Если схватывать формы реальных дхарм, таких как форма, звук и запах, также возникнут взгляды на себя и личность, поэтому они должны быть несуществующими."',
+            'Español': '"Si uno se aferra a las apariencias de dharmas reales como forma, sonido y olor, también surgirán puntos de vista del yo y la persona, por lo tanto deberían ser inexistentes."',
+            'Italiano': '"Se si afferrano le apparenze di dharma reali come forma, suono e odore, sorgeranno anche visioni del sé e della persona, quindi dovrebbero essere inesistenti."',
+            'संस्कृतम्': 'यदि रूपशब्दगन्धादीनाम् वास्तवधर्मरूपाणि गृह्णन्ति, आत्मपुरुषादिदृष्टयः अपि उत्पद्यन्ते, अतः अस्ति न इति।',
+            'Pāli': 'Sace rūpasaddagandhādīnaṃ vatthudhammarūpāni gaṇhanti, attapurisādidassanāpi uppajjanti, tasmā atthi no ti.'
+        },
+        translations: {
+            '白话文': '如果取法相，就是执着我、人、众生、寿者。',
+            'English': '"If they grasp at the appearances of dharmas, they will be attached to self, person, sentient being, and life span."',
+            'Deutsch': '"Wenn sie die Erscheinungen von Dharmas ergreifen, werden sie an Selbst, Person, fühlendem Wesen und Lebensspanne haften."',
+            'Français': '"S\'ils saisissent les apparences des dharma, ils s\'attacheront au soi, à la personne, à l\'être sensible et à la durée de vie."',
+            'Русский': '"Если они схватывают формы дхарм, они будут привязаны к себе, личности, существу и продолжительности жизни."',
+            'Español': '"Si se aferran a las apariencias de los dharmas, se apegarán al yo, la persona, el ser sensible y la vida."',
+            'Italiano': '"Se afferrano le apparenze dei dharma, si attaccheranno al sé, alla persona, all\'essere senziente e alla durata della vita."',
+            'संस्कृतम्': 'यदि धर्मरूपाणि गृह्णन्ति, तर्हि आत्मपुरुषसत्त्वजीवितग्रहणं भवति।',
+            'Pāli': 'Sace dhammarūpāni gaṇhanti, atha attapurisasattajīvitagahaṇaṃ bhavati.'
+        }
+    },
+    {
+        id: 'section10',
+        text: '何以故？若取非法相，即著我、人、眾生、壽者。',
+        readingText: '何以故？若取非法相，即著我、人、眾生、壽者。',
+        pinyin: 'hé yǐ gù ruò qǔ fēi fǎ xiāng jí zhuó wǒ rén zhòng shēng shòu zhě',
+        english: '"Why is this? If they grasp at the appearances of non-dharmas, they will be attached to self, person, sentient being, and life span."',
+        annotation: '釋：何故復無非法耶？緣空故有有，由有故空空。若無有相雲起，起相計我，萬或慈生矣。\n○或慈應作惑茲。',
+        annotationPinyin: 'shì hé gù fù wú fēi fǎ yē yuán kōng gù yǒu yǒu yóu yǒu gù kōng kōng ruò wú yǒu xiāng yún qǐ qǐ xiāng jì wǒ wàn huò cí shēng yǐ \n○ huò cí yīng zuò huò zī',
+        annotationTranslations: {
+            '白话文': '解释：为何又无非法？缘空故有有，由有故空空。若无有相云起，起相计我，万惑滋生。\n注："或慈"应作"惑兹"。',
+            'English': '"Explanation: Why are non-dharmas also nonexistent? Because of emptiness there is existence, because of existence there is emptiness. If there are no appearances of existence arising, arising appearances conceive self—myriad delusions proliferate.\nNote: "或慈" should be "惑兹" (delusions proliferate)."',
+            'Deutsch': '"Erklärung: Warum sind Nicht-Dharmas auch nichtexistent? Wegen Leerheit gibt es Existenz, wegen Existenz gibt es Leerheit. Wenn es keine Erscheinungen von Existenz gibt, die entstehen, entstehende Erscheinungen fassen Selbst auf—unzählige Täuschungen vermehren sich.\nAnmerkung: "或慈" sollte "惑兹" sein (Täuschungen vermehren sich)."',
+            'Français': '"Explication : Pourquoi les non-dharma sont-ils aussi inexistants ? À cause de la vacuité il y a existence, à cause de l\'existence il y a vacuité. S\'il n\'y a pas d\'apparences d\'existence qui surgissent, les apparences surgissantes conçoivent le soi—d\'innombrables illusions prolifèrent.\nNote : "或慈" devrait être "惑兹" (les illusions prolifèrent)."',
+            'Русский': '"Объяснение: Почему не-дхармы также несуществующие? Из-за пустоты есть существование, из-за существования есть пустота. Если нет форм существования, возникающих, возникающие формы воспринимают себя—бесчисленные заблуждения размножаются.\nПримечание: "或慈" должно быть "惑兹" (заблуждения размножаются)."',
+            'Español': '"Explicación: ¿Por qué los no-dharmas también son inexistentes? Debido a la vacuidad hay existencia, debido a la existencia hay vacuidad. Si no hay apariencias de existencia surgiendo, las apariencias surgientes conciben el yo—incontables ilusiones proliferan.\nNota: "或慈" debería ser "惑兹" (las ilusiones proliferan)."',
+            'Italiano': '"Spiegazione: Perché i non-dharma sono anche inesistenti? A causa della vacuità c\'è esistenza, a causa dell\'esistenza c\'è vacuità. Se non ci sono apparenze di esistenza che sorgono, le apparenze sorgenti concepiscono il sé—miriadi di illusioni proliferano.\nNota: "或慈" dovrebbe essere "惑兹" (le illusioni proliferano)."',
+            'संस्कृतम्': 'व्याख्या - किम् कारणम् अधर्माः अपि अस्ति न इति? शून्यतायाः कारणात् अस्ति, अस्तित्वस्य कारणात् शून्यता। यदि अस्तित्वरूपाणि न उत्पद्यन्ते, उत्पन्नरूपाणि आत्मानं गृह्णन्ति - असंख्याः विपर्ययाः प्ररोहन्ति।\nटिप्पणीः "或慈" इति "惑兹" (विपर्ययाः प्ररोहन्ति) इति पठितव्यम्।',
+            'Pāli': 'Vibhaṅgo - kiṃ kāraṇaṃ adhammāpi atthi no ti? Suññatāya kāraṇā atthi, atthitvassa kāraṇā suññatā. Sace atthitarūpāni na uppajjanti, uppannarūpāni attānaṃ gaṇhanti - asaṅkhyā vipariyāsā pabhavanti.\nNidassanaṃ: "或慈" ti "惑兹" (vipariyāsā pabhavanti) ti paṭhitabbaṃ.'
+        },
+        translations: {
+            '白话文': '为什么呢？如果取非法相，就是执着我、人、众生、寿者。',
+            'English': '"Why is this? If they grasp at the appearances of non-dharmas, they will be attached to self, person, sentient being, and life span."',
+            'Deutsch': '"Warum ist das so? Wenn sie die Erscheinungen von Nicht-Dharmas ergreifen, werden sie an Selbst, Person, fühlendem Wesen und Lebensspanne haften."',
+            'Français': '"Pourquoi cela ? S\'ils saisissent les apparences des non-dharma, ils s\'attacheront au soi, à la personne, à l\'être sensible et à la durée de vie."',
+            'Русский': '"Почему это? Если они схватывают формы не-дхарм, они будут привязаны к себе, личности, существу и продолжительности жизни."',
+            'Español': '"¿Por qué es esto? Si se aferran a las apariencias de los no-dharmas, se apegarán al yo, la persona, el ser sensible y la vida."',
+            'Italiano': '"Perché questo? Se afferrano le apparenze dei non-dharma, si attaccheranno al sé, alla persona, all\'essere senziente e alla durata della vita."',
+            'संस्कृतम्': 'तत्र किं कारणम्? यदि अधर्मरूपाणि गृह्णन्ति, तर्हि आत्मपुरुषसत्त्वजीवितग्रहणं भवति।',
+            'Pāli': 'Tatra kiṃ kāraṇaṃ? Sace adhammarūpāni gaṇhanti, atha attapurisasattajīvitagahaṇaṃ bhavati.'
+        }
+    },
+    {
+        id: 'section11',
+        text: '是故不應取法，不應取非法。',
+        readingText: '是故不應取法，不應取非法。',
+        pinyin: 'shì gù bù yīng qǔ fǎ bù yīng qǔ fēi fǎ',
+        english: '"Therefore one should not grasp at dharmas, nor should one grasp at non-dharmas."',
+        annotation: '并結無法相．無非法相也。空有兩忘，心無所取，解會平等，結盡道成。',
+        annotationPinyin: 'bìng jié wú fǎ xiāng wú fēi fǎ xiāng yě kōng yǒu liǎng wàng xīn wú suǒ qǔ jiě huì píng děng jié jìn dào chéng',
+        annotationTranslations: {
+            '白话文': '一并总结无法相、无非法相。空有两忘，心无所取，理解平等，结缚尽除道业成就。',
+            'English': '"This concludes both no appearances of dharmas and no appearances of non-dharmas. Both emptiness and existence forgotten, the mind grasps at nothing—understanding equality, bonds are exhausted and the path is accomplished."',
+            'Deutsch': '"Dies schließt sowohl keine Erscheinungen von Dharmas als auch keine Erscheinungen von Nicht-Dharmas ab. Sowohl Leerheit als auch Existenz vergessen, der Geist ergreift nichts—Gleichheit verstehend, Bindungen sind erschöpft und der Weg ist vollbracht."',
+            'Français': '"Ceci conclut à la fois aucune apparence de dharma et aucune apparence de non-dharma. La vacuité et l\'existence toutes deux oubliées, l\'esprit ne saisit rien—comprenant l\'égalité, les liens sont épuisés et la voie est accomplie."',
+            'Русский': '"Это завершает и отсутствие форм дхарм, и отсутствие форм не-дхарм. И пустота, и существование забыты, ум ничего не схватывает—понимая равенство, оковы исчерпаны и путь осуществлен."',
+            'Español': '"Esto concluye tanto no apariencias de dharmas como no apariencias de no-dharmas. Tanto la vacuidad como la existencia olvidadas, la mente no se aferra a nada—entendiendo la igualdad, los lazos se agotan y el camino se logra."',
+            'Italiano': '"Questo conclude sia nessuna apparenza di dharma sia nessuna apparenza di non-dharma. Sia la vacuità che l\'esistenza dimenticate, la mente non afferra nulla—comprendendo l\'uguaglianza, i legami sono esauriti e il sentiero è compiuto."',
+            'संस्कृतम्': 'एतत् न धर्मसंज्ञा, न अधर्मसंज्ञा इति निष्कर्षः। शून्यतासत्त्वे उभे अपि विस्मृते, चित्तं न किम् अपि गृह्णाति - समतां प्रतिपद्य, बन्धनानि क्षीणानि मार्गः सिद्धः।',
+            'Pāli': 'Etaṃ na dhammasaññā, na adhammasaññā ti nikkhanto. Suññatāatthavā ubhopi vismutā, cittaṃ na kiñci gaṇhāti - samataṃ paṭipajja, bandhanāni khīṇāni maggo siddho.'
+        },
+        translations: {
+            '白话文': '因此不应取法，也不应取非法。',
+            'English': '"Therefore one should not grasp at dharmas, nor should one grasp at non-dharmas."',
+            'Deutsch': '"Daher sollte man nicht nach Dharmas greifen, noch sollte man nach Nicht-Dharmas greifen."',
+            'Français': '"Par conséquent, on ne devrait pas saisir les dharma, ni ne devrait-on saisir les non-dharma."',
+            'Русский': '"Поэтому не следует схватывать дхармы, ни следует схватывать не-дхармы."',
+            'Español': '"Por lo tanto, uno no debe aferrarse a los dharmas, ni debe aferrarse a los no-dharmas."',
+            'Italiano': '"Pertanto non si dovrebbe afferrare i dharma, né si dovrebbe afferrare i non-dharma."',
+            'संस्कृतम्': 'तस्मात् न धर्मान् ग्रहीतव्याः, न अधर्मान् ग्रहीतव्याः।',
+            'Pāli': 'Tasmā na dhamme gahetabbā, na adhamme gahetabbā.'
+        }
+    },
+    {
+        id: 'section12',
+        text: '以是義故，如來常說：汝等比丘！知我說法如筏喻者，法尚應捨，何況非法？',
+        readingText: '以是義故，如來常說：汝等比丘！知我說法如筏喻者，法尚應捨，何況非法？',
+        pinyin: 'yǐ shì yì gù rú lái cháng shuō rǔ děng bǐ qiū zhī wǒ shuō fǎ rú fá yù zhě fǎ shàng yīng shě hé kuàng fēi fǎ',
+        english: '"For this reason, the Tathāgata always says: \'Monks, you should know that my teachings are like a raft. Even the Dharma should be relinquished, how much more so non-Dharma.\'"',
+        annotation: '即引昔說以證今理也。譬欲濟河，搆筏自運，既登彼岸，棄筏而去。將度生死，假乘萬行，既到涅槃，萬善俱捨。道法尚捨，而況非法之空也。\n○之空二字疏無。',
+        annotationPinyin: 'jí yǐn xī shuō yǐ zhèng jīn lǐ yě pì yù jì hé gòu fá zì yùn jì dēng bǐ àn qì fá ér qù jiāng dù shēng sǐ jiǎ chéng wàn xíng jì dào niè pán wàn shàn jù shě dào fǎ shàng shě ér kuàng fēi fǎ zhī kōng yě \n○ zhī kōng èr zì shū wú',
+        annotationTranslations: {
+            '白话文': '随即引用佛语来证明此理。譬如欲渡河，造筏自渡，既登彼岸，弃筏而去。将要度生死，假借万行，既到涅槃，万善俱舍。道法尚且应舍，何况非法之空。\n注："之空"二字在疏中没有。',
+            'English': '"Immediately citing the Buddha\'s past words to verify the present principle. It is like wishing to cross a river—constructing a raft to ferry oneself across, once the other shore is reached, the raft is abandoned. Wishing to cross the sea of birth and death, one provisionally rides the myriad practices; once nirvāṇa is reached, all virtues are relinquished. Even the path-Dharma should be relinquished, how much more so the emptiness of non-Dharma.\nNote: The two characters for "之空" are absent in the commentary."',
+            'Deutsch': '"Unmittelbar die vergangenen Worte des Buddha zitierend, um das gegenwärtige Prinzip zu verifizieren. Es ist wie der Wunsch, einen Fluss zu überqueren—ein Floß bauend, um sich selbst hinüber zu setzen, sobald das andere Ufer erreicht ist, wird das Floß aufgegeben. Wünschend, das Meer von Geburt und Tod zu überqueren, reitet man vorläufig auf den zahllosen Praktiken; sobald Nirvāṇa erreicht ist, werden alle Tugenden aufgegeben. Sogar der Pfad-Dharma sollte aufgegeben werden, wie viel mehr so die Leerheit des Nicht-Dharma.\nAnmerkung: Die zwei Zeichen für "之空" fehlen im Kommentar."',
+            'Français': '"Citant immédiatement les paroles passées du Bouddha pour vérifier le principe présent. C\'est comme souhaiter traverser une rivière—construisant un radeau pour se faire traverser, une fois l\'autre rive atteinte, le radeau est abandonné. Souhaitant traverser la mer de la naissance et de la mort, on monte provisoirement les myriades de pratiques; une fois le nirvāṇa atteint, toutes les vertus sont abandonnées. Même le Dharma du chemin devrait être abandonné, à plus forte raison la vacuité du non-Dharma.\nNote : Les deux caractères pour "之空" sont absents dans le commentaire."',
+            'Русский': '"Немедленно цитируя прошлые слова Будды, чтобы подтвердить настоящий принцип. Это подобно желанию перейти реку—строя плот, чтобы переправить себя, как только достигнут другой берег, плот оставляют. Желая пересечь море рождения и смерти, временно едут на мириадах практик; как только достигнута нирвана, все добродетели оставлены. Даже путь-Дхарма должна быть оставлена, тем более пустотность не-Дхармы.\nПримечание: Два иероглифа для "之空" отсутствуют в комментарии."',
+            'Español': '"Citando inmediatamente las palabras pasadas del Buddha para verificar el principio presente. Es como desear cruzar un río—construyendo una balsa para transportarse, una vez que se alcanza la otra orilla, la balsa se abandona. Deseando cruzar el mar del nacimiento y la muerte, uno monta provisionalmente las miríadas de prácticas; una vez que se alcanza el nirvāṇa, todas las virtudes se abandonan. Incluso el Dharma del camino debería abandonarse, cuánto más la vacuidad del no-Dharma.\nNota: Los dos caracteres para "之空" están ausentes en el comentario."',
+            'Italiano': '"Citando immediatamente le parole passate del Buddha per verificare il principio presente. È come desiderare di attraversare un fiume—costruendo una zattera per traghettarsi, una volta raggiunta l\'altra sponda, la zattera viene abbandonata. Desiderando attraversare il mare della nascita e della morte, si cavalcano provvisoriamente le miriadi di pratiche; una volta raggiunto il nirvāṇa, tutte le virtù vengono abbandonate. Anche il Dharma del sentiero dovrebbe essere abbandonato, quanto più la vacuità del non-Dharma.\nNota: I due caratteri per "之空" sono assenti nel commento."',
+            'संस्कृतम्': 'तथागतवचनानि आहृत्य अस्य तत्त्वस्य प्रमाणीकरणम्। यथा नदीं तर्तुम् इच्छन्, काष्ठसञ्चयं कृत्वा स्वयम् तरति, पारं प्राप्य, काष्ठसञ्चयं त्यजति। संसारसागरं तर्तुम् इच्छन्, उपायानाम् आश्रयेण तरति, निर्वाणं प्राप्य, सर्वाणि कुशलानि त्यजति। मार्गधर्मः अपि त्याज्यः, किं पुनः अधर्मस्य शून्यता।\nटिप्पणीः "शून्यता" इति द्वौ अक्षरौ व्याख्यायां न स्तः।',
+            'Pāli': 'Tathāgatavacanāni āharitvā imassa tathāya pramāṇīkaraṇaṃ. Yathā nadiṃ tarituṃ icchan, kaṭṭhasañcayaṃ katvā sayameva tarati, pāraṃ patvā, kaṭṭhasañcayaṃ pajahati. Saṃsārasāgaraṃ tarituṃ icchan, upāyānaṃ āsāyena tarati, nibbānaṃ patvā, sabbāni kusalāni pajahati. Maggadhammopi cajitabbo, kiṃ puna adhammassa suññatā.\nNidassanaṃ: "suññatā" ti dve akkharā aṭṭhakathāyaṃ na honti.'
+        },
+        translations: {
+            '白话文': '因此缘故，如来常说：你们比丘！应知我说法如筏喻，法尚且应舍，何况非法？',
+            'English': '"For this reason, the Tathāgata always says: \'Monks, you should know that my teachings are like a raft. Even the Dharma should be relinquished, how much more so non-Dharma.\'"',
+            'Deutsch': '"Aus diesem Grund sagt der Tathāgata immer: \'Mönche, ihr solltet wissen, dass meine Lehren wie ein Floß sind. Sogar das Dharma sollte aufgegeben werden, wie viel mehr so Nicht-Dharma.\'"',
+            'Français': '"Pour cette raison, le Tathāgata dit toujours : \'Moines, vous devez savoir que mes enseignements sont comme un radeau. Même le Dharma devrait être abandonné, à plus forte raison le non-Dharma.\'"',
+            'Русский': '"По этой причине Татхагата всегда говорит: \'Монахи, вы должны знать, что мои учения подобны плоту. Даже Дхарму следует оставить, тем более не-Дхарму.\'"',
+            'Español': '"Por esta razón, el Tathāgata siempre dice: \'Monjes, deben saber que mis enseñanzas son como una balsa. Incluso el Dharma debería ser abandonado, cuánto más el no-Dharma.\'"',
+            'Italiano': '"Per questa ragione, il Tathāgata dice sempre: \'Monaci, dovreste sapere che i miei insegnamenti sono come una zattera. Anche il Dharma dovrebbe essere abbandonato, quanto più il non-Dharma.\'"',
+            'संस्कृतम्': 'तस्मात् कारणात्, तथागतः सदा वदति - भिक्षवः! जानीत यत् मम उपदेशाः काष्ठसञ्चयवत्। धर्मः अपि त्याज्यः, किं पुनः अधर्मः?',
+            'Pāli': 'Tasmā kāraṇā, tathāgato sadā vadati - bhikkhave! Jānātha yaṃ mama desanā kaṭṭhasañcayavatā. Dhammopi cajitabbo, kiṃ puna adhammo?'
+        }
+    }
+];
+
+// 多语言选项
+const languages = [
+    '白话文', 'English', 'Deutsch', 'Français', 'Русский', 
+    'Español', 'Italiano', 'संस्कृतम्', 'Pāli'
+];
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 生成经文内容
+    const scriptureContent = document.getElementById('scriptureContent');
+    
+    scriptureData.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `text-section section-${(index % 6) + 1}`;
+        
+        // 经文标题
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = `经文第${index + 1}段`;
+        sectionDiv.appendChild(sectionTitle);
+        
+        // 经文正文（带拼音注释）
+        const textDiv = document.createElement('div');
+        textDiv.className = 'text-content';
+        textDiv.innerHTML = processTextWithPinyin(section.text, section.pinyin, section.id);
+        
+        // 添加朗读按钮和纯文本
+        const textActions = document.createElement('div');
+        textActions.className = 'action-buttons';
+        textActions.innerHTML = `
+            <button class="action-btn speak" id="speakText-${section.id}">朗读经文</button>
+            <span class="plain-text">${section.readingText}</span>
+        `;
+        textDiv.appendChild(textActions);
+        
+        // 添加多语言翻译
+        addTranslations(textDiv, section.translations, `${section.id}-trans`);
+        
+        sectionDiv.appendChild(textDiv);
+        
+        // 注解内容
+        const annoDiv = document.createElement('div');
+        annoDiv.className = 'annotation-content';
+        
+        // 添加注解内容（带拼音标注）
+        const annotationP = document.createElement('div');
+        annotationP.className = 'annotation';
+        annotationP.id = `${section.id}-anno`;
+        annotationP.innerHTML = processAnnotationWithPinyin(section.annotation, section.annotationPinyin);
+        annoDiv.appendChild(annotationP);
+        
+        // 添加朗读按钮和隐藏的注解文本
+        const annoActions = document.createElement('div');
+        annoActions.className = 'action-buttons';
+        annoActions.innerHTML = `
+            <button class="action-btn speak" id="speakAnno-${section.id}">朗读注解</button>
+            <span class="annotation-text">${section.annotation}</span>
+        `;
+        annoDiv.appendChild(annoActions);
+        
+        // 添加注解的多语言翻译
+        addTranslations(annoDiv, section.annotationTranslations, `${section.id}-anno-trans`);
+        
+        sectionDiv.appendChild(annoDiv);
+        
+        scriptureContent.appendChild(sectionDiv);
+    });
+
+    // 设置朗读按钮事件
+    setupSpeakButtons();
+    
+    // 设置汉字点击事件
+    setupCharClickEvents();
+});
+
+// 处理文本添加拼音
+function processTextWithPinyin(text, pinyin, sectionId) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return `<span id="${sectionId}-text">${result}</span>`;
+}
+
+// 处理注解文本添加拼音
+function processAnnotationWithPinyin(text, pinyin) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return result;
+}
+
+// 添加多语言翻译模块
+function addTranslations(container, translations, baseId) {
+    const transTabs = document.createElement('div');
+    transTabs.className = 'translation-tabs';
+    
+    const transContents = document.createElement('div');
+    
+    Object.entries(translations).forEach(([lang, content]) => {
+        // 翻译标签
+        const tab = document.createElement('div');
+        tab.className = 'translation-tab';
+        tab.textContent = lang;
+        tab.onclick = function() {
+            // 切换活跃标签
+            transTabs.querySelectorAll('.translation-tab').forEach(t => 
+                t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 显示对应语言内容
+            transContents.querySelectorAll('.translation-content').forEach(c => 
+                c.classList.remove('active'));
+            transContents.querySelector(`#${baseId}-${lang}`).classList.add('active');
+        };
+        transTabs.appendChild(tab);
+        
+        // 翻译内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'translation-content';
+        contentDiv.id = `${baseId}-${lang}`;
+        contentDiv.textContent = content;
+        transContents.appendChild(contentDiv);
+    });
+    
+    // 默认显示第一个语言
+    if (transTabs.firstChild) {
+        transTabs.firstChild.click();
+    }
+    
+    container.appendChild(transTabs);
+    container.appendChild(transContents);
+}
+
+// 设置所有朗读按钮事件
+function setupSpeakButtons() {
+    // 经文朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakText-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.readingText;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+    
+    // 注解朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakAnno-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = this.nextElementSibling.textContent; // 获取隐藏的注解文本
+                toggleSpeech(text, this);
+            });
+        }
+    });
+}
+
+// 设置汉字点击事件（显示详情弹窗）
+function setupCharClickEvents() {
+    document.addEventListener('click', function(e) {
+        const charElement = e.target.closest('.char');
+        if (charElement) {
+            const char = charElement.dataset.char;
+            showCharModal(char);
+        }
+    });
+    
+    // 关闭弹窗按钮
+    document.getElementById('closeCharModal').addEventListener('click', function() {
+        document.getElementById('charModal').style.display = 'none';
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('charModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+}
+
+// 显示汉字详情弹窗
+function showCharModal(char) {
+    const modal = document.getElementById('charModal');
+    const modalChar = document.getElementById('modalChar');
+    const modalPinyin = document.getElementById('modalPinyin');
+    const modalMeaning = document.getElementById('modalMeaning');
+    const modalBuddhistMeaning = document.getElementById('modalBuddhistMeaning');
+    
+    // 设置弹窗内容
+    modalChar.textContent = char;
+    
+    if (punctuationPinyin[char]) {
+        // 标点符号
+        modalPinyin.textContent = punctuationPinyin[char];
+        modalMeaning.textContent = 'This is a punctuation mark.';
+        modalBuddhistMeaning.textContent = 'Punctuation marks help structure the text and indicate pauses in recitation.';
+    } else if (charMeanings[char]) {
+        // 汉字
+        const charData = charMeanings[char];
+        modalPinyin.textContent = charData.pinyin;
+        modalMeaning.innerHTML = charData.meanings.map(m => `• ${m}`).join('<br>');
+        modalBuddhistMeaning.textContent = charData.buddhist;
+    } else {
+        // 未知字符
+        modalPinyin.textContent = 'Unknown';
+        modalMeaning.textContent = 'No detailed information available for this character.';
+        modalBuddhistMeaning.textContent = 'No specific Buddhist meaning recorded.';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 切换朗读/停止功能
+function toggleSpeech(text, button) {
+    if (currentUtterance && speechSynthesis.speaking) {
+        // 如果正在朗读，则停止
+        speechSynthesis.cancel();
+        button.classList.remove('stop');
+        button.classList.add('speak');
+        currentUtterance = null;
+    } else {
+        // 开始朗读
+        if ('speechSynthesis' in window) {
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 0.7; // 正常语速
+            
+            currentUtterance.onend = function() {
+                button.classList.remove('stop');
+                button.classList.add('speak');
+                currentUtterance = null;
+            };
+            
+            speechSynthesis.speak(currentUtterance);
+            button.classList.remove('speak');
+            button.classList.add('stop');
+        } else {
+            alert('您的浏览器不支持语音朗读功能');
+        }
+    }
+}
+</script>
+</body>
+</html>

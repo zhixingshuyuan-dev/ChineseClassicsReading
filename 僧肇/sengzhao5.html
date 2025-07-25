@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金刚般若波罗蜜经（第五品交互版）</title>
+    <style>
+        body {
+            font-family: "SimSun", "STKaiti", serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1.4em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 2.0em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d4a762;
+        }
+        
+        .author {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .preface-section {
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #d4a762;
+        }
+        
+        .preface-content {
+            margin-bottom: 20px;
+            line-height: 2.0;
+            color: #e0e0e0;
+        }
+        
+        .preface-annotation {
+            color: #999;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 3px solid #555;
+            margin-top: 15px;
+        }
+        
+        .text-section {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .text-section h3 {
+            margin-top: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            color: #d4a762;
+            background-color: #2a2a2a;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .annotation-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            color: #e0e0e0;
+        }
+        
+        .char-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #444;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .char:hover .char-tooltip {
+            display: block;
+        }
+        
+        .annotation {
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .plain-text {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.7em;
+            background-color: #444;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .action-btn:hover {
+            background-color: #555;
+        }
+        
+        .action-btn.speak {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .action-btn.stop {
+            background-color: #a76a6a;
+            color: #1a1a1a;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 15px 0;
+        }
+        
+        .translation-tab {
+            padding: 3px 8px;
+            background-color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .translation-tab.active {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        /* 修改后的弹窗样式 */
+        .char-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .char-modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 80%;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .char-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .char-modal-char {
+            font-size: 2.5em;
+            color: #d4a762;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-pinyin {
+            font-size: 1.3em;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .char-modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .char-modal-close:hover {
+            color: #e0e0e0;
+        }
+        
+        .char-modal-section {
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-section h3 {
+            color: #d4a762;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .char-modal-meaning {
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        
+        /* Color schemes for alternating sections */
+        .section-1 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-1 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #d4a762;
+        }
+        
+        .section-2 .text-content {
+            background-color: #333333;
+        }
+        .section-2 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #5d8aa8;
+        }
+        
+        .section-3 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-3 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a8d4a7;
+        }
+        
+        .section-4 .text-content {
+            background-color: #333333;
+        }
+        .section-4 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4a7a7;
+        }
+        
+        .section-5 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-5 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a7a7d4;
+        }
+        
+        .section-6 .text-content {
+            background-color: #333333;
+        }
+        .section-6 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4d4a7;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+            color: #d4a762;
+            font-weight: bold;
+        }
+        
+        .reading-text {
+            display: none; /* 不再需要单独显示 */
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            
+            .char-modal-content {
+                padding: 15px;
+            }
+            
+            .char-modal-char {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 汉字详情弹窗 -->
+<div class="char-modal" id="charModal">
+    <div class="char-modal-content">
+        <div class="char-modal-header">
+            <h2>汉字详情</h2>
+            <button class="char-modal-close" id="closeCharModal">&times;</button>
+        </div>
+        <div class="char-modal-char" id="modalChar"></div>
+        <div class="char-modal-pinyin" id="modalPinyin"></div>
+        <div class="char-modal-section">
+            <h3>基本释义</h3>
+            <div class="char-modal-meaning" id="modalMeaning"></div>
+        </div>
+        <div class="char-modal-section">
+            <h3>佛教释义</h3>
+            <div class="char-modal-meaning" id="modalBuddhistMeaning"></div>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="title">金刚般若波罗蜜经</div>
+    <div class="author">姚秦三藏法师鸠摩罗什译</div>
+</div>
+
+<!-- 第五品标题 -->
+<div class="section-title">第五品</div>
+
+<!-- 经文内容 -->
+<div id="scriptureContent"></div>
+
+<script>
+// 语音合成对象
+let currentUtterance = null;
+
+// 标点符号的拼音映射
+const punctuationPinyin = {
+    '，': 'dòu hào',
+    '。': 'jù hào',
+    '、': 'dùn hào',
+    '；': 'fēn hào',
+    '：': 'mào hào',
+    '！': 'tàn hào',
+    '？': 'wèn hào',
+    '「': 'zuǒ yǐn hào',
+    '」': 'yòu yǐn hào',
+    '『': 'zuǒ shuāng yǐn hào',
+    '』': 'yòu shuāng yǐn hào',
+    '（': 'zuǒ kuò hào',
+    '）': 'yòu kuò hào',
+    '《': 'zuǒ shū míng hào',
+    '》': 'yòu shū míng hào'
+};
+
+// 汉字的多义项解释
+const charMeanings = {
+    '須': {
+        pinyin: 'xū',
+        meanings: [
+            'must',
+            'need',
+            'beard'
+        ],
+        buddhist: 'A term of address for Subhūti, meaning "necessary" or "essential" in the Dharma.'
+    },
+    '菩': {
+        pinyin: 'pú',
+        meanings: [
+            'bodhi',
+            'enlightenment'
+        ],
+        buddhist: 'Short for bodhi, meaning awakening or enlightenment.'
+    },
+    '提': {
+        pinyin: 'tí',
+        meanings: [
+            'lift',
+            'mention',
+            'carry'
+        ],
+        buddhist: 'Part of Subhūti\'s name, meaning "to lift up" or "to carry forward" the Dharma.'
+    },
+    '於': {
+        pinyin: 'yú',
+        meanings: [
+            'at',
+            'in',
+            'to'
+        ],
+        buddhist: 'A preposition indicating relation or connection.'
+    },
+    '意': {
+        pinyin: 'yì',
+        meanings: [
+            'meaning',
+            'intention',
+            'thought'
+        ],
+        buddhist: 'The mind or intention in Buddhist psychology.'
+    },
+    '云': {
+        pinyin: 'yún',
+        meanings: [
+            'say',
+            'cloud',
+            'speak'
+        ],
+        buddhist: 'To say or express in teachings.'
+    },
+    '何': {
+        pinyin: 'hé',
+        meanings: [
+            'what',
+            'why',
+            'how'
+        ],
+        buddhist: 'A question about Dharma.'
+    },
+    '可': {
+        pinyin: 'kě',
+        meanings: [
+            'can',
+            'may',
+            'possible'
+        ],
+        buddhist: 'Possibility or permission.'
+    },
+    '以': {
+        pinyin: 'yǐ',
+        meanings: [
+            'with',
+            'by',
+            'because'
+        ],
+        buddhist: 'A preposition indicating means.'
+    },
+    '身': {
+        pinyin: 'shēn',
+        meanings: [
+            'body',
+            'self',
+            'person'
+        ],
+        buddhist: 'The physical body or self in Buddhist teachings.'
+    },
+    '相': {
+        pinyin: 'xiāng',
+        meanings: [
+            'mutual',
+            'appearance',
+            'characteristic'
+        ],
+        buddhist: 'Characteristics or signs of phenomena.'
+    },
+    '見': {
+        pinyin: 'jiàn',
+        meanings: [
+            'see',
+            'view',
+            'meet'
+        ],
+        buddhist: 'To perceive or realize in practice.'
+    },
+    '如': {
+        pinyin: 'rú',
+        meanings: [
+            'as',
+            'like',
+            'such as'
+        ],
+        buddhist: 'Thusness or suchness.'
+    },
+    '來': {
+        pinyin: 'lái',
+        meanings: [
+            'come',
+            'arrive',
+            'future'
+        ],
+        buddhist: 'The Tathāgata, one who has thus come/gone.'
+    },
+    '不': {
+        pinyin: 'bù',
+        meanings: [
+            'not',
+            'no',
+            'un-'
+        ],
+        buddhist: 'Negation in Dharma teachings.'
+    },
+    '世': {
+        pinyin: 'shì',
+        meanings: [
+            'world',
+            'generation',
+            'age'
+        ],
+        buddhist: 'The world or realm of existence.'
+    },
+    '尊': {
+        pinyin: 'zūn',
+        meanings: [
+            'honor',
+            'respect',
+            'venerate'
+        ],
+        buddhist: 'Honored one, a title for the Buddha.'
+    },
+    '所': {
+        pinyin: 'suǒ',
+        meanings: [
+            'place',
+            'that which',
+            'what'
+        ],
+        buddhist: 'A relative pronoun in Buddhist texts.'
+    },
+    '說': {
+        pinyin: 'shuō',
+        meanings: [
+            'speak',
+            'explain',
+            'teach'
+        ],
+        buddhist: 'The Buddha\'s teaching or explanation.'
+    },
+    '即': {
+        pinyin: 'jí',
+        meanings: [
+            'immediately',
+            'namely',
+            'approach'
+        ],
+        buddhist: 'Identity or non-duality in teachings.'
+    },
+    '非': {
+        pinyin: 'fēi',
+        meanings: [
+            'not',
+            'wrong',
+            'non-'
+        ],
+        buddhist: 'Negation in Dharma.'
+    },
+    '凡': {
+        pinyin: 'fán',
+        meanings: [
+            'ordinary',
+            'all',
+            'every'
+        ],
+        buddhist: 'Ordinary or unenlightened beings.'
+    },
+    '有': {
+        pinyin: 'yǒu',
+        meanings: [
+            'have',
+            'exist',
+            'possess'
+        ],
+        buddhist: 'Existence or possession.'
+    },
+    '皆': {
+        pinyin: 'jiē',
+        meanings: [
+            'all',
+            'each',
+            'every'
+        ],
+        buddhist: 'Universal or all-inclusive.'
+    },
+    '虗': {
+        pinyin: 'xū',
+        meanings: [
+            'empty',
+            'false',
+            'humble'
+        ],
+        buddhist: 'Same as 虚, representing emptiness.'
+    },
+    '妄': {
+        pinyin: 'wàng',
+        meanings: [
+            'false',
+            'delusion',
+            'reckless'
+        ],
+        buddhist: 'Falsehood or delusion.'
+    },
+    '若': {
+        pinyin: 'ruò',
+        meanings: [
+            'if',
+            'like',
+            'seem'
+        ],
+        buddhist: 'Condition or possibility.'
+    },
+    '諸': {
+        pinyin: 'zhū',
+        meanings: [
+            'all',
+            'various',
+            'many'
+        ],
+        buddhist: 'All or many, referring to phenomena.'
+    },
+    '則': {
+        pinyin: 'zé',
+        meanings: [
+            'rule',
+            'then',
+            'standard'
+        ],
+        buddhist: 'A principle or rule in Dharma.'
+    },
+    '佛': {
+        pinyin: 'fó',
+        meanings: [
+            'Buddha',
+            'Buddhism',
+            'awakened'
+        ],
+        buddhist: 'The awakened one.'
+    },
+    '告': {
+        pinyin: 'gào',
+        meanings: [
+            'tell',
+            'inform',
+            'announce'
+        ],
+        buddhist: 'The Buddha\'s instruction.'
+    }
+};
+
+// 完整经文数据
+const scriptureData = [
+    {
+        id: 'section1',
+        text: '須菩提！於意云何？可以身相見如來不？',
+        readingText: '須菩提！於意云何？可以身相見如來不？',
+        pinyin: 'xū pú tí yú yì yún hé kě yǐ shēn xiāng jiàn rú lái fǒu',
+        english: '"Subhūti, what do you think? Can the Tathāgata be seen by means of bodily form?"',
+        annotation: '菩薩發心，義兼三端：一化眾生，二修萬行，三向菩提。降伏[A4]已明化物之儀，辨住則示修行之軌。此章明趣菩提之方。如來身相，即菩提之體。若識法身，則菩提可登。若計實菩提，乖之遠矣。故問法身明菩提空者乎？\n○之體，疏作果體，計實菩提作計性，實菩提二字無故。問作故舉。',
+        annotationTranslations: {
+            '白话文': '菩萨发心有三重意义：一是教化众生，二是修行万行，三是趋向菩提。降伏妄心已说明教化众生的方式，辨别安住则显示修行的轨则。此章阐明趣向菩提的方法。如来身相就是菩提的本体。若能认识法身，则菩提可证。若执着实有的菩提，则背离甚远。所以通过问法身来阐明菩提空性的道理。\n注："之体"在疏中作"果体"，"计实菩提"作"计性"，"实菩提"二字无。"问"作"故举"。',
+            'English': 'The bodhisattva\'s aspiration encompasses three aspects: first, transforming sentient beings; second, cultivating all practices; third, directing toward bodhi. Subduing [the mind] has clarified the method of transforming beings, while distinguishing abiding demonstrates the path of practice. This chapter clarifies the method for approaching bodhi. The Tathāgata\'s bodily form is the essence of bodhi. If one recognizes the Dharma body, then bodhi can be attained. If one conceives of bodhi as real, this deviates far [from the truth]. Therefore, by inquiring about the Dharma body, is the emptiness of bodhi being clarified?\nNote: "The essence" in the commentary is written as "the fruit essence"; "conceiving real bodhi" is written as "conceiving nature"; the two characters for "real bodhi" are absent; "inquiring" is written as "raising the point".',
+            'Deutsch': 'Das Streben des Bodhisattva umfasst drei Aspekte: erstens die Transformation von fühlenden Wesen; zweitens die Kultivierung aller Praktiken; drittens die Ausrichtung auf Bodhi. Das Bezwingen [des Geistes] hat die Methode zur Transformation von Wesen geklärt, während das Unterscheiden des Verweilens den Übungsweg zeigt. Dieses Kapitel klärt die Methode zur Annäherung an Bodhi. Die körperliche Form des Tathāgata ist das Wesen von Bodhi. Wenn man den Dharmakörper erkennt, kann Bodhi verwirklicht werden. Wenn man Bodhi als real auffasst, weicht dies weit [von der Wahrheit] ab. Daher wird durch die Frage nach dem Dharmakörper die Leerheit von Bodhi geklärt?\nAnmerkung: "Das Wesen" im Kommentar ist als "das Fruchtwesen" geschrieben; "realen Bodhi auffassen" ist als "Natur auffassen" geschrieben; die beiden Zeichen für "realen Bodhi" fehlen; "fragen" ist als "den Punkt erheben" geschrieben.'
+        },
+        translations: {
+            '白话文': '须菩提！你的意思如何？可以通过身相见到如来吗？',
+            'English': '"Subhūti, what do you think? Can the Tathāgata be seen by means of bodily form?"',
+            'Deutsch': '"Subhūti, was denkst du? Kann der Tathāgata durch körperliche Form gesehen werden?"'
+        }
+    },
+    {
+        id: 'section2',
+        text: '不也，世尊。不可以身相得見如來。',
+        readingText: '不也，世尊。不可以身相得見如來。',
+        pinyin: 'bù yě shì zūn bù kě yǐ shēn xiāng dé jiàn rú lái',
+        english: '"No, World-Honored One. The Tathāgata cannot be seen by means of bodily form."',
+        annotation: '須菩提深識法身故，言不可以實身相而見也。\n○實字疏無。',
+        annotationTranslations: {
+            '白话文': '须菩提深刻认识法身的缘故，所以说不能以实有的身相见到如来。\n注："实"字在疏中没有。',
+            'English': 'Because Subhūti deeply understands the Dharma body, he says [the Tathāgata] cannot be seen by means of real bodily form.\nNote: The character for "real" is absent in the commentary.',
+            'Deutsch': 'Weil Subhūti den Dharmakörper tief versteht, sagt er, [der Tathāgata] könne nicht durch reale körperliche Form gesehen werden.\nAnmerkung: Das Zeichen für "real" fehlt im Kommentar.'
+        },
+        translations: {
+            '白话文': '不可以，世尊。不能以身相见到如来。',
+            'English': '"No, World-Honored One. The Tathāgata cannot be seen by means of bodily form."',
+            'Deutsch': '"Nein, Weltgeehrter. Der Tathāgata kann nicht durch körperliche Form gesehen werden."'
+        }
+    },
+    {
+        id: 'section3',
+        text: '何以故？如來所說身相，即非身相。',
+        readingText: '何以故？如來所說身相，即非身相。',
+        pinyin: 'hé yǐ gù rú lái suǒ shuō shēn xiāng jí fēi shēn xiāng',
+        english: '"Why is this? The bodily form spoken of by the Tathāgata is not a real bodily form."',
+        annotation: '即引佛語而釋也。法身者，萬善之極，體含萬善，妙集成身，緣構無性，故即非身。',
+        annotationTranslations: {
+            '白话文': '随即引用佛语来解释。法身是万善的极致，本体包含万善，妙合而成身，因缘构成无自性，所以说即非身。',
+            'English': 'Immediately citing the Buddha\'s words to explain. The Dharma body is the ultimate of all virtues, its essence contains all virtues, marvelously integrated to form a body, dependently arisen without nature, therefore it is said to be not a real body.',
+            'Deutsch': 'Unmittelbar unter Berufung auf die Worte des Buddha zur Erklärung. Der Dharmakörper ist das Höchste aller Tugenden, sein Wesen enthält alle Tugenden, wunderbar integriert, um einen Körper zu bilden, bedingt entstanden ohne Natur, daher wird gesagt, es sei kein wirklicher Körper.'
+        },
+        translations: {
+            '白话文': '为什么呢？如来所说的身相，即非实有的身相。',
+            'English': '"Why is this? The bodily form spoken of by the Tathāgata is not a real bodily form."',
+            'Deutsch': '"Warum ist das so? Die vom Tathāgata genannte körperliche Form ist keine wirkliche körperliche Form."'
+        }
+    },
+    {
+        id: 'section4',
+        text: '佛告須菩提：凡所有相皆是虗妄。',
+        readingText: '佛告須菩提：凡所有相皆是虗妄。',
+        pinyin: 'fó gào xū pú tí fán suǒ yǒu xiāng jiē shì xū wàng',
+        english: 'The Buddha told Subhūti: "All appearances are illusory."',
+        annotation: '即述成須菩提之言也。又則虗妄，理非相也。又假名故虗，實計為妄乎。',
+        annotationTranslations: {
+            '白话文': '随即肯定须菩提的说法。再者，虚妄是因为理体本非相。又因为是假名所以虚，执着实有就是妄。',
+            'English': 'Immediately affirming Subhūti\'s statement. Furthermore, they are illusory because the principle is fundamentally not appearances. Also, being nominal they are empty, while conceiving them as real is delusion.',
+            'Deutsch': 'Unmittelbar bestätigend Subhūtis Aussage. Darüber hinaus sind sie illusorisch, weil das Prinzip grundsätzlich nicht Erscheinungen ist. Auch, als nominal sind sie leer, während sie als real aufzufassen Täuschung ist.'
+        },
+        translations: {
+            '白话文': '佛告诉须菩提：凡所有相都是虚妄不实的。',
+            'English': 'The Buddha told Subhūti: "All appearances are illusory."',
+            'Deutsch': 'Der Buddha sagte zu Subhūti: "Alle Erscheinungen sind illusorisch."'
+        }
+    },
+    {
+        id: 'section5',
+        text: '若見諸相非相，則見如來。',
+        readingText: '若見諸相非相，則見如來。',
+        pinyin: 'ruò jiàn zhū xiāng fēi xiāng zé jiàn rú lái',
+        english: '"If one sees all appearances as non-appearances, then one sees the Tathāgata."',
+        annotation: '行合解通，則為見佛。',
+        annotationTranslations: {
+            '白话文': '修行与理解相通，就是见佛。',
+            'English': 'When practice accords with understanding, then one sees the Buddha.',
+            'Deutsch': 'Wenn Praxis mit Verständnis übereinstimmt, dann sieht man den Buddha.'
+        },
+        translations: {
+            '白话文': '若能见到一切相非实有相，就是见到如来。',
+            'English': '"If one sees all appearances as non-appearances, then one sees the Tathāgata."',
+            'Deutsch': '"Wenn man alle Erscheinungen als Nicht-Erscheinungen sieht, dann sieht man den Tathāgata."'
+        }
+    }
+];
+
+// 多语言选项
+const languages = [
+    '白话文', 'English', 'Deutsch'
+];
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 生成经文内容
+    const scriptureContent = document.getElementById('scriptureContent');
+    
+    scriptureData.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `text-section section-${index + 1}`;
+        
+        // 经文标题
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = `经文第${index + 1}段`;
+        sectionDiv.appendChild(sectionTitle);
+        
+        // 经文正文（带拼音注释）
+        const textDiv = document.createElement('div');
+        textDiv.className = 'text-content';
+        textDiv.innerHTML = processTextWithPinyin(section.text, section.pinyin, section.id);
+        
+        // 添加朗读按钮和纯文本
+        const textActions = document.createElement('div');
+        textActions.className = 'action-buttons';
+        textActions.innerHTML = `
+            <button class="action-btn speak" id="speakText-${section.id}">朗读经文</button>
+            <span class="plain-text">${section.readingText}</span>
+        `;
+        textDiv.appendChild(textActions);
+        
+        // 添加多语言翻译
+        addTranslations(textDiv, section.translations, `${section.id}-trans`);
+        
+        sectionDiv.appendChild(textDiv);
+        
+        // 注解内容
+        const annoDiv = document.createElement('div');
+        annoDiv.className = 'annotation-content';
+        
+        // 添加注解内容
+        const annotationP = document.createElement('div');
+        annotationP.className = 'annotation';
+        annotationP.id = `${section.id}-anno`;
+        annotationP.textContent = section.annotation;
+        annoDiv.appendChild(annotationP);
+        
+        // 添加朗读按钮
+        const annoActions = document.createElement('div');
+        annoActions.className = 'action-buttons';
+        annoActions.innerHTML = `
+            <button class="action-btn speak" id="speakAnno-${section.id}">朗读注解</button>
+        `;
+        annoDiv.appendChild(annoActions);
+        
+        // 添加注解的多语言翻译
+        addTranslations(annoDiv, section.annotationTranslations, `${section.id}-anno-trans`);
+        
+        sectionDiv.appendChild(annoDiv);
+        
+        scriptureContent.appendChild(sectionDiv);
+    });
+
+    // 设置朗读按钮事件
+    setupSpeakButtons();
+    
+    // 设置汉字点击事件
+    setupCharClickEvents();
+});
+
+// 处理文本添加拼音（去掉英文提示）
+function processTextWithPinyin(text, pinyin, sectionId) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return `<span id="${sectionId}-text">${result}</span>`;
+}
+
+// 添加多语言翻译模块
+function addTranslations(container, translations, baseId) {
+    const transTabs = document.createElement('div');
+    transTabs.className = 'translation-tabs';
+    
+    const transContents = document.createElement('div');
+    
+    Object.entries(translations).forEach(([lang, content]) => {
+        // 翻译标签
+        const tab = document.createElement('div');
+        tab.className = 'translation-tab';
+        tab.textContent = lang;
+        tab.onclick = function() {
+            // 切换活跃标签
+            transTabs.querySelectorAll('.translation-tab').forEach(t => 
+                t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 显示对应语言内容
+            transContents.querySelectorAll('.translation-content').forEach(c => 
+                c.classList.remove('active'));
+            transContents.querySelector(`#${baseId}-${lang}`).classList.add('active');
+        };
+        transTabs.appendChild(tab);
+        
+        // 翻译内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'translation-content';
+        contentDiv.id = `${baseId}-${lang}`;
+        contentDiv.textContent = content;
+        transContents.appendChild(contentDiv);
+    });
+    
+    // 默认显示第一个语言
+    if (transTabs.firstChild) {
+        transTabs.firstChild.click();
+    }
+    
+    container.appendChild(transTabs);
+    container.appendChild(transContents);
+}
+
+// 设置所有朗读按钮事件
+function setupSpeakButtons() {
+    // 经文朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakText-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.readingText;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+    
+    // 注解朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakAnno-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.annotation;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+}
+
+// 设置汉字点击事件（显示详情弹窗）
+function setupCharClickEvents() {
+    document.addEventListener('click', function(e) {
+        const charElement = e.target.closest('.char');
+        if (charElement) {
+            const char = charElement.dataset.char;
+            showCharModal(char);
+        }
+    });
+    
+    // 关闭弹窗按钮
+    document.getElementById('closeCharModal').addEventListener('click', function() {
+        document.getElementById('charModal').style.display = 'none';
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('charModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+}
+
+// 显示汉字详情弹窗
+function showCharModal(char) {
+    const modal = document.getElementById('charModal');
+    const modalChar = document.getElementById('modalChar');
+    const modalPinyin = document.getElementById('modalPinyin');
+    const modalMeaning = document.getElementById('modalMeaning');
+    const modalBuddhistMeaning = document.getElementById('modalBuddhistMeaning');
+    
+    // 设置弹窗内容
+    modalChar.textContent = char;
+    
+    if (punctuationPinyin[char]) {
+        // 标点符号
+        modalPinyin.textContent = punctuationPinyin[char];
+        modalMeaning.textContent = 'This is a punctuation mark.';
+        modalBuddhistMeaning.textContent = 'Punctuation marks help structure the text and indicate pauses in recitation.';
+    } else if (charMeanings[char]) {
+        // 汉字
+        const charData = charMeanings[char];
+        modalPinyin.textContent = charData.pinyin;
+        modalMeaning.innerHTML = charData.meanings.map(m => `• ${m}`).join('<br>');
+        modalBuddhistMeaning.textContent = charData.buddhist;
+    } else {
+        // 未知字符
+        modalPinyin.textContent = 'Unknown';
+        modalMeaning.textContent = 'No detailed information available for this character.';
+        modalBuddhistMeaning.textContent = 'No specific Buddhist meaning recorded.';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 切换朗读/停止功能
+function toggleSpeech(text, button) {
+    if (currentUtterance && speechSynthesis.speaking) {
+        // 如果正在朗读，则停止
+        speechSynthesis.cancel();
+        button.classList.remove('stop');
+        button.classList.add('speak');
+        currentUtterance = null;
+    } else {
+        // 开始朗读
+        if ('speechSynthesis' in window) {
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 0.7; // 正常语速
+            
+            currentUtterance.onend = function() {
+                button.classList.remove('stop');
+                button.classList.add('speak');
+                currentUtterance = null;
+            };
+            
+            speechSynthesis.speak(currentUtterance);
+            button.classList.remove('speak');
+            button.classList.add('stop');
+        } else {
+            alert('您的浏览器不支持语音朗读功能');
+        }
+    }
+}
+</script>
+</body>
+</html>

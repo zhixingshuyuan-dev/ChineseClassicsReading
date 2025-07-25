@@ -1,0 +1,1957 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>金刚般若波罗蜜经（完整交互版）</title>
+    <style>
+        body {
+            font-family: "SimSun", "STKaiti", serif;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            font-size: 1.4em;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #444;
+            padding-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 2.0em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #d4a762;
+        }
+        
+        .author {
+            font-style: italic;
+            margin-bottom: 10px;
+            color: #999;
+        }
+        
+        .preface-section {
+            background-color: #2a2a2a;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 5px solid #d4a762;
+        }
+        
+        .preface-content {
+            margin-bottom: 20px;
+            line-height: 2.0;
+            color: #e0e0e0;
+        }
+        
+        .preface-annotation {
+            color: #999;
+            font-style: italic;
+            padding-left: 20px;
+            border-left: 3px solid #555;
+            margin-top: 15px;
+        }
+        
+        .text-section {
+            margin-bottom: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .text-section h3 {
+            margin-top: 0;
+            padding: 15px 20px;
+            border-bottom: 2px solid #444;
+            color: #d4a762;
+            background-color: #2a2a2a;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .text-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .annotation-content {
+            padding: 20px;
+            line-height: 2.0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .char {
+            cursor: pointer;
+            position: relative;
+            color: #e0e0e0;
+        }
+        
+        .char-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #444;
+            color: #fff;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 100;
+        }
+        
+        .char:hover .char-tooltip {
+            display: block;
+        }
+        
+        .annotation {
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+            padding-left: 15px;
+            border-left: 2px solid #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        
+        .plain-text {
+            margin-left: 15px;
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        
+        .action-btn {
+            padding: 4px 10px;
+            font-size: 0.7em;
+            background-color: #444;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .action-btn:hover {
+            background-color: #555;
+        }
+        
+        .action-btn.speak {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .action-btn.stop {
+            background-color: #a76a6a;
+            color: #1a1a1a;
+        }
+        
+        .translation-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 15px 0;
+        }
+        
+        .translation-tab {
+            padding: 3px 8px;
+            background-color: #333;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.2s;
+            color: #e0e0e0;
+        }
+        
+        .translation-tab.active {
+            background-color: #d4a762;
+            color: #1a1a1a;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 6px;
+            font-size: 0.8em;
+            line-height: 1.6;
+            color: #e0e0e0;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        /* 修改后的弹窗样式 */
+        .char-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .char-modal-content {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 80%;
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .char-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .char-modal-char {
+            font-size: 2.5em;
+            color: #d4a762;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-pinyin {
+            font-size: 1.3em;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+        
+        .char-modal-close {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        
+        .char-modal-close:hover {
+            color: #e0e0e0;
+        }
+        
+        .char-modal-section {
+            margin-bottom: 15px;
+        }
+        
+        .char-modal-section h3 {
+            color: #d4a762;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+        
+        .char-modal-meaning {
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        
+        /* Color schemes for alternating sections */
+        .section-1 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-1 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #d4a762;
+        }
+        
+        .section-2 .text-content {
+            background-color: #333333;
+        }
+        .section-2 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #5d8aa8;
+        }
+        
+        .section-3 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-3 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a8d4a7;
+        }
+        
+        .section-4 .text-content {
+            background-color: #333333;
+        }
+        .section-4 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4a7a7;
+        }
+        
+        .section-5 .text-content {
+            background-color: #2a2a2a;
+        }
+        .section-5 .annotation-content {
+            background-color: #333333;
+            border-left: 4px solid #a7a7d4;
+        }
+        
+        .section-6 .text-content {
+            background-color: #333333;
+        }
+        .section-6 .annotation-content {
+            background-color: #2a2a2a;
+            border-left: 4px solid #d4d4a7;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 20px 0;
+            color: #d4a762;
+            font-weight: bold;
+        }
+        
+        .reading-text {
+            display: none; /* 不再需要单独显示 */
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                font-size: 1.2em;
+                padding: 15px;
+            }
+            
+            .char-modal-content {
+                padding: 15px;
+            }
+            
+            .char-modal-char {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 汉字详情弹窗 -->
+<div class="char-modal" id="charModal">
+    <div class="char-modal-content">
+        <div class="char-modal-header">
+            <h2>汉字详情</h2>
+            <button class="char-modal-close" id="closeCharModal">&times;</button>
+        </div>
+        <div class="char-modal-char" id="modalChar"></div>
+        <div class="char-modal-pinyin" id="modalPinyin"></div>
+        <div class="char-modal-section">
+            <h3>基本释义</h3>
+            <div class="char-modal-meaning" id="modalMeaning"></div>
+        </div>
+        <div class="char-modal-section">
+            <h3>佛教释义</h3>
+            <div class="char-modal-meaning" id="modalBuddhistMeaning"></div>
+        </div>
+    </div>
+</div>
+
+<div class="header">
+    <div class="title">金刚般若波罗蜜经</div>
+    <div class="author">姚秦三藏法师鸠摩罗什译</div>
+</div>
+
+<!-- 第四品标题 -->
+<div class="section-title">第四品</div>
+
+<!-- 经文内容 -->
+<div id="scriptureContent"></div>
+
+<script>
+// 语音合成对象
+let currentUtterance = null;
+
+// 标点符号的拼音映射
+const punctuationPinyin = {
+    '，': 'dòu hào',
+    '。': 'jù hào',
+    '、': 'dùn hào',
+    '；': 'fēn hào',
+    '：': 'mào hào',
+    '！': 'tàn hào',
+    '？': 'wèn hào',
+    '「': 'zuǒ yǐn hào',
+    '」': 'yòu yǐn hào',
+    '『': 'zuǒ shuāng yǐn hào',
+    '』': 'yòu shuāng yǐn hào',
+    '（': 'zuǒ kuò hào',
+    '）': 'yòu kuò hào',
+    '《': 'zuǒ shū míng hào',
+    '》': 'yòu shū míng hào'
+};
+
+// 汉字的多义项解释
+const charMeanings = {
+    '復': {
+        pinyin: 'fù',
+        meanings: [
+            'again',
+            'repeat',
+            'return'
+        ],
+        buddhist: 'Repetition or return, indicating the cyclical nature of teachings.'
+    },
+    '次': {
+        pinyin: 'cì',
+        meanings: [
+            'next',
+            'second',
+            'order'
+        ],
+        buddhist: 'Sequence or order in the Buddha\'s teachings.'
+    },
+    '於': {
+        pinyin: 'yú',
+        meanings: [
+            'at',
+            'in',
+            'to'
+        ],
+        buddhist: 'A preposition indicating relation or connection.'
+    },
+    '法': {
+        pinyin: 'fǎ',
+        meanings: [
+            'law',
+            'method',
+            'dharma'
+        ],
+        buddhist: 'The teachings of the Buddha or phenomena in general.'
+    },
+    '應': {
+        pinyin: 'yīng',
+        meanings: [
+            'ought to',
+            'should',
+            'respond'
+        ],
+        buddhist: 'The appropriate response or practice according to Dharma.'
+    },
+    '無': {
+        pinyin: 'wú',
+        meanings: [
+            'not have',
+            'no',
+            'without'
+        ],
+        buddhist: 'Emptiness (śūnyatā), the ultimate nature of all phenomena.'
+    },
+    '住': {
+        pinyin: 'zhù',
+        meanings: [
+            'live',
+            'stay',
+            'abide'
+        ],
+        buddhist: 'Abiding or dwelling, often referring to attachment.'
+    },
+    '行': {
+        pinyin: 'xíng',
+        meanings: [
+            'walk',
+            'conduct',
+            'practice'
+        ],
+        buddhist: 'Spiritual practice or conduct (caryā).'
+    },
+    '布': {
+        pinyin: 'bù',
+        meanings: [
+            'cloth',
+            'spread',
+            'announce'
+        ],
+        buddhist: 'Generosity or giving (dāna), the first perfection.'
+    },
+    '施': {
+        pinyin: 'shī',
+        meanings: [
+            'give',
+            'apply',
+            'bestow'
+        ],
+        buddhist: 'The act of giving, one of the six perfections.'
+    },
+    '所': {
+        pinyin: 'suǒ',
+        meanings: [
+            'place',
+            'that which',
+            'what'
+        ],
+        buddhist: 'A relative pronoun in Buddhist texts.'
+    },
+    '謂': {
+        pinyin: 'wèi',
+        meanings: [
+            'say',
+            'call',
+            'mean'
+        ],
+        buddhist: 'To explain or designate in teachings.'
+    },
+    '色': {
+        pinyin: 'sè',
+        meanings: [
+            'color',
+            'form',
+            'appearance'
+        ],
+        buddhist: 'Form (rūpa), the first of the five aggregates.'
+    },
+    '聲': {
+        pinyin: 'shēng',
+        meanings: [
+            'sound',
+            'voice',
+            'noise'
+        ],
+        buddhist: 'Sound as one of the sense objects.'
+    },
+    '香': {
+        pinyin: 'xiāng',
+        meanings: [
+            'fragrance',
+            'incense',
+            'smell'
+        ],
+        buddhist: 'Smell as one of the sense objects.'
+    },
+    '味': {
+        pinyin: 'wèi',
+        meanings: [
+            'taste',
+            'flavor',
+            'meaning'
+        ],
+        buddhist: 'Taste as one of the sense objects.'
+    },
+    '觸': {
+        pinyin: 'chù',
+        meanings: [
+            'touch',
+            'contact',
+            'feel'
+        ],
+        buddhist: 'Touch as one of the sense objects.'
+    },
+    '塵': {
+        pinyin: 'chén',
+        meanings: [
+            'dust',
+            'worldly',
+            'defilement'
+        ],
+        buddhist: 'Sense objects that defile the mind.'
+    },
+    '彌': {
+        pinyin: 'mí',
+        meanings: [
+            'more',
+            'fill',
+            'extensive'
+        ],
+        buddhist: 'Vast or boundless, as in the Dharma.'
+    },
+    '曠': {
+        pinyin: 'kuàng',
+        meanings: [
+            'vast',
+            'spacious',
+            'free'
+        ],
+        buddhist: 'Boundless or limitless, like the Buddha\'s compassion.'
+    },
+    '略': {
+        pinyin: 'lüè',
+        meanings: [
+            'brief',
+            'sketch',
+            'strategy'
+        ],
+        buddhist: 'A summary or brief explanation.'
+    },
+    '舉': {
+        pinyin: 'jǔ',
+        meanings: [
+            'lift',
+            'cite',
+            'enumerate'
+        ],
+        buddhist: 'To mention or bring up in teaching.'
+    },
+    '內': {
+        pinyin: 'nèi',
+        meanings: [
+            'inside',
+            'internal',
+            'within'
+        ],
+        buddhist: 'Internal or subjective aspects.'
+    },
+    '則': {
+        pinyin: 'zé',
+        meanings: [
+            'rule',
+            'then',
+            'standard'
+        ],
+        buddhist: 'A principle or rule in Dharma.'
+    },
+    '六': {
+        pinyin: 'liù',
+        meanings: [
+            'six',
+            'sixth'
+        ],
+        buddhist: 'The number six, as in six perfections.'
+    },
+    '度': {
+        pinyin: 'dù',
+        meanings: [
+            'degree',
+            'cross',
+            'perfection'
+        ],
+        buddhist: 'The perfections (pāramitās) in Mahayana.'
+    },
+    '外': {
+        pinyin: 'wài',
+        meanings: [
+            'outside',
+            'external',
+            'foreign'
+        ],
+        buddhist: 'External or objective aspects.'
+    },
+    '諸': {
+        pinyin: 'zhū',
+        meanings: [
+            'all',
+            'various',
+            'many'
+        ],
+        buddhist: 'All or many, referring to phenomena.'
+    },
+    '斯': {
+        pinyin: 'sī',
+        meanings: [
+            'this',
+            'these',
+            'then'
+        ],
+        buddhist: 'A demonstrative pronoun in texts.'
+    },
+    '皆': {
+        pinyin: 'jiē',
+        meanings: [
+            'all',
+            'each',
+            'every'
+        ],
+        buddhist: 'Universal or all-inclusive.'
+    },
+    '因': {
+        pinyin: 'yīn',
+        meanings: [
+            'cause',
+            'because',
+            'reason'
+        ],
+        buddhist: 'Cause in dependent origination.'
+    },
+    '緣': {
+        pinyin: 'yuán',
+        meanings: [
+            'condition',
+            'edge',
+            'fate'
+        ],
+        buddhist: 'Condition in dependent origination.'
+    },
+    '性': {
+        pinyin: 'xìng',
+        meanings: [
+            'nature',
+            'character',
+            'gender'
+        ],
+        buddhist: 'Nature or essence of phenomena.'
+    },
+    '心': {
+        pinyin: 'xīn',
+        meanings: [
+            'heart',
+            'mind',
+            'core'
+        ],
+        buddhist: 'The mind as the source of experience.'
+    },
+    '停': {
+        pinyin: 'tíng',
+        meanings: [
+            'stop',
+            'pause',
+            'stay'
+        ],
+        buddhist: 'Cessation or abiding in meditation.'
+    },
+    '處': {
+        pinyin: 'chù',
+        meanings: [
+            'place',
+            'location',
+            'point'
+        ],
+        buddhist: 'A place or state of being.'
+    },
+    '捨': {
+        pinyin: 'shě',
+        meanings: [
+            'abandon',
+            'give up',
+            'alms'
+        ],
+        buddhist: 'Renunciation or generosity.'
+    },
+    '恡': {
+        pinyin: 'lìn',
+        meanings: [
+            'stingy',
+            'grudge',
+            'reluctant'
+        ],
+        buddhist: 'Stinginess as an obstacle to giving.'
+    },
+    '相': {
+        pinyin: 'xiāng',
+        meanings: [
+            'mutual',
+            'appearance',
+            'characteristic'
+        ],
+        buddhist: 'Characteristics or signs of phenomena.'
+    },
+    '存': {
+        pinyin: 'cún',
+        meanings: [
+            'exist',
+            'store',
+            'survive'
+        ],
+        buddhist: 'Existence or preservation.'
+    },
+    '何': {
+        pinyin: 'hé',
+        meanings: [
+            'what',
+            'why',
+            'how'
+        ],
+        buddhist: 'A question about Dharma.'
+    },
+    '有': {
+        pinyin: 'yǒu',
+        meanings: [
+            'have',
+            'exist',
+            'possess'
+        ],
+        buddhist: 'Existence or possession.'
+    },
+    '首': {
+        pinyin: 'shǒu',
+        meanings: [
+            'head',
+            'first',
+            'leader'
+        ],
+        buddhist: 'The foremost or primary.'
+    },
+    '為': {
+        pinyin: 'wéi',
+        meanings: [
+            'do',
+            'act',
+            'become'
+        ],
+        buddhist: 'Action or transformation.'
+    },
+    '生': {
+        pinyin: 'shēng',
+        meanings: [
+            'birth',
+            'life',
+            'produce'
+        ],
+        buddhist: 'Birth in samsara.'
+    },
+    '基': {
+        pinyin: 'jī',
+        meanings: [
+            'foundation',
+            'base',
+            'beginning'
+        ],
+        buddhist: 'The basis or root of phenomena.'
+    },
+    '二': {
+        pinyin: 'èr',
+        meanings: [
+            'two',
+            'second'
+        ],
+        buddhist: 'Duality or pairs in teachings.'
+    },
+    '盡': {
+        pinyin: 'jìn',
+        meanings: [
+            'exhaust',
+            'end',
+            'all'
+        ],
+        buddhist: 'Complete cessation or ending.'
+    },
+    '既': {
+        pinyin: 'jì',
+        meanings: [
+            'already',
+            'since',
+            'both'
+        ],
+        buddhist: 'A conjunction indicating completion.'
+    },
+    '得': {
+        pinyin: 'dé',
+        meanings: [
+            'obtain',
+            'gain',
+            'can'
+        ],
+        buddhist: 'Attainment or realization.'
+    },
+    '解': {
+        pinyin: 'jiě',
+        meanings: [
+            'understand',
+            'explain',
+            'untie'
+        ],
+        buddhist: 'Understanding or liberation.'
+    },
+    '明': {
+        pinyin: 'míng',
+        meanings: [
+            'bright',
+            'clear',
+            'wisdom'
+        ],
+        buddhist: 'Wisdom or clarity.'
+    },
+    '立': {
+        pinyin: 'lì',
+        meanings: [
+            'stand',
+            'establish',
+            'set up'
+        ],
+        buddhist: 'Establishment or realization.'
+    },
+    '復': {
+        pinyin: 'fù',
+        meanings: [
+            'again',
+            'return',
+            'reply'
+        ],
+        buddhist: 'Repetition or renewal.'
+    },
+    '退': {
+        pinyin: 'tuì',
+        meanings: [
+            'retreat',
+            'withdraw',
+            'decline'
+        ],
+        buddhist: 'Regression in practice.'
+    },
+    '失': {
+        pinyin: 'shī',
+        meanings: [
+            'lose',
+            'miss',
+            'fail'
+        ],
+        buddhist: 'Loss or failure in practice.'
+    },
+    '故': {
+        pinyin: 'gù',
+        meanings: [
+            'reason',
+            'old',
+            'therefore'
+        ],
+        buddhist: 'Cause or reason in Dharma.'
+    },
+    '言': {
+        pinyin: 'yán',
+        meanings: [
+            'speak',
+            'word',
+            'language'
+        ],
+        buddhist: 'Speech or expression of Dharma.'
+    },
+    '結': {
+        pinyin: 'jié',
+        meanings: [
+            'tie',
+            'knot',
+            'conclude'
+        ],
+        buddhist: 'Conclusion or binding.'
+    },
+    '成': {
+        pinyin: 'chéng',
+        meanings: [
+            'become',
+            'complete',
+            'accomplish'
+        ],
+        buddhist: 'Completion or perfection.'
+    },
+    '義': {
+        pinyin: 'yì',
+        meanings: [
+            'meaning',
+            'righteous',
+            'justice'
+        ],
+        buddhist: 'Meaning or principle in Dharma.'
+    },
+    '者': {
+        pinyin: 'zhě',
+        meanings: [
+            'person',
+            'one who',
+            'that which'
+        ],
+        buddhist: 'A grammatical particle.'
+    },
+    '受': {
+        pinyin: 'shòu',
+        meanings: [
+            'receive',
+            'accept',
+            'endure'
+        ],
+        buddhist: 'Receiving or experiencing.'
+    },
+    '財': {
+        pinyin: 'cái',
+        meanings: [
+            'wealth',
+            'property',
+            'talent'
+        ],
+        buddhist: 'Material possessions.'
+    },
+    '物': {
+        pinyin: 'wù',
+        meanings: [
+            'thing',
+            'object',
+            'matter'
+        ],
+        buddhist: 'Material objects.'
+    },
+    '皆': {
+        pinyin: 'jiē',
+        meanings: [
+            'all',
+            'each',
+            'every'
+        ],
+        buddhist: 'Universal or all-inclusive.'
+    },
+    '可': {
+        pinyin: 'kě',
+        meanings: [
+            'can',
+            'may',
+            'possible'
+        ],
+        buddhist: 'Possibility or permission.'
+    },
+    '得': {
+        pinyin: 'dé',
+        meanings: [
+            'obtain',
+            'get',
+            'can'
+        ],
+        buddhist: 'Attainment or realization.'
+    },
+    '福': {
+        pinyin: 'fú',
+        meanings: [
+            'blessing',
+            'good fortune',
+            'merit'
+        ],
+        buddhist: 'Merit or blessings.'
+    },
+    '德': {
+        pinyin: 'dé',
+        meanings: [
+            'virtue',
+            'moral',
+            'power'
+        ],
+        buddhist: 'Virtue or spiritual power.'
+    },
+    '不': {
+        pinyin: 'bù',
+        meanings: [
+            'not',
+            'no',
+            'un-'
+        ],
+        buddhist: 'Negation in Dharma teachings.'
+    },
+    '可': {
+        pinyin: 'kě',
+        meanings: [
+            'can',
+            'may',
+            'possible'
+        ],
+        buddhist: 'Possibility or permission.'
+    },
+    '思': {
+        pinyin: 'sī',
+        meanings: [
+            'think',
+            'consider',
+            'thought'
+        ],
+        buddhist: 'Thought or conceptualization.'
+    },
+    '量': {
+        pinyin: 'liàng',
+        meanings: [
+            'measure',
+            'quantity',
+            'capacity'
+        ],
+        buddhist: 'Measurement or limitation.'
+    },
+    '正': {
+        pinyin: 'zhèng',
+        meanings: [
+            'correct',
+            'right',
+            'main'
+        ],
+        buddhist: 'Right or correct in Dharma.'
+    },
+    '以': {
+        pinyin: 'yǐ',
+        meanings: [
+            'with',
+            'by',
+            'because'
+        ],
+        buddhist: 'A preposition indicating means.'
+    },
+    '虗': {
+        pinyin: 'xū',
+        meanings: [
+            'empty',
+            'false',
+            'humble'
+        ],
+        buddhist: 'Same as 虚, representing emptiness.'
+    },
+    '知': {
+        pinyin: 'zhī',
+        meanings: [
+            'know',
+            'realize',
+            'wisdom'
+        ],
+        buddhist: 'Knowledge or wisdom.'
+    },
+    '為': {
+        pinyin: 'wéi',
+        meanings: [
+            'do',
+            'act',
+            'become'
+        ],
+        buddhist: 'Action or transformation.'
+    },
+    '是': {
+        pinyin: 'shì',
+        meanings: [
+            'be',
+            'this',
+            'correct'
+        ],
+        buddhist: 'Truth or reality.'
+    },
+    '非': {
+        pinyin: 'fēi',
+        meanings: [
+            'not',
+            'wrong',
+            'non-'
+        ],
+        buddhist: 'Negation in Dharma.'
+    },
+    '又': {
+        pinyin: 'yòu',
+        meanings: [
+            'again',
+            'also',
+            'moreover'
+        ],
+        buddhist: 'Additionally in teachings.'
+    },
+    '理': {
+        pinyin: 'lǐ',
+        meanings: [
+            'principle',
+            'reason',
+            'truth'
+        ],
+        buddhist: 'The principle or truth of Dharma.'
+    },
+    '既': {
+        pinyin: 'jì',
+        meanings: [
+            'already',
+            'since',
+            'both'
+        ],
+        buddhist: 'A conjunction indicating completion.'
+    },
+    '無': {
+        pinyin: 'wú',
+        meanings: [
+            'not have',
+            'no',
+            'without'
+        ],
+        buddhist: 'Emptiness or absence.'
+    },
+    '限': {
+        pinyin: 'xiàn',
+        meanings: [
+            'limit',
+            'restrict',
+            'boundary'
+        ],
+        buddhist: 'Limitation or boundary.'
+    },
+    '稱': {
+        pinyin: 'chēng',
+        meanings: [
+            'call',
+            'name',
+            'weigh'
+        ],
+        buddhist: 'To designate or name.'
+    },
+    '彌': {
+        pinyin: 'mí',
+        meanings: [
+            'more',
+            'fill',
+            'extensive'
+        ],
+        buddhist: 'Vast or boundless.'
+    },
+    '意': {
+        pinyin: 'yì',
+        meanings: [
+            'meaning',
+            'intention',
+            'thought'
+        ],
+        buddhist: 'Intention or thought.'
+    },
+    '云': {
+        pinyin: 'yún',
+        meanings: [
+            'say',
+            'cloud',
+            'speak'
+        ],
+        buddhist: 'To say or express.'
+    },
+    '東': {
+        pinyin: 'dōng',
+        meanings: [
+            'east',
+            'eastern'
+        ],
+        buddhist: 'The eastern direction.'
+    },
+    '方': {
+        pinyin: 'fāng',
+        meanings: [
+            'direction',
+            'side',
+            'method'
+        ],
+        buddhist: 'Direction or method.'
+    },
+    '虛': {
+        pinyin: 'xū',
+        meanings: [
+            'empty',
+            'void',
+            'humble'
+        ],
+        buddhist: 'Emptiness or voidness.'
+    },
+    '空': {
+        pinyin: 'kōng',
+        meanings: [
+            'empty',
+            'sky',
+            'void'
+        ],
+        buddhist: 'Emptiness (śūnyatā).'
+    },
+    '南': {
+        pinyin: 'nán',
+        meanings: [
+            'south',
+            'southern'
+        ],
+        buddhist: 'The southern direction.'
+    },
+    '西': {
+        pinyin: 'xī',
+        meanings: [
+            'west',
+            'western'
+        ],
+        buddhist: 'The western direction.'
+    },
+    '北': {
+        pinyin: 'běi',
+        meanings: [
+            'north',
+            'northern'
+        ],
+        buddhist: 'The northern direction.'
+    },
+    '四': {
+        pinyin: 'sì',
+        meanings: [
+            'four',
+            'fourth'
+        ],
+        buddhist: 'The number four.'
+    },
+    '維': {
+        pinyin: 'wéi',
+        meanings: [
+            'tie',
+            'maintain',
+            'dimension'
+        ],
+        buddhist: 'Dimensions or directions.'
+    },
+    '上': {
+        pinyin: 'shàng',
+        meanings: [
+            'above',
+            'up',
+            'previous'
+        ],
+        buddhist: 'Above or superior.'
+    },
+    '下': {
+        pinyin: 'xià',
+        meanings: [
+            'below',
+            'down',
+            'next'
+        ],
+        buddhist: 'Below or inferior.'
+    },
+    '亦': {
+        pinyin: 'yì',
+        meanings: [
+            'also',
+            'too',
+            'likewise'
+        ],
+        buddhist: 'Also or likewise.'
+    },
+    '如': {
+        pinyin: 'rú',
+        meanings: [
+            'as',
+            'like',
+            'such as'
+        ],
+        buddhist: 'Thusness or suchness.'
+    },
+    '是': {
+        pinyin: 'shì',
+        meanings: [
+            'be',
+            'this',
+            'correct'
+        ],
+        buddhist: 'Truth or reality.'
+    },
+    '極': {
+        pinyin: 'jí',
+        meanings: [
+            'extreme',
+            'utmost',
+            'pole'
+        ],
+        buddhist: 'The ultimate or extreme.'
+    },
+    '降': {
+        pinyin: 'jiàng',
+        meanings: [
+            'descend',
+            'fall',
+            'subdue'
+        ],
+        buddhist: 'Subduing or descending.'
+    },
+    '彰': {
+        pinyin: 'zhāng',
+        meanings: [
+            'clear',
+            'manifest',
+            'evident'
+        ],
+        buddhist: 'Manifestation or clarity.'
+    },
+    '顯': {
+        pinyin: 'xiǎn',
+        meanings: [
+            'apparent',
+            'manifest',
+            'clear'
+        ],
+        buddhist: 'Manifestation or clarity.'
+    },
+    '時': {
+        pinyin: 'shí',
+        meanings: [
+            'time',
+            'season',
+            'hour'
+        ],
+        buddhist: 'Time or occasion.'
+    },
+    '聽': {
+        pinyin: 'tīng',
+        meanings: [
+            'listen',
+            'hear',
+            'obey'
+        ],
+        buddhist: 'Listening to Dharma.'
+    },
+    '戢': {
+        pinyin: 'jí',
+        meanings: [
+            'sheathe',
+            'restrain',
+            'collect'
+        ],
+        buddhist: 'Restraint or collection.'
+    },
+    '多': {
+        pinyin: 'duō',
+        meanings: [
+            'many',
+            'much',
+            'more'
+        ],
+        buddhist: 'Abundance or multiplicity.'
+    },
+    '況': {
+        pinyin: 'kuàng',
+        meanings: [
+            'condition',
+            'moreover',
+            'example'
+        ],
+        buddhist: 'Example or analogy.'
+    },
+    '齊': {
+        pinyin: 'qí',
+        meanings: [
+            'even',
+            'uniform',
+            'complete'
+        ],
+        buddhist: 'Uniformity or completeness.'
+    },
+    '乎': {
+        pinyin: 'hū',
+        meanings: [
+            'at',
+            'in',
+            'question'
+        ],
+        buddhist: 'A question particle.'
+    },
+    '太': {
+        pinyin: 'tài',
+        meanings: [
+            'great',
+            'extreme',
+            'too'
+        ],
+        buddhist: 'Great or supreme.'
+    },
+    '聖': {
+        pinyin: 'shèng',
+        meanings: [
+            'sage',
+            'holy',
+            'sacred'
+        ],
+        buddhist: 'The sage or Buddha.'
+    },
+    '言': {
+        pinyin: 'yán',
+        meanings: [
+            'speak',
+            'word',
+            'language'
+        ],
+        buddhist: 'Speech or expression.'
+    },
+    '謬': {
+        pinyin: 'miù',
+        meanings: [
+            'error',
+            'mistake',
+            'false'
+        ],
+        buddhist: 'Error or falsehood.'
+    },
+    '越': {
+        pinyin: 'yuè',
+        meanings: [
+            'exceed',
+            'cross',
+            'overstep'
+        ],
+        buddhist: 'Transcendence or crossing.'
+    },
+    '但': {
+        pinyin: 'dàn',
+        meanings: [
+            'only',
+            'merely',
+            'but'
+        ],
+        buddhist: 'Only or merely.'
+    },
+    '當': {
+        pinyin: 'dāng',
+        meanings: [
+            'should',
+            'when',
+            'bear'
+        ],
+        buddhist: 'Ought to or should.'
+    },
+    '如': {
+        pinyin: 'rú',
+        meanings: [
+            'as',
+            'like',
+            'such as'
+        ],
+        buddhist: 'Thusness or suchness.'
+    },
+    '佛': {
+        pinyin: 'fó',
+        meanings: [
+            'Buddha',
+            'Buddhism',
+            'awakened'
+        ],
+        buddhist: 'The awakened one.'
+    },
+    '教': {
+        pinyin: 'jiào',
+        meanings: [
+            'teach',
+            'religion',
+            'instruction'
+        ],
+        buddhist: 'The teachings of Buddha.'
+    },
+    '安': {
+        pinyin: 'ān',
+        meanings: [
+            'peace',
+            'safe',
+            'calm'
+        ],
+        buddhist: 'Peace or tranquility.'
+    },
+    '也': {
+        pinyin: 'yě',
+        meanings: [
+            'also',
+            'too',
+            'final particle'
+        ],
+        buddhist: 'A final particle.'
+    }
+};
+
+// 完整经文数据
+const scriptureData = [
+    {
+        id: 'section1',
+        text: '復次，須菩提！菩薩於法應無所住行於布施，所謂不住色布施，不住聲、香、味、觸、法布施。',
+        readingText: '復次，須菩提！菩薩於法應無所住行於布施，所謂不住色布施，不住聲、香、味、觸、法布施。',
+        pinyin: 'fù cì xū pú tí pú sà yú fǎ yīng wú suǒ zhù xíng yú bù shī suǒ wèi bù zhù sè bù shī bù zhù shēng xiāng wèi chù fǎ bù shī',
+        english: '"Furthermore, Subhūti, bodhisattvas should practice generosity without dwelling on appearances. That is to say, they should practice generosity without dwelling on forms, sounds, smells, tastes, tactile sensations, or mental phenomena."',
+        annotation: '次答住行，即明法空。謂法彌曠，略舉內則六度，外為六塵，內外諸法，斯皆因緣無性。因緣無性，則心無停處，故應無住也。捨心無恡，謂之布施，無相可存，何恡之有？施為六度之首，塵為法生之基，二法皆空，于何不盡？既得法空，解明行立，無復退失，故言住也。\n○基，疏作機。',
+        annotationTranslations: {
+            '白话文': '接着回答安住修行的问题，阐明法空的道理。法门广大无边，简略来说，内在有六度，外在有六尘，内外一切法都是因缘所生无自性。因缘无自性，所以心无所住，应当不执着。心无吝啬就是布施，既然无相可执，还有什么吝啬呢？布施是六度之首，六尘是法生起的基础，这两者都是空性，还有什么不能舍尽？既然证得法空，理解明白修行确立，不再退失，所以说安住。\n注："基"字在疏中作"机"字。',
+            'English': 'Next answering the question about abiding in practice, clarifying the emptiness of phenomena. The Dharma is vast and boundless; briefly, internally there are the six perfections, externally the six dusts (sense objects). All phenomena, internal and external, are dependently arisen without intrinsic nature. Since they are dependently arisen without nature, the mind has no abiding place, thus should be non-abiding. Generosity is giving without stinginess; when there are no appearances to cling to, what stinginess can there be? Generosity is the first of the six perfections; the dusts are the basis for the arising of phenomena. Both are empty - what cannot be completely relinquished? Having realized the emptiness of phenomena, with clear understanding and established practice, there is no regression - thus it is called abiding.\nNote: The character "基" (basis) in the commentary is written as "机" (mechanism).',
+            'Deutsch': 'Als nächstes wird die Frage über das Verweilen in der Praxis beantwortet, wobei die Leerheit der Phänomene erläutert wird. Das Dharma ist weit und grenzenlos; kurz gesagt, intern gibt es die sechs Vollkommenheiten, extern die sechs Staubpartikel (Sinnesobjekte). Alle Phänomene, intern und extern, sind abhängig entstanden ohne inhärente Natur. Da sie abhängig entstanden ohne Natur, hat der Geist keinen Verweilort, daher sollte er nicht verweilen. Großzügigkeit ist Geben ohne Geiz; wenn es keine Erscheinungen gibt, an denen man festhalten könnte, welcher Geiz kann dann existieren? Großzügigkeit ist die erste der sechs Vollkommenheiten; die Staubpartikel sind die Grundlage für das Entstehen von Phänomenen. Beide sind leer - was kann nicht vollständig aufgegeben werden? Nach der Verwirklichung der Leerheit der Phänomene, mit klarem Verständnis und etablierter Praxis, gibt es keinen Rückfall - daher wird es Verweilen genannt.\nAnmerkung: Das Zeichen "基" (Grundlage) im Kommentar ist als "机" (Mechanismus) geschrieben.',
+            'Français': 'Ensuite, répondant à la question sur la demeure dans la pratique, clarifiant la vacuité des phénomènes. Le Dharma est vaste et sans limites ; brièvement, en interne il y a les six perfections, en externe les six poussières (objets des sens). Tous les phénomènes, internes et externes, sont dépendamment apparus sans nature intrinsèque. Puisqu\'ils sont dépendamment apparus sans nature, l\'esprit n\'a pas de lieu de demeure, donc devrait être non-demeurant. La générosité est donner sans avarice ; quand il n\'y a pas d\'apparences auxquelles s\'accrocher, quelle avarice peut-il y avoir ? La générosité est la première des six perfections ; les poussières sont la base de l\'apparition des phénomènes. Les deux sont vides - quoi ne peut être complètement abandonné ? Ayant réalisé la vacuité des phénomènes, avec une compréhension claire et une pratique établie, il n\'y a pas de régression - donc cela s\'appelle demeurer.\nNote : Le caractère "基" (base) dans le commentaire est écrit comme "机" (mécanisme).',
+            'Русский': 'Далее отвечая на вопрос о пребывании в практике, разъясняя пустотность явлений. Дхарма обширна и безгранична; кратко говоря, внутренне есть шесть совершенств, внешне шесть пылинок (объектов чувств). Все явления, внутренние и внешние, зависимо возникли без собственной природы. Поскольку они зависимо возникли без природы, ум не имеет места пребывания, поэтому должен быть непривязанным. Щедрость - это даяние без скупости; когда нет форм, за которые можно цепляться, какая скупость может быть? Щедрость - первое из шести совершенств; пылинки - основа возникновения явлений. Оба пусты - что не может быть полностью оставлено? Постигнув пустотность явлений, с ясным пониманием и установившейся практикой, нет возврата - поэтому это называется пребыванием.\nПримечание: Иероглиф "基" (основа) в комментарии написан как "机" (механизм).',
+            'Español': 'A continuación, respondiendo a la pregunta sobre la morada en la práctica, aclarando la vacuidad de los fenómenos. El Dharma es vasto e ilimitado; brevemente, internamente están las seis perfecciones, externamente los seis polvos (objetos sensoriales). Todos los fenómenos, internos y externos, son surgidos dependientemente sin naturaleza intrínseca. Como son surgidos dependientemente sin naturaleza, la mente no tiene lugar de morada, por lo tanto debe ser no-moradora. La generosidad es dar sin avaricia; cuando no hay apariencias a las que aferrarse, ¿qué avaricia puede haber? La generosidad es la primera de las seis perfecciones; los polvos son la base para el surgimiento de los fenómenos. Ambos son vacíos - ¿qué no puede ser completamente abandonado? Habiendo realizado la vacuidad de los fenómenos, con comprensión clara y práctica establecida, no hay regresión - por lo tanto se llama morada.\nNota: El carácter "基" (base) en el comentario está escrito como "机" (mecanismo).',
+            'Italiano': 'Successivamente, rispondendo alla domanda sulla dimora nella pratica, chiarendo la vacuità dei fenomeni. Il Dharma è vasto e illimitato; brevemente, internamente ci sono le sei perfezioni, esternamente le sei polveri (oggetti sensoriali). Tutti i fenomeni, interni ed esterni, sono sorti in modo dipendente senza natura intrinseca. Poiché sono sorti in modo dipendente senza natura, la mente non ha luogo di dimora, quindi dovrebbe essere non-dimorante. La generosità è donare senza avarizia; quando non ci sono apparenze a cui aggrapparsi, quale avarizia può esserci? La generosità è la prima delle sei perfezioni; le polveri sono la base per l\'emergere dei fenomeni. Entrambi sono vuoti - cosa non può essere completamente abbandonato? Avendo realizzato la vacuità dei fenomeni, con chiara comprensione e pratica stabilita, non c\'è regressione - quindi si chiama dimora.\nNota: Il carattere "基" (base) nel commento è scritto come "机" (meccanismo).',
+            'संस्कृतम्': 'अनन्तरं प्रश्नस्य उत्तरं दत्त्वा धर्मशून्यतां व्याख्याति। धर्माः अपरिमिताः, संक्षेपतः अन्तः षट्पारमिताः, बहिः षड्विषयाः, अन्तर्बहिः सर्वे धर्माः प्रतीत्यसमुत्पन्नाः स्वभावशून्याः। प्रतीत्यसमुत्पन्नत्वात् स्वभावशून्यत्वाच्च चित्तं निरालम्बनम्, अतः अनाभोगः कर्तव्यः। त्यागः अलोभः, निराकारे कः लोभः? दानं षट्पारमितानां प्रथमम्, विषयाः धर्मोत्पत्तेः आधारः, उभौ शून्यौ - किं न परित्यक्तुं शक्यते? धर्मशून्यतां प्राप्य, प्रज्ञया स्थितिप्रतिष्ठितया न पुनः पतनम्, अतः स्थितिरिति उच्यते।\nटिप्पणीः "आधार" इति शब्दः व्याख्यायां "यन्त्र" इति पठ्यते।',
+            'Pāli': 'Anantaraṃ pañhassa uttaraṃ datvā dhammasuññataṃ vibhajati. Dhammā aparimitā, saṅkhepato ajjhattaṃ cha pāramiyo, bahiddhā cha visayā, ajjhattabahiddhā sabbe dhammā paṭiccasamuppannā sabhāvasuññā. Paṭiccasamuppannattā sabhāvasuññatā ca cittaṃ nirārammaṇaṃ, tasmā anābhogo kātabbo. Cāgo alobho, nirākāre ko lobho? Dānaṃ cha pāramiyānaṃ paṭhamaṃ, visayā dhammuppattiyā ādhāro, ubho suññā - kiṃ na pariccajituṃ sakkā? Dhammasuññataṃ patvā, paññāya ṭhitipatiṭṭhitāya na puna pātubhāvo, tasmā ṭhiti\'ti vuccati.\nNidassanaṃ: "Ādhāro" ti saddo aṭṭhakathāyaṃ "yantra" ti paṭhitaṃ.'
+        },
+        translations: {
+            '白话文': '再者，须菩提！菩萨对于一切法应该无所执着而行布施，所谓不执着于色相布施，不执着于声、香、味、触、法等相布施。',
+            'English': '"Furthermore, Subhūti, bodhisattvas should practice generosity without dwelling on appearances. That is to say, they should practice generosity without dwelling on forms, sounds, smells, tastes, tactile sensations, or mental phenomena."',
+            'Deutsch': '"Ferner, Subhūti, sollten Bodhisattvas Großzügigkeit praktizieren, ohne auf Erscheinungen zu verweilen. Das heißt, sie sollten Großzügigkeit praktizieren, ohne auf Formen, Klänge, Gerüche, Geschmäcker, Berührungen oder geistige Phänomene zu verweilen."',
+            'Français': '"De plus, Subhūti, les bodhisattvas devraient pratiquer la générosité sans demeurer sur les apparences. C\'est-à-dire qu\'ils devraient pratiquer la générosité sans demeurer sur les formes, les sons, les odeurs, les goûts, les sensations tactiles ou les phénomènes mentaux."',
+            'Русский': '"Далее, Субхути, бодхисаттвы должны практиковать щедрость, не пребывая в видимостях. То есть они должны практиковать щедрость, не пребывая в формах, звуках, запахах, вкусах, тактильных ощущениях или умственных феноменах."',
+            'Español': '"Además, Subhūti, los bodhisattvas deben practicar la generosidad sin morar en las apariencias. Es decir, deben practicar la generosidad sin morar en formas, sonidos, olores, sabores, sensaciones táctiles o fenómenos mentales."',
+            'Italiano': '"Inoltre, Subhūti, i bodhisattva dovrebbero praticare la generosità senza dimorare sulle apparenze. Cioè, dovrebbero praticare la generosità senza dimorare su forme, suoni, odori, sapori, sensazioni tattili o fenomeni mentali."',
+            'संस्कृतम्': 'पुनश्च, सुभूते! बोधिसत्त्वैः धर्मेषु अनाभोगेन दानं प्रतिपाद्यम्। यदुक्तं - रूपेषु अनाभोगेन दानं, शब्दगन्धरसस्प्रष्टव्यधर्मेषु च अनाभोगेन दानम्।',
+            'Pāli': 'Puna ca, Subhūti! Bodhisattvehi dhammehi anābhogena dānaṃ paṭipajjitabbaṃ. Yaduta - rūpehi anābhogena dānaṃ, saddagandharasaphoṭṭhabbadhammehi ca anābhogena dānan\'ti.'
+        }
+    },
+    {
+        id: 'section2',
+        text: '須菩提！菩薩應如是布施，不住於相。',
+        readingText: '須菩提！菩薩應如是布施，不住於相。',
+        pinyin: 'xū pú tí pú sà yīng rú shì bù shī bù zhù yú xiāng',
+        english: '"Subhūti, bodhisattvas should practice generosity thus, without dwelling on appearances."',
+        annotation: '結成住義也。施者．受者．財物皆不可得，不住相也。',
+        annotationTranslations: {
+            '白话文': '总结安住的含义。施者、受者、财物三者都不可得，就是不执着相。',
+            'English': 'Concluding the meaning of abiding. The giver, receiver, and gift are all ungraspable - this is non-abiding in appearances.',
+            'Deutsch': 'Zusammenfassend die Bedeutung des Verweilens. Der Geber, der Empfänger und die Gabe sind alle unfassbar - dies ist Nicht-Verweilen in Erscheinungen.',
+            'Français': 'Concluant le sens de la demeure. Le donneur, le receveur et le don sont tous insaisissables - c\'est la non-demeure dans les apparences.',
+            'Русский': 'Подводя итог значению пребывания. Дающий, получающий и дар - все они непостижимы - это непривязанность к видимостям.',
+            'Español': 'Concluyendo el significado de la morada. El dador, el receptor y el regalo son todos inasibles - esto es no morar en las apariencias.',
+            'Italiano': 'Concludendo il significato della dimora. Il donatore, il ricevente e il dono sono tutti inafferrabili - questa è la non-dimora nelle apparenze.',
+            'संस्कृतम्': 'स्थितेः अर्थं संगृह्णाति। दाता प्रतिग्रहीता द्रव्यं च अग्राह्यम्, अतः अनाभोगः।',
+            'Pāli': 'Ṭhitiyā atthaṃ saṅgaṇhāti. Dāyako paṭiggāhako dātabbañca aggahaṇīyaṃ, tasmā anābhogo\'ti.'
+        },
+        translations: {
+            '白话文': '须菩提！菩萨应当这样布施，不执着于相。',
+            'English': '"Subhūti, bodhisattvas should practice generosity thus, without dwelling on appearances."',
+            'Deutsch': '"Subhūti, Bodhisattvas sollten Großzügigkeit so praktizieren, ohne auf Erscheinungen zu verweilen."',
+            'Français': '"Subhūti, les bodhisattvas devraient pratiquer la générosité ainsi, sans demeurer sur les apparences."',
+            'Русский': '"Субхути, бодхисаттвы должны практиковать щедрость так, не пребывая в видимостях."',
+            'Español': '"Subhūti, los bodhisattvas deben practicar la generosidad así, sin morar en las apariencias."',
+            'Italiano': '"Subhūti, i bodhisattva dovrebbero praticare la generosità così, senza dimorare sulle apparenze."',
+            'संस्कृतम्': 'सुभूते! बोधिसत्त्वैः एवं दानं प्रतिपाद्यम्, अनाभोगेन।',
+            'Pāli': 'Subhūti! Bodhisattvehi evaṃ dānaṃ paṭipajjitabbaṃ, anābhogenā\'ti.'
+        }
+    },
+    {
+        id: 'section3',
+        text: '何以故？若菩薩不住相布施，其福德不可思量。',
+        readingText: '何以故？若菩薩不住相布施，其福德不可思量。',
+        pinyin: 'hé yǐ gù ruò pú sà bù zhù xiāng bù shī qí fú dé bù kě sī liáng',
+        english: '"Why is this? If bodhisattvas practice generosity without dwelling on appearances, their merit and virtue are inconceivable and immeasurable."',
+        annotation: '釋：何故布施應不住相耶？正以虗心而施，則福不可量。故知不住為是，住相為非。又理既無量，心不應限。稱理行施，故其福彌曠者乎？',
+        annotationTranslations: {
+            '白话文': '解释：为什么布施应该不执着相？正是因为以空心布施，福德就不可限量。所以知道不执着是正确的，执着相是错误的。再者，理体既然无量，心也不应有限量。随顺理体而行布施，所以福德更加广大。',
+            'English': 'Explanation: Why should generosity be without dwelling on appearances? Precisely because giving with an empty mind makes merit immeasurable. Thus we know non-abiding is correct, while dwelling on appearances is wrong. Furthermore, since the principle is immeasurable, the mind should not be limited. Practicing generosity in accordance with the principle, how could the merit not be vast?',
+            'Deutsch': 'Erklärung: Warum sollte Großzügigkeit ohne Verweilen auf Erscheinungen sein? Gerade weil Geben mit leerem Geist das Verdienst unermesslich macht. So wissen wir, dass Nicht-Verweilen richtig ist, während Verweilen auf Erscheinungen falsch ist. Darüber hinaus, da das Prinzip unermesslich ist, sollte der Geist nicht begrenzt sein. Großzügigkeit in Übereinstimmung mit dem Prinzip praktizierend, wie könnte das Verdienst nicht weit sein?',
+            'Français': 'Explication : Pourquoi la générosité devrait-elle être sans demeurer sur les apparences ? Précisément parce que donner avec un esprit vide rend le mérite incommensurable. Ainsi, nous savons que la non-demeure est correcte, tandis que demeurer sur les apparences est erroné. De plus, puisque le principe est incommensurable, l\'esprit ne devrait pas être limité. Pratiquant la générosité en accord avec le principe, comment le mérite pourrait-il ne pas être vaste ?',
+            'Русский': 'Объяснение: Почему щедрость должна быть без пребывания в видимостях? Именно потому, что даяние с пустым умом делает заслуги неизмеримыми. Таким образом, мы знаем, что непривязанность правильна, тогда как пребывание в видимостях ошибочно. Более того, поскольку принцип неизмерим, ум не должен быть ограничен. Практикуя щедрость в соответствии с принципом, как заслуги могут не быть обширными?',
+            'Español': 'Explicación: ¿Por qué la generosidad debe ser sin morar en las apariencias? Precisamente porque dar con una mente vacía hace que el mérito sea inconmensurable. Así sabemos que no morar es correcto, mientras que morar en las apariencias es incorrecto. Además, dado que el principio es inconmensurable, la mente no debe estar limitada. Practicando la generosidad de acuerdo con el principio, ¿cómo podría el mérito no ser vasto?',
+            'Italiano': 'Spiegazione: Perché la generosità dovrebbe essere senza dimorare sulle apparenze? Proprio perché donare con una mente vuota rende il merito incommensurabile. Così sappiamo che la non-dimora è corretta, mentre dimorare sulle apparenze è sbagliato. Inoltre, poiché il principio è incommensurabile, la mente non dovrebbe essere limitata. Praticando la generosità in accordo con il principio, come potrebbe il merito non essere vasto?',
+            'संस्कृतम्': 'व्याख्यातम् - किमर्थं दानं अनाभोगेन भवितव्यम्? शून्यचित्तेन दानात् पुण्यम् अपरिमितं भवति। अतः अनाभोगः युक्तः, आभोगः अयुक्तः। यतः तत्त्वम् अपरिमितम्, चित्तम् अपि न परिमितम् भवितव्यम्। तत्त्वानुसारेण दानं कृत्वा, पुण्यं कथं न विपुलं स्यात्?',
+            'Pāli': 'Vibhajitaṃ - kissa kāraṇā dānaṃ anābhogena bhavitabbaṃ? Suññacittena dānā puññaṃ aparimitaṃ hoti. Tasmā anābhogo yutto, ābhogo ayutto. Yato tathā aparimitaṃ, cittampi na parimitaṃ bhavitabbaṃ. Tathānusārena dānaṃ katvā, puññaṃ kathaṃ na vipulaṃ assā\'ti?'
+        },
+        translations: {
+            '白话文': '为什么呢？如果菩萨不执着于相而布施，他的福德就不可思量。',
+            'English': '"Why is this? If bodhisattvas practice generosity without dwelling on appearances, their merit and virtue are inconceivable and immeasurable."',
+            'Deutsch': '"Warum ist das so? Wenn Bodhisattvas Großzügigkeit praktizieren, ohne auf Erscheinungen zu verweilen, sind ihre Verdienste und Tugenden unvorstellbar und unermesslich."',
+            'Français': '"Pourquoi cela ? Si les bodhisattvas pratiquent la générosité sans demeurer sur les apparences, leur mérite et vertu sont inconcevables et incommensurables."',
+            'Русский': '"Почему это? Если бодхисаттвы практикуют щедрость, не пребывая в видимостях, их заслуги и добродетели непостижимы и неизмеримы."',
+            'Español': '"¿Por qué es esto? Si los bodhisattvas practican la generosidad sin morar en las apariencias, su mérito y virtud son inconcebibles e inconmensurables."',
+            'Italiano': '"Perché questo? Se i bodhisattva praticano la generosità senza dimorare sulle apparenze, il loro merito e virtù sono inconcepibili e incommensurabili."',
+            'संस्कृतम्': 'तत्र किं कारणम्? यदि बोधिसत्त्वः अनाभोगेन दानं ददाति, तस्य पुण्यम् अचिन्त्यम् अपरिमेयम् च भवति।',
+            'Pāli': 'Tatra kiṃ kāraṇaṃ? Sace bodhisatto anābhogena dānaṃ deti, tassa puññaṃ acinteyyaṃ appameyyañca hotī\'ti.'
+        }
+    },
+    {
+        id: 'section4',
+        text: '須菩提！於意云何？東方虗空可思量不？不也，世尊！須菩提！南西北方四維上下虗空可思量不？不也，世尊！須菩提！菩薩無住相布施福德，亦復如是不可思量。',
+        readingText: '須菩提！於意云何？東方虗空可思量不？不也，世尊！須菩提！南西北方四維上下虗空可思量不？不也，世尊！須菩提！菩薩無住相布施福德，亦復如是不可思量。',
+        pinyin: 'xū pú tí yú yì yún hé dōng fāng xū kōng kě sī liáng fǒu bù yě shì zūn xū pú tí nán xī běi fāng sì wéi shàng xià xū kōng kě sī liáng fǒu bù yě shì zūn xū pú tí pú sà wú zhù xiāng bù shī fú dé yì fù rú shì bù kě sī liáng',
+        english: '"Subhūti, what do you think? Can the vastness of eastern space be conceived or measured?" "No, World-Honored One." "Subhūti, can the vastness of southern, western, northern space, the four intermediate directions, and the zenith and nadir be conceived or measured?" "No, World-Honored One." "Subhūti, the merit and virtue of bodhisattvas who practice generosity without dwelling on appearances are likewise inconceivable and immeasurable."',
+        annotation: '理極二空，降住[A3]已彰。理行既顯，時聽戢心。如說而行，其福為多。為多之況，齊乎太虗之矣。',
+        annotationTranslations: {
+            '白话文': '理体穷尽人法二空，降伏和安住的意义已经显明。理体和修行既然已经显明，此时听众应当收摄其心。如说而行，福德就多。福德多的情形，如同太虚一样无边无际。',
+            'English': 'The principle exhausts the two emptinesses of self and phenomena; the meanings of subduing and abiding are already clear. Since both principle and practice are manifest, listeners at this time should collect their minds. Practicing as taught, the merit becomes vast. The extent of this vastness equals the boundlessness of great emptiness.',
+            'Deutsch': 'Das Prinzip erschöpft die zwei Leerheiten von Selbst und Phänomenen; die Bedeutungen von Zähmen und Verweilen sind bereits klar. Da sowohl Prinzip als auch Praxis offenbar sind, sollten Zuhörer zu dieser Zeit ihre Geister sammeln. Wie gelehrt praktizierend, wird das Verdienst weit. Das Ausmaß dieser Weite gleicht der Grenzenlosigkeit der großen Leere.',
+            'Français': 'Le principe épuise les deux vacuités du soi et des phénomènes ; les significations de la subjugation et de la demeure sont déjà claires. Puisque le principe et la pratique sont tous deux manifestes, les auditeurs à ce moment devraient recueillir leurs esprits. Pratiquant comme enseigné, le mérite devient vaste. L\'étendue de cette vastitude égale l\'illimité de la grande vacuité.',
+            'Русский': 'Принцип исчерпывает две пустотности - себя и явлений; значения усмирения и пребывания уже ясны. Поскольку и принцип, и практика проявлены, слушатели в это время должны собрать свои умы. Практикуя, как учили, заслуги становятся обширными. Масштаб этой обширности равен безграничности великой пустоты.',
+            'Español': 'El principio agota las dos vacuidades del yo y los fenómenos; los significados de subyugar y morar ya son claros. Dado que tanto el principio como la práctica son manifiestos, los oyentes en este momento deben recoger sus mentes. Practicando como se enseña, el mérito se vuelve vasto. La extensión de esta vastitud iguala lo ilimitado del gran vacío.',
+            'Italiano': 'Il principio esaurisce le due vacuità del sé e dei fenomeni; i significati di domare e dimorare sono già chiari. Poiché sia il principio che la pratica sono manifesti, gli ascoltatori in questo momento dovrebbero raccogliere le loro menti. Praticando come insegnato, il merito diventa vasto. L\'estensione di questa vastità equivale all\'illimitatezza del grande vuoto.',
+            'संस्कृतम्': 'तत्त्वं पुद्गलधर्मशून्यतां पर्यवसितम्, वशीकरणस्थित्योः अर्थः प्रकाशितः। तत्त्वचर्ययोः प्रकाशितयोः, श्रोतॄणां चित्तं संहर्तव्यम्। यथोक्तं चरित्वा, पुण्यं बहु भवति। बहुत्वस्य उपमा महाशून्यतया समा।',
+            'Pāli': 'Tathā puggaladhammasuññataṃ pariyositā, vasīkaraṇaṭhitiyo attho pakāsito. Tathācariyānaṃ pakāsitānaṃ, sotūnaṃ cittaṃ saṃharitabbaṃ. Yathovuttaṃ caritvā, puññaṃ bahu hoti. Bahuttassa upamā mahāsuññatāya samā\'ti.'
+        },
+        translations: {
+            '白话文': '须菩提！你的意思如何？东方的虚空可以思量吗？不可以，世尊！须菩提！南方、西方、北方、四维、上下的虚空可以思量吗？不可以，世尊！须菩提！菩萨不执着于相而布施的福德，也像这样不可思量。',
+            'English': '"Subhūti, what do you think? Can the vastness of eastern space be conceived or measured?" "No, World-Honored One." "Subhūti, can the vastness of southern, western, northern space, the four intermediate directions, and the zenith and nadir be conceived or measured?" "No, World-Honored One." "Subhūti, the merit and virtue of bodhisattvas who practice generosity without dwelling on appearances are likewise inconceivable and immeasurable."',
+            'Deutsch': '"Subhūti, was denkst du? Kann die Weite des östlichen Raumes erfasst oder gemessen werden?" "Nein, Weltgeehrter." "Subhūti, kann die Weite des südlichen, westlichen, nördlichen Raumes, der vier Zwischenrichtungen und des Zenits und Nadirs erfasst oder gemessen werden?" "Nein, Weltgeehrter." "Subhūti, das Verdienst und die Tugend der Bodhisattvas, die Großzügigkeit praktizieren, ohne auf Erscheinungen zu verweilen, sind ebenso unvorstellbar und unermesslich."',
+            'Français': '"Subhūti, qu\'en penses-tu ? La vastitude de l\'espace oriental peut-elle être conçue ou mesurée ?" "Non, Honoré du Monde." "Subhūti, la vastitude de l\'espace méridional, occidental, septentrional, des quatre directions intermédiaires, et du zénith et du nadir peut-elle être conçue ou mesurée ?" "Non, Honoré du Monde." "Subhūti, le mérite et la vertu des bodhisattvas qui pratiquent la générosité sans demeurer sur les apparences sont de même inconcevables et incommensurables."',
+            'Русский': '"Субхути, как ты думаешь? Можно ли постичь или измерить обширность восточного пространства?" "Нет, Почитаемый Миром." "Субхути, можно ли постичь или измерить обширность южного, западного, северного пространства, четырех промежуточных направлений и зенита с надиром?" "Нет, Почитаемый Миром." "Субхути, заслуги и добродетели бодхисаттв, практикующих щедрость без пребывания в видимостях, точно так же непостижимы и неизмеримы."',
+            'Español': '"Subhūti, ¿qué opinas? ¿Puede concebirse o medirse la vastedad del espacio oriental?" "No, Honrado por el Mundo." "Subhūti, ¿puede concebirse o medirse la vastedad del espacio meridional, occidental, septentrional, las cuatro direcciones intermedias y el cenit y el nadir?" "No, Honrado por el Mundo." "Subhūti, el mérito y la virtud de los bodhisattvas que practican la generosidad sin morar en las apariencias son igualmente inconcebibles e inconmensurables."',
+            'Italiano': '"Subhūti, cosa ne pensi? La vastità dello spazio orientale può essere concepita o misurata?" "No, Onorato dal Mondo." "Subhūti, la vastità dello spazio meridionale, occidentale, settentrionale, le quattro direzioni intermedie e lo zenit e il nadir possono essere concepiti o misurati?" "No, Onorato dal Mondo." "Subhūti, il merito e la virtù dei bodhisattva che praticano la generosità senza dimorare sulle apparenze sono allo stesso modo inconcepibili e incommensurabili."',
+            'संस्कृतम्': 'सुभूते! तव किं मतम्? पूर्वस्य दिशः आकाशः चिन्तयितुं मेयः वा? न हि, भगवन्! सुभूते! दक्षिणपश्चिमोत्तरदिशां चतसृणां विदिशोरधोर्ध्वाकाशः चिन्तयितुं मेयः वा? न हि, भगवन्! सुभूते! बोधिसत्त्वस्य अनाभोगदानपुण्यम् अपि तथैव अचिन्त्यम् अपरिमेयम् च।',
+            'Pāli': 'Subhūti! Taṃ kiṃ maññasi? Puratthimāya disāya ākāso cintetabbo māpetabbo vā\'ti? No hidaṃ, bhante! Subhūti! Dakkhiṇapaccimāuttarā disā catassannaṃ vidisānaṃ heṭṭhā upari ākāso cintetabbo māpetabbo vā\'ti? No hidaṃ, bhante! Subhūti! Bodhisattassa anābhogadānapuññaṃ apitathaiva acinteyyaṃ appameyyañcā\'ti.'
+        }
+    },
+    {
+        id: 'section5',
+        text: '須菩提！菩薩但應如所教住。',
+        readingText: '須菩提！菩薩但應如所教住。',
+        pinyin: 'xū pú tí pú sà dàn yīng rú suǒ jiào zhù',
+        english: '"Subhūti, bodhisattvas should abide thus as taught."',
+        annotation: '聖言無謬，理不可越，但當如佛所教而安心也。',
+        annotationTranslations: {
+            '白话文': '圣人的话没有谬误，理体不可超越，只应当按照佛陀的教导而安心。',
+            'English': 'The sage\'s words are without error; the principle cannot be surpassed. One should simply abide peacefully as the Buddha taught.',
+            'Deutsch': 'Die Worte des Weisen sind ohne Fehler; das Prinzip kann nicht übertroffen werden. Man sollte einfach friedlich verweilen, wie der Buddha lehrte.',
+            'Français': 'Les paroles du sage sont sans erreur ; le principe ne peut être surpassé. On devrait simplement demeurer paisiblement comme le Bouddha l\'a enseigné.',
+            'Русский': 'Слова мудреца безошибочны; принцип нельзя превзойти. Следует просто пребывать в покое, как учил Будда.',
+            'Español': 'Las palabras del sabio no tienen error; el principio no puede ser superado. Uno simplemente debe morar en paz como el Buddha enseñó.',
+            'Italiano': 'Le parole del saggio sono senza errore; il principio non può essere superato. Si dovrebbe semplicemente dimorare in pace come il Buddha insegnò.',
+            'संस्कृतम्': 'आर्यवाक्यं निर्दोषम्, तत्त्वम् अतिक्रान्तुम् अशक्यम्, केवलं बुद्धोपदिष्टेन न्यायेन चित्तं स्थापयितव्यम्।',
+            'Pāli': 'Ariyavācaṃ niddosaṃ, tathā atikkantum asakyaṃ, kevalaṃ buddhupadisitena nyāyena cittaṃ ṭhapetabbanti.'
+        },
+        translations: {
+            '白话文': '须菩提！菩萨只应当按照所教导的那样安住。',
+            'English': '"Subhūti, bodhisattvas should abide thus as taught."',
+            'Deutsch': '"Subhūti, Bodhisattvas sollten so verweilen, wie gelehrt."',
+            'Français': '"Subhūti, les bodhisattvas devraient demeurer ainsi comme enseigné."',
+            'Русский': '"Субхути, бодхисаттвы должны пребывать так, как учили."',
+            'Español': '"Subhūti, los bodhisattvas deben morar así como se enseñó."',
+            'Italiano': '"Subhūti, i bodhisattva dovrebbero dimorare così come insegnato."',
+            'संस्कृतम्': 'सुभूते! बोधिसत्त्वैः यथोपदिष्टं एव स्थातव्यम्।',
+            'Pāli': 'Subhūti! Bodhisattvehi yathovaditaṃ yeva ṭhātabban\'ti.'
+        }
+    }
+];
+
+// 多语言选项
+const languages = [
+    '白话文', 'English', 'Deutsch', 'Français', 'Русский', 
+    'Español', 'Italiano', 'संस्कृतम्', 'Pāli'
+];
+
+// 初始化页面
+document.addEventListener('DOMContentLoaded', function() {
+    // 生成经文内容
+    const scriptureContent = document.getElementById('scriptureContent');
+    
+    scriptureData.forEach((section, index) => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = `text-section section-${index + 1}`;
+        
+        // 经文标题
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.textContent = `经文第${index + 1}段`;
+        sectionDiv.appendChild(sectionTitle);
+        
+        // 经文正文（带拼音注释）
+        const textDiv = document.createElement('div');
+        textDiv.className = 'text-content';
+        textDiv.innerHTML = processTextWithPinyin(section.text, section.pinyin, section.id);
+        
+        // 添加朗读按钮和纯文本
+        const textActions = document.createElement('div');
+        textActions.className = 'action-buttons';
+        textActions.innerHTML = `
+            <button class="action-btn speak" id="speakText-${section.id}">朗读经文</button>
+            <span class="plain-text">${section.readingText}</span>
+        `;
+        textDiv.appendChild(textActions);
+        
+        // 添加多语言翻译
+        addTranslations(textDiv, section.translations, `${section.id}-trans`);
+        
+        sectionDiv.appendChild(textDiv);
+        
+        // 注解内容
+        const annoDiv = document.createElement('div');
+        annoDiv.className = 'annotation-content';
+        
+        // 添加注解内容
+        const annotationP = document.createElement('div');
+        annotationP.className = 'annotation';
+        annotationP.id = `${section.id}-anno`;
+        annotationP.textContent = section.annotation;
+        annoDiv.appendChild(annotationP);
+        
+        // 添加朗读按钮
+        const annoActions = document.createElement('div');
+        annoActions.className = 'action-buttons';
+        annoActions.innerHTML = `
+            <button class="action-btn speak" id="speakAnno-${section.id}">朗读注解</button>
+        `;
+        annoDiv.appendChild(annoActions);
+        
+        // 添加注解的多语言翻译
+        addTranslations(annoDiv, section.annotationTranslations, `${section.id}-anno-trans`);
+        
+        sectionDiv.appendChild(annoDiv);
+        
+        scriptureContent.appendChild(sectionDiv);
+    });
+
+    // 设置朗读按钮事件
+    setupSpeakButtons();
+    
+    // 设置汉字点击事件
+    setupCharClickEvents();
+});
+
+// 处理文本添加拼音（去掉英文提示）
+function processTextWithPinyin(text, pinyin, sectionId) {
+    const pinyinArr = pinyin.split(' ');
+    const chars = text.split('');
+    
+    let result = '';
+    let wordCount = 0;
+    
+    for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        if (/[\u4e00-\u9fa5]/.test(char)) {
+            // 汉字处理
+            const pinyin = pinyinArr[wordCount] || '';
+            wordCount++;
+            
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${pinyin}</span></span>`;
+        } else if (punctuationPinyin[char]) {
+            // 标点符号处理
+            result += `<span class="char" data-char="${char}">${char}<span class="char-tooltip">${punctuationPinyin[char]}</span></span>`;
+        } else {
+            // 其他字符（空格等）
+            result += char;
+        }
+    }
+    
+    return `<span id="${sectionId}-text">${result}</span>`;
+}
+
+// 添加多语言翻译模块
+function addTranslations(container, translations, baseId) {
+    const transTabs = document.createElement('div');
+    transTabs.className = 'translation-tabs';
+    
+    const transContents = document.createElement('div');
+    
+    Object.entries(translations).forEach(([lang, content]) => {
+        // 翻译标签
+        const tab = document.createElement('div');
+        tab.className = 'translation-tab';
+        tab.textContent = lang;
+        tab.onclick = function() {
+            // 切换活跃标签
+            transTabs.querySelectorAll('.translation-tab').forEach(t => 
+                t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // 显示对应语言内容
+            transContents.querySelectorAll('.translation-content').forEach(c => 
+                c.classList.remove('active'));
+            transContents.querySelector(`#${baseId}-${lang}`).classList.add('active');
+        };
+        transTabs.appendChild(tab);
+        
+        // 翻译内容
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'translation-content';
+        contentDiv.id = `${baseId}-${lang}`;
+        contentDiv.textContent = content;
+        transContents.appendChild(contentDiv);
+    });
+    
+    // 默认显示第一个语言
+    if (transTabs.firstChild) {
+        transTabs.firstChild.click();
+    }
+    
+    container.appendChild(transTabs);
+    container.appendChild(transContents);
+}
+
+// 设置所有朗读按钮事件
+function setupSpeakButtons() {
+    // 经文朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakText-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.readingText;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+    
+    // 注解朗读按钮
+    scriptureData.forEach(section => {
+        const btn = document.getElementById(`speakAnno-${section.id}`);
+        if (btn) {
+            btn.addEventListener('click', function() {
+                const text = section.annotation;
+                toggleSpeech(text, this);
+            });
+        }
+    });
+}
+
+// 设置汉字点击事件（显示详情弹窗）
+function setupCharClickEvents() {
+    document.addEventListener('click', function(e) {
+        const charElement = e.target.closest('.char');
+        if (charElement) {
+            const char = charElement.dataset.char;
+            showCharModal(char);
+        }
+    });
+    
+    // 关闭弹窗按钮
+    document.getElementById('closeCharModal').addEventListener('click', function() {
+        document.getElementById('charModal').style.display = 'none';
+    });
+    
+    // 点击弹窗外部关闭
+    document.getElementById('charModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    });
+}
+
+// 显示汉字详情弹窗
+function showCharModal(char) {
+    const modal = document.getElementById('charModal');
+    const modalChar = document.getElementById('modalChar');
+    const modalPinyin = document.getElementById('modalPinyin');
+    const modalMeaning = document.getElementById('modalMeaning');
+    const modalBuddhistMeaning = document.getElementById('modalBuddhistMeaning');
+    
+    // 设置弹窗内容
+    modalChar.textContent = char;
+    
+    if (punctuationPinyin[char]) {
+        // 标点符号
+        modalPinyin.textContent = punctuationPinyin[char];
+        modalMeaning.textContent = 'This is a punctuation mark.';
+        modalBuddhistMeaning.textContent = 'Punctuation marks help structure the text and indicate pauses in recitation.';
+    } else if (charMeanings[char]) {
+        // 汉字
+        const charData = charMeanings[char];
+        modalPinyin.textContent = charData.pinyin;
+        modalMeaning.innerHTML = charData.meanings.map(m => `• ${m}`).join('<br>');
+        modalBuddhistMeaning.textContent = charData.buddhist;
+    } else {
+        // 未知字符
+        modalPinyin.textContent = 'Unknown';
+        modalMeaning.textContent = 'No detailed information available for this character.';
+        modalBuddhistMeaning.textContent = 'No specific Buddhist meaning recorded.';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+// 切换朗读/停止功能
+function toggleSpeech(text, button) {
+    if (currentUtterance && speechSynthesis.speaking) {
+        // 如果正在朗读，则停止
+        speechSynthesis.cancel();
+        button.classList.remove('stop');
+        button.classList.add('speak');
+        currentUtterance = null;
+    } else {
+        // 开始朗读
+        if ('speechSynthesis' in window) {
+            currentUtterance = new SpeechSynthesisUtterance(text);
+            currentUtterance.lang = 'zh-CN';
+            currentUtterance.rate = 0.7; // 正常语速
+            
+            currentUtterance.onend = function() {
+                button.classList.remove('stop');
+                button.classList.add('speak');
+                currentUtterance = null;
+            };
+            
+            speechSynthesis.speak(currentUtterance);
+            button.classList.remove('speak');
+            button.classList.add('stop');
+        } else {
+            alert('您的浏览器不支持语音朗读功能');
+        }
+    }
+}
+</script>
+</body>
+</html>
