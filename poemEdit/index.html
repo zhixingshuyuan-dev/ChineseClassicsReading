@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>诗歌编辑工具 - 完整版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/pinyin-pro@3.14.0/dist/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-language"></i> 诗文编辑翻译工具</h1>
+            <div class="header-decoration"></div>
+        </header>
+
+        <div class="language-selector">
+            <button class="lang-btn active" data-lang="en">
+                <i class="fas fa-flag-usa"></i> English
+            </button>
+            <button class="lang-btn" data-lang="zh">
+                <i class="fas fa-flag"></i> 中文
+            </button>
+            <button class="lang-btn" data-lang="de">
+                <i class="fas fa-flag"></i> Deutsch
+            </button>
+            <button class="lang-btn" data-lang="fr">
+                <i class="fas fa-flag"></i> Français
+            </button>
+            <button class="lang-btn" data-lang="es">
+                <i class="fas fa-flag"></i> Español
+            </button>
+            <button class="lang-btn" data-lang="it">
+                <i class="fas fa-flag"></i> Italiano
+            </button>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="panel">
+                <div class="full-text-editor">
+                    <div class="full-text-header">
+                        <h3><i class="fas fa-align-left"></i> 语篇录入与分行</h3>
+                        <div class="split-controls">
+                            <button class="btn btn-purple" id="previewSplitBtn"><i class="fas fa-eye"></i> 预览分行</button>
+                            <button class="btn btn-success" id="applySplitBtn"><i class="fas fa-check"></i> 应用分行</button>
+                        </div>
+                    </div>
+                    
+                    <div class="split-options">
+                        <label for="splitStrategy">分行策略：</label>
+                        <select id="splitStrategy">
+                            <option value="punctuation">按标点符号分行</option>
+                            <option value="comma">按逗号分行</option>
+                            <option value="semicolon">按句号分行</option>
+                            <option value="custom">自定义字数分行</option>
+                        </select>
+                        
+                        <div id="customOption" style="display:none;">
+                            <label for="charsPerLine">每行字数：</label>
+                            <input type="number" id="charsPerLine" value="5" min="2" max="20">
+                        </div>
+                    </div>
+                    
+                    <div class="text-area-container">
+                        <textarea class="full-poem-input" id="fullPoemInput" placeholder="在此输入整篇诗歌...">好雨知时节，当春乃发生。随风潜入夜，润物细无声。野径云俱黑，江船火独明。晓看红湿处，花重锦官城。</textarea>
+                        <div class="split-preview" id="splitPreview">
+                            分行预览将显示在这里...
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-pencil-alt"></i> 诗歌编辑</h2>
+                    <div>
+                        <button class="btn btn-success" id="addLineBtn"><i class="fas fa-plus"></i> 添加行</button>
+                        <button class="btn btn-info" id="resetBtn"><i class="fas fa-undo"></i> 重置</button>
+                    </div>
+                </div>
+                
+                <div class="poem-lines" id="poemLines">
+                    <!-- 诗句将通过JavaScript动态生成 -->
+                </div>
+                
+                <div class="panel-header" style="margin-top: 30px;">
+                    <h2 class="panel-title"><i class="fas fa-language"></i> 整句翻译</h2>
+                    <div class="translation-controls">
+                        <button class="btn btn-purple" id="autoLineBtn"><i class="fas fa-robot"></i> 自动翻译</button>
+                        <button class="btn btn-teal" id="translateAllBtn"><i class="fas fa-globe"></i> 翻译全部</button>
+                    </div>
+                </div>
+                
+                <div class="api-status">
+                    <div class="status-indicator" id="apiStatus"></div>
+                    <span>翻译API状态: <span id="apiStatusText">在线</span></span>
+                </div>
+                
+                <div class="translation-loader" id="translationLoader">
+                    <div class="loader"></div>
+                    <p>正在翻译中，请稍候...</p>
+                </div>
+                
+                <table class="translation-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 20%;">行号</th>
+                            <th style="width: 40%;">原句</th>
+                            <th>翻译</th>
+                        </tr>
+                    </thead>
+                    <tbody id="translationBody">
+                        <!-- 翻译内容将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title"><i class="fas fa-font"></i> 字符编辑</h2>
+                    <div>
+                        <button class="btn btn-warning" id="reparseBtn"><i class="fas fa-sync-alt"></i> 重新解析</button>
+                        <button class="btn btn-info" id="saveCharsBtn"><i class="fas fa-save"></i> 保存</button>
+                    </div>
+                </div>
+                
+                <div class="auto-gen-controls">
+                    <button class="btn btn-purple" id="autoPinyinBtn"><i class="fas fa-spell-check"></i> 自动生成拼音</button>
+                    <button class="btn btn-purple" id="autoTranslationBtn"><i class="fas fa-language"></i> 自动生成翻译</button>
+                    <button class="btn btn-purple" id="autoAllBtn"><i class="fas fa-magic"></i> 全部自动生成</button>
+                </div>
+                
+                <div class="characters-grid" id="charactersGrid">
+                    <!-- 字符卡片将通过JavaScript动态生成 -->
+                </div>
+                
+                <div class="panel-header" style="margin-top: 30px;">
+                    <h2 class="panel-title"><i class="fas fa-eye"></i> 实时预览</h2>
+                    <button class="btn btn-info" id="refreshPreviewBtn"><i class="fas fa-sync"></i> 刷新预览</button>
+                </div>
+                
+                <div class="preview-container" id="previewContainer">
+                    <!-- 预览内容将通过JavaScript动态生成 -->
+                </div>
+                
+                <!-- 新增的导出选项 -->
+                <div class="panel-header" style="margin-top: 30px;">
+                    <h2 class="panel-title"><i class="fas fa-file-export"></i> 导出选项</h2>
+                </div>
+                
+                <div class="export-options">
+                    <button class="btn btn-primary" id="generateWebBtn">
+                        <i class="fas fa-code"></i> 生成网页
+                    </button>
+                    <button class="btn btn-danger" id="generatePdfBtn">
+                        <i class="fas fa-file-pdf"></i> 生成PDF
+                    </button>
+                </div>
+                
+                <div id="webPreviewContainer" style="margin-top: 20px; display: none;">
+                    <h3>网页预览</h3>
+                    <iframe id="webPreviewFrame" style="width: 100%; height: 300px; border: 1px solid #ccc;"></iframe>
+                    <button class="btn btn-success" id="downloadWebBtn" style="margin-top: 10px;">
+                        <i class="fas fa-download"></i> 下载网页
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>诗歌编辑工具 v10.0 | 完整版</p>
+            <p>© 2025 古诗词数字化项目 | 设计：小鱼儿</p>
+        </div>
+    </div>
+    
+    <div class="update-notification" id="updateNotification">
+        <i class="fas fa-check-circle"></i>
+        <span>更新已成功保存！</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
