@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>汉字阅读</title>
+  <title>西游记阅读器</title>
   <style>
     body {
       margin: 0;
@@ -20,10 +21,11 @@
     #textContainer {
       text-align: center;
       max-width: 90%;
+      padding: 20px;
     }
 
     .sentence {
-      font-size: 60px; /* Increased from 48px */
+      font-size: 60px;
       line-height: 1.5;
       margin: 0 auto;
       opacity: 0;
@@ -36,7 +38,7 @@
 
     .hanzi {
       display: inline-block;
-      min-width: 60px; /* Increased from 50px */
+      min-width: 60px;
       opacity: 0;
       transform: scale(0.5);
       transition: all 0.5s ease-out;
@@ -56,10 +58,10 @@
 
     .hanzi .pinyin {
       position: absolute;
-      top: -35px; /* Adjusted for larger font */
+      top: -35px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 20px; /* Increased from 16px */
+      font-size: 20px;
       background: rgba(0,0,0,0.7);
       padding: 2px 5px;
       border-radius: 3px;
@@ -69,10 +71,81 @@
     .hanzi:hover .pinyin {
       display: block;
     }
+
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: 1px solid white;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    #startOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      z-index: 1000;
+    }
+
+    #startButton {
+      padding: 15px 30px;
+      font-size: 24px;
+      background: #00fff7;
+      color: #0f2027;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.3s, background 0.3s;
+    }
+
+    #startButton:hover {
+      transform: scale(1.05);
+      background: #00e6d6;
+    }
+
+    #overlayText {
+      margin-bottom: 30px;
+      font-size: 28px;
+      color: #fff;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
   <div id="textContainer"></div>
+  <div id="controls">
+    <button id="prevBtn">上一句</button>
+    <button id="pauseBtn">暂停</button>
+    <button id="nextBtn">下一句</button>
+  </div>
+
+  <div id="startOverlay">
+    <div id="overlayText">西游记阅读器</div>
+    <button id="startButton">开始阅读</button>
+  </div>
 
   <script>
     const sentences = [
@@ -85,76 +158,10 @@
       "四周没有树木遮挡，左右却有灵芝仙草相伴。",
       "自从开天辟地以来，这块石头吸收天地灵气、日月精华，久而久之，便有了灵性。",
       "有一天，仙石突然迸裂，产出一个石卵，像圆球一样大。",
-      "遇到风后，石卵化作一只石猴，五官俱全，四肢齐备。",
-      "它一出生就会爬会走，还朝着四方拜了拜。",
-      "它的双眼射出两道金光，直冲云霄，惊动了天界的玉皇大帝。",
-      "当时，玉帝正坐在灵霄宝殿上，召集众仙议事，忽然看见金光闪耀，便命令千里眼和顺风耳打开南天门查看。",
-      "二将领命出门，仔细察看后回来禀报：",
-      "“臣等奉旨观察，发现金光来自东胜神洲傲来国的花果山。",
-      "山上有一块仙石，石中产出一卵，遇风化成一个石猴，正在拜四方，眼中金光直射天宫。",
-      "不过，它现在开始喝水进食，金光很快就会消失了。”",
-      "玉帝听后，仁慈地说道：“下界之物，不过是天地精华所生，不足为奇。”",
-      "那猴在山中，却会行走跳跃，食草木，饮涧泉，采山花，觅树果；与狼虫为伴，虎豹为群，獐鹿为友，猕猿为亲；夜宿石崖之下，朝游峰洞之中。真是“山中无甲子，寒尽不知年。”",
-      "一朝天气炎热，与群猴避暑，都在松阴之下顽耍。你看他一个个：",
-      "跳树攀枝，采花觅果；抛弹子，邷么儿；跑沙窝，砌宝塔；赶蜻蜓，扑蜡；参老天，拜菩萨；扯葛藤，编草帓；捉虱子，咬又掐；理毛衣，剔指甲；挨的挨，擦的擦；推的推，压的压；扯的扯，拉的拉，青松林下任他顽，绿水涧边随洗濯。",
-      "一群猴子耍了一会，却去那山涧中洗澡。见那股涧水奔流，真个似滚瓜涌溅。古云：“禽有禽言，兽有兽语。”众猴都道：“这股水不知是那里的水。我们今日赶闲无事，顺涧边往上溜头寻看源流，耍子去耶！”喊一声，都拖男挈女，呼弟呼兄，一齐跑来，顺涧爬山，直至源流之处，乃是一股瀑布飞泉。但见那：",
-      "一派白虹起，千寻雪浪飞；海风吹不断，江月照还依。",
-      "冷气分青嶂，馀流润翠微；潺湲名瀑布，真似挂帘帷。",
-      "众猴拍手称扬道：“好水！好水！原来此处远通山脚之下，直接大海之波。”又道：“那一个有本事的，钻进去寻个源头出来，不伤身体者，我等即拜他为王。”连呼了三声，忽见丛杂中跳出一名石猴，应声高叫道：“我进去！我进去！”好猴！"
+      "遇到风后，石卵化作一只石猴，五官俱全，四肢齐备。"
     ];
 
-    // Pinyin data for demonstration - you would need a complete pinyin mapping
     const pinyinMap = {
-      "那": "nà", "猴": "hóu", "在": "zài", "中": "zhōng", "却": "què", 
-      "会": "huì", "行": "xíng", "走": "zǒu", "跳": "tiào", "跃": "yuè", 
-      "食": "shí", "草": "cǎo", "木": "mù", "饮": "yǐn", "涧": "jiàn", 
-      "泉": "quán", "采": "cǎi", "花": "huā", "觅": "mì", "树": "shù", 
-      "果": "guǒ", "与": "yǔ", "狼": "láng", "虫": "chóng", "为": "wéi", 
-      "伴": "bàn", "虎": "hǔ", "豹": "bào", "群": "qún", "獐": "zhāng", 
-      "鹿": "lù", "友": "yǒu", "猕": "mí", "猿": "yuán", "亲": "qīn", 
-      "夜": "yè", "宿": "sù", "石": "shí", "崖": "yá", "之": "zhī", 
-      "下": "xià", "朝": "zhāo", "游": "yóu", "峰": "fēng", "洞": "dòng", 
-      "真": "zhēn", "是": "shì", "无": "wú", "甲": "jiǎ", "子": "zǐ", 
-      "寒": "hán", "尽": "jìn", "不": "bù", "知": "zhī", "年": "nián", 
-      "一": "yī", "朝": "zhāo", "天": "tiān", "气": "qì", "炎": "yán", 
-      "热": "rè", "避": "bì", "暑": "shǔ", "都": "dōu", "松": "sōng", 
-      "阴": "yīn", "顽": "wán", "耍": "shuǎ", "你": "nǐ", "看": "kàn", 
-      "他": "tā", "个": "gè", "跳": "tiào", "攀": "pān", "枝": "zhī", 
-      "抛": "pāo", "弹": "dàn", "子": "zǐ", "邷": "wǎ", "么": "me", 
-      "儿": "ér", "跑": "pǎo", "沙": "shā", "窝": "wō", "砌": "qì", 
-      "宝": "bǎo", "塔": "tǎ", "赶": "gǎn", "蜻": "qīng", "蜓": "tíng", 
-      "扑": "pū", "蜡": "là", "参": "cān", "老": "lǎo", "拜": "bài", 
-      "菩": "pú", "萨": "sà", "扯": "chě", "葛": "gé", "藤": "téng", 
-      "编": "biān", "帓": "mò", "捉": "zhuō", "虱": "shī", "咬": "yǎo", 
-      "又": "yòu", "掐": "qiā", "理": "lǐ", "毛": "máo", "衣": "yī", 
-      "剔": "tī", "指": "zhǐ", "甲": "jiǎ", "挨": "āi", "擦": "cā", 
-      "推": "tuī", "压": "yā", "拉": "lā", "青": "qīng", "任": "rèn", 
-      "绿": "lǜ", "水": "shuǐ", "边": "biān", "随": "suí", "洗": "xǐ", 
-      "濯": "zhuó", "耍": "shuǎ", "了": "le", "会": "huì", "去": "qù", 
-      "洗": "xǐ", "澡": "zǎo", "见": "jiàn", "股": "gǔ", "奔": "bēn", 
-      "流": "liú", "滚": "gǔn", "瓜": "guā", "涌": "yǒng", "溅": "jiàn", 
-      "古": "gǔ", "云": "yún", "禽": "qín", "言": "yán", "兽": "shòu", 
-      "语": "yǔ", "众": "zhòng", "道": "dào", "今": "jīn", "日": "rì", 
-      "赶": "gǎn", "闲": "xián", "无": "wú", "事": "shì", "顺": "shùn", 
-      "上": "shàng", "溜": "liū", "头": "tóu", "寻": "xún", "源": "yuán", 
-      "耍": "shuǎ", "子": "zǐ", "耶": "yē", "喊": "hǎn", "声": "shēng", 
-      "拖": "tuō", "男": "nán", "挈": "qiè", "女": "nǚ", "呼": "hū", 
-      "弟": "dì", "兄": "xiōng", "齐": "qí", "跑": "pǎo", "爬": "pá", 
-      "直": "zhí", "至": "zhì", "处": "chù", "乃": "nǎi", "瀑": "pù", 
-      "布": "bù", "飞": "fēi", "派": "pài", "白": "bái", "虹": "hóng", 
-      "起": "qǐ", "千": "qiān", "寻": "xún", "雪": "xuě", "浪": "làng", 
-      "海": "hǎi", "吹": "chuī", "断": "duàn", "江": "jiāng", "照": "zhào", 
-      "还": "hái", "依": "yī", "冷": "lěng", "分": "fēn", "嶂": "zhàng", 
-      "馀": "yú", "润": "rùn", "翠": "cuì", "微": "wēi", "潺": "chán", 
-      "湲": "yuán", "名": "míng", "似": "sì", "挂": "guà", "帘": "lián", 
-      "帷": "wéi", "拍": "pāi", "手": "shǒu", "称": "chēng", "扬": "yáng", 
-      "原": "yuán", "来": "lái", "通": "tōng", "脚": "jiǎo", "直": "zhí", 
-      "接": "jiē", "波": "bō", "又": "yòu", "有": "yǒu", "本": "běn", 
-      "事": "shì", "钻": "zuān", "进": "jìn", "出": "chū", "伤": "shāng", 
-      "身": "shēn", "体": "tǐ", "即": "jí", "王": "wáng", "连": "lián", 
-      "三": "sān", "忽": "hū", "丛": "cóng", "杂": "zá", "应": "yìng", 
-      "高": "gāo", "叫": "jiào", "好": "hǎo", 
-      // Previous pinyin entries remain unchanged
       "这": "zhè", "部": "bù", "书": "shū", "单": "dān", "讲": "jiǎng",
       "东": "dōng", "胜": "shèng", "神": "shén", "洲": "zhōu", "的": "de",
       "故": "gù", "事": "shì", "海": "hǎi", "外": "wài", "有": "yǒu",
@@ -185,38 +192,80 @@
       "风": "fēng", "化": "huà", "猴": "hóu", "五": "wǔ", "官": "guān",
       "俱": "jù", "全": "quán", "四": "sì", "肢": "zhī", "齐": "qí",
       "备": "bèi", "它": "tā", "生": "shēng", "会": "huì", "爬": "pá",
-      "走": "zǒu", "还": "hái", "朝": "cháo", "着": "zhe", "拜": "bài",
-      "双": "shuāng", "眼": "yǎn", "射": "shè", "两": "liǎng", "道": "dào",
-      "金": "jīn", "光": "guāng", "直": "zhí", "冲": "chōng", "云": "yún",
-      "霄": "xiāo", "惊": "jīng", "动": "dòng", "界": "jiè", "皇": "huáng",
-      "帝": "dì", "当": "dāng", "玉": "yù", "坐": "zuò", "灵": "líng",
-      "霄": "xiāo", "宝": "bǎo", "殿": "diàn", "召": "zhào", "集": "jí",
-      "众": "zhòng", "议": "yì", "忽": "hū", "看": "kàn", "见": "jiàn",
-      "闪": "shǎn", "耀": "yào", "命": "mìng", "令": "lìng", "千": "qiān",
-      "里": "lǐ", "眼": "yǎn", "顺": "shùn", "耳": "ěr", "打": "dǎ",
-      "南": "nán", "门": "mén", "查": "chá", "看": "kàn", "将": "jiāng",
-      "领": "lǐng", "命": "mìng", "出": "chū", "仔": "zǐ", "细": "xì",
-      "察": "chá", "回": "huí", "禀": "bǐng", "报": "bào", "臣": "chén",
-      "等": "děng", "奉": "fèng", "旨": "zhǐ", "观": "guān", "发": "fā",
-      "现": "xiàn", "臣": "chén", "不": "bù", "过": "guò", "现": "xiàn",
-      "在": "zài", "开": "kāi", "始": "shǐ", "喝": "hē", "水": "shuǐ",
-      "进": "jìn", "食": "shí", "很": "hěn", "快": "kuài", "消": "xiāo",
-      "失": "shī", "听": "tīng", "仁": "rén", "慈": "cí", "说": "shuō",
-      "下": "xià", "物": "wù", "不": "bù", "足": "zú", "奇": "qí"
+      "走": "zǒu", "还": "hái", "朝": "cháo", "着": "zhe", "拜": "bài"
     };
 
+    // 全局变量
     let currentSentenceIndex = 0;
+    let isPlaying = false;
+    let timeoutId = null;
     const textContainer = document.getElementById('textContainer');
+    const prevBtn = document.getElementById('prevBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const startButton = document.getElementById('startButton');
+    const startOverlay = document.getElementById('startOverlay');
+    const synth = window.speechSynthesis;
 
-    // 页面加载后自动开始
-    window.addEventListener('load', () => {
-      showNextSentence();
-    });
+    // 初始化函数
+    function init() {
+      // 设置控制按钮事件
+      setupControls();
+      
+      // 开始按钮事件
+      startButton.addEventListener('click', startReading);
+    }
 
-    function showNextSentence() {
-      if (currentSentenceIndex >= sentences.length) {
-        currentSentenceIndex = 0; // 循环播放
+    function setupControls() {
+      prevBtn.addEventListener('click', () => {
+        if (currentSentenceIndex > 0) {
+          currentSentenceIndex--;
+          showCurrentSentence();
+        }
+      });
+
+      pauseBtn.addEventListener('click', () => {
+        isPlaying = !isPlaying;
+        pauseBtn.textContent = isPlaying ? '暂停' : '继续';
+        if (isPlaying) {
+          showCurrentSentence();
+        } else {
+          clearTimeout(timeoutId);
+        }
+      });
+
+      nextBtn.addEventListener('click', () => {
+        if (currentSentenceIndex < sentences.length - 1) {
+          currentSentenceIndex++;
+          showCurrentSentence();
+        }
+      });
+    }
+
+    function startReading() {
+      startOverlay.style.display = 'none';
+      isPlaying = true;
+      showCurrentSentence();
+      
+      // 激活语音合成API（有些浏览器需要用户交互后才能使用）
+      const utterance = new SpeechSynthesisUtterance('');
+      utterance.volume = 0;
+      synth.speak(utterance);
+    }
+
+    function speakCharacter(char) {
+      if (synth.speaking) {
+        synth.cancel();
       }
+      
+      const utterance = new SpeechSynthesisUtterance(char);
+      utterance.lang = 'zh-CN';
+      utterance.rate = 0.8;
+      synth.speak(utterance);
+    }
+
+    function showCurrentSentence() {
+      clearTimeout(timeoutId);
       
       const sentence = sentences[currentSentenceIndex];
       textContainer.innerHTML = '';
@@ -235,12 +284,22 @@
         // 添加拼音元素
         const pinyin = document.createElement('span');
         pinyin.className = 'pinyin';
-        pinyin.textContent = pinyinMap[char] || ''; // 获取拼音，如果没有则显示空
+        pinyin.textContent = pinyinMap[char] || '';
         hanzi.appendChild(pinyin);
+        
+        // 添加点击事件
+        hanzi.addEventListener('click', () => {
+          speakCharacter(char);
+          // 高亮效果
+          document.querySelectorAll('.hanzi.highlight').forEach(el => {
+            el.classList.remove('highlight');
+          });
+          hanzi.classList.add('highlight');
+        });
         
         sentenceEl.appendChild(hanzi);
         
-        // 逐个显示汉字，间隔缩短为300ms
+        // 逐个显示汉字
         setTimeout(() => {
           hanzi.classList.add('show');
         }, index * 300);
@@ -251,11 +310,22 @@
         sentenceEl.classList.add('active');
       }, 500);
       
-      // 5秒后显示下一句（句子显示时间 = 汉字数量*300ms + 5000ms）
-      const sentenceDuration = chars.length * 300 + 5000;
-      currentSentenceIndex++;
-      setTimeout(showNextSentence, sentenceDuration);
+      // 自动播放下一句
+      if (isPlaying) {
+        const sentenceDuration = chars.length * 300 + 3000;
+        timeoutId = setTimeout(() => {
+          if (currentSentenceIndex < sentences.length - 1) {
+            currentSentenceIndex++;
+          } else {
+            currentSentenceIndex = 0; // 循环回到第一句
+          }
+          showCurrentSentence();
+        }, sentenceDuration);
+      }
     }
+
+    // 页面加载后初始化
+    window.addEventListener('load', init);
   </script>
 </body>
 </html>
