@@ -4459,75 +4459,104 @@
 
 ];
 
-    let current = 0;
-    let step = 0;
+   let currentIdiomIndex = 0;
+  let currentStep = 0;
+  let fastForwardInterval = null;
 
-    function nextIdiom() {
-      const idiomBox = document.getElementById("idiom");
-      const data = idioms[current];
-      idiomBox.style.backgroundColor = getRandomColor();
-      idiomBox.innerText = data.idiom;
-      idiomBox.className = "colorful";
-      resetInfo();
-      speak(data.idiom, 'zh-CN');
-      step = 0;
-      current = (current + 1) % idioms.length;
+  // 初始化显示第一个成语
+  window.onload = function() {
+    showIdiom();
+  };
+
+  // 显示当前成语
+  function showIdiom() {
+    const idiomElement = document.getElementById('idiom');
+    idiomElement.textContent = idioms[currentIdiomIndex].idiom;
+    idiomElement.classList.add('colorful');
+    
+    // 重置步骤
+    currentStep = 0;
+    hideAllElements();
+  }
+
+  // 隐藏所有元素
+  function hideAllElements() {
+    document.getElementById('pinyin').style.display = 'none';
+    document.getElementById('definition').style.display = 'none';
+    document.getElementById('examples').style.display = 'none';
+    document.getElementById('translations').style.display = 'none';
+    document.getElementById('nextBtn').style.display = 'none';
+    document.getElementById('fastForwardBtn').style.display = 'none';
+  }
+
+  // 逐步显示内容
+  function revealStep() {
+    currentStep++;
+    const idiom = idioms[currentIdiomIndex];
+    
+    switch(currentStep) {
+      case 1:
+        // 显示拼音
+        document.getElementById('pinyin').textContent = idiom.pinyin;
+        document.getElementById('pinyin').style.display = 'block';
+        break;
+      case 2:
+        // 显示释义
+        document.getElementById('definition').textContent = idiom.definition;
+        document.getElementById('definition').style.display = 'block';
+        break;
+      case 3:
+        // 显示例句
+        let examplesHTML = idiom.examples.map(ex => 
+          `<div class="example-item" onclick="speak('${ex}')">${ex}</div>`
+        ).join('');
+        document.getElementById('examples').innerHTML = "<h3>例句：</h3>" + examplesHTML;
+        document.getElementById('examples').style.display = 'block';
+        break;
+      case 4:
+        // 显示多语言翻译
+        let translationsHTML = idiom.translations.map(tr => 
+          `<div>${tr}</div>`
+        ).join('');
+        document.getElementById('translations').innerHTML = "<h3>多语言翻译：</h3>" + translationsHTML;
+        document.getElementById('translations').style.display = 'block';
+        
+        // 显示操作按钮
+        document.getElementById('nextBtn').style.display = 'inline-block';
+        document.getElementById('fastForwardBtn').style.display = 'inline-block';
+        break;
     }
+  }
 
-    function resetInfo() {
-      document.getElementById("pinyin").style.display = 'none';
-      document.getElementById("definition").style.display = 'none';
-      document.getElementById("examples").style.display = 'none';
-      document.getElementById("translations").style.display = 'none';
-      document.getElementById("nextBtn").style.display = 'none';
+  // 下一个成语
+  function nextIdiom() {
+    currentIdiomIndex = (currentIdiomIndex + 1) % idioms.length;
+    document.getElementById('idiom').classList.remove('colorful');
+    setTimeout(showIdiom, 500);
+  }
+
+  // 快进功能
+  function fastForward() {
+    if (fastForwardInterval) {
+      clearInterval(fastForwardInterval);
+      fastForwardInterval = null;
+      document.getElementById('fastForwardBtn').textContent = '成语快进';
+    } else {
+      document.getElementById('fastForwardBtn').textContent = '停止快进';
+      fastForwardInterval = setInterval(nextIdiom, 3000);
     }
+  }
 
-    function revealStep() {
-      const data = idioms[(current + idioms.length - 1) % idioms.length];
-      step++;
-      if (step === 1) {
-        document.getElementById("pinyin").innerText = `${data.pinyin}`;
-        document.getElementById("pinyin").style.display = 'block';
-      } else if (step === 2) {
-        document.getElementById("definition").innerText = `解释：${data.definition}`;
-        document.getElementById("definition").style.display = 'block';
-        speak(data.definition, 'zh-CN');
-      } else if (step === 3) {
-        document.getElementById("examples").innerText = `例句：\n- ${data.examples.join("\n- ")}`;
-        document.getElementById("examples").style.display = 'block';
-        speak(data.examples[0], 'zh-CN');
-        speak(data.examples[1], 'zh-CN');
-      } else if (step === 4) {
-        const trEl = document.getElementById("translations");
-        trEl.innerHTML =
-          `英文：<span onclick="speakTranslation('${data.translations.en}', 'en-US')" style="cursor:pointer;text-decoration:underline">${data.translations.en}</span><br>` +
-          `德文：<span onclick="speakTranslation('${data.translations.de}', 'de-DE')" style="cursor:pointer;text-decoration:underline">${data.translations.de}</span><br>` +
-          `法文：<span onclick="speakTranslation('${data.translations.fr}', 'fr-FR')" style="cursor:pointer;text-decoration:underline">${data.translations.fr}</span>`;
-        trEl.style.display = 'block';
-        // 自动朗读英文解释
-        speak(data.translations.en, 'en-US');
-      } else if (step === 5) {
-        document.getElementById("nextBtn").style.display = 'inline-block';
-      }
+  // 朗读功能
+  function speak(text) {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      speechSynthesis.speak(utterance);
+    } else {
+      alert('您的浏览器不支持语音合成功能');
     }
-
-    function speak(text, lang) {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = lang;
-      window.speechSynthesis.speak(utter);
-    }
-
-    function speakTranslation(text, lang) {
-      speak(text, lang);
-    }
-
-    function getRandomColor() {
-      const colors = ["#f06292", "#4fc3f7", "#ba68c8", "#81c784", "#ffb74d"];
-      return colors[Math.floor(Math.random() * colors.length)];
-    }
-
-    // 自动显示第一个成语
-    nextIdiom();
-  </script>
+  }
+</script>
 </body>
 </html>
