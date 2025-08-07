@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>康德哲学阅读助手</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            line-height: 3;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 1.5px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .work-title {
+            color: #d4a017;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+        }
+        .author {
+            color: #a0a0a0;
+            text-align: center;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        .section-title {
+            color: #d4a017;
+            margin: 30px 0 15px;
+            font-size: 1.5em;
+        }
+        .word-container {
+            position: relative;
+            display: inline-block;
+            margin-right: 4px;
+            cursor: pointer;
+            vertical-align: top;
+        }
+        .german {
+            font-size: 1.3em;
+            color: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+        .german:hover {
+            background-color: #333;
+            box-sizing: 2px 4px;
+        }
+        .translation {
+            position: absolute;
+            bottom: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(#1a1a1a);
+            padding: 1px 1px;
+            border-radius: 5px;
+            box-shadow: 0 1px 1px rgba(#1a1a1a);
+            box-sizing: 1px 4px;
+            white-space: nowrap;
+            display: none;
+            font-size: 0.9em;
+            color: #f0f0f0;
+            z-index: 3;
+            min-width: 70px;
+            text-align: center;
+            border: 0px solid #444;
+        }
+        .explanation {
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 51, 102, 0.9);
+            padding: 2px 6px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            font-size: 0.9em;
+            color: #b3d9ff;
+            display: none;
+            z-index: 10;
+            min-width: 400px;
+            max-width: 800px;
+            text-align: left;
+            margin-top: 5px;
+            border: 1px solid #0055aa;
+            line-height: 1;
+            white-space: normal;
+        }
+        .toggle-translation {
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .toggle-translation:hover {
+            color: #3e8e41;
+        }
+        .play-audio {
+            background-color: transparent;
+            color: #d4a017;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .play-audio:hover {
+            color: #e0b040;
+        }
+        .line-number {
+            color: #888;
+            font-size: 0.8em;
+            margin-right: 10px;
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+        }
+        .container {
+            background-color: #222;
+            padding: 10%;
+            border-radius: 5px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .paragraph {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="work-title">
+            <span class="word-container">
+                <span class="german">Kritik</span>
+                <span class="translation">批判</span>
+                <span class="explanation">词源：源自希腊语"kritikē"（判断的艺术），通过拉丁语"critica"进入德语</span>
+            </span>
+            <span class="word-container">
+                <span class="german">der</span>
+                <span class="translation">的</span>
+                <span class="explanation">词源：古高地德语"der"，源自原始日耳曼语"*þa-"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">praktischen</span>
+                <span class="translation">实践</span>
+                <span class="explanation">词源：源自希腊语"praktikos"（与行动有关的），通过拉丁语"practicus"进入德语</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vernunft</span>
+                <span class="translation">理性</span>
+                <span class="explanation">词源：古高地德语"vernunft"，与"vernehmen"（理解）相关，源自原始日耳曼语"*fruniz"</span>
+            </span>
+        </h1>
+        <div class="author">
+            <span class="word-container">
+                <span class="german">von</span>
+                <span class="translation">作者</span>
+                <span class="explanation">词源：古高地德语"fon"，源自原始日耳曼语"*fana-"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Immanuel</span>
+                <span class="translation">伊曼努尔</span>
+                <span class="explanation">词源：希伯来语名字，意为"上帝与我们同在"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Kant</span>
+                <span class="translation">康德</span>
+                <span class="explanation">词源：德语姓氏，可能源自斯拉夫语或德语"Kante"（边缘）</span>
+            </span>
+        </div>
+
+        <div class="section-title">
+            <span class="word-container">
+                <span class="german">Vorrede</span>
+                <span class="translation">前言</span>
+                <span class="explanation">词源：由"vor"（前）和"Rede"（讲话）组成，古高地德语"forareda"</span>
+            </span>
+        </div>
+
+        <div class="paragraph">
+            <span class="line-number">1</span>
+            <span class="word-container">
+                <span class="german">Warum</span>
+                <span class="translation">为什么</span>
+                <span class="explanation">词源：古高地德语"warum"，由"wa"（什么）和"rum"（原因）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">diese</span>
+                <span class="translation">这部</span>
+                <span class="explanation">词源：古高地德语"dese"，源自原始日耳曼语"*þat-"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Kritik</span>
+                <span class="translation">批判</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">nicht</span>
+                <span class="translation">不</span>
+                <span class="explanation">词源：古高地德语"niowiht"，由"ne"（不）和"owiht"（任何事物）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">eine</span>
+                <span class="translation">一部</span>
+                <span class="explanation">词源：古高地德语"ein"，源自原始日耳曼语"*ainaz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Kritik</span>
+                <span class="translation">批判</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">der</span>
+                <span class="translation">的</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">=reinen=</span>
+                <span class="translation">纯粹</span>
+                <span class="explanation">词源：古高地德语"rein"，源自拉丁语"purus"（通过法语"pur"进入德语）</span>
+            </span>
+            <span class="word-container">
+                <span class="german">praktischen</span>
+                <span class="translation">实践</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vernunft</span>
+                <span class="translation">理性</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">sondern</span>
+                <span class="translation">而是</span>
+                <span class="explanation">词源：古高地德语"suntar"，源自原始日耳曼语"*sundraz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">schlechthin</span>
+                <span class="translation">完全</span>
+                <span class="explanation">词源：由"schlecht"（简单）和"hin"（方向）组成，16世纪形成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">der</span>
+                <span class="translation">的</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">praktischen</span>
+                <span class="translation">实践</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vernunft</span>
+                <span class="translation">理性</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">überhaupt</span>
+                <span class="translation">一般</span>
+                <span class="explanation">词源：由"über"（超过）和"Haupt"（头）组成，原意为"总体上"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">betitelt</span>
+                <span class="translation">标题为</span>
+                <span class="explanation">词源：源自"Titel"（标题），受拉丁语"titulus"影响</span>
+            </span>
+            <span class="word-container">
+                <span class="german">wird</span>
+                <span class="translation">被</span>
+                <span class="explanation">词源：古高地德语"werdan"，源自原始日耳曼语"*werþaną"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">obgleich</span>
+                <span class="translation">尽管</span>
+                <span class="explanation">词源：由"ob"（尽管）和"gleich"（相同）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">der</span>
+                <span class="translation">这种</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Parallelism</span>
+                <span class="translation">平行性</span>
+                <span class="explanation">词源：源自希腊语"parallelismos"，通过拉丁语进入德语</span>
+            </span>
+            <span class="word-container">
+                <span class="german">derselben</span>
+                <span class="translation">它的</span>
+                <span class="explanation">词源：由"der"和"selbe"（相同）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">mit</span>
+                <span class="translation">与</span>
+                <span class="explanation">词源：古高地德语"mit"，源自原始日耳曼语"*midi"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">der</span>
+                <span class="translation">的</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">speculativen</span>
+                <span class="translation">思辨</span>
+                <span class="explanation">词源：源自拉丁语"speculativus"，来自"speculari"（观察）</span>
+            </span>
+            <span class="word-container">
+                <span class="german">das</span>
+                <span class="translation">这个</span>
+                <span class="explanation">词源：古高地德语"daz"，源自原始日耳曼语"*þat"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">erstere</span>
+                <span class="translation">前者</span>
+                <span class="explanation">词源：由"erst"（第一）和"-er"比较级后缀组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">zu</span>
+                <span class="translation">来</span>
+                <span class="explanation">词源：古高地德语"zuo"，源自原始日耳曼语"*tō"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">erfordern</span>
+                <span class="translation">要求</span>
+                <span class="explanation">词源：由"er-"（完成）和"fordern"（要求）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">scheint</span>
+                <span class="translation">似乎</span>
+                <span class="explanation">词源：古高地德语"scīnan"，源自原始日耳曼语"*skīnaną"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">darüber</span>
+                <span class="translation">关于这一点</span>
+                <span class="explanation">词源：由"da"（那里）和"über"（关于）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">giebt</span>
+                <span class="translation">给出</span>
+                <span class="explanation">词源：古高地德语"geban"，源自原始日耳曼语"*gebaną"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">diese</span>
+                <span class="translation">这篇</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Abhandlung</span>
+                <span class="translation">论文</span>
+                <span class="explanation">词源：由"abhandeln"（处理）和"-ung"名词后缀组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">hinreichenden</span>
+                <span class="translation">充分的</span>
+                <span class="explanation">词源：由"hin"（方向）和"reichen"（足够）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Aufschluß</span>
+                <span class="translation">解释</span>
+                <span class="explanation">词源：由"auf"（上）和"Schluß"（结论）组成</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="paragraph">
+            <span class="line-number">2</span>
+            <span class="word-container">
+                <span class="german">Sie</span>
+                <span class="translation">它</span>
+                <span class="explanation">词源：古高地德语"sī"，源自原始日耳曼语"*sī"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">soll</span>
+                <span class="translation">应该</span>
+                <span class="explanation">词源：古高地德语"sculan"，源自原始日耳曼语"*skulaną"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">blos</span>
+                <span class="translation">仅仅</span>
+                <span class="explanation">词源：古高地德语"bloß"，源自原始日耳曼语"*blautaz"（赤裸的）</span>
+            </span>
+            <span class="word-container">
+                <span class="german">darthun</span>
+                <span class="translation">证明</span>
+                <span class="explanation">词源：由"dar"（那里）和"tun"（做）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">=daß</span>
+                <span class="translation">即</span>
+                <span class="explanation">词源：古高地德语"daz"，源自原始日耳曼语"*þat"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">es</span>
+                <span class="translation">存在</span>
+                <span class="explanation">词源：古高地德语"iz"，源自原始日耳曼语"*it"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">reine</span>
+                <span class="translation">纯粹</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">praktische</span>
+                <span class="translation">实践</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vernunft</span>
+                <span class="translation">理性</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">gebe=</span>
+                <span class="translation">=</span>
+                <span class="explanation">词源：古高地德语"geban"，见"giebt"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">und</span>
+                <span class="translation">并且</span>
+                <span class="explanation">词源：古高地德语"unti"，源自原始日耳曼语"*andi"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">kritisirt</span>
+                <span class="translation">批判</span>
+                <span class="explanation">词源：见"Kritik"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">in</span>
+                <span class="translation">在</span>
+                <span class="explanation">词源：古高地德语"in"，源自原始日耳曼语"*in"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">dieser</span>
+                <span class="translation">这个</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Absicht</span>
+                <span class="translation">意图</span>
+                <span class="explanation">词源：由"ab"（从）和"Sicht"（视线）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">ihr</span>
+                <span class="translation">它的</span>
+                <span class="explanation">词源：古高地德语"ir"，源自原始日耳曼语"*izōz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">ganzes</span>
+                <span class="translation">整个</span>
+                <span class="explanation">词源：古高地德语"ganz"，源自原始日耳曼语"*gantaz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">=praktisches</span>
+                <span class="translation">实践</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vermögen=</span>
+                <span class="translation">能力=</span>
+                <span class="explanation">词源：由"ver-"（完成）和"mögen"（能够）组成</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="paragraph">
+            <span class="line-number">3</span>
+            <span class="word-container">
+                <span class="german">Wenn</span>
+                <span class="translation">如果</span>
+                <span class="explanation">词源：古高地德语"wanne"，源自原始日耳曼语"*hwan"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">es</span>
+                <span class="translation">它</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">ihr</span>
+                <span class="translation">她</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">hiemit</span>
+                <span class="translation">由此</span>
+                <span class="explanation">词源：由"hie"（这里）和"mit"（与）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">gelingt</span>
+                <span class="translation">成功</span>
+                <span class="explanation">词源：古高地德语"gilingan"，由"ge-"（完成）和"lingan"（成功）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">so</span>
+                <span class="translation">那么</span>
+                <span class="explanation">词源：古高地德语"sō"，源自原始日耳曼语"*swa"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">bedarf</span>
+                <span class="translation">需要</span>
+                <span class="explanation">词源：古高地德语"bidurfan"，由"bi-"（关于）和"durfan"（需要）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">sie</span>
+                <span class="translation">它</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">das</span>
+                <span class="translation">这个</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">reine</span>
+                <span class="translation">纯粹</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vermögen</span>
+                <span class="translation">能力</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">selbst</span>
+                <span class="translation">自身</span>
+                <span class="explanation">词源：古高地德语"selb"，源自原始日耳曼语"*selbaz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">nicht</span>
+                <span class="translation">不</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">zu</span>
+                <span class="translation">去</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">kritisiren</span>
+                <span class="translation">批判</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">um</span>
+                <span class="translation">为了</span>
+                <span class="explanation">词源：古高地德语"umbi"，源自原始日耳曼语"*umbi"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">zu</span>
+                <span class="translation">去</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">sehen</span>
+                <span class="translation">看</span>
+                <span class="explanation">词源：古高地德语"sehan"，源自原始日耳曼语"*sehwaną"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">ob</span>
+                <span class="translation">是否</span>
+                <span class="explanation">词源：古高地德语"oba"，源自原始日耳曼语"*jabai"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">sich</span>
+                <span class="translation">自己</span>
+                <span class="explanation">词源：古高地德语"sih"，源自原始日耳曼语"*sek"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">die</span>
+                <span class="translation">这</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vernunft</span>
+                <span class="translation">理性</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">mit</span>
+                <span class="translation">与</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">einem</span>
+                <span class="translation">一个</span>
+                <span class="explanation">词源：古高地德语"einem"，源自原始日耳曼语"*ainaz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">solchen</span>
+                <span class="translation">这样的</span>
+                <span class="explanation">词源：古高地德语"solih"，源自原始日耳曼语"*swalīkaz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">als</span>
+                <span class="translation">作为</span>
+                <span class="explanation">词源：古高地德语"alsō"，由"al"（全部）和"sō"（如此）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">einer</span>
+                <span class="translation">一个</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">bloßen</span>
+                <span class="translation">仅仅的</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Anmaßung</span>
+                <span class="translation">僭越</span>
+                <span class="explanation">词源：由"an"（在...上）和"Maß"（尺度）组成，意为"过度主张"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">nicht</span>
+                <span class="translation">不</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">übersteige</span>
+                <span class="translation">超越</span>
+                <span class="explanation">词源：由"über"（超过）和"steigen"（上升）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">(wie</span>
+                <span class="translation">（如同</span>
+                <span class="explanation">词源：古高地德语"hwio"，源自原始日耳曼语"*hwē"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">es</span>
+                <span class="translation">它</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">wohl</span>
+                <span class="translation">可能</span>
+                <span class="explanation">词源：古高地德语"wola"，源自原始日耳曼语"*wela"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">mit</span>
+                <span class="translation">与</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">der</span>
+                <span class="translation">的</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">speculativen</span>
+                <span class="translation">思辨</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">geschieht)</span>
+                <span class="translation">发生）</span>
+                <span class="explanation">词源：古高地德语"giskiht"，由"ge-"（完成）和"skihan"（发生）组成</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="paragraph">
+            <span class="line-number">4</span>
+            <span class="word-container">
+                <span class="german">Denn</span>
+                <span class="translation">因为</span>
+                <span class="explanation">词源：古高地德语"denne"，源自原始日耳曼语"*þan"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">wenn</span>
+                <span class="translation">如果</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">sie</span>
+                <span class="translation">它</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">als</span>
+                <span class="translation">作为</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">reine</span>
+                <span class="translation">纯粹</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vernunft</span>
+                <span class="translation">理性</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">wirklich</span>
+                <span class="translation">真正</span>
+                <span class="explanation">词源：古高地德语"wirkilīh"，由"wirken"（工作）和"-lich"（类似）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">praktisch</span>
+                <span class="translation">实践</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">ist</span>
+                <span class="translation">是</span>
+                <span class="explanation">词源：古高地德语"ist"，源自原始日耳曼语"*isti"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">so</span>
+                <span class="translation">那么</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">beweiset</span>
+                <span class="translation">证明</span>
+                <span class="explanation">词源：古高地德语"biweisen"，由"bi-"（关于）和"weisen"（展示）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">sie</span>
+                <span class="translation">它</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">ihre</span>
+                <span class="translation">它的</span>
+                <span class="explanation">词源：古高地德语"ira"，源自原始日耳曼语"*izōz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">und</span>
+                <span class="translation">和</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">ihrer</span>
+                <span class="translation">它的</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Begriffe</span>
+                <span class="translation">概念</span>
+                <span class="explanation">词源：由"be-"（关于）和"greifen"（抓住）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Realität</span>
+                <span class="translation">实在性</span>
+                <span class="explanation">词源：源自拉丁语"realitas"，来自"res"（事物）</span>
+            </span>
+            <span class="word-container">
+                <span class="german">durch</span>
+                <span class="translation">通过</span>
+                <span class="explanation">词源：古高地德语"thuruh"，源自原始日耳曼语"*þurhw"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">die</span>
+                <span class="translation">这</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">That</span>
+                <span class="translation">行动</span>
+                <span class="explanation">词源：古高地德语"tāt"，源自原始日耳曼语"*dēdiz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">und</span>
+                <span class="translation">和</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">alles</span>
+                <span class="translation">所有</span>
+                <span class="explanation">词源：古高地德语"al"，源自原始日耳曼语"*allaz"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Vernünfteln</span>
+                <span class="translation">理性推理</span>
+                <span class="explanation">词源：由"Vernunft"（理性）和"-eln"（表示反复动作的后缀）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">wider</span>
+                <span class="translation">反对</span>
+                <span class="explanation">词源：古高地德语"widar"，源自原始日耳曼语"*wiþra-"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">die</span>
+                <span class="translation">这</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">Möglichkeit</span>
+                <span class="translation">可能性</span>
+                <span class="explanation">词源：由"möglich"（可能）和"-keit"（名词后缀）组成</span>
+            </span>
+            <span class="word-container">
+                <span class="german">es</span>
+                <span class="translation">它</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">zu</span>
+                <span class="translation">去</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">sein</span>
+                <span class="translation">是</span>
+                <span class="explanation">词源：古高地德语"sīn"，源自原始日耳曼语"*wesaną"</span>
+            </span>
+            <span class="word-container">
+                <span class="german">ist</span>
+                <span class="translation">是</span>
+                <span class="explanation">词源：同上</span>
+            </span>
+            <span class="word-container">
+                <span class="german">vergeblich</span>
+                <span class="translation">徒劳</span>
+                <span class="explanation">词源：由"ver-"（失去）和"geben"（给予）组成，原意为"无结果的"</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <script>
+            // 显示/隐藏翻译
+            document.querySelectorAll('.toggle-translation').forEach(button => {
+                button.addEventListener('click', function() {
+                    const paragraph = this.parentNode;
+                    const translations = paragraph.querySelectorAll('.translation');
+                    
+                    const isShowing = translations[0].style.display === 'block';
+                    
+                    translations.forEach(trans => {
+                        trans.style.display = isShowing ? 'none' : 'block';
+                    });
+                    
+                    this.innerHTML = isShowing ? '<i class="fas fa-language"></i>' : '<i class="fas fa-eye-slash"></i>';
+                });
+            });
+
+            // 单词点击功能
+            document.querySelectorAll('.word-container').forEach(container => {
+                const german = container.querySelector('.german');
+                const explanation = container.querySelector('.explanation');
+                
+                german.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    if (explanation && explanation.style.display === 'block') {
+                        explanation.style.display = 'none';
+                    } else if (explanation) {
+                        // 隐藏其他解释
+                        document.querySelectorAll('.explanation').forEach(info => {
+                            if (info !== explanation) info.style.display = 'none';
+                        });
+                        explanation.style.display = 'block';
+                    }
+                });
+                
+                // 点击页面其他地方隐藏所有解释
+                document.addEventListener('click', function() {
+                    document.querySelectorAll('.explanation').forEach(info => {
+                        info.style.display = 'none';
+                    });
+                });
+            });
+
+            // 音频播放功能
+            document.querySelectorAll('.play-audio').forEach(button => {
+                button.addEventListener('click', function() {
+                    const paragraph = this.parentNode;
+                    const germanWords = Array.from(paragraph.querySelectorAll('.german')).map(word => word.textContent);
+                    const sentence = germanWords.join(' ');
+                    
+                    if ('speechSynthesis' in window) {
+                        const utterance = new SpeechSynthesisUtterance(sentence);
+                        utterance.lang = 'de-DE'; // 德语发音
+                        utterance.rate = 0.9; // 稍慢的语速
+                        speechSynthesis.speak(utterance);
+                    } else {
+                        alert('您的浏览器不支持语音合成功能。请使用Chrome或Edge浏览器。');
+                    }
+                });
+            });
+        </script>
+    </div>
+</body>
+</html>
