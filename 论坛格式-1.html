@@ -1,0 +1,582 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易BBS论坛</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+            color: #E0E0E0;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .header h1 {
+            display: inline-block;
+            margin: 0;
+            color: #FFFFFF;
+            font-size: 28px;
+        }
+        .edit-title-btn {
+            background-color: transparent;
+            border: none;
+            color: #64B5F6;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+            display: none;
+        }
+        .topic {
+            background-color: #1E1E1E;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .topic-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .topic-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #64B5F6;
+        }
+        .topic-content {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 18px;
+        }
+        .reply {
+            background-color: #2D2D2D;
+            border-left: 3px solid #64B5F6;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .reply-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            align-items: center;
+        }
+        .reply-topic {
+            font-weight: bold;
+            cursor: pointer;
+            color: #64B5F6;
+            font-size: 16px;
+        }
+        .reply-content {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #64B5F6;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #64B5F6;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #2D2D2D;
+            color: #E0E0E0;
+        }
+        button {
+            background-color: #64B5F6;
+            color: #121212;
+            border: none;
+            padding: 4px 7.5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        button:hover {
+            background-color: #42A5F5;
+        }
+        .delete-btn {
+            background-color: #E53935;
+            color: white;
+            border: none;
+            padding: 2.5px 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            margin-left: 10px;
+        }
+        .delete-btn:hover {
+            background-color: #C62828;
+        }
+        .hidden {
+            display: none;
+        }
+        .admin-panel {
+            background-color: #1E1E1E;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .login-form {
+            margin-bottom: 20px;
+        }
+        .read-aloud-btn {
+            background-color: transparent;
+            border: none;
+            color: #64B5F6;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .read-aloud-btn.active {
+            color: #FF9800;
+        }
+        .save-status {
+            color: #4CAF50;
+            font-size: 12px;
+            margin-left: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 id="main-title">简易BBS论坛</h1>
+        <button id="edit-title-btn" class="edit-title-btn">编辑标题</button>
+        <span id="save-status" class="save-status">已保存</span>
+    </div>
+
+    <div id="admin-panel" class="admin-panel">
+        <h3>管理员登录</h3>
+        <div class="login-form">
+            <div class="form-group">
+                <label for="admin-password">管理员密码</label>
+                <input type="password" id="admin-password" placeholder="输入密码">
+            </div>
+            <button id="login-btn">登录</button>
+            <button id="logout-btn" class="hidden">退出</button>
+        </div>
+    </div>
+
+    <div id="topics-container">
+        <!-- 主题内容将通过JavaScript动态生成 -->
+    </div>
+
+    <div class="topic hidden" id="new-topic-form">
+        <h3>发表新主题</h3>
+        <div class="form-group">
+            <label for="new-topic-title">主题标题</label>
+            <input type="text" id="new-topic-title" placeholder="输入主题标题">
+        </div>
+        <div class="form-group">
+            <label for="new-topic-content">主题内容</label>
+            <textarea id="new-topic-content" rows="4" placeholder="输入主题内容"></textarea>
+        </div>
+        <button id="submit-topic">发表主题</button>
+    </div>
+
+    <script>
+        // 论坛数据
+        let forumData = {
+            mainTitle: "简易BBS论坛",
+            topics: [
+                {
+                    id: 1,
+                    title: "示例主题",
+                    content: "这是一个示例主题内容",
+                    replies: [
+                        {
+                            id: 101,
+                            language: "English",
+                            content: "This is an example translation",
+                            collapsed: false
+                        }
+                    ]
+                }
+            ]
+        };
+
+        // 当前状态
+        let currentState = {
+            editingTopic: null,
+            editingReply: null,
+            isAdmin: false,
+            adminPassword: "admin123", // 默认管理员密码
+            currentSpeech: null,       // 当前朗读对象
+            speakingElement: null      // 当前朗读的元素
+        };
+
+        // 显示保存状态
+        function showSaveStatus() {
+            const statusElement = document.getElementById('save-status');
+            statusElement.style.display = 'inline';
+            setTimeout(() => {
+                statusElement.style.display = 'none';
+            }, 2000);
+        }
+
+        // 初始化数据
+        function initData() {
+            const savedData = localStorage.getItem('forumData');
+            if (savedData) {
+                forumData = JSON.parse(savedData);
+                document.getElementById('main-title').textContent = forumData.mainTitle;
+                document.title = forumData.mainTitle;
+                showSaveStatus();
+            } else {
+                saveData();
+            }
+        }
+
+        // 保存数据到本地存储
+        function saveData() {
+            forumData.mainTitle = document.getElementById('main-title').textContent;
+            localStorage.setItem('forumData', JSON.stringify(forumData));
+            document.title = forumData.mainTitle;
+            showSaveStatus();
+        }
+
+        // 朗读文本（可切换）
+        function toggleReadAloud(text, element) {
+            // 如果正在朗读当前元素，则停止
+            if (currentState.speakingElement === element && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                element.classList.remove('active');
+                currentState.speakingElement = null;
+                return;
+            }
+            
+            // 如果正在朗读其他内容，先停止
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+                if (currentState.speakingElement) {
+                    currentState.speakingElement.classList.remove('active');
+                }
+            }
+            
+            // 开始朗读新内容
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = element.textContent.includes('English') ? 'en-US' : 'zh-CN';
+                
+                utterance.onstart = function() {
+                    element.classList.add('active');
+                    currentState.speakingElement = element;
+                };
+                
+                utterance.onend = function() {
+                    element.classList.remove('active');
+                    if (currentState.speakingElement === element) {
+                        currentState.speakingElement = null;
+                    }
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('您的浏览器不支持语音朗读功能');
+            }
+        }
+
+        // 渲染论坛内容
+        function renderForum() {
+            const container = document.getElementById('topics-container');
+            container.innerHTML = '';
+
+            // 更新标题编辑按钮的显示状态
+            document.getElementById('edit-title-btn').style.display = 
+                currentState.isAdmin ? 'inline-block' : 'none';
+
+            if (forumData.topics.length === 0) {
+                const emptyMsg = document.createElement('div');
+                emptyMsg.className = 'topic';
+                emptyMsg.textContent = '没有找到相关主题';
+                container.appendChild(emptyMsg);
+                return;
+            }
+
+            forumData.topics.forEach(topic => {
+                const topicElement = document.createElement('div');
+                topicElement.className = 'topic';
+                
+                let adminControls = '';
+                if (currentState.isAdmin) {
+                    adminControls = `
+                        <button class="delete-btn" onclick="deleteTopic(${topic.id})">删除主题</button>
+                        <button onclick="editTopic(${topic.id})">编辑主题</button>
+                    `;
+                }
+                
+                // 添加朗读按钮
+                const readAloudBtnId = `read-aloud-topic-${topic.id}`;
+                const readAloudBtn = `<button id="${readAloudBtnId}" class="read-aloud-btn" onclick="toggleReadAloud('${topic.content.replace(/'/g, "\\'")}', this)">朗读</button>`;
+                
+                topicElement.innerHTML = `
+                    <div class="topic-header">
+                        <div class="topic-title">${topic.title}</div>
+                        <div>${adminControls}</div>
+                    </div>
+                    <div class="topic-content">${topic.content} ${readAloudBtn}</div>
+                    <div class="replies" id="replies-${topic.id}"></div>
+                    ${currentState.isAdmin ? `
+                    <div class="form-group">
+                        <label for="reply-topic-${topic.id}">语种Language</label>
+                        <input type="text" id="reply-topic-${topic.id}" placeholder="输入语种">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="reply-content-${topic.id}" rows="3" placeholder="输入内容"></textarea>
+                    </div>
+                    <button onclick="addReply(${topic.id})">提交</button>
+                    ` : ''}
+                `;
+                container.appendChild(topicElement);
+
+                const repliesContainer = document.getElementById(`replies-${topic.id}`);
+                topic.replies.forEach(reply => {
+                    let replyAdminControls = '';
+                    if (currentState.isAdmin) {
+                        replyAdminControls = `
+                            <button class="delete-btn" onclick="deleteReply(${topic.id}, ${reply.id})">删除</button>
+                            <button onclick="editReply(${topic.id}, ${reply.id})">编辑</button>
+                        `;
+                    }
+                    
+                    // 为回复添加朗读按钮
+                    const replyReadAloudBtnId = `read-aloud-reply-${reply.id}`;
+                    const replyReadAloudBtn = `<button id="${replyReadAloudBtnId}" class="read-aloud-btn" onclick="toggleReadAloud('${reply.content.replace(/'/g, "\\'")}', this)">朗读</button>`;
+                    
+                    const replyElement = document.createElement('div');
+                    replyElement.className = 'reply';
+                    replyElement.id = `reply-${reply.id}`;
+                    replyElement.innerHTML = `
+                        <div class="reply-header">
+                            <div>
+                                <span class="reply-topic" onclick="toggleReply(${reply.id})">
+                                    ${reply.language} ${reply.collapsed ? '▶' : '▼'}
+                                </span>
+                                ${replyAdminControls}
+                            </div>
+                        </div>
+                        <div class="reply-content" ${reply.collapsed ? 'style="display:none;"' : ''}>
+                            ${reply.content} ${replyReadAloudBtn}
+                        </div>
+                    `;
+                    repliesContainer.appendChild(replyElement);
+                });
+            });
+        }
+
+        // 编辑主标题
+        function editMainTitle() {
+            if (!currentState.isAdmin) return;
+            
+            const currentTitle = document.getElementById('main-title').textContent;
+            const newTitle = prompt('输入新的论坛标题:', currentTitle);
+            
+            if (newTitle !== null && newTitle.trim() !== '') {
+                document.getElementById('main-title').textContent = newTitle.trim();
+                saveData();
+            }
+        }
+
+        // 切换回复的折叠状态
+        function toggleReply(replyId) {
+            for (const topic of forumData.topics) {
+                const reply = topic.replies.find(r => r.id === replyId);
+                if (reply) {
+                    reply.collapsed = !reply.collapsed;
+                    break;
+                }
+            }
+            renderForum();
+        }
+
+        // 添加新主题
+        document.getElementById('submit-topic').addEventListener('click', function() {
+            if (!currentState.isAdmin) return;
+            
+            const title = document.getElementById('new-topic-title').value.trim();
+            const content = document.getElementById('new-topic-content').value.trim();
+            
+            if (title && content) {
+                if (currentState.editingTopic) {
+                    // 编辑现有主题
+                    const topic = forumData.topics.find(t => t.id === currentState.editingTopic);
+                    if (topic) {
+                        topic.title = title;
+                        topic.content = content;
+                    }
+                    currentState.editingTopic = null;
+                    document.getElementById('submit-topic').textContent = '发表主题';
+                } else {
+                    // 添加新主题
+                    const newTopic = {
+                        id: forumData.topics.length > 0 ? Math.max(...forumData.topics.map(t => t.id)) + 1 : 1,
+                        title: title,
+                        content: content,
+                        replies: []
+                    };
+                    forumData.topics.push(newTopic);
+                }
+                
+                document.getElementById('new-topic-title').value = '';
+                document.getElementById('new-topic-content').value = '';
+                saveData();
+                renderForum();
+            } else {
+                alert('请填写主题标题和内容');
+            }
+        });
+
+        // 编辑主题
+        function editTopic(topicId) {
+            if (!currentState.isAdmin) return;
+            
+            const topic = forumData.topics.find(t => t.id === topicId);
+            if (topic) {
+                currentState.editingTopic = topicId;
+                document.getElementById('new-topic-title').value = topic.title;
+                document.getElementById('new-topic-content').value = topic.content;
+                document.getElementById('submit-topic').textContent = '更新主题';
+                document.getElementById('new-topic-form').classList.remove('hidden');
+                document.getElementById('new-topic-form').scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // 删除主题
+        function deleteTopic(topicId) {
+            if (!currentState.isAdmin) return;
+            
+            if (confirm('确定要删除这个主题吗？所有译文也将被删除。')) {
+                forumData.topics = forumData.topics.filter(t => t.id !== topicId);
+                saveData();
+                renderForum();
+            }
+        }
+
+        // 添加回复
+        function addReply(topicId) {
+            if (!currentState.isAdmin) return;
+            
+            const topic = forumData.topics.find(t => t.id === topicId);
+            if (!topic) return;
+            
+            const languageInput = document.getElementById(`reply-topic-${topicId}`).value.trim();
+            const contentInput = document.getElementById(`reply-content-${topicId}`).value.trim();
+            
+            if (languageInput && contentInput) {
+                if (currentState.editingReply) {
+                    // 编辑现有回复
+                    for (const t of forumData.topics) {
+                        const reply = t.replies.find(r => r.id === currentState.editingReply);
+                        if (reply) {
+                            reply.language = languageInput;
+                            reply.content = contentInput;
+                            break;
+                        }
+                    }
+                    currentState.editingReply = null;
+                } else {
+                    // 添加新回复
+                    const newReply = {
+                        id: topic.replies.length > 0 ? Math.max(...topic.replies.map(r => r.id)) + 1 : 100 + topic.replies.length + 1,
+                        language: languageInput,
+                        content: contentInput,
+                        collapsed: false
+                    };
+                    topic.replies.push(newReply);
+                }
+                
+                document.getElementById(`reply-topic-${topicId}`).value = '';
+                document.getElementById(`reply-content-${topicId}`).value = '';
+                saveData();
+                renderForum();
+            } else {
+                alert('请填写语种和内容');
+            }
+        }
+
+        // 编辑回复
+        function editReply(topicId, replyId) {
+            if (!currentState.isAdmin) return;
+            
+            for (const topic of forumData.topics) {
+                const reply = topic.replies.find(r => r.id === replyId);
+                if (reply) {
+                    currentState.editingReply = replyId;
+                    document.getElementById(`reply-topic-${topicId}`).value = reply.language;
+                    document.getElementById(`reply-content-${topicId}`).value = reply.content;
+                    document.getElementById(`reply-content-${topicId}`).scrollIntoView({ behavior: 'smooth' });
+                    break;
+                }
+            }
+        }
+
+        // 删除回复
+        function deleteReply(topicId, replyId) {
+            if (!currentState.isAdmin) return;
+            
+            if (confirm('确定要删除这个译文吗？')) {
+                const topic = forumData.topics.find(t => t.id === topicId);
+                if (topic) {
+                    topic.replies = topic.replies.filter(r => r.id !== replyId);
+                    saveData();
+                    renderForum();
+                }
+            }
+        }
+
+        // 管理员登录
+        document.getElementById('login-btn').addEventListener('click', function() {
+            const password = document.getElementById('admin-password').value;
+            if (password === currentState.adminPassword) {
+                currentState.isAdmin = true;
+                document.getElementById('login-btn').classList.add('hidden');
+                document.getElementById('logout-btn').classList.remove('hidden');
+                document.getElementById('new-topic-form').classList.remove('hidden');
+                renderForum();
+            } else {
+                alert('密码错误');
+            }
+        });
+
+        // 管理员退出
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            currentState.isAdmin = false;
+            document.getElementById('login-btn').classList.remove('hidden');
+            document.getElementById('logout-btn').classList.add('hidden');
+            document.getElementById('admin-password').value = '';
+            document.getElementById('new-topic-form').classList.add('hidden');
+            renderForum();
+        });
+
+        // 初始化事件监听
+        document.getElementById('edit-title-btn').addEventListener('click', editMainTitle);
+
+        // 页面关闭前停止所有朗读
+        window.addEventListener('beforeunload', function() {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+        });
+
+        // 初始化
+        initData();
+        renderForum();
+    </script>
+</body>
+</html>
