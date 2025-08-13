@@ -10,7 +10,29 @@
       background: linear-gradient(to bottom right, #7c734f, #b8d1e7);
       text-align: center;
       padding: 50px;
+      margin: 0;
+      display: flex;
+      min-height: 100vh;
     }
+    
+    #sidebar {
+      width: 250px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow-y: auto;
+      max-height: 80vh;
+      margin-right: 20px;
+    }
+    
+    #main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
     #idiom {
       font-size: 24px;
       opacity: 0;
@@ -21,43 +43,110 @@
       border-radius: 12px;
       cursor: pointer;
     }
+    
     #pinyin {
       font-size: 2em;
     }
+    
     #definition, #examples, #translations, #nextBtn {
       margin-top: 22px;
       display: none;
     }
+    
     .colorful {
       animation: pop 1s ease forwards;
     }
+    
     @keyframes pop {
       0% { font-size: 20px; opacity: 0.2; transform: scale(0.5); }
       100% { font-size: 64px; opacity: 1; transform: scale(1); }
     }
+    
     button {
       margin-top: 25px;
       padding: 10px 20px;
       font-size: 20px;
       cursor: pointer;
     }
+    
+    .sidebar-title {
+      font-size: 1.2em;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    .idiom-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .idiom-item {
+      padding: 8px 12px;
+      margin: 5px 0;
+      background-color: #f5f5f5;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    
+    .idiom-item:hover {
+      background-color: #e0e0e0;
+    }
+    
+    .idiom-item.active {
+      background-color: #4fc3f7;
+      color: white;
+    }
+    
+    #search {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .sidebar-section {
+      margin-bottom: 20px;
+    }
   </style>
 </head>
 <body>
 
-  <h1>成语飞花令 · 多语互动版</h1>
-  <div id="idiom" onclick="revealStep()"></div>
+  <div id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-title">成语列表</div>
+      <input type="text" id="search" placeholder="搜索成语..." oninput="filterIdioms()">
+      <ul class="idiom-list" id="idiomList">
+        <!-- 成语列表将通过JS动态生成 -->
+      </ul>
+    </div>
+    
+    <div class="sidebar-section">
+      <div class="sidebar-title">分类浏览</div>
+      <div class="idiom-item" onclick="filterByFirstCharacter('')">全部成语</div>
+      <div class="idiom-item" onclick="filterByFirstCharacter('A')">A开头</div>
+     
+    </div>
+  </div>
 
-  <div id="pinyin"></div>
-  <div id="definition"></div>
-  <div id="examples"></div>
-  <div id="translations"></div>
+  <div id="main-content">
+    <h1>成语飞花令 · 多语互动版</h1>
+    <div id="idiom" onclick="revealStep()"></div>
 
-  <button id="nextBtn" onclick="nextIdiom()">显示下一个成语</button>
+    <div id="pinyin"></div>
+    <div id="definition"></div>
+    <div id="examples"></div>
+    <div id="translations"></div>
+
+    <button id="nextBtn" onclick="nextIdiom()">显示下一个成语</button>
+  </div>
 
   <script>
+    // 成语数据保持不变...
     const idioms = [
-  {
+     {
     idiom: "一五一十",
     pinyin: "yi wu yi shi",
     definition: "形容原原本本地叙述事情经过。",
@@ -4426,26 +4515,33 @@
       "en": "Reap where one has not sown.",
       "de": "Ernten, wo man nicht gesät hat.",
       "fr": "Récolter là où on n'a pas semé."
-    }
+       }
   }
 ]
-
-
-
-
-
-
-
-
-
-
 
 ];
 
     let current = 0;
     let step = 0;
+    let filteredIdioms = [...idioms];
 
-    function nextIdiom() {
+    // 初始化成语列表
+    function initIdiomList() {
+      const idiomList = document.getElementById('idiomList');
+      idiomList.innerHTML = '';
+      
+      filteredIdioms.forEach((idiom, index) => {
+        const li = document.createElement('li');
+        li.className = 'idiom-item';
+        li.textContent = idiom.idiom;
+        li.onclick = () => selectIdiom(index);
+        idiomList.appendChild(li);
+      });
+    }
+    
+    // 选择特定成语
+    function selectIdiom(index) {
+      current = index;
       const idiomBox = document.getElementById("idiom");
       const data = idioms[current];
       idiomBox.style.backgroundColor = getRandomColor();
@@ -4454,7 +4550,38 @@
       resetInfo();
       speak(data.idiom, 'zh-CN');
       step = 0;
-      current = (current + 1) % idioms.length;
+      
+      // 更新活动状态
+      const items = document.querySelectorAll('.idiom-item');
+      items.forEach(item => item.classList.remove('active'));
+      items[index].classList.add('active');
+    }
+    
+    // 过滤成语
+    function filterIdioms() {
+      const searchTerm = document.getElementById('search').value.toLowerCase();
+      filteredIdioms = idioms.filter(idiom => 
+        idiom.idiom.toLowerCase().includes(searchTerm) || 
+        idiom.pinyin.toLowerCase().includes(searchTerm)
+      );
+      initIdiomList();
+    }
+    
+    // 按首字母过滤
+    function filterByFirstCharacter(char) {
+      if (!char) {
+        filteredIdioms = [...idioms];
+      } else {
+        filteredIdioms = idioms.filter(idiom => 
+          idiom.pinyin.charAt(0).toUpperCase() === char
+        );
+      }
+      initIdiomList();
+    }
+
+    function nextIdiom() {
+      current = (current + 1) % filteredIdioms.length;
+      selectIdiom(current);
     }
 
     function resetInfo() {
@@ -4466,7 +4593,7 @@
     }
 
     function revealStep() {
-      const data = idioms[(current + idioms.length - 1) % idioms.length];
+      const data = filteredIdioms[current];
       step++;
       if (step === 1) {
         document.getElementById("pinyin").innerText = `${data.pinyin}`;
@@ -4487,7 +4614,6 @@
           `德文：<span onclick="speakTranslation('${data.translations.de}', 'de-DE')" style="cursor:pointer;text-decoration:underline">${data.translations.de}</span><br>` +
           `法文：<span onclick="speakTranslation('${data.translations.fr}', 'fr-FR')" style="cursor:pointer;text-decoration:underline">${data.translations.fr}</span>`;
         trEl.style.display = 'block';
-        // 自动朗读英文解释
         speak(data.translations.en, 'en-US');
       } else if (step === 5) {
         document.getElementById("nextBtn").style.display = 'inline-block';
@@ -4509,8 +4635,11 @@
       return colors[Math.floor(Math.random() * colors.length)];
     }
 
-    // 自动显示第一个成语
-    nextIdiom();
+    // 初始化
+    window.onload = function() {
+      initIdiomList();
+      nextIdiom();
+    };
   </script>
 </body>
 </html>
