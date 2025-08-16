@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>李白古体诗-拼音释义版</title>
+<style>
+body {
+  background: #1a0012;
+  color: #f542b0;
+  font-family: "楷体", "STKaiti", serif;
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+}
+
+.sidebar {
+  width: 200px;
+  background: rgba(26, 0, 18, 0.9);
+  border-right: 1px solid #d437a0;
+  overflow-y: auto;
+  padding: 20px 10px;
+  height: 100vh;
+  box-sizing: border-box;
+  position: fixed;
+}
+
+.sidebar-title {
+  font-size: 24px;
+  color: #d437a0;
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #d437a0;
+}
+
+.poem-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.poem-menu li {
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  font-size: 16px;
+  color: #f542b0;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+
+.poem-menu li:hover {
+  background: rgba(212, 55, 160, 0.3);
+}
+
+.poem-menu li.active {
+  background: rgba(212, 55, 160, 0.5);
+  color: #ffc4f9;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px 40px 40px 240px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.poem-title {
+  font-size: 42px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #d437a0;
+  border-bottom: 2px dashed #d437a0;
+  padding-bottom: 15px;
+}
+
+.poem-meta {
+  font-size: 28px;
+  color: #f542b0;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.poem-content {
+  font-size: 36px;
+  line-height: 2.5;
+  text-align: center;
+}
+
+.line-container {
+  margin: 20px 0;
+  transition: all 0.5s;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.char-container {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 5px;
+  vertical-align: top;
+  position: relative;
+}
+
+.pinyin {
+  font-size: 27px;
+  color: #f542b0;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  visibility: hidden;
+  position: absolute;
+  top: -35px;
+}
+
+.char-container:hover .pinyin {
+  visibility: visible;
+}
+
+.definition {
+  font-size: 16px;
+  color: #ff07c8;
+  position: absolute;
+  bottom: -25px;
+  width: 200px;
+  text-align: center;
+  display: none;
+  background: rgba(26, 0, 18, 0.8);
+  border-radius: 5px;
+  padding: 5px;
+  z-index: 10;
+}
+
+.char {
+  display: inline-block;
+  transition: all 0.3s;
+  cursor: pointer;
+  width: 50px;
+  text-align: center;
+  position: relative;
+}
+
+.char:hover {
+  transform: scale(1.1);
+}
+
+.punctuation {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.reading-line {
+  background: rgba(212, 55, 160, 0.2);
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(212, 55, 160, 0.3);
+  transform: scale(1.02);
+}
+
+.controls {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  z-index: 100;
+}
+
+.control-btn {
+  background: rgba(212, 55, 160, 0.3);
+  border: 2px solid #d437a0;
+  color: #ffc4f9;
+  padding: 10px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 20px;
+  font-family: "楷体", "STKaiti";
+  width: 120px;
+  text-align: center;
+}
+
+.control-btn:hover {
+  background: rgba(212, 55, 160, 0.5);
+}
+
+.control-btn.pause-btn {
+  background: rgba(255, 7, 200, 0.3);
+  border: 2px solid #ff07c8;
+}
+
+.control-btn.pause-btn:hover {
+  background: rgba(255, 7, 200, 0.5);
+}
+
+.ref-note {
+  font-size: 24px;
+  color: #f542b0;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px dashed #d437a0;
+}
+
+.convert-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(212, 55, 160, 0.3);
+  border: 2px solid #d437a0;
+  color: #ffc4f9;
+  padding: 8px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 16px;
+  font-family: "楷体", "STKaiti";
+  z-index: 100;
+}
+
+.convert-btn:hover {
+  background: rgba(212, 55, 160, 0.5);
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-title">李白古体诗</div>
+  <ul class="poem-menu" id="poem-menu"></ul>
+</div>
+
+<div class="main-content">
+  <div class="poem-title" id="poem-title"></div>
+  <div class="poem-meta" id="poem-meta"></div>
+  <div class="poem-content" id="poem-content"></div>
+  <div class="ref-note" id="ref-note"></div>
+</div>
+
+<div class="controls">
+  <button class="control-btn" id="read-btn">朗读</button>
+  <button class="control-btn pause-btn" id="pause-btn">暂停</button>
+  <button class="control-btn" id="stop-btn">停止</button>
+</div>
+
+<button class="convert-btn" id="convert-btn">转为繁体</button>
+
+<script>
+// 诗篇数据
+const poems = [
+  {
+    title: "古风 其一",
+    meta: "盛唐·李白 | 750年 | 押真韵　创作地点：江苏省南京市",
+    content: "大雅久不作，吾衰竟谁陈。\n王风委蔓草，战国多荆榛。\n龙虎相啖食，兵戈逮狂秦。\n正声何微茫，哀怨起骚人。\n扬马激颓波，开流荡无垠。\n废兴虽万变，宪章亦已沦。\n自从建安来，绮丽不足珍。\n圣代复元古，垂衣贵清真。\n群才属休明，乘运共跃鳞。\n文质相炳焕，众星罗秋旻。\n我志在删述，垂辉映千春。\n希圣如有立，绝笔于获麟。",
+    refs: "引用典故：获麟"
+  },
+  {
+    title: "古风 其二",
+    meta: "盛唐·李白 | 753年 | 创作地点：安徽省宣城市",
+    content: "蟾蜍薄太清，蚀此瑶台月。\n圆光亏中天，金魄遂沦没。\n螮蝀入紫微，大明夷朝晖。\n浮云隔两曜，万象昏阴霏。\n萧萧长门宫，昔是今已非。\n桂蠹花不实，天霜下严威。\n沈叹终永夕，感我涕沾衣。",
+    refs: "引用典故：长门"
+  },
+  {
+    title: "古风 其三",
+    meta: "盛唐·李白 | 747年 | 押灰韵　创作地点：浙江省台州市天台县天台山",
+    content: "秦皇扫六合，虎视何雄哉。\n飞剑决浮云，诸侯尽西来。\n明断自天启，大略驾群才。\n收兵铸金人，函谷正东开。\n铭功会稽岭，骋望琅琊台。\n刑徒七十万，起土骊山隈。\n尚采不死药，茫然使心哀。\n连弩射海鱼，长鲸正崔嵬。\n额鼻象五岳，扬波喷云雷。\n鬐鬣蔽青天，何由睹蓬莱。\n徐韨载秦女，楼船几时回。\n但见三泉下，金棺葬寒灰。",
+    refs: "引用典故：铭功会稽　三泉　射海鱼　徐韨载女"
+  },
+  {
+    title: "古风 其四",
+    meta: "盛唐·李白 | 754年 | 押真韵　创作地点：安徽省池州市",
+    content: "凤飞九千仞，五章备䌽珍。\n衔书且虚归，空入周与秦。\n横绝历四海，所居未得邻。\n吾营紫河车，千载落风尘。\n药物秘海岳，采铅青溪滨。\n时登大楼山，举手望仙真。\n羽驾灭去影，飙车绝回轮。\n尚恐丹液迟，志愿不及申。\n徒霜镜中发，羞彼鹤上人。\n桃李何处开，此花非我春。\n唯应清都境，长与韩众亲。",
+    refs: "引用典故：韩众"
+  },
+  {
+    title: "古风 其五",
+    meta: "盛唐·李白 | 744年 | 押屑韵　创作地点：陕西省西安市",
+    content: "太白何苍苍，星辰上森列。\n去天三百里，邈尔与世绝。\n中有绿发翁，披云卧松雪。\n不笑亦不语，冥栖在岩穴。\n我来逢真人，长跪问宝诀。\n粲然启玉齿，授以鍊药说。\n铭骨传其语，竦身已电灭。\n仰望不可及，苍然五情热。\n吾将营丹砂，永与世人别。",
+    refs: ""
+  },
+  {
+    title: "古风 其六",
+    meta: "盛唐·李白 | 749年 | 押先韵　创作地点：江苏省南京市",
+    content: "代马不思越，越禽不恋燕。\n情性有所习，土风固其然。\n昔别雁门关，今戍龙庭前。\n惊沙乱海日，飞雪迷胡天。\n虮虱生虎鹖，心魂逐旌旃。\n苦战功不赏，忠诚难可宣。\n谁怜李飞将，白首没三边。",
+    refs: "引用典故：李飞将"
+  },
+  {
+    title: "古风 其七",
+    meta: "盛唐·李白 | 742年 | 押词韵第十一部　创作地点：山东省泰安市",
+    content: "五鹤西北来，飞飞凌太清。\n仙人绿云上，自道安期名。\n两两白玉童，双吹紫鸾笙。\n去影忽不见，回风送天声。\n我欲一问之，飘然若流星。\n愿餐金光草，寿与天齐倾",
+    refs: "引用典故：安期"
+  },
+  {
+    title: "古风 其八",
+    meta: "盛唐·李白 | 753年 | 押支韵　创作地点：陕西省西安市",
+    content: "咸阳二三月，宫柳黄金枝。\n绿帻谁家子，卖珠轻薄儿。\n日暮醉酒归，白马骄且驰。\n意气人所仰，冶游方及时。\n子云不晓事，晚献长杨辞。\n赋达身已老，草玄鬓若丝。\n投阁良可叹，但为此辈嗤。",
+    refs: "引用典故：献长杨　绿帻　投阁"
+  },
+  {
+    title: "古风 其九",
+    meta: "盛唐·李白 | 745年 | 押尤韵　创作地点：山东省菏泽市单县",
+    content: "庄周梦胡蝶，胡蝶为庄周。\n一体更变易，万事良悠悠。\n乃知蓬莱水，复作清浅流。\n青门种瓜人，旧日东陵侯。\n富贵故如此，营营何所求。",
+    refs: "引用典故：庄周梦　青门种瓜"
+  },
+  {
+    title: "古风 其十",
+    meta: "盛唐·李白 | 740年 | 押啸韵　创作地点：山东省济宁市",
+    content: "齐有倜傥生，鲁连特高妙。\n明月出海底，一朝开光曜。\n却秦振英声，后世仰末照。\n意轻千金赠，顾向平原笑。\n吾亦澹荡人，拂衣可同调。",
+    refs: "引用典故：鲁连"
+  },
+  {
+    title: "古风 其十一",
+    meta: "盛唐·李白 | 740年 | 押贿韵　创作地点：山东省济宁市",
+    content: "黄河走东溟，白日落西海。\n逝川与流光，飘忽不相待。\n春容舍我去，秋发已衰改。\n人生非寒松，年貌岂长在。\n吾当乘云螭，吸景驻光彩（一作谁能学天飞，三秀与君采）。",
+    refs: "引用典故：逝川"
+  },
+  {
+    title: "古风 其十二",
+    meta: "盛唐·李白 | 743年 | 押删韵　创作地点：陕西省西安市",
+    content: "松柏本孤直，难为桃李颜。\n昭昭严子陵，垂钓沧波间。\n身将客星隐，心与浮云闲。\n长揖万乘君，还归富春山。\n清风洒六合，邈然不可攀。\n使我长叹息，冥栖岩石间。",
+    refs: ""
+  },
+  {
+    title: "古风 其十三",
+    meta: "盛唐·李白 | 753年 | 押词韵第十一部　创作地点：安徽省宣城市",
+    content: "君平既弃世，世亦弃君平。\n观变穷太易，探元化群生。\n寂寞缀道论，空帘闭幽情。\n驺虞不虚来，鸑鷟有时鸣。\n安知天汉上，白日悬高名。\n海客去已久，谁人测沈冥。",
+    refs: "引用典故：上汉槎"
+  },
+  {
+    title: "古风 其十四",
+    meta: "盛唐·李白 | 749年 | 押麌韵　创作地点：江苏省南京市",
+    content: "胡关饶风沙，萧索竟终古。\n木落秋草黄，登高望戎虏。\n荒城空大漠，边邑无遗堵。\n白骨横千霜，嵯峨蔽榛莽。\n借问谁凌虐，天骄毒威武。\n赫怒我圣皇，劳师事鼙鼓。\n阳和变杀气，发卒骚中土。\n三十六万人，哀哀泪如雨。\n且悲就行役，安得营农圃。\n不见征戍儿，岂知关山苦（一本此下有“争锋徒死节，秉钺皆庸竖。战士死蒿莱，将军获圭组”四句）。\n李牧今不在，边人饲豺虎。",
+    refs: "引用典故：李牧"
+  },
+  {
+    title: "古风 其十五",
+    meta: "盛唐·李白 | 731年 | 押灰韵　创作地点：陕西省西安市",
+    content: "燕昭延郭隗，遂筑黄金台。\n剧辛方赵至，邹衍复齐来。\n奈何青云士，弃我如尘埃。\n珠玉买歌笑，糟糠养贤才。\n方知黄鹤举，千里独裴回。",
+    refs: "引用典故：延郭隗"
+  },
+  {
+    title: "古风 其十六",
+    meta: "盛唐·李白 | 731年 | 押冬韵　创作地点：河南省洛阳市",
+    content: "宝剑双蛟龙，雪花照芙蓉。\n精光射天地，雷腾不可冲。\n一去别金匣，飞沈失相从。\n风胡灭已久，所以潜其锋。\n吴水深万丈，楚山邈千重。\n雌雄终不隔，神物会当逢。",
+    refs: "引用典故：一旦为龙　风胡"
+  },
+  {
+    title: "古风 其十七",
+    meta: "盛唐·李白 | 747年 | 押陌韵　创作地点：浙江省台州市天台县天台山",
+    content: "金华牧羊儿，乃是紫烟客。\n我愿从之游，未去发已白。\n不知繁华子，扰扰何所迫。\n昆山采琼蕊，可以炼精魄。",
+    refs: "引用典故：金华牧羊儿"
+  },
+  {
+    title: "古风 其十八",
+    meta: "盛唐·李白 | 753年 | 创作地点：陕西省西安市",
+    content: "天津三月时，千门桃与李。\n朝为断肠花，暮逐东流水。\n前水复后水，古今相续流。\n新人非旧人，年年桥上游。\n鸡鸣海色动，谒帝罗公侯。\n月落西上阳，馀辉半城楼。\n衣冠照云日，朝下散皇州。\n鞍马如飞龙，黄金络马头。\n行人皆辟易，志气横嵩丘。\n入门上高堂，列鼎错珍羞。\n香风引赵舞，清管随齐讴。\n七十紫鸳鸯，双双戏庭幽。\n行乐争昼夜，自言度千秋。\n功成身不退，自古多愆尤。\n黄犬空叹息，绿珠成衅雠。\n何如鸱夷子，散发棹（一作弄）扁舟。",
+    refs: "引用典故：绿珠　鸱夷子"
+  },
+  {
+    title: "古风 其十九",
+    meta: "盛唐·李白 | 744年 | 押词韵第十一部　创作地点：山东省济宁市",
+    content: "西岳莲花山，迢迢见明星。\n素手把芙蓉，虚步蹑太清。\n霓裳曳广带，飘拂升天行。\n邀我登云台，高揖卫叔卿。\n恍恍与之去，驾鸿凌紫冥。\n俯视洛阳川，茫茫走胡兵。\n流血涂野草，豺狼尽冠缨。",
+    refs: "引用典故：卫叔卿"
+  },
+  {
+    title: "古风 其二十",
+    meta: "盛唐·李白 | 744年 | 创作地点：山东省济宁市",
+    content: "昔我游齐都，登华不注峰。\n兹山何峻秀，绿翠如芙蓉。\n萧飒古仙人，了知是赤松。\n借予一白鹿，自挟两青龙。\n含笑凌倒景，欣然愿相从。\n泣与亲友别，欲语再三咽。\n勖君青松心，努力保霜雪。\n世路多险艰，白日欺红颜。\n分手各千里，去去何时还。\n在世复几时，倏如飘风度。\n空闻紫金经，白首愁相误。\n抚己忽自笑，沈吟为谁故。\n名利徒煎熬，安得闲余步。\n终留赤玉舄，东上蓬莱路。\n秦帝如我求，苍苍但烟雾。",
+    refs: "引用典故：赤松"
+  }
+];
+
+// 生僻字释义数据库
+const definitionData = {
+  "浔": "浔阳(xún yáng): 地名，今江西省九江市。Place name, now Jiujiang, Jiangxi.",
+  "渚": "牛渚(niú zhǔ): 地名，今安徽马鞍山采石矶。Place name, now Caishiji in Ma'anshan, Anhui.",
+  "峭": "峭帆(qiào fān): 高耸的船帆。Tall sail.",
+  "蹙": "东蹙(dōng cù): 向东逼迫。Press eastward.",
+  "鹜": "雁鹜(yàn wù): 雁和野鸭。Wild geese and ducks.",
+  "鳷": "鳷鹊(zhī què): 古代传说中的鸟名。Name of a legendary bird.",
+  "骧": "龙骧(lóng xiāng): 龙腾跃的样子。Dragon leaping.",
+  "旌": "旌旗(jīng qí): 旗帜的总称。General term for flags.",
+  "啖": "啖食(dàn shí): 吞食。Devour.",
+  "榛": "荆榛(jīng zhēn): 荆棘丛生。Thorny bushes.",
+  "螮": "螮蝀(dì dōng): 虹的别称。Another name for rainbow.",
+  "韨": "徐韨(xú fú): 人名。Name of a person.",
+  "鬐": "鬐鬣(qí liè): 鱼鳍和鱼须。Fish fins and whiskers.",
+  "鹖": "虎鹖(hǔ hé): 猛禽名。Name of a bird of prey.",
+  "鸑": "鸑鷟(yuè zhuó): 传说中的神鸟。Mythical bird.",
+  "舄": "赤玉舄(chì yù xì): 红色的玉鞋。Red jade shoes."
+};
+
+// 完整拼音数据库
+const pinyinData = {
+  "古":"gǔ","风":"fēng","其":"qí","一":"yī","盛":"shèng","唐":"táng","李":"lǐ","白":"bái","押":"yā",
+  "真":"zhēn","韵":"yùn","创":"chuàng","作":"zuò","地":"dì","点":"diǎn","江":"jiāng","苏":"sū",
+  "省":"shěng","南":"nán","京":"jīng","市":"shì","引":"yǐn","用":"yòng","典":"diǎn","故":"gù","获":"huò",
+  "麟":"lín","大":"dà","雅":"yǎ","久":"jiǔ","不":"bù","作":"zuò","吾":"wú","衰":"shuāi","竟":"jìng",
+  "谁":"shuí","陈":"chén","王":"wáng","委":"wěi","蔓":"màn","草":"cǎo","战":"zhàn","国":"guó","多":"duō",
+  "荆":"jīng","榛":"zhēn","龙":"lóng","虎":"hǔ","相":"xiāng","啖":"dàn","食":"shí","兵":"bīng","戈":"gē",
+  "逮":"dǎi","狂":"kuáng","秦":"qín","正":"zhèng","声":"shēng","何":"hé","微":"wēi","茫":"máng","哀":"āi",
+  "怨":"yuàn","起":"qǐ","骚":"sāo","人":"rén","扬":"yáng","马":"mǎ","激":"jī","颓":"tuí","波":"bō",
+  "开":"kāi","流":"liú","荡":"dàng","无":"wú","垠":"yín","废":"fèi","兴":"xīng","虽":"suī","万":"wàn",
+  "变":"biàn","宪":"xiàn","章":"zhāng","亦":"yì","已":"yǐ","沦":"lún","自":"zì","从":"cóng","建":"jiàn",
+  "安":"ān","来":"lái","绮":"qǐ","丽":"lì","足":"zú","珍":"zhēn","圣":"shèng","代":"dài","复":"fù",
+  "元":"yuán","垂":"chuí","衣":"yī","贵":"guì","清":"qīng","真":"zhēn","群":"qún","才":"cái","属":"shǔ",
+  "休":"xiū","明":"míng","乘":"chéng","运":"yùn","共":"gòng","跃":"yuè","鳞":"lín","文":"wén","质":"zhì",
+  "炳":"bǐng","焕":"huàn","众":"zhòng","星":"xīng","罗":"luó","秋":"qiū","旻":"mín","志":"zhì","在":"zài",
+  "删":"shān","述":"shù","辉":"huī","映":"yìng","千":"qiān","春":"chūn","希":"xī","如":"rú","有":"yǒu",
+  "立":"lì","绝":"jué","笔":"bǐ","于":"yú","二":"èr","安":"ān","徽":"huī","宣":"xuān","城":"chéng",
+  "蟾":"chán","蜍":"chú","薄":"bó","太":"tài","蚀":"shí","此":"cǐ","瑶":"yáo","台":"tái","月":"yuè",
+  "圆":"yuán","光":"guāng","亏":"kuī","中":"zhōng","天":"tiān","金":"jīn","魄":"pò","遂":"suì","没":"mò",
+  "螮":"dì","蝀":"dōng","入":"rù","紫":"zǐ","微":"wēi","大":"dà","夷":"yí","朝":"cháo","晖":"huī",
+  "浮":"fú","云":"yún","隔":"gé","两":"liǎng","曜":"yào","万":"wàn","象":"xiàng","昏":"hūn","阴":"yīn",
+  "霏":"fēi","萧":"xiāo","长":"cháng","门":"mén","宫":"gōng","昔":"xī","是":"shì","今":"jīn","非":"fēi",
+  "桂":"guì","蠹":"dù","花":"huā","实":"shí","霜":"shuāng","下":"xià","严":"yán","威":"wēi","沈":"shěn",
+  "叹":"tàn","终":"zhōng","永":"yǒng","夕":"xī","感":"gǎn","涕":"tì","沾":"zhān","衣":"yī","三":"sān",
+  "浙":"zhè","台":"tāi","天":"tiān","山":"shān","秦":"qín","皇":"huáng","扫":"sǎo","六":"liù","合":"hé",
+  "视":"shì","雄":"xióng","哉":"zāi","飞":"fēi","剑":"jiàn","决":"jué","诸":"zhū","侯":"hóu","尽":"jìn",
+  "西":"xī","断":"duàn","启":"qǐ","略":"lüè","驾":"jià","收":"shōu","铸":"zhù","函":"hán","谷":"gǔ",
+  "东":"dōng","铭":"míng","功":"gōng","会":"kuài","稽":"jī","岭":"lǐng","骋":"chěng","望":"wàng","琅":"láng",
+  "琊":"yá","刑":"xíng","徒":"tú","七":"qī","十":"shí","起":"qǐ","土":"tǔ","骊":"lí","隈":"wēi",
+  "尚":"shàng","采":"cǎi","死":"sǐ","药":"yào","茫":"máng","然":"rán","使":"shǐ","心":"xīn","哀":"āi",
+  "连":"lián","弩":"nǔ","射":"shè","海":"hǎi","鱼":"yú","长":"cháng","鲸":"jīng","崔":"cuī","嵬":"wéi",
+  "额":"é","鼻":"bí","象":"xiàng","五":"wǔ","岳":"yuè","喷":"pēn","雷":"léi","鬐":"qí","鬣":"liè",
+  "蔽":"bì","青":"qīng","何":"hé","由":"yóu","睹":"dǔ","蓬":"péng","莱":"lái","徐":"xú","韨":"fú",
+  "载":"zài","女":"nǚ","楼":"lóu","船":"chuán","几":"jǐ","时":"shí","回":"huí","但":"dàn","见":"jiàn",
+  "泉":"quán","棺":"guān","葬":"zàng","寒":"hán","灰":"huī","四":"sì","池":"chí","州":"zhōu","凤":"fèng",
+  "九":"jiǔ","千":"qiān","仞":"rèn","五":"wǔ","章":"zhāng","备":"bèi","䌽":"cǎi","衔":"xián","书":"shū",
+  "且":"qiě","虚":"xū","归":"guī","空":"kōng","周":"zhōu","与":"yǔ","横":"héng","绝":"jué","历":"lì",
+  "四":"sì","所":"suǒ","居":"jū","未":"wèi","得":"dé","邻":"lín","吾":"wú","营":"yíng","河":"hé",
+  "车":"chē","落":"luò","尘":"chén","药":"yào","物":"wù","秘":"mì","岳":"yuè","铅":"qiān","溪":"xī",
+  "滨":"bīn","登":"dēng","大":"dà","举":"jǔ","手":"shǒu","仙":"xiān","羽":"yǔ","灭":"miè","去":"qù",
+  "影":"yǐng","飙":"biāo","轮":"lún","恐":"kǒng","丹":"dān","液":"yè","迟":"chí","愿":"yuàn","及":"jí",
+  "申":"shēn","徒":"tú","镜":"jìng","中":"zhōng","发":"fà","羞":"xiū","彼":"bǐ","鹤":"hè","上":"shàng",
+  "桃":"táo","李":"lǐ","处":"chù","开":"kāi","此":"cǐ","花":"huā","非":"fēi","我":"wǒ","唯":"wéi",
+  "应":"yīng","境":"jìng","韩":"hán","众":"zhòng","亲":"qīn","五":"wǔ","陕":"shǎn","西":"xī","西":"xī",
+  "安":"ān","太":"tài","苍":"cāng","辰":"chén","森":"sēn","列":"liè","三":"sān","百":"bǎi","里":"lǐ",
+  "邈":"miǎo","尔":"ěr","世":"shì","绝":"jué","绿":"lǜ","翁":"wēng","披":"pī","卧":"wò","松":"sōng",
+  "雪":"xuě","笑":"xiào","语":"yǔ","冥":"míng","栖":"qī","岩":"yán","穴":"xué","逢":"féng","真":"zhēn",
+  "跪":"guì","问":"wèn","宝":"bǎo","诀":"jué","粲":"càn","然":"rán","启":"qǐ","玉":"yù","齿":"chǐ",
+  "授":"shòu","以":"yǐ","鍊":"liàn","说":"shuō","骨":"gǔ","传":"chuán","语":"yǔ","竦":"sǒng","身":"shēn",
+  "电":"diàn","仰":"yǎng","不":"bù","可":"kě","及":"jí","情":"qíng","热":"rè","将":"jiāng","砂":"shā",
+  "永":"yǒng","别":"bié","六":"liù","宁":"níng","代":"dài","越":"yuè","禽":"qín","恋":"liàn","燕":"yàn",
+  "情":"qíng","性":"xìng","习":"xí","土":"tǔ","固":"gù","然":"rán","昔":"xī","别":"bié","雁":"yàn",
+  "关":"guān","今":"jīn","戍":"shù","庭":"tíng","前":"qián","惊":"jīng","沙":"shā","乱":"luàn","日":"rì",
+  "迷":"mí","胡":"hú","虮":"jǐ","虱":"shī","生":"shēng","鹖":"hé","魂":"hún","逐":"zhú","旃":"zhān",
+  "苦":"kǔ","战":"zhàn","功":"gōng","赏":"shǎng","忠":"zhōng","诚":"chéng","难":"nán","宣":"xuān","怜":"lián",
+  "首":"shǒu","没":"mò","边":"biān","七":"qī","泰":"tài","鹤":"hè","北":"běi","凌":"líng","仙":"xiān",
+  "道":"dào","名":"míng","两":"liǎng","童":"tóng","双":"shuāng","吹":"chuī","鸾":"luán","笙":"shēng","忽":"hū",
+  "风":"fēng","送":"sòng","声":"shēng","欲":"yù","问":"wèn","之":"zhī","飘":"piāo","然":"rán","若":"ruò",
+  "流":"liú","愿":"yuàn","餐":"cān","金":"jīn","草":"cǎo","寿":"shòu","齐":"qí","倾":"qīng","八":"bā",
+  "咸":"xián","阳":"yáng","二":"èr","三":"sān","柳":"liǔ","黄":"huáng","枝":"zhī","帻":"zé","谁":"shuí",
+  "家":"jiā","子":"zǐ","卖":"mài","珠":"zhū","轻":"qīng","薄":"bó","儿":"ér","暮":"mù","醉":"zuì",
+  "酒":"jiǔ","白":"bái","骄":"jiāo","驰":"chí","意":"yì","气":"qì","仰":"yǎng","冶":"yě","游":"yóu",
+  "方":"fāng","及":"jí","时":"shí","云":"yún","晓":"xiǎo","事":"shì","晚":"wǎn","献":"xiàn","辞":"cí",
+  "赋":"fù","达":"dá","老":"lǎo","草":"cǎo","玄":"xuán","鬓":"bìn","丝":"sī","投":"tóu","阁":"gé",
+  "良":"liáng","叹":"tàn","为":"wèi","此":"cǐ","辈":"bèi","嗤":"chī","九":"jiǔ","菏":"hé","泽":"zé",
+  "单":"dān","庄":"zhuāng","周":"zhōu","梦":"mèng","胡":"hú","蝶":"dié","体":"tǐ","更":"gèng","变":"biàn",
+  "易":"yì","事":"shì","良":"liáng","悠":"yōu","乃":"nǎi","知":"zhī","水":"shuǐ","复":"fù","作":"zuò",
+  "浅":"qiǎn","种":"zhòng","瓜":"guā","旧":"jiù","日":"rì","东":"dōng","陵":"líng","侯":"hóu","富":"fù",
+  "贵":"guì","故":"gù","营":"yíng","求":"qiú","十":"shí","济":"jì","齐":"qí","倜":"tì","傥":"tǎng",
+  "鲁":"lǔ","连":"lián","特":"tè","高":"gāo","妙":"miào","明":"míng","底":"dǐ","朝":"zhāo","曜":"yào",
+  "却":"què","振":"zhèn","英":"yīng","声":"shēng","后":"hòu","世":"shì","末":"mò","照":"zhào","轻":"qīng",
+  "千":"qiān","赠":"zèng","顾":"gù","向":"xiàng","平":"píng","原":"yuán","笑":"xiào","亦":"yì","澹":"dàn",
+  "荡":"dàng","拂":"fú","同":"tóng","调":"diào","十":"shí","一":"yī","贿":"huì","黄":"huáng","河":"hé",
+  "走":"zǒu","溟":"míng","白":"bái","落":"luò","西":"xī","逝":"shì","川":"chuān","与":"yǔ","光":"guāng",
+  "飘":"piāo","忽":"hū","待":"dài","春":"chūn","容":"róng","舍":"shè","去":"qù","秋":"qiū","改":"gǎi",
+  "人":"rén","生":"shēng","寒":"hán","年":"nián","貌":"mào","岂":"qǐ","在":"zài","当":"dāng","乘":"chéng",
+  "螭":"chī","吸":"xī","景":"jǐng","驻":"zhù","彩":"cǎi","能":"néng","学":"xué","飞":"fēi","秀":"xiù",
+  "君":"jūn","采":"cǎi","十":"shí","二":"èr","删":"shān","松":"sōng","柏":"bǎi","本":"běn","孤":"gū",
+  "直":"zhí","难":"nán","颜":"yán","昭":"zhāo","严":"yán","子":"zǐ","陵":"líng","钓":"diào","沧":"cāng",
+  "波":"bō","间":"jiān","身":"shēn","将":"jiāng","客":"kè","星":"xīng","隐":"yǐn","心":"xīn","闲":"xián",
+  "揖":"yī","万":"wàn","乘":"shèng","还":"huán","富":"fù","春":"chūn","清":"qīng","洒":"sǎ","六":"liù",
+  "邈":"miǎo","攀":"pān","使":"shǐ","息":"xī","冥":"míng","石":"shí","间":"jiān","十":"shí","三":"sān",
+  "既":"jì","弃":"qì","观":"guān","穷":"qióng","易":"yì","探":"tàn","元":"yuán","化":"huà","寂":"jì",
+  "寞":"mò","缀":"zhuì","论":"lùn","帘":"lián","闭":"bì","幽":"yōu","驺":"zōu","虞":"yú","虚":"xū",
+  "鸑":"yuè","鷟":"zhuó","鸣":"míng","安":"ān","汉":"hàn","悬":"xuán","客":"kè","去":"qù","已":"yǐ",
+  "测":"cè","沈":"shěn","十":"shí","四":"sì","麌":"yǔ","饶":"ráo","萧":"xiāo","索":"suǒ","终":"zhōng",
+  "木":"mù","落":"luò","黄":"huáng","望":"wàng","戎":"róng","虏":"lǔ","荒":"huāng","城":"chéng","漠":"mò",
+  "邑":"yì","遗":"yí","堵":"dǔ","骨":"gǔ","横":"héng","霜":"shuāng","嵯":"cuó","峨":"é","莽":"mǎng",
+  "借":"jiè","问":"wèn","凌":"líng","虐":"nüè","骄":"jiāo","毒":"dú","威":"wēi","武":"wǔ","赫":"hè",
+  "怒":"nù","皇":"huáng","劳":"láo","师":"shī","鼙":"pí","鼓":"gǔ","和":"hé","杀":"shā","卒":"zú",
+  "骚":"sāo","中":"zhōng","哀":"āi","泪":"lèi","雨":"yǔ","且":"qiě","悲":"bēi","行":"xíng","役":"yì",
+  "农":"nóng","圃":"pǔ","征":"zhēng","儿":"ér","知":"zhī","关":"guān","山":"shān","苦":"kǔ","争":"zhēng",
+  "锋":"fēng","徒":"tú","节":"jié","秉":"bǐng","钺":"yuè","皆":"jiē","庸":"yōng","竖":"shù","战":"zhàn",
+  "士":"shì","蒿":"hāo","莱":"lái","将":"jiāng","军":"jūn","圭":"guī","组":"zǔ","牧":"mù","在":"zài",
+  "饲":"sì","豺":"chái","虎":"hǔ","十":"shí","五":"wǔ","延":"yán","隗":"wěi","遂":"suì","筑":"zhù",
+  "剧":"jù","辛":"xīn","方":"fāng","赵":"zhào","至":"zhì","邹":"zōu","衍":"yǎn","复":"fù","齐":"qí",
+  "奈":"nài","何":"hé","青":"qīng","士":"shì","弃":"qì","埃":"āi","尘":"chén","珠":"zhū","买":"mǎi",
+  "歌":"gē","糟":"zāo","糠":"kāng","养":"yǎng","贤":"xián","才":"cái","知":"zhī","举":"jǔ","独":"dú",
+  "裴":"péi","回":"huí","十":"shí","六":"liù","冬":"dōng","洛":"luò","宝":"bǎo","剑":"jiàn","双":"shuāng",
+  "蛟":"jiāo","花":"huā","照":"zhào","芙":"fú","蓉":"róng","精":"jīng","射":"shè","射":"shè","腾":"téng",
+  "冲":"chōng","别":"bié","匣":"xiá","飞":"fēi","沈":"shěn","失":"shī","从":"cóng","灭":"miè","久":"jiǔ",
+  "所":"suǒ","以":"yǐ","潜":"qián","锋":"fēng","吴":"wú","深":"shēn","丈":"zhàng","楚":"chǔ","邈":"miǎo",
+  "重":"chóng","雌":"cí","雄":"xióng","神":"shén","物":"wù","会":"huì","当":"dāng","逢":"féng","十":"shí",
+  "七":"qī","陌":"mò","金":"jīn","华":"huá","牧":"mù","羊":"yáng","乃":"nǎi","是":"shì","烟":"yān",
+  "客":"kè","愿":"yuàn","从":"cóng","之":"zhī","游":"yóu","发":"fà","已":"yǐ","知":"zhī","繁":"fán",
+  "华":"huá","子":"zǐ","扰":"rǎo","迫":"pò","昆":"kūn","琼":"qióng","蕊":"ruǐ","可":"kě","炼":"liàn",
+  "魄":"pò","十":"shí","八":"bā","津":"jīn","时":"shí","桃":"táo","李":"lǐ","朝":"zhāo","断":"duàn",
+  "肠":"cháng","暮":"mù","逐":"zhú","前":"qián","后":"hòu","古":"gǔ","今":"jīn","续":"xù","新":"xīn",
+  "旧":"jiù","年":"nián","桥":"qiáo","鸡":"jī","鸣":"míng","动":"dòng","谒":"yè","帝":"dì","罗":"luó",
+  "公":"gōng","侯":"hóu","落":"luò","上":"shàng","阳":"yáng","馀":"yú","辉":"huī","半":"bàn","楼":"lóu",
+  "冠":"guān","照":"zhào","日":"rì","下":"xià","散":"sàn","皇":"huáng","鞍":"ān","如":"rú","龙":"lóng",
+  "络":"luò","头":"tóu","行":"xíng","皆":"jiē","辟":"pì","易":"yì","志":"zhì","横":"héng","嵩":"sōng",
+  "丘":"qiū","入":"rù","高":"gāo","堂":"táng","列":"liè","鼎":"dǐng","错":"cuò","珍":"zhēn","羞":"xiū",
+  "香":"xiāng","引":"yǐn","赵":"zhào","舞":"wǔ","清":"qīng","管":"guǎn","随":"suí","讴":"ōu","七":"qī",
+  "鸳":"yuān","鸯":"yāng","双":"shuāng","戏":"xì","庭":"tíng","幽":"yōu","乐":"lè","昼":"zhòu","夜":"yè",
+  "言":"yán","度":"dù","秋":"qiū","成":"chéng","身":"shēn","退":"tuì","自":"zì","古":"gǔ","愆":"qiān",
+  "尤":"yóu","黄":"huáng","犬":"quǎn","息":"xī","绿":"lǜ","珠":"zhū","衅":"xìn","雠":"chóu","何":"hé",
+  "如":"rú","鸱":"chī","夷":"yí","散":"sàn","发":"fà","棹":"zhào","弄":"nòng","扁":"piān","舟":"zhōu",
+  "十":"shí","九":"jiǔ","岳":"yuè","莲":"lián","迢":"tiáo","星":"xīng","素":"sù","把":"bǎ","虚":"xū",
+  "步":"bù","蹑":"niè","霓":"ní","裳":"cháng","曳":"yè","广":"guǎng","带":"dài","飘":"piāo","升":"shēng",
+  "邀":"yāo","登":"dēng","台":"tái","揖":"yī","卫":"wèi","叔":"shū","卿":"qīng","恍":"huǎng","驾":"jià",
+  "鸿":"hóng","凌":"líng","冥":"míng","俯":"fǔ","视":"shì","洛":"luò","阳":"yáng","茫":"máng","走":"zǒu",
+  "兵":"bīng","流":"liú","血":"xuè","涂":"tú","野":"yě","豺":"chái","狼":"láng","尽":"jìn","缨":"yīng",
+  "二":"èr","十":"shí","昔":"xī","游":"yóu","齐":"qí","都":"dū","登":"dēng","华":"huá","不":"bù",
+  "注":"zhù","峰":"fēng","兹":"zī","峻":"jùn","秀":"xiù","翠":"cuì","芙":"fú","蓉":"róng","萧":"xiāo",
+  "飒":"sà","了":"liǎo","赤":"chì","松":"sōng","借":"jiè","予":"yǔ","一":"yī","鹿":"lù","挟":"xié",
+  "含":"hán","笑":"xiào","凌":"líng","倒":"dào","景":"jǐng","欣":"xīn","然":"rán","相":"xiāng","从":"cóng",
+  "泣":"qì","友":"yǒu","别":"bié","欲":"yù","再":"zài","咽":"yān","勖":"xù","君":"jūn","心":"xīn",
+  "努":"nǔ","力":"lì","保":"bǎo","雪":"xuě","世":"shì","路":"lù","险":"xiǎn","艰":"jiān","欺":"qī",
+  "红":"hóng","颜":"yán","分":"fēn","手":"shǒu","各":"gè","里":"lǐ","去":"qù","还":"huán","复":"fù",
+  "几":"jǐ","倏":"shū","度":"dù","闻":"wén","经":"jīng","首":"shǒu","愁":"chóu","误":"wù","抚":"fǔ",
+  "己":"jǐ","忽":"hū","自":"zì","笑":"xiào","沈":"shěn","吟":"yín","谁":"shuí","名":"míng","利":"lì",
+  "徒":"tú","煎":"jiān","熬":"áo","得":"dé","闲":"xián","余":"yú","步":"bù","终":"zhōng","留":"liú",
+  "舄":"xì","蓬":"péng","莱":"lái","路":"lù","帝":"dì","求":"qiú","苍":"cāng","烟":"yān","雾":"wù"
+};
+
+// 繁简转换映射
+const traditionalToSimple = {
+  "風":"风","雲":"云","華":"华","葉":"叶","烏":"乌","驚":"惊","漢":"汉","涼":"凉","終":"终","卻":"却",
+  "從":"从","萬":"万","戶":"户","門":"门","漢":"汉","顏":"颜","軿":"軿","間":"间","跡":"迹","裊":"袅",
+  "環":"环","連":"连","蓋":"盖","宮":"宫","樓":"楼","羅":"罗","鬥":"斗","壓":"压","闌":"阑","幹":"干",
+  "煙":"烟","濃":"浓","紅":"红","絹":"绢","淺":"浅","畫":"画","點":"点","淚":"泪","陽":"阳","絕":"绝",
+  "斷":"断","遙":"遥","裡":"里","簾":"帘","車":"车","帶":"带","傷":"伤","階":"阶","歸":"归","飛":"飞",
+  "處":"处","長":"长","夢":"梦","聲":"声","斷":"断","樂":"乐","遊":"游","節":"节","塵":"尘","絕":"绝",
+  "殘":"残","妝":"妆","閒":"闲","誰":"谁","腰":"腰","窈":"窈","窕":"窕","禦":"御","帳":"帐","鴛":"鸳",
+  "鴦":"鸯","燈":"灯","話":"话","邊":"边","闊":"阔","達":"达","懸":"悬","懷":"怀","鎖":"锁","難":"难",
+  "開":"开","淚":"泪","遠":"远","瀟":"潇","聽":"听","報":"报","墜":"坠","捲":"卷","氣":"气","爐":"炉",
+  "應":"应","亂":"乱","舉":"举","頭":"头","見":"见","書":"书","閣":"阁","塵":"尘","頭":"头","會":"会",
+  "瑤":"瑶","艷":"艳","問":"问","憐":"怜","妝":"妆","傾":"倾","歡":"欢","釋":"释","幹":"干"
+};
+
+// 简繁转换映射（反向）
+const simpleToTraditional = Object.fromEntries(
+  Object.entries(traditionalToSimple).map(([trad, simp]) => [simp, trad])
+);
+
+// 标点符号集合
+const PUNCTUATIONS = new Set(['，', '。', '？', '！', '、', '；', '：', '・', '。', '？', '！', '，', '；', '：', '\n']);
+
+// 系统变量
+let currentPoemIndex = 0;
+let speechSynthesis = window.speechSynthesis;
+let currentUtterance = null;
+let isReading = false;
+let isPaused = false;
+let lineElements = [];
+let isTraditional = false;
+
+// 渲染诗篇
+function renderPoem(index) {
+  if (index >= poems.length) {
+    currentPoemIndex = 0;
+    index = 0;
+  } else if (index < 0) {
+    currentPoemIndex = poems.length - 1;
+    index = poems.length - 1;
+  }
+  
+  // 更新菜单激活状态
+  const menuItems = document.querySelectorAll('.poem-menu li');
+  menuItems.forEach((item, i) => {
+    if (i === index) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+  
+  const poem = poems[index];
+  document.getElementById('poem-title').textContent = isTraditional ? convertToTraditional(poem.title) : poem.title;
+  document.getElementById('poem-meta').textContent = isTraditional ? convertToTraditional(poem.meta) : poem.meta;
+  document.getElementById('ref-note').textContent = isTraditional ? convertToTraditional(poem.refs || "") : poem.refs || "";
+  
+  const contentDiv = document.getElementById('poem-content');
+  contentDiv.innerHTML = '';
+  lineElements = [];
+  
+  // 分行处理：按换行符和标点符号分行
+  let lines = poem.content.split('\n');
+  
+  // 渲染每行
+  lines.forEach((line, lineIndex) => {
+    const lineDiv = document.createElement('div');
+    lineDiv.className = 'line-container';
+    
+    const convertedLine = isTraditional ? convertToTraditional(line) : line;
+    
+    convertedLine.split('').forEach(char => {
+      const charContainer = document.createElement('div');
+      charContainer.className = 'char-container';
+      
+      const pinyinSpan = document.createElement('div');
+      pinyinSpan.className = 'pinyin';
+      pinyinSpan.textContent = PUNCTUATIONS.has(char) ? '' : (pinyinData[char] || char);
+      
+      const charSpan = document.createElement('div');
+      charSpan.className = PUNCTUATIONS.has(char) ? 'char punctuation' : 'char';
+      charSpan.textContent = char;
+      
+      // 添加释义
+      if (definitionData[char] && !PUNCTUATIONS.has(char)) {
+        const definitionSpan = document.createElement('div');
+        definitionSpan.className = 'definition';
+        definitionSpan.textContent = definitionData[char];
+        
+        charSpan.onclick = function(e) {
+          e.stopPropagation(); // 阻止事件冒泡
+          
+          // 切换当前字的释义显示
+          const isShowing = definitionSpan.style.display === 'block';
+          document.querySelectorAll('.definition').forEach(def => {
+            def.style.display = 'none';
+          });
+          definitionSpan.style.display = isShowing ? 'none' : 'block';
+        };
+        
+        charContainer.appendChild(definitionSpan);
+      } else {
+        charSpan.onclick = null;
+      }
+      
+      charContainer.appendChild(pinyinSpan);
+      charContainer.appendChild(charSpan);
+      lineDiv.appendChild(charContainer);
+    });
+    
+    contentDiv.appendChild(lineDiv);
+    lineElements.push(lineDiv);
+  });
+}
+
+// 转换为繁体
+function convertToTraditional(text) {
+  return text.split('').map(char => simpleToTraditional[char] || char).join('');
+}
+
+// 转换为简体
+function convertToSimple(text) {
+  return text.split('').map(char => traditionalToSimple[char] || char).join('');
+}
+
+// 朗读诗篇 (带节奏停顿)
+function readPoem() {
+  if (isReading) return;
+  
+  isReading = true;
+  isPaused = false;
+  document.getElementById('read-btn').textContent = '朗读中...';
+  document.getElementById('pause-btn').textContent = '暂停';
+  lineElements.forEach(el => el.classList.remove('reading-line'));
+  
+  const poem = poems[currentPoemIndex];
+  let lines = poem.content.split('\n');
+  
+  let currentLine = 0;
+  
+  function readLine(index) {
+    if (index >= lines.length || !isReading) {
+      endReading();
+      return;
+    }
+    
+    if (isPaused) {
+      setTimeout(() => readLine(index), 100);
+      return;
+    }
+    
+    // 高亮当前行
+    lineElements.forEach(el => el.classList.remove('reading-line'));
+    lineElements[index].classList.add('reading-line');
+    lineElements[index].scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center' 
+    });
+    
+    const line = lines[index];
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.7;
+    
+    // 根据古体诗特点调整停顿
+    let text = line;
+    if (poem.meta.includes("古风")) {
+      // 在适当位置增加停顿
+      if (line.length >= 5) {
+        text = line.substring(0, 5) + " " + line.substring(5);
+      }
+    }
+    
+    utterance.text = text;
+    
+    utterance.onend = () => {
+      // 根据标点符号增加停顿
+      const lastChar = line[line.length-1];
+      const pauseTime = PUNCTUATIONS.has(lastChar) ? 
+        (lastChar === '。' ? 1000 : 600) : 400;
+      
+      setTimeout(() => {
+        readLine(index + 1);
+      }, pauseTime);
+    };
+    
+    speechSynthesis.speak(utterance);
+  }
+  
+  function endReading() {
+    isReading = false;
+    isPaused = false;
+    document.getElementById('read-btn').textContent = '朗读';
+    document.getElementById('pause-btn').textContent = '暂停';
+    
+    // 自动切换到下一首
+    currentPoemIndex++;
+    if (currentPoemIndex < poems.length) {
+      renderPoem(currentPoemIndex);
+    } else {
+      currentPoemIndex = 0;
+      renderPoem(currentPoemIndex);
+    }
+  }
+  
+  readLine(0);
+}
+
+// 暂停/继续朗读
+function togglePauseReading() {
+  if (isReading) {
+    if (isPaused) {
+      // 恢复朗读
+      speechSynthesis.resume();
+      document.getElementById('pause-btn').textContent = '暂停';
+      isPaused = false;
+    } else {
+      // 暂停朗读
+      speechSynthesis.pause();
+      document.getElementById('pause-btn').textContent = '继续';
+      isPaused = true;
+    }
+  }
+}
+
+// 停止朗读
+function stopReading() {
+  if (speechSynthesis.speaking || isPaused) {
+    speechSynthesis.cancel();
+    isReading = false;
+    isPaused = false;
+    document.getElementById('read-btn').textContent = '朗读';
+    document.getElementById('pause-btn').textContent = '暂停';
+    lineElements.forEach(el => el.classList.remove('reading-line'));
+  }
+}
+
+// 初始化菜单
+function initMenu() {
+  const menu = document.getElementById('poem-menu');
+  poems.forEach((poem, index) => {
+    const li = document.createElement('li');
+    li.textContent = poem.title;
+    li.onclick = () => {
+      currentPoemIndex = index;
+      renderPoem(currentPoemIndex);
+      stopReading();
+    };
+    menu.appendChild(li);
+  });
+}
+
+// 繁简转换
+function toggleTraditional() {
+  isTraditional = !isTraditional;
+  document.getElementById('convert-btn').textContent = isTraditional ? '转为简体' : '转为繁体';
+  renderPoem(currentPoemIndex);
+}
+
+// 点击其他地方关闭释义窗口
+document.addEventListener('click', function(e) {
+  if (!e.target.classList.contains('char')) {
+    document.querySelectorAll('.definition').forEach(def => {
+      def.style.display = 'none';
+    });
+  }
+});
+
+// 控制按钮事件
+document.getElementById('read-btn').addEventListener('click', readPoem);
+document.getElementById('pause-btn').addEventListener('click', togglePauseReading);
+document.getElementById('stop-btn').addEventListener('click', stopReading);
+document.getElementById('convert-btn').addEventListener('click', toggleTraditional);
+
+// 键盘导航
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') {
+    currentPoemIndex = (currentPoemIndex + 1) % poems.length;
+    renderPoem(currentPoemIndex);
+    stopReading();
+  } else if (e.key === 'ArrowLeft') {
+    currentPoemIndex = (currentPoemIndex - 1 + poems.length) % poems.length;
+    renderPoem(currentPoemIndex);
+    stopReading();
+  } else if (e.key === ' ') {
+    // 空格键暂停/继续
+    if (isReading) {
+      togglePauseReading();
+    }
+  }
+});
+
+// 初始化
+initMenu();
+renderPoem(0);
+</script>
+</body>
+</html>
