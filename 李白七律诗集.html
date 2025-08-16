@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>李白七律诗集-拼音释义版</title>
+<style>
+body {
+  background: #121212;
+  color: #c8f7c5;
+  font-family: "楷体", "STKaiti", serif;
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+}
+
+.sidebar {
+  width: 200px;
+  background: rgba(18, 18, 18, 0.9);
+  border-right: 1px solid #4CAF50;
+  overflow-y: auto;
+  padding: 20px 10px;
+  height: 100vh;
+  box-sizing: border-box;
+  position: fixed;
+}
+
+.sidebar-title {
+  font-size: 24px;
+  color: #8BC34A;
+  text-align: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #4CAF50;
+}
+
+.poem-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.poem-menu li {
+  padding: 8px 10px;
+  margin-bottom: 5px;
+  font-size: 16px;
+  color: #A5D6A7;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+
+.poem-menu li:hover {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+.poem-menu li.active {
+  background: rgba(76, 175, 80, 0.5);
+  color: #E8F5E9;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px 40px 40px 240px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.poem-title {
+  font-size: 42px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 25px;
+  color: #8BC34A;
+  border-bottom: 2px dashed #4CAF50;
+  padding-bottom: 15px;
+}
+
+.poem-meta {
+  font-size: 28px;
+  color: #A5D6A7;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.poem-content {
+  font-size: 36px;
+  line-height: 2.5;
+  text-align: center;
+}
+
+.line-container {
+  margin: 20px 0;
+  transition: all 0.5s;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.char-container {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 5px;
+  vertical-align: top;
+  position: relative;
+}
+
+.pinyin {
+  font-size: 27px;
+  color: #81C784;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  visibility: hidden;
+  position: absolute;
+  top: -35px;
+}
+
+.char-container:hover .pinyin {
+  visibility: visible;
+}
+
+.definition {
+  font-size: 16px;
+  color: #FFC107;
+  position: absolute;
+  bottom: -25px;
+  width: 200px;
+  text-align: center;
+  display: none;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 5px;
+  padding: 5px;
+  z-index: 10;
+}
+
+.char {
+  display: inline-block;
+  transition: all 0.3s;
+  cursor: pointer;
+  width: 50px;
+  text-align: center;
+  position: relative;
+}
+
+.char:hover {
+  transform: scale(1.1);
+}
+
+.punctuation {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.reading-line {
+  background: rgba(76, 175, 80, 0.2);
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+  transform: scale(1.02);
+}
+
+.controls {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+  z-index: 100;
+}
+
+.control-btn {
+  background: rgba(76, 175, 80, 0.3);
+  border: 2px solid #4CAF50;
+  color: #E8F5E9;
+  padding: 15px 25px;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 24px;
+  font-family: "楷体", "STKaiti";
+}
+
+.control-btn:hover {
+  background: rgba(76, 175, 80, 0.5);
+}
+
+.control-btn.pause-btn {
+  background: rgba(255, 193, 7, 0.3);
+  border: 2px solid #FFC107;
+}
+
+.control-btn.pause-btn:hover {
+  background: rgba(255, 193, 7, 0.5);
+}
+
+.ref-note {
+  font-size: 24px;
+  color: #A5D6A7;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px dashed #4CAF50;
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-title">李白七律诗集</div>
+  <ul class="poem-menu" id="poem-menu"></ul>
+</div>
+
+<div class="main-content">
+  <div class="poem-title" id="poem-title"></div>
+  <div class="poem-meta" id="poem-meta"></div>
+  <div class="poem-content" id="poem-content"></div>
+  <div class="ref-note" id="ref-note"></div>
+
+  <div class="controls">
+    <button class="control-btn" id="read-btn">开始朗读</button>
+    <button class="control-btn pause-btn" id="pause-btn">暂停朗读</button>
+    <button class="control-btn" id="stop-btn">停止朗读</button>
+  </div>
+</div>
+
+<script>
+// 诗篇数据
+const poems = [
+  {
+    title: "赠郭将军",
+    meta: "盛唐·李白 | 743年 | 陕西省西安市",
+    content: "将军少年出武威，入掌银台护紫微。平明拂剑朝天去，薄暮垂鞭醉酒归。爱子临风吹玉笛，美人向月舞罗衣。畴昔雄豪如梦里，相逢且欲醉春晖。",
+    refs: "",
+    type: "七言律诗"
+  },
+  {
+    title: "寄崔侍御",
+    meta: "盛唐·李白 | 753年 | 安徽省宣城市",
+    content: "宛溪霜夜听猿愁，去国长为不系舟。独怜一雁飞南海，却羡双溪解北流。高人屡解陈蕃榻，过客难登谢朓楼。此处别离同落叶，朝朝分散敬亭秋。",
+    refs: "引用典故：不系舟　陈蕃榻",
+    type: "七言律诗"
+  },
+  {
+    title: "别中都明府兄",
+    meta: "盛唐·李白 | 746年 | 山东省济宁市兖州区",
+    content: "吾兄诗酒继陶君，试宰中都天下闻。东楼喜奉连枝会，南陌愁为落叶分。城隅渌水明秋日，海上青山隔暮云。取醉不辞留夜月，雁行中断惜离群。",
+    refs: "",
+    type: "七言律诗"
+  },
+  {
+    title: "送贺监归四明应制",
+    meta: "盛唐·李白 | 744年春 | 陕西省西安市",
+    content: "久辞荣禄遂初衣，曾向长生说息机。真诀自从茅氏得，恩波宁阻洞庭归。瑶台含雾星辰满，仙峤浮空岛屿微。借问欲栖珠树鹤，何年却向帝城飞。",
+    refs: "",
+    type: "七言律诗"
+  },
+  {
+    title: "登金陵凤凰台",
+    meta: "盛唐·李白 | 747年 | 江苏省南京市",
+    content: "凤凰台上凤凰游，凤去台空江自流。吴宫花草埋幽径，晋代衣冠成古丘。三山半落青天外，二水中分白鹭洲。总为浮云能蔽日，长安不见使人愁。",
+    refs: "",
+    type: "七言律诗"
+  },
+  {
+    title: "题雍丘崔明府丹灶",
+    meta: "盛唐·李白 | 744年 | 河南省开封市杞县",
+    content: "美人为政本忘机，服药求仙事不违。叶县已泥丹灶毕，瀛洲当伴赤松归。先师有诀神将助，大圣无心火自飞。九转但能生羽翼，双凫忽去定何依。",
+    refs: "",
+    type: "七言律诗"
+  },
+  {
+    title: "题东溪公幽居",
+    meta: "盛唐·李白 | 753年 | 安徽省宣城市",
+    content: "杜陵贤人清且廉，东溪卜筑岁将淹。宅近青山同谢朓，门垂碧柳似陶潜。好鸟迎春歌后院，飞花送酒舞前檐。客到但知留一醉，盘中秪有水晶盐。",
+    refs: "引用典故：五柳　水晶盐　谢朓",
+    type: "七言律诗"
+  },
+  {
+    title: "太华观",
+    meta: "盛唐·李白",
+    content: "厄磴层层上太华，白云深处有人家。道童对月閒吹笛，仙子乘云远驾车。怪石堆山如坐虎，老藤缠树似腾蛇。曾闻玉井金河在，会见蓬莱十丈花。",
+    refs: "",
+    type: "七言律诗"
+  },
+  {
+    title: "代佳人寄翁参枢先辈",
+    meta: "盛唐·李白",
+    content: "等闲经夏复经寒，梦里惊嗟岂暂安。南国风光当世少，西陵江浪过江难。周旋小字挑灯读，重迭遥山隔雾看。真是为君餐不得，书来莫说更加餐。",
+    refs: "",
+    type: "七言律诗"
+  },
+  {
+    title: "别匡山",
+    meta: "盛唐·李白 | 724年 | 四川省绵阳市江油市大匡山",
+    content: "晓峰如画碧参差，藤影风摇拂槛垂。野径来多将犬伴，人间归晚带樵随。看云客倚啼猿树，洗钵僧临失鹤池。莫怪无心恋清境，已将书剑许明时。",
+    refs: "",
+    type: "七言律诗"
+  }
+];
+
+// 生僻字释义数据库
+const definitionData = {
+  "畴": "畴昔(chóu xī): 往日，从前。In the past, former times.",
+  "渌": "渌水(lù shuǐ): 清澈的水。Clear water.",
+  "峤": "仙峤(xiān qiáo): 仙山。Fairy mountain.",
+  "凫": "双凫(shuāng fú): 一对野鸭。A pair of wild ducks.",
+  "磴": "厄磴(è dèng): 险峻的石阶。Steep stone steps.",
+  "樵": "带樵(dài qiáo): 带着柴薪。Carrying firewood.",
+  "钵": "洗钵(xǐ bō): 僧人洗涤食器。Monk washing alms bowl.",
+  "朓": "谢朓(Xiè Tiǎo): 南朝著名诗人。Famous poet of Southern Dynasties.",
+  "瀛": "瀛洲(yíng zhōu): 传说中的仙山。Legendary fairy mountain.",
+  "秪": "秪有(zhǐ yǒu): 只有。Only, merely.",
+  "厄": "厄磴(è dèng): 险峻的石阶。Steep stone steps.",
+  "参": "参枢(cān shū): 参与枢密。Participate in important affairs.",
+  "枢": "参枢(cān shū): 参与枢密。Participate in important affairs.",
+  "嗟": "惊嗟(jīng jiē): 惊叹。Exclaim in surprise.",
+  "迭": "重迭(chóng dié): 重叠。Overlapping, piled up."
+};
+
+// 完整拼音数据库
+const pinyinData = {
+  "将":"jiāng","军":"jūn","少":"shào","年":"nián","出":"chū","武":"wǔ","威":"wēi","入":"rù","掌":"zhǎng","银":"yín",
+  "台":"tái","护":"hù","紫":"zǐ","微":"wēi","平":"píng","明":"míng","拂":"fú","剑":"jiàn","朝":"cháo","天":"tiān",
+  "去":"qù","薄":"bó","暮":"mù","垂":"chuí","鞭":"biān","醉":"zuì","酒":"jiǔ","归":"guī","爱":"ài","子":"zǐ",
+  "临":"lín","风":"fēng","吹":"chuī","玉":"yù","笛":"dí","美":"měi","人":"rén","向":"xiàng","月":"yuè","舞":"wǔ",
+  "罗":"luó","衣":"yī","畴":"chóu","昔":"xī","雄":"xióng","豪":"háo","如":"rú","梦":"mèng","里":"lǐ","相":"xiāng",
+  "逢":"féng","且":"qiě","欲":"yù","春":"chūn","晖":"huī","宛":"wǎn","溪":"xī","霜":"shuāng","夜":"yè","听":"tīng",
+  "猿":"yuán","愁":"chóu","国":"guó","长":"cháng","为":"wéi","不":"bù","系":"xì","舟":"zhōu","独":"dú","怜":"lián",
+  "一":"yī","雁":"yàn","飞":"fēi","南":"nán","海":"hǎi","却":"què","羡":"xiàn","双":"shuāng","解":"jiě","北":"běi",
+  "流":"liú","高":"gāo","屡":"lǚ","榻":"tà","过":"guò","客":"kè","难":"nán","登":"dēng","谢":"xiè","楼":"lóu",
+  "此":"cǐ","处":"chù","别":"bié","离":"lí","同":"tóng","落":"luò","叶":"yè","朝":"zhāo","分":"fēn","散":"sàn",
+  "敬":"jìng","亭":"tíng","秋":"qiū","吾":"wú","兄":"xiōng","诗":"shī","继":"jì","陶":"táo","君":"jūn","试":"shì",
+  "宰":"zǎi","中":"zhōng","都":"dū","天":"tiān","下":"xià","闻":"wén","东":"dōng","喜":"xǐ","奉":"fèng","连":"lián",
+  "枝":"zhī","会":"huì","陌":"mò","城":"chéng","隅":"yú","渌":"lù","水":"shuǐ","日":"rì","上":"shàng","青":"qīng",
+  "山":"shān","隔":"gé","云":"yún","取":"qǔ","辞":"cí","留":"liú","月":"yuè","行":"háng","中":"zhōng","断":"duàn",
+  "惜":"xī","群":"qún","久":"jiǔ","荣":"róng","禄":"lù","遂":"suì","初":"chū","衣":"yī","曾":"céng","生":"shēng",
+  "说":"shuō","息":"xī","机":"jī","真":"zhēn","诀":"jué","自":"zì","从":"cóng","茅":"máo","氏":"shì","得":"dé",
+  "恩":"ēn","波":"bō","宁":"níng","阻":"zǔ","洞":"dòng","庭":"tíng","瑶":"yáo","含":"hán","雾":"wù","星":"xīng",
+  "辰":"chén","满":"mǎn","仙":"xiān","峤":"qiáo","浮":"fú","空":"kōng","岛":"dǎo","屿":"yǔ","微":"wēi","借":"jiè",
+  "问":"wèn","栖":"qī","珠":"zhū","树":"shù","鹤":"hè","何":"hé","年":"nián","帝":"dì","凤":"fèng","凰":"huáng",
+  "游":"yóu","自":"zì","吴":"wú","宫":"gōng","花":"huā","草":"cǎo","埋":"mái","幽":"yōu","径":"jìng","晋":"jìn",
+  "代":"dài","冠":"guān","成":"chéng","古":"gǔ","丘":"qiū","三":"sān","半":"bàn","落":"luò","外":"wài","二":"èr",
+  "分":"fēn","白":"bái","鹭":"lù","洲":"zhōu","总":"zǒng","浮":"fú","蔽":"bì","长":"cháng","安":"ān","使":"shǐ",
+  "政":"zhèng","本":"běn","忘":"wàng","服":"fú","药":"yào","求":"qiú","事":"shì","违":"wéi","叶":"yè","县":"xiàn",
+  "已":"yǐ","泥":"ní","毕":"bì","瀛":"yíng","洲":"zhōu","伴":"bàn","赤":"chì","松":"sōng","先":"xiān","师":"shī",
+  "神":"shén","助":"zhù","大":"dà","圣":"shèng","无":"wú","心":"xīn","火":"huǒ","九":"jiǔ","转":"zhuǎn","但":"dàn",
+  "能":"néng","羽":"yǔ","翼":"yì","双":"shuāng","凫":"fú","忽":"hū","定":"dìng","依":"yī","杜":"dù","陵":"líng",
+  "贤":"xián","清":"qīng","且":"qiě","廉":"lián","卜":"bǔ","筑":"zhù","岁":"suì","淹":"yān","宅":"zhái","近":"jìn",
+  "垂":"chuí","碧":"bì","柳":"liǔ","似":"sì","潜":"qián","好":"hǎo","鸟":"niǎo","歌":"gē","后":"hòu","院":"yuàn",
+  "送":"sòng","前":"qián","檐":"yán","客":"kè","到":"dào","但":"dàn","知":"zhī","醉":"zuì","盘":"pán","秪":"zhǐ",
+  "有":"yǒu","晶":"jīng","盐":"yán","厄":"è","磴":"dèng","层":"céng","太":"tài","华":"huá","深":"shēn","家":"jiā",
+  "道":"dào","童":"tóng","对":"duì","閒":"xián","驾":"jià","怪":"guài","石":"shí","堆":"duī","坐":"zuò","虎":"hǔ",
+  "老":"lǎo","藤":"téng","缠":"chán","腾":"téng","蛇":"shé","闻":"wén","玉":"yù","井":"jǐng","金":"jīn","河":"hé",
+  "会":"huì","见":"jiàn","蓬":"péng","莱":"lái","丈":"zhàng","花":"huā","等":"děng","闲":"xián","复":"fù","经":"jīng",
+  "夏":"xià","寒":"hán","惊":"jīng","嗟":"jiē","岂":"qǐ","暂":"zàn","风":"fēng","光":"guāng","当":"dāng","世":"shì",
+  "少":"shǎo","西":"xī","陵":"líng","浪":"làng","江":"jiāng","周":"zhōu","旋":"xuán","小":"xiǎo","字":"zì","挑":"tiāo",
+  "灯":"dēng","读":"dú","重":"chóng","迭":"dié","遥":"yáo","隔":"gé","看":"kàn","真":"zhēn","是":"shì","为":"wèi",
+  "餐":"cān","不":"bù","得":"dé","书":"shū","来":"lái","莫":"mò","加":"jiā","晓":"xiǎo","峰":"fēng","画":"huà",
+  "碧":"bì","参":"cēn","差":"cī","影":"yǐng","摇":"yáo","槛":"jiàn","野":"yě","径":"jìng","多":"duō","犬":"quǎn",
+  "伴":"bàn","间":"jiān","归":"guī","晚":"wǎn","带":"dài","樵":"qiáo","随":"suí","倚":"yǐ","啼":"tí","猿":"yuán",
+  "洗":"xǐ","钵":"bō","僧":"sēng","临":"lín","失":"shī","鹤":"hè","池":"chí","怪":"guài","无":"wú","恋":"liàn",
+  "境":"jìng","已":"yǐ","将":"jiāng","书":"shū","剑":"jiàn","许":"xǔ","时":"shí","参":"cān","枢":"shū","先":"xiān",
+  "辈":"bèi"
+};
+
+// 标点符号集合
+const PUNCTUATIONS = new Set(['，', '。', '？', '！', '、', '；', '：', '・', '。', '？', '！', '，', '；', '：']);
+
+// 系统变量
+let currentPoemIndex = 0;
+let speechSynthesis = window.speechSynthesis;
+let currentUtterance = null;
+let isReading = false;
+let isPaused = false;
+let lineElements = [];
+
+// 渲染诗篇
+function renderPoem(index) {
+  if (index >= poems.length) {
+    currentPoemIndex = 0;
+    index = 0;
+  } else if (index < 0) {
+    currentPoemIndex = poems.length - 1;
+    index = poems.length - 1;
+  }
+  
+  // 更新菜单激活状态
+  const menuItems = document.querySelectorAll('.poem-menu li');
+  menuItems.forEach((item, i) => {
+    if (i === index) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
+  });
+  
+  const poem = poems[index];
+  document.getElementById('poem-title').textContent = poem.title;
+  document.getElementById('poem-meta').textContent = poem.meta + (poem.type ? " | " + poem.type : "");
+  document.getElementById('ref-note').textContent = poem.refs || "";
+  
+  const contentDiv = document.getElementById('poem-content');
+  contentDiv.innerHTML = '';
+  lineElements = [];
+  
+  // 分行处理：按标点符号分行
+  let lines = poem.content.split(/([，。])/).filter(line => line.trim().length > 0);
+  
+  // 合并标点符号回前一行
+  let mergedLines = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (i % 2 === 0) {
+      mergedLines.push(lines[i] + (lines[i+1] || ''));
+    }
+  }
+  
+  // 渲染每行
+  mergedLines.forEach((line, lineIndex) => {
+    const lineDiv = document.createElement('div');
+    lineDiv.className = 'line-container';
+    
+    line.split('').forEach(char => {
+      const charContainer = document.createElement('div');
+      charContainer.className = 'char-container';
+      
+      const pinyinSpan = document.createElement('div');
+      pinyinSpan.className = 'pinyin';
+      pinyinSpan.textContent = PUNCTUATIONS.has(char) ? '' : (pinyinData[char] || char);
+      
+      const charSpan = document.createElement('div');
+      charSpan.className = PUNCTUATIONS.has(char) ? 'char punctuation' : 'char';
+      charSpan.textContent = char;
+      
+      // 添加释义
+      if (definitionData[char] && !PUNCTUATIONS.has(char)) {
+        const definitionSpan = document.createElement('div');
+        definitionSpan.className = 'definition';
+        definitionSpan.textContent = definitionData[char];
+        
+      charSpan.onclick = function(e) {
+  e.stopPropagation(); // 阻止事件冒泡
+  
+  // 切换当前字的释义显示
+  if (definitionSpan) {
+    const isShowing = definitionSpan.style.display === 'block';
+    document.querySelectorAll('.definition').forEach(def => def.style.display = 'none');
+    definitionSpan.style.display = isShowing ? 'none' : 'block';
+  }
+};
+
+// 添加全局点击事件来关闭所有释义
+document.addEventListener('click', function() {
+  document.querySelectorAll('.definition').forEach(def => {
+    def.style.display = 'none';
+  });
+});
+        
+        charContainer.appendChild(definitionSpan);
+      } else {
+        charSpan.onclick = null;
+      }
+      
+      charContainer.appendChild(pinyinSpan);
+      charContainer.appendChild(charSpan);
+      lineDiv.appendChild(charContainer);
+    });
+    
+    contentDiv.appendChild(lineDiv);
+    lineElements.push(lineDiv);
+  });
+}
+
+// 朗读诗篇 (带节奏停顿)
+function readPoem() {
+  if (isReading) return;
+  
+  isReading = true;
+  isPaused = false;
+  document.getElementById('read-btn').textContent = '朗读中...';
+  document.getElementById('pause-btn').textContent = '暂停朗读';
+  lineElements.forEach(el => el.classList.remove('reading-line'));
+  
+  const poem = poems[currentPoemIndex];
+  let lines = poem.content.split(/([，。])/).filter(line => line.trim().length > 0);
+  
+  // 合并标点符号回前一行
+  let mergedLines = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (i % 2 === 0) {
+      mergedLines.push(lines[i] + (lines[i+1] || ''));
+    }
+  }
+  
+  let currentLine = 0;
+  
+  function readLine(index) {
+    if (index >= mergedLines.length || !isReading) {
+      endReading();
+      return;
+    }
+    
+    if (isPaused) {
+      setTimeout(() => readLine(index), 100);
+      return;
+    }
+    
+    // 高亮当前行
+    lineElements.forEach(el => el.classList.remove('reading-line'));
+    lineElements[index].classList.add('reading-line');
+    lineElements[index].scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center' 
+    });
+    
+    const line = mergedLines[index];
+    const utterance = new SpeechSynthesisUtterance();
+    utterance.lang = 'zh-CN';
+    utterance.rate = 0.7;
+    
+    // 七言诗在第二、四字后停顿
+    let text = insertPauses(line, [2, 4]);
+    
+    utterance.text = text;
+    
+    utterance.onend = () => {
+      // 根据标点符号增加停顿
+      const lastChar = line[line.length-1];
+      const pauseTime = PUNCTUATIONS.has(lastChar) ? 
+        (lastChar === '。' ? 800 : 500) : 300;
+      
+      setTimeout(() => {
+        readLine(index + 1);
+      }, pauseTime);
+    };
+    
+    speechSynthesis.speak(utterance);
+  }
+  
+  function insertPauses(text, positions) {
+    let result = [];
+    for (let i = 0; i < text.length; i++) {
+      result.push(text[i]);
+      if (positions.includes(i) && !PUNCTUATIONS.has(text[i])) {
+        result.push(" "); // 插入空格制造停顿
+      }
+    }
+    return result.join('');
+  }
+  
+  function endReading() {
+    isReading = false;
+    isPaused = false;
+    document.getElementById('read-btn').textContent = '开始朗读';
+    document.getElementById('pause-btn').textContent = '暂停朗读';
+    
+    // 自动切换到下一首
+    currentPoemIndex++;
+    if (currentPoemIndex < poems.length) {
+      renderPoem(currentPoemIndex);
+    } else {
+      currentPoemIndex = 0;
+      renderPoem(currentPoemIndex);
+    }
+  }
+  
+  readLine(0);
+}
+
+// 暂停/继续朗读
+function togglePauseReading() {
+  if (isReading) {
+    if (isPaused) {
+      // 恢复朗读
+      speechSynthesis.resume();
+      document.getElementById('pause-btn').textContent = '暂停朗读';
+      isPaused = false;
+    } else {
+      // 暂停朗读
+      speechSynthesis.pause();
+      document.getElementById('pause-btn').textContent = '继续朗读';
+      isPaused = true;
+    }
+  }
+}
+
+// 停止朗读
+function stopReading() {
+  if (speechSynthesis.speaking || isPaused) {
+    speechSynthesis.cancel();
+    isReading = false;
+    isPaused = false;
+    document.getElementById('read-btn').textContent = '开始朗读';
+    document.getElementById('pause-btn').textContent = '暂停朗读';
+    lineElements.forEach(el => el.classList.remove('reading-line'));
+  }
+}
+
+// 初始化菜单
+function initMenu() {
+  const menu = document.getElementById('poem-menu');
+  poems.forEach((poem, index) => {
+    const li = document.createElement('li');
+    li.textContent = poem.title;
+    li.onclick = () => {
+      currentPoemIndex = index;
+      renderPoem(currentPoemIndex);
+      stopReading();
+    };
+    menu.appendChild(li);
+  });
+}
+
+// 控制按钮事件
+document.getElementById('read-btn').addEventListener('click', readPoem);
+document.getElementById('pause-btn').addEventListener('click', togglePauseReading);
+document.getElementById('stop-btn').addEventListener('click', stopReading);
+
+// 键盘导航
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') {
+    currentPoemIndex = (currentPoemIndex + 1) % poems.length;
+    renderPoem(currentPoemIndex);
+    stopReading();
+  } else if (e.key === 'ArrowLeft') {
+    currentPoemIndex = (currentPoemIndex - 1 + poems.length) % poems.length;
+    renderPoem(currentPoemIndex);
+    stopReading();
+  } else if (e.key === ' ') {
+    // 空格键暂停/继续
+    if (isReading) {
+      togglePauseReading();
+    }
+  }
+});
+
+// 初始化
+initMenu();
+renderPoem(0);
+</script>
+</body>
+</html>
