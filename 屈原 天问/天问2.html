@@ -1,0 +1,1800 @@
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>天问 - 屈原</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋体", serif;
+            background-color: #000000;
+            color: #ffffff;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            font-size: 3em;
+        }
+        
+        h1 {
+            color: #ffffff;
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 60px;
+            border-bottom: 3px solid #666666;
+            padding-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.1);
+        }
+        
+        .sentence {
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 30px;
+            margin-bottom: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(255,255,255,0.05);
+            border-left: 6px solid #666666;
+        }
+        
+        .sentence p {
+            margin: 0;
+            color: #ffffff;
+            text-align: justify;
+            line-height: 2.0;
+        }
+        
+        .character {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .character:hover {
+            color: #ffcc00;
+            text-shadow: 0 0 3px rgba(255, 204, 0, 0.5);
+        }
+        
+        .pinyin {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffcc00;
+            color: #000000;
+            padding: 6px 16px;
+            border-radius: 5px;
+            white-space: nowrap;
+            z-index: 100;
+            font-size: 0.8em;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .character:hover .pinyin {
+            display: block;
+        }
+        
+        .toggle-translation {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #666666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .toggle-translation:hover {
+            background-color: #888888;
+        }
+        
+        .translation {
+            margin-top: 30px;
+            padding: 0;
+            background-color: rgba(40, 40, 40, 0.9);
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .translation-header {
+            display: flex;
+            background-color: #444444;
+            padding: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .translation-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+            font-size: 0.7em;
+        }
+        
+        .translation-tab.active {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 30px;
+            background-color: rgba(50, 50, 50, 0.9);
+            color: #ffffff;
+            line-height: 1.8;
+            font-size: 0.7em;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        .notes-window {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #222222;
+            padding: 40px;
+            border: 2px solid #666666;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.1);
+            z-index: 1000;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 0.9em;
+        }
+        
+        .notes-window h3 {
+            color: #ffcc00;
+            margin-top: 0;
+            border-bottom: 2px dashed #666666;
+            padding-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 40px;
+            color: #ffcc00;
+        }
+        
+        .section-divider {
+            text-align: center;
+            margin: 60px 0;
+            color: #aaaaaa;
+            font-style: italic;
+            font-size: 1.2em;
+        }
+        
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .control-btn {
+            padding: 8px 15px;
+            background-color: #666666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background-color: #888888;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+                font-size: 2em;
+            }
+            
+            .sentence {
+                padding: 20px;
+            }
+            
+            .translation-header {
+                flex-wrap: wrap;
+            }
+            
+            .translation-tab {
+                margin-bottom: 10px;
+                padding: 8px 15px;
+                font-size: 0.6em;
+            }
+            
+            .control-panel {
+                position: static;
+                margin-bottom: 20px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <button class="control-btn" onclick="convertToSimplified()">简体</button>
+        <button class="control-btn" onclick="convertToTraditional()">繁體</button>
+        <button class="control-btn" onclick="showTranslation('chinese')">白话文</button>
+        <button class="control-btn" onclick="showTranslation('english')">English</button>
+        <button class="control-btn" onclick="showTranslation('german')">Deutsch</button>
+        <button class="control-btn" onclick="showTranslation('french')">Français</button>
+        <button class="control-btn" onclick="showTranslation('russian')">Русский</button>
+        <button class="control-btn" onclick="showTranslation('spanish')">Español</button>
+        <button class="control-btn" onclick="showTranslation('italian')">Italiano</button>
+    </div>
+
+    <h1>天问 下</h1>
+    <div class="section-divider">［战国 楚］屈原</div>
+
+
+
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('成', 'Cheng')">成<span class="pinyin">chéng</span></span>
+        <span class="character" onclick="showNotes('汤', 'Tang')">汤<span class="pinyin">tāng</span></span>
+        <span class="character" onclick="showNotes('东', 'East')">东<span class="pinyin">dōng</span></span>
+        <span class="character" onclick="showNotes('巡', 'Tour')">巡<span class="pinyin">xún</span></span>，
+        <span class="character" onclick="showNotes('有', 'You')">有<span class="pinyin">yǒu</span></span>
+        <span class="character" onclick="showNotes('莘', 'Shen')">莘<span class="pinyin">shēn</span></span>
+        <span class="character" onclick="showNotes('爰', 'Then')">爰<span class="pinyin">yuán</span></span>
+        <span class="character" onclick="showNotes('极', 'Reach')">极<span class="pinyin">jí</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese120')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english120')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese120">成汤东巡至有莘，为何求小臣却得贤妃？</div>
+        <div class="translation-content" id="english120">Cheng Tang toured east to You Shen, why seek a minor official but gain a virtuous consort?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'How')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('乞', 'Beg')">乞<span class="pinyin">qǐ</span></span>
+        <span class="character" onclick="showNotes('彼', 'That')">彼<span class="pinyin">bǐ</span></span>
+        <span class="character" onclick="showNotes('小', 'Small')">小<span class="pinyin">xiǎo</span></span>
+        <span class="character" onclick="showNotes('臣', 'Minister')">臣<span class="pinyin">chén</span></span>，
+        <span class="character" onclick="showNotes('而', 'But')">而<span class="pinyin">ér</span></span>
+        <span class="character" onclick="showNotes('吉', 'Auspicious')">吉<span class="pinyin">jí</span></span>
+        <span class="character" onclick="showNotes('妃', 'Consort')">妃<span class="pinyin">fēi</span></span>
+        <span class="character" onclick="showNotes('是', 'Is')">是<span class="pinyin">shì</span></span>
+        <span class="character" onclick="showNotes('得', 'Obtain')">得<span class="pinyin">dé</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese121')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english121')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese121">为何求彼小臣，反得吉祥妃子？</div>
+        <div class="translation-content" id="english121">Why beg for that minor official, but obtain an auspicious consort?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('水', 'Water')">水<span class="pinyin">shuǐ</span></span>
+        <span class="character" onclick="showNotes('滨', 'Shore')">滨<span class="pinyin">bīn</span></span>
+        <span class="character" onclick="showNotes('之', 'Of')">之<span class="pinyin">zhī</span></span>
+        <span class="character" onclick="showNotes('木', 'Tree')">木<span class="pinyin">mù</span></span>，
+        <span class="character" onclick="showNotes('得', 'Obtain')">得<span class="pinyin">dé</span></span>
+        <span class="character" onclick="showNotes('彼', 'That')">彼<span class="pinyin">bǐ</span></span>
+        <span class="character" onclick="showNotes('小', 'Little')">小<span class="pinyin">xiǎo</span></span>
+        <span class="character" onclick="showNotes('子', 'Child')">子<span class="pinyin">zǐ</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese122')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english122')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese122">水边空心桑树，如何得那婴孩？</div>
+        <div class="translation-content" id="english122">The hollow tree by water's edge, how obtained that child?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('夫', 'Man')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('恶', 'Hate')">恶<span class="pinyin">wù</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>，
+        <span class="character" onclick="showNotes('媵', 'Accompany')">媵<span class="pinyin">yìng</span></span>
+        <span class="character" onclick="showNotes('有', 'You')">有<span class="pinyin">yǒu</span></span>
+        <span class="character" onclick="showNotes('莘', 'Shen')">莘<span class="pinyin">shēn</span></span>
+        <span class="character" onclick="showNotes('之', 'Of')">之<span class="pinyin">zhī</span></span>
+        <span class="character" onclick="showNotes('妇', 'Woman')">妇<span class="pinyin">fù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese123')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english123')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese123">为何厌恶伊尹，使他陪嫁有莘之妇？</div>
+        <div class="translation-content" id="english123">Why hate him, making him accompany You Shen's bride?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('汤', 'Tang')">汤<span class="pinyin">tāng</span></span>
+        <span class="character" onclick="showNotes('出', 'Leave')">出<span class="pinyin">chū</span></span>
+        <span class="character" onclick="showNotes('重', 'Heavy')">重<span class="pinyin">chóng</span></span>
+        <span class="character" onclick="showNotes('泉', 'Spring')">泉<span class="pinyin">quán</span></span>，
+        <span class="character" onclick="showNotes('夫', 'Man')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('罪', 'Crime')">罪<span class="pinyin">zuì</span></span>
+        <span class="character" onclick="showNotes('尤', 'Fault')">尤<span class="pinyin">yóu</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese124')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english124')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese124">汤出重泉之囚，他有何罪过？</div>
+        <div class="translation-content" id="english124">Tang emerged from Chongquan prison, what crime did he commit?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('不', 'Not')">不<span class="pinyin">bù</span></span>
+        <span class="character" onclick="showNotes('胜', 'Endure')">胜<span class="pinyin">shèng</span></span>
+        <span class="character" onclick="showNotes('心', 'Heart')">心<span class="pinyin">xīn</span></span>
+        <span class="character" onclick="showNotes('伐', 'Attack')">伐<span class="pinyin">fá</span></span>
+        <span class="character" onclick="showNotes('帝', 'Emperor')">帝<span class="pinyin">dì</span></span>，
+        <span class="character" onclick="showNotes('夫', 'Man')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('谁', 'Who')">谁<span class="pinyin">shéi</span></span>
+        <span class="character" onclick="showNotes('使', 'Make')">使<span class="pinyin">shǐ</span></span>
+        <span class="character" onclick="showNotes('挑', 'Provoke')">挑<span class="pinyin">tiǎo</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese125')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english125')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese125">不能忍受而伐桀，是谁挑动其心？</div>
+        <div class="translation-content" id="english125">Unable to endure, he attacked the emperor, who provoked him?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('会', 'Meeting')">会<span class="pinyin">huì</span></span>
+        <span class="character" onclick="showNotes('晁', 'Morning')">晁<span class="pinyin">cháo</span></span>
+        <span class="character" onclick="showNotes('争', 'Struggle')">争<span class="pinyin">zhēng</span></span>
+        <span class="character" onclick="showNotes('盟', 'Alliance')">盟<span class="pinyin">méng</span></span>，
+        <span class="character" onclick="showNotes('何', 'How')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('践', 'Fulfill')">践<span class="pinyin">jiàn</span></span>
+        <span class="character" onclick="showNotes('吾', 'Our')">吾<span class="pinyin">wú</span></span>
+        <span class="character" onclick="showNotes('期', 'Appointment')">期<span class="pinyin">qī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese126')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english126')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese126">甲子之朝会盟誓，如何如期而至？</div>
+        <div class="translation-content" id="english126">At dawn they struggled to swear alliance, how kept our appointment?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('苍', 'Blue')">苍<span class="pinyin">cāng</span></span>
+        <span class="character" onclick="showNotes('鸟', 'Birds')">鸟<span class="pinyin">niǎo</span></span>
+        <span class="character" onclick="showNotes('群', 'Flock')">群<span class="pinyin">qún</span></span>
+        <span class="character" onclick="showNotes('飞', 'Fly')">飞<span class="pinyin">fēi</span></span>，
+        <span class="character" onclick="showNotes('孰', 'Who')">孰<span class="pinyin">shú</span></span>
+        <span class="character" onclick="showNotes('使', 'Make')">使<span class="pinyin">shǐ</span></span>
+        <span class="character" onclick="showNotes('萃', 'Gather')">萃<span class="pinyin">cuì</span></span>
+        <span class="character" onclick="showNotes('之', 'Them')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese127')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english127')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese127">苍鹰成群飞翔，谁使它们聚集？</div>
+        <div class="translation-content" id="english127">Blue birds flying in flocks, who made them gather?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('到', 'Arrive')">到<span class="pinyin">dào</span></span>
+        <span class="character" onclick="showNotes('击', 'Strike')">击<span class="pinyin">jī</span></span>
+        <span class="character" onclick="showNotes('纣', 'Zhou')">纣<span class="pinyin">zhòu</span></span>
+        <span class="character" onclick="showNotes('躬', 'Body')">躬<span class="pinyin">gōng</span></span>，
+        <span class="character" onclick="showNotes('叔', 'Uncle')">叔<span class="pinyin">shū</span></span>
+        <span class="character" onclick="showNotes('旦', 'Dan')">旦<span class="pinyin">dàn</span></span>
+        <span class="character" onclick="showNotes('不', 'Not')">不<span class="pinyin">bù</span></span>
+        <span class="character" onclick="showNotes('嘉', 'Praise')">嘉<span class="pinyin">jiā</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese128')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english128')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese128">武王击纣王尸，周公旦不赞许。</div>
+        <div class="translation-content" id="english128">Arriving to strike Zhou's corpse, Uncle Dan did not praise.</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('亲', 'Personally')">亲<span class="pinyin">qīn</span></span>
+        <span class="character" onclick="showNotes('揆', 'Measure')">揆<span class="pinyin">kuí</span></span>
+        <span class="character" onclick="showNotes('发', 'Fa')">发<span class="pinyin">fā</span></span>，
+        <span class="character" onclick="showNotes('定', 'Establish')">定<span class="pinyin">dìng</span></span>
+        <span class="character" onclick="showNotes('周', 'Zhou')">周<span class="pinyin">zhōu</span></span>
+        <span class="character" onclick="showNotes('之', 'Of')">之<span class="pinyin">zhī</span></span>
+        <span class="character" onclick="showNotes('命', 'Mandate')">命<span class="pinyin">mìng</span></span>
+        <span class="character" onclick="showNotes('以', 'With')">以<span class="pinyin">yǐ</span></span>
+        <span class="character" onclick="showNotes('咨', 'Sigh')">咨<span class="pinyin">zī</span></span>
+        <span class="character" onclick="showNotes('嗟', 'Lament')">嗟<span class="pinyin">jiē</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese129')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english129')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese129">为何亲自谋划伐纣，奠定周命却叹息？</div>
+        <div class="translation-content" id="english129">Why personally plan Fa's attack, establish Zhou's mandate with sighs?</div>
+    </div>
+</div>
+   
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('授', 'Bestow')">授<span class="pinyin">shòu</span></span>
+        <span class="character" onclick="showNotes('殷', 'Yin')">殷<span class="pinyin">yīn</span></span>
+        <span class="character" onclick="showNotes('天', 'Heaven')">天<span class="pinyin">tiān</span></span>
+        <span class="character" onclick="showNotes('下', 'Under')">下<span class="pinyin">xià</span></span>，
+        <span class="character" onclick="showNotes('其', 'Its')">其<span class="pinyin">qí</span></span>
+        <span class="character" onclick="showNotes('位', 'Position')">位<span class="pinyin">wèi</span></span>
+        <span class="character" onclick="showNotes('安', 'How')">安<span class="pinyin">ān</span></span>
+        <span class="character" onclick="showNotes('施', 'Implement')">施<span class="pinyin">shī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese130')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english130')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese130">上天授殷天命，其位如何施行？</div>
+        <div class="translation-content" id="english130">When Heaven bestowed the realm to Yin, how was its position established?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('反', 'Reverse')">反<span class="pinyin">fǎn</span></span>
+        <span class="character" onclick="showNotes('成', 'Success')">成<span class="pinyin">chéng</span></span>
+        <span class="character" onclick="showNotes('乃', 'Then')">乃<span class="pinyin">nǎi</span></span>
+        <span class="character" onclick="showNotes('亡', 'Perish')">亡<span class="pinyin">wáng</span></span>，
+        <span class="character" onclick="showNotes('其', 'Its')">其<span class="pinyin">qí</span></span>
+        <span class="character" onclick="showNotes('罪', 'Crime')">罪<span class="pinyin">zuì</span></span>
+        <span class="character" onclick="showNotes('伊', 'This')">伊<span class="pinyin">yī</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese131')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english131')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese131">既成而反亡，其罪究竟为何？</div>
+        <div class="translation-content" id="english131">Success reversed into ruin, what crimes caused this?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('争', 'Compete')">争<span class="pinyin">zhēng</span></span>
+        <span class="character" onclick="showNotes('遣', 'Dispatch')">遣<span class="pinyin">qiǎn</span></span>
+        <span class="character" onclick="showNotes('伐', 'Attack')">伐<span class="pinyin">fá</span></span>
+        <span class="character" onclick="showNotes('器', 'Weapons')">器<span class="pinyin">qì</span></span>，
+        <span class="character" onclick="showNotes('何', 'How')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('以', 'By')">以<span class="pinyin">yǐ</span></span>
+        <span class="character" onclick="showNotes('行', 'Implement')">行<span class="pinyin">xíng</span></span>
+        <span class="character" onclick="showNotes('之', 'It')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese132')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english132')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese132">争相派遣兵器，如何调遣施行？</div>
+        <div class="translation-content" id="english132">Competing to dispatch weapons, how were they deployed?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('并', 'Together')">并<span class="pinyin">bìng</span></span>
+        <span class="character" onclick="showNotes('驱', 'Drive')">驱<span class="pinyin">qū</span></span>
+        <span class="character" onclick="showNotes('击', 'Strike')">击<span class="pinyin">jī</span></span>
+        <span class="character" onclick="showNotes('翼', 'Wings')">翼<span class="pinyin">yì</span></span>，
+        <span class="character" onclick="showNotes('何', 'How')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('以', 'With')">以<span class="pinyin">yǐ</span></span>
+        <span class="character" onclick="showNotes('将', 'Lead')">将<span class="pinyin">jiāng</span></span>
+        <span class="character" onclick="showNotes('之', 'Them')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese133')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english133')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese133">并驾齐驱击两翼，如何统率指挥？</div>
+        <div class="translation-content" id="english133">Driving together to strike the flanks, how were they commanded?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('昭', 'Zhao')">昭<span class="pinyin">zhāo</span></span>
+        <span class="character" onclick="showNotes('后', 'King')">后<span class="pinyin">hòu</span></span>
+        <span class="character" onclick="showNotes('成', 'Complete')">成<span class="pinyin">chéng</span></span>
+        <span class="character" onclick="showNotes('游', 'Tour')">游<span class="pinyin">yóu</span></span>，
+        <span class="character" onclick="showNotes('南', 'Southern')">南<span class="pinyin">nán</span></span>
+        <span class="character" onclick="showNotes('土', 'Land')">土<span class="pinyin">tǔ</span></span>
+        <span class="character" onclick="showNotes('爰', 'Then')">爰<span class="pinyin">yuán</span></span>
+        <span class="character" onclick="showNotes('底', 'Reach')">底<span class="pinyin">dǐ</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese134')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english134')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese134">昭王完成南巡，抵达楚地疆域。</div>
+        <div class="translation-content" id="english134">King Zhao completed his southern tour, reaching the land of Chu.</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('厥', 'Its')">厥<span class="pinyin">jué</span></span>
+        <span class="character" onclick="showNotes('利', 'Benefit')">利<span class="pinyin">lì</span></span>
+        <span class="character" onclick="showNotes('惟', 'Is')">惟<span class="pinyin">wéi</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>，
+        <span class="character" onclick="showNotes('逢', 'Encounter')">逢<span class="pinyin">féng</span></span>
+        <span class="character" onclick="showNotes('彼', 'That')">彼<span class="pinyin">bǐ</span></span>
+        <span class="character" onclick="showNotes('白', 'White')">白<span class="pinyin">bái</span></span>
+        <span class="character" onclick="showNotes('雉', 'Pheasant')">雉<span class="pinyin">zhì</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese135')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english135')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese135">其利究竟为何，得遇白雉祥瑞？</div>
+        <div class="translation-content" id="english135">What benefit was gained, encountering that white pheasant?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('穆', 'Mu')">穆<span class="pinyin">mù</span></span>
+        <span class="character" onclick="showNotes('王', 'King')">王<span class="pinyin">wáng</span></span>
+        <span class="character" onclick="showNotes('巧', 'Skilled')">巧<span class="pinyin">qiǎo</span></span>
+        <span class="character" onclick="showNotes('梅', 'Plum')">梅<span class="pinyin">méi</span></span>，
+        <span class="character" onclick="showNotes('夫', 'Man')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('为', 'For')">为<span class="pinyin">wèi</span></span>
+        <span class="character" onclick="showNotes('周', 'Circumnavigate')">周<span class="pinyin">zhōu</span></span>
+        <span class="character" onclick="showNotes('流', 'Roam')">流<span class="pinyin">liú</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese136')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english136')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese136">穆王善御八骏，为何周游天下？</div>
+        <div class="translation-content" id="english136">King Mu skilled with his steeds, why roam the realm?</div>
+    </div>
+</div>
+
+
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('环', 'Circling')">环<span class="pinyin">huán</span></span>
+        <span class="character" onclick="showNotes('理', 'Govern')">理<span class="pinyin">lǐ</span></span>
+        <span class="character" onclick="showNotes('天', 'Heaven')">天<span class="pinyin">tiān</span></span>
+        <span class="character" onclick="showNotes('下', 'Under')">下<span class="pinyin">xià</span></span>，
+        <span class="character" onclick="showNotes('夫', 'Man')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('索', 'Seek')">索<span class="pinyin">suǒ</span></span>
+        <span class="character" onclick="showNotes('求', 'Seek')">求<span class="pinyin">qiú</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese137')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english137')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese137">周穆王环游天下，究竟所求为何？</div>
+        <div class="translation-content" id="english137">Circling to govern all under heaven, what did he seek to find?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('妖', 'Strange')">妖<span class="pinyin">yāo</span></span>
+        <span class="character" onclick="showNotes('夫', 'Man')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('曳', 'Drag')">曳<span class="pinyin">yè</span></span>
+        <span class="character" onclick="showNotes('衒', 'Show')">衒<span class="pinyin">xuàn</span></span>，
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('号', 'Shout')">号<span class="pinyin">háo</span></span>
+        <span class="character" onclick="showNotes('于', 'In')">于<span class="pinyin">yú</span></span>
+        <span class="character" onclick="showNotes('市', 'Market')">市<span class="pinyin">shì</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese138')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english138')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese138">妖人拖曳炫耀，为何街市叫卖？</div>
+        <div class="translation-content" id="english138">Strange men dragging displays, why shout in the marketplace?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('周', 'Zhou')">周<span class="pinyin">zhōu</span></span>
+        <span class="character" onclick="showNotes('幽', 'You')">幽<span class="pinyin">yōu</span></span>
+        <span class="character" onclick="showNotes('谁', 'Who')">谁<span class="pinyin">shéi</span></span>
+        <span class="character" onclick="showNotes('诛', 'Kill')">诛<span class="pinyin">zhū</span></span>，
+        <span class="character" onclick="showNotes('焉', 'How')">焉<span class="pinyin">yān</span></span>
+        <span class="character" onclick="showNotes('得', 'Obtain')">得<span class="pinyin">dé</span></span>
+        <span class="character" onclick="showNotes('夫', 'That')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('褒', 'Bao')">褒<span class="pinyin">bāo</span></span>
+        <span class="character" onclick="showNotes('姒', 'Si')">姒<span class="pinyin">sì</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese139')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english139')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese139">周幽王被谁所杀，如何得到褒姒？</div>
+        <div class="translation-content" id="english139">Who destroyed King You of Zhou, how obtained that Bao Si?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('天', 'Heaven')">天<span class="pinyin">tiān</span></span>
+        <span class="character" onclick="showNotes('命', 'Mandate')">命<span class="pinyin">mìng</span></span>
+        <span class="character" onclick="showNotes('反', 'Reverse')">反<span class="pinyin">fǎn</span></span>
+        <span class="character" onclick="showNotes('侧', 'Side')">侧<span class="pinyin">cè</span></span>，
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('罚', 'Punish')">罚<span class="pinyin">fá</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('佑', 'Bless')">佑<span class="pinyin">yòu</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese140')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english140')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese140">天命反复无常，究竟惩罚谁保佑谁？</div>
+        <div class="translation-content" id="english140">Heaven's mandate shifts unpredictably, whom to punish, whom to bless?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('齐', 'Qi')">齐<span class="pinyin">qí</span></span>
+        <span class="character" onclick="showNotes('桓', 'Huan')">桓<span class="pinyin">huán</span></span>
+        <span class="character" onclick="showNotes('九', 'Nine')">九<span class="pinyin">jiǔ</span></span>
+        <span class="character" onclick="showNotes('会', 'Assemblies')">会<span class="pinyin">huì</span></span>，
+        <span class="character" onclick="showNotes('卒', 'Finally')">卒<span class="pinyin">zú</span></span>
+        <span class="character" onclick="showNotes('然', 'Yet')">然<span class="pinyin">rán</span></span>
+        <span class="character" onclick="showNotes('身', 'Body')">身<span class="pinyin">shēn</span></span>
+        <span class="character" onclick="showNotes('杀', 'Killed')">杀<span class="pinyin">shā</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese141')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english141')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese141">齐桓公九合诸侯，最终却遭惨死。</div>
+        <div class="translation-content" id="english141">Duke Huan of Qi convened nine assemblies, yet finally met violent death.</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('彼', 'That')">彼<span class="pinyin">bǐ</span></span>
+        <span class="character" onclick="showNotes('王', 'King')">王<span class="pinyin">wáng</span></span>
+        <span class="character" onclick="showNotes('纣', 'Zhou')">纣<span class="pinyin">zhòu</span></span>
+        <span class="character" onclick="showNotes('之', 'Of')">之<span class="pinyin">zhī</span></span>
+        <span class="character" onclick="showNotes('躬', 'Self')">躬<span class="pinyin">gōng</span></span>，
+        <span class="character" onclick="showNotes('孰', 'Who')">孰<span class="pinyin">shú</span></span>
+        <span class="character" onclick="showNotes('使', 'Make')">使<span class="pinyin">shǐ</span></span>
+        <span class="character" onclick="showNotes('乱', 'Chaos')">乱<span class="pinyin">luàn</span></span>
+        <span class="character" onclick="showNotes('惑', 'Confused')">惑<span class="pinyin">huò</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese142')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english142')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese142">那纣王自身，是谁使他昏乱？</div>
+        <div class="translation-content" id="english142">That King Zhou himself, who led him to chaos?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('恶', 'Hate')">恶<span class="pinyin">wù</span></span>
+        <span class="character" onclick="showNotes('辅', 'Assist')">辅<span class="pinyin">fǔ</span></span>
+        <span class="character" onclick="showNotes('弼', 'Advisor')">弼<span class="pinyin">bì</span></span>，
+        <span class="character" onclick="showNotes('谗', 'Slander')">谗<span class="pinyin">chán</span></span>
+        <span class="character" onclick="showNotes('谄', 'Flatter')">谄<span class="pinyin">chǎn</span></span>
+        <span class="character" onclick="showNotes('是', 'This')">是<span class="pinyin">shì</span></span>
+        <span class="character" onclick="showNotes('服', 'Believe')">服<span class="pinyin">fú</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese143')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english143')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese143">为何厌恶忠良，却听信谗谄？</div>
+        <div class="translation-content" id="english143">Why hate loyal advisors, believe slander and flattery?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('比', 'Bi')">比<span class="pinyin">bǐ</span></span>
+        <span class="character" onclick="showNotes('干', 'Gan')">干<span class="pinyin">gān</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('逆', 'Offense')">逆<span class="pinyin">nì</span></span>，
+        <span class="character" onclick="showNotes('而', 'Yet')">而<span class="pinyin">ér</span></span>
+        <span class="character" onclick="showNotes('抑', 'Suppress')">抑<span class="pinyin">yì</span></span>
+        <span class="character" onclick="showNotes('沉', 'Sink')">沉<span class="pinyin">chén</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese144')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english144')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese144">比干有何罪过，竟遭压制沉沦？</div>
+        <div class="translation-content" id="english144">What offense did Bi Gan commit, to be suppressed and destroyed?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('雷', 'Lei')">雷<span class="pinyin">léi</span></span>
+        <span class="character" onclick="showNotes('开', 'Kai')">开<span class="pinyin">kāi</span></span>
+        <span class="character" onclick="showNotes('阿', 'Flatter')">阿<span class="pinyin">ē</span></span>
+        <span class="character" onclick="showNotes('顺', 'Obedient')">顺<span class="pinyin">shùn</span></span>，
+        <span class="character" onclick="showNotes('而', 'Yet')">而<span class="pinyin">ér</span></span>
+        <span class="character" onclick="showNotes('赐', 'Reward')">赐<span class="pinyin">cì</span></span>
+        <span class="character" onclick="showNotes('封', 'Enfeoff')">封<span class="pinyin">fēng</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese145')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english145')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese145">雷开阿谀顺从，为何反得封赏？</div>
+        <div class="translation-content" id="english145">Lei Kai flattered obediently, why was he rewarded with land?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('圣', 'Sage')">圣<span class="pinyin">shèng</span></span>
+        <span class="character" onclick="showNotes('人', 'Man')">人<span class="pinyin">rén</span></span>
+        <span class="character" onclick="showNotes('之', 'Of')">之<span class="pinyin">zhī</span></span>
+        <span class="character" onclick="showNotes('一', 'One')">一<span class="pinyin">yī</span></span>
+        <span class="character" onclick="showNotes('德', 'Virtue')">德<span class="pinyin">dé</span></span>，
+        <span class="character" onclick="showNotes('卒', 'Finally')">卒<span class="pinyin">zú</span></span>
+        <span class="character" onclick="showNotes('其', 'Their')">其<span class="pinyin">qí</span></span>
+        <span class="character" onclick="showNotes('异', 'Different')">异<span class="pinyin">yì</span></span>
+        <span class="character" onclick="showNotes('方', 'Ways')">方<span class="pinyin">fāng</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese146')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english146')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese146">为何圣人同德，最终结局各异？</div>
+        <div class="translation-content" id="english146">Why do sages share one virtue, yet meet different fates?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('梅伯', 'Mei Bo')">梅伯<span class="pinyin">méi bó</span></span>
+        <span class="character" onclick="showNotes('受', 'Receive')">受<span class="pinyin">shòu</span></span>
+        <span class="character" onclick="showNotes('醢', 'Minced meat')">醢<span class="pinyin">hǎi</span></span>，
+        <span class="character" onclick="showNotes('箕子', 'Ji Zi')">箕子<span class="pinyin">jī zǐ</span></span>
+        <span class="character" onclick="showNotes('详狂', 'Feign madness')">详狂<span class="pinyin">xiáng kuáng</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese1')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english1')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese1">梅伯被剁成肉酱，箕子假装疯狂。</div>
+        <div class="translation-content" id="english1">Mei Bo was minced into meat paste, while Ji Zi feigned madness.</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('稷', 'Ji')">稷<span class="pinyin">jì</span></span>
+        <span class="character" onclick="showNotes('维', 'Is')">维<span class="pinyin">wéi</span></span>
+        <span class="character" onclick="showNotes('元子', 'First son')">元子<span class="pinyin">yuán zǐ</span></span>，
+        <span class="character" onclick="showNotes('帝', 'Emperor')">帝<span class="pinyin">dì</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('竺', 'Favor')">竺<span class="pinyin">zhú</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese2')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english2')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese2">稷是嫡长子，帝喾为何憎恶他？</div>
+        <div class="translation-content" id="english2">Ji was the first son, why did Emperor Ku despise him?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('投', 'Throw')">投<span class="pinyin">tóu</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>
+        <span class="character" onclick="showNotes('于', 'On')">于<span class="pinyin">yú</span></span>
+        <span class="character" onclick="showNotes('冰上', 'Ice')">冰上<span class="pinyin">bīng shàng</span></span>，
+        <span class="character" onclick="showNotes('鸟', 'Birds')">鸟<span class="pinyin">niǎo</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('燠', 'Warm')">燠<span class="pinyin">yù</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese3')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english3')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese3">将他抛弃在冰上，鸟儿为何温暖他？</div>
+        <div class="translation-content" id="english3">He was abandoned on the ice, why did birds keep him warm?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('冯', 'Hold')">冯<span class="pinyin">píng</span></span>
+        <span class="character" onclick="showNotes('弓', 'Bow')">弓<span class="pinyin">gōng</span></span>
+        <span class="character" onclick="showNotes('挟', 'Grasp')">挟<span class="pinyin">xié</span></span>
+        <span class="character" onclick="showNotes('矢', 'Arrows')">矢<span class="pinyin">shǐ</span></span>，
+        <span class="character" onclick="showNotes('殊', 'Exceptional')">殊<span class="pinyin">shū</span></span>
+        <span class="character" onclick="showNotes('能', 'Ability')">能<span class="pinyin">néng</span></span>
+        <span class="character" onclick="showNotes('将', 'Lead')">将<span class="pinyin">jiāng</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese4')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english4')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese4">为何持弓挟箭，他有非凡才能？</div>
+        <div class="translation-content" id="english4">Why did he hold a bow and arrows, possessing exceptional talent?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('既', 'Already')">既<span class="pinyin">jì</span></span>
+        <span class="character" onclick="showNotes('惊', 'Startle')">惊<span class="pinyin">jīng</span></span>
+        <span class="character" onclick="showNotes('帝', 'Emperor')">帝<span class="pinyin">dì</span></span>
+        <span class="character" onclick="showNotes('切激', 'Fiercely')">切激<span class="pinyin">qiè jī</span></span>，
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('逢', 'Meet')">逢<span class="pinyin">féng</span></span>
+        <span class="character" onclick="showNotes('长', 'Long')">长<span class="pinyin">cháng</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese5')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english5')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese5">既然惊动天帝激烈，为何还能兴盛长久？</div>
+        <div class="translation-content" id="english5">Since he startled the Emperor fiercely, why did he prosper for long?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('伯昌', 'Bo Chang')">伯昌<span class="pinyin">bó chāng</span></span>
+        <span class="character" onclick="showNotes('号', 'Title')">号<span class="pinyin">hào</span></span>
+        <span class="character" onclick="showNotes('衰', 'Decline')">衰<span class="pinyin">shuāi</span></span>，
+        <span class="character" onclick="showNotes('秉', 'Hold')">秉<span class="pinyin">bǐng</span></span>
+        <span class="character" onclick="showNotes('鞭', 'Whip')">鞭<span class="pinyin">biān</span></span>
+        <span class="character" onclick="showNotes('作', 'Become')">作<span class="pinyin">zuò</span></span>
+        <span class="character" onclick="showNotes('牧', 'Shepherd')">牧<span class="pinyin">mù</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese6')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english6')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese6">伯昌号称衰落，执鞭成为牧人。</div>
+        <div class="translation-content" id="english6">Bo Chang was titled in decline, yet held the whip as a shepherd.</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('令', 'Order')">令<span class="pinyin">lìng</span></span>
+        <span class="character" onclick="showNotes('彻', 'Abolish')">彻<span class="pinyin">chè</span></span>
+        <span class="character" onclick="showNotes('彼', 'That')">彼<span class="pinyin">bǐ</span></span>
+        <span class="character" onclick="showNotes('岐', 'Qi')">岐<span class="pinyin">qí</span></span>
+        <span class="character" onclick="showNotes('社', 'Altar')">社<span class="pinyin">shè</span></span>，
+        <span class="character" onclick="showNotes('命', 'Decree')">命<span class="pinyin">mìng</span></span>
+        <span class="character" onclick="showNotes('有', 'Possess')">有<span class="pinyin">yǒu</span></span>
+        <span class="character" onclick="showNotes('殷国', 'Yin State')">殷国<span class="pinyin">yīn guó</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese7')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english7')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese7">为何下令拆毁岐社，天命占有殷国？</div>
+        <div class="translation-content" id="english7">Why order the Qi altar destroyed, decreeing possession of Yin?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('迁', 'Move')">迁<span class="pinyin">qiān</span></span>
+        <span class="character" onclick="showNotes('藏', 'Treasures')">藏<span class="pinyin">cáng</span></span>
+        <span class="character" onclick="showNotes('就', 'To')">就<span class="pinyin">jiù</span></span>
+        <span class="character" onclick="showNotes('岐', 'Qi')">岐<span class="pinyin">qí</span></span>，
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('能', 'Could')">能<span class="pinyin">néng</span></span>
+        <span class="character" onclick="showNotes('依', 'Rely')">依<span class="pinyin">yī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese8')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english8')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese8">迁藏到岐地，为何能依靠？</div>
+        <div class="translation-content" id="english8">Moving treasures to Qi, how could they rely on it?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('殷', 'Yin')">殷<span class="pinyin">yīn</span></span>
+        <span class="character" onclick="showNotes('有', 'Had')">有<span class="pinyin">yǒu</span></span>
+        <span class="character" onclick="showNotes('惑妇', 'Bewitching woman')">惑妇<span class="pinyin">huò fù</span></span>，
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('所', 'Was')">所<span class="pinyin">suǒ</span></span>
+        <span class="character" onclick="showNotes('讥', 'Mock')">讥<span class="pinyin">jī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese9')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english9')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese9">殷有惑妇，人们有何讥讽？</div>
+        <div class="translation-content" id="english9">Yin had a bewitching woman, what mockery arose?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('受', 'Receive')">受<span class="pinyin">shòu</span></span>
+        <span class="character" onclick="showNotes('赐', 'Gift')">赐<span class="pinyin">cì</span></span>
+        <span class="character" onclick="showNotes('兹', 'This')">兹<span class="pinyin">zī</span></span>
+        <span class="character" onclick="showNotes('醢', 'Minced meat')">醢<span class="pinyin">hǎi</span></span>，
+        <span class="character" onclick="showNotes('西伯', 'Earl of the West')">西伯<span class="pinyin">xī bó</span></span>
+        <span class="character" onclick="showNotes('上', 'Above')">上<span class="pinyin">shàng</span></span>
+        <span class="character" onclick="showNotes('告', 'Report')">告<span class="pinyin">gào</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese10')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english10')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese10">受赐这肉酱，西伯向上天控告。</div>
+        <div class="translation-content" id="english10">Receiving this minced meat, the Earl of the West reported to Heaven.</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('亲', 'Personally')">亲<span class="pinyin">qīn</span></span>
+        <span class="character" onclick="showNotes('就', 'Approach')">就<span class="pinyin">jiù</span></span>
+        <span class="character" onclick="showNotes('上帝', 'God')">上帝<span class="pinyin">shàng dì</span></span>，
+        <span class="character" onclick="showNotes('罚', 'Punish')">罚<span class="pinyin">fá</span></span>
+        <span class="character" onclick="showNotes('殷', 'Yin')">殷<span class="pinyin">yīn</span></span>
+        <span class="character" onclick="showNotes('之', 'Of')">之<span class="pinyin">zhī</span></span>
+        <span class="character" onclick="showNotes('命', 'Fate')">命<span class="pinyin">mìng</span></span>
+        <span class="character" onclick="showNotes('以', 'With')">以<span class="pinyin">yǐ</span></span>
+        <span class="character" onclick="showNotes('不救', 'No rescue')">不救<span class="pinyin">bù jiù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese11')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english11')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese11">为何亲自诉诸上帝，惩罚殷命无可挽救？</div>
+        <div class="translation-content" id="english11">Why personally appeal to God, punishing Yin's fate beyond rescue?</div>
+    </div>
+</div>
+
+
+
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('师望', 'Master Wang')">师望<span class="pinyin">shī wàng</span></span>
+        <span class="character" onclick="showNotes('在', 'At')">在<span class="pinyin">zài</span></span>
+        <span class="character" onclick="showNotes('肆', 'Market')">肆<span class="pinyin">sì</span></span>，
+        <span class="character" onclick="showNotes('昌', 'Chang')">昌<span class="pinyin">chāng</span></span>
+        <span class="character" onclick="showNotes('何', 'How')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('识', 'Recognize')">识<span class="pinyin">shí</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese12')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english12')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese12">吕望在肉铺，姬昌如何认出他？</div>
+        <div class="translation-content" id="english12">When Master Wang was in the market, how did Chang recognize him?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('鼓', 'Wield')">鼓<span class="pinyin">gǔ</span></span>
+        <span class="character" onclick="showNotes('刀', 'Knife')">刀<span class="pinyin">dāo</span></span>
+        <span class="character" onclick="showNotes('扬', 'Raise')">扬<span class="pinyin">yáng</span></span>
+        <span class="character" onclick="showNotes('声', 'Voice')">声<span class="pinyin">shēng</span></span>，
+        <span class="character" onclick="showNotes('后', 'King')">后<span class="pinyin">hòu</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('喜', 'Delight')">喜<span class="pinyin">xǐ</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese13')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english13')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese13">挥舞屠刀高声叫卖，文王为何欢喜？</div>
+        <div class="translation-content" id="english13">When he wielded his knife and raised his voice, why did the king delight?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('武', 'King Wu')">武<span class="pinyin">wǔ</span></span>
+        <span class="character" onclick="showNotes('发', 'Fa')">发<span class="pinyin">fā</span></span>
+        <span class="character" onclick="showNotes('杀', 'Kill')">杀<span class="pinyin">shā</span></span>
+        <span class="character" onclick="showNotes('殷', 'Yin')">殷<span class="pinyin">yīn</span></span>，
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('所', 'Feel')">所<span class="pinyin">suǒ</span></span>
+        <span class="character" onclick="showNotes('悒', 'Anguish')">悒<span class="pinyin">yì</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese14')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english14')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese14">武王伐纣灭殷，为何心中忧郁？</div>
+        <div class="translation-content" id="english14">When King Wu destroyed Yin, why did he feel anguish?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('载', 'Carry')">载<span class="pinyin">zài</span></span>
+        <span class="character" onclick="showNotes('尸', 'Corpse')">尸<span class="pinyin">shī</span></span>
+        <span class="character" onclick="showNotes('集', 'Gather')">集<span class="pinyin">jí</span></span>
+        <span class="character" onclick="showNotes('战', 'Battle')">战<span class="pinyin">zhàn</span></span>，
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('所', 'Such')">所<span class="pinyin">suǒ</span></span>
+        <span class="character" onclick="showNotes('急', 'Haste')">急<span class="pinyin">jí</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese15')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english15')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese15">载着文王木主会战，为何如此急迫？</div>
+        <div class="translation-content" id="english15">Carrying the corpse to battle, why such haste?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('伯', 'Earl')">伯<span class="pinyin">bó</span></span>
+        <span class="character" onclick="showNotes('林', 'Woods')">林<span class="pinyin">lín</span></span>
+        <span class="character" onclick="showNotes('雉', 'Pheasant')">雉<span class="pinyin">zhì</span></span>
+        <span class="character" onclick="showNotes('经', 'Hang')">经<span class="pinyin">jīng</span></span>，
+        <span class="character" onclick="showNotes('维', 'Is')">维<span class="pinyin">wéi</span></span>
+        <span class="character" onclick="showNotes('其', 'Its')">其<span class="pinyin">qí</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('故', 'Reason')">故<span class="pinyin">gù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese16')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english16')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese16">比干被剖心而死，究竟是何缘故？</div>
+        <div class="translation-content" id="english16">The earl hanged in the woods - what was the reason?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'How')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('感', 'Move')">感<span class="pinyin">gǎn</span></span>
+        <span class="character" onclick="showNotes('天', 'Heaven')">天<span class="pinyin">tiān</span></span>
+        <span class="character" onclick="showNotes('抑', 'Press')">抑<span class="pinyin">yì</span></span>
+        <span class="character" onclick="showNotes('地', 'Earth')">地<span class="pinyin">dì</span></span>，
+        <span class="character" onclick="showNotes('夫', 'Who')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('谁', 'Whom')">谁<span class="pinyin">shuí</span></span>
+        <span class="character" onclick="showNotes('畏惧', 'Fear')">畏惧<span class="pinyin">wèi jù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese17')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english17')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese17">如何感动天地，让谁感到畏惧？</div>
+        <div class="translation-content" id="english17">How did it move heaven and earth? Whom did it frighten?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('皇', 'August')">皇<span class="pinyin">huáng</span></span>
+        <span class="character" onclick="showNotes('天', 'Heaven')">天<span class="pinyin">tiān</span></span>
+        <span class="character" onclick="showNotes('集', 'Bestow')">集<span class="pinyin">jí</span></span>
+        <span class="character" onclick="showNotes('命', 'Mandate')">命<span class="pinyin">mìng</span></span>，
+        <span class="character" onclick="showNotes('惟', 'But')">惟<span class="pinyin">wéi</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('戒', 'Warn')">戒<span class="pinyin">jiè</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese18')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english18')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese18">上天降下天命，为何又要警告他？</div>
+        <div class="translation-content" id="english18">When August Heaven bestowed the mandate, why give warnings?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('受', 'Receive')">受<span class="pinyin">shòu</span></span>
+        <span class="character" onclick="showNotes('礼', 'Rule')">礼<span class="pinyin">lǐ</span></span>
+        <span class="character" onclick="showNotes('天下', 'World')">天下<span class="pinyin">tiān xià</span></span>，
+        <span class="character" onclick="showNotes('又', 'Again')">又<span class="pinyin">yòu</span></span>
+        <span class="character" onclick="showNotes('使', 'Send')">使<span class="pinyin">shǐ</span></span>
+        <span class="character" onclick="showNotes('至', 'Come')">至<span class="pinyin">zhì</span></span>
+        <span class="character" onclick="showNotes('代', 'Replace')">代<span class="pinyin">dài</span></span>
+        <span class="character" onclick="showNotes('之', 'Him')">之<span class="pinyin">zhī</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese19')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english19')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese19">受命统治天下，为何又派人取代他？</div>
+        <div class="translation-content" id="english19">Having received the world's rule, why send another to replace him?</div>
+    </div>
+</div>
+
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('初', 'Initially')">初<span class="pinyin">chū</span></span>
+        <span class="character" onclick="showNotes('汤', 'Tang')">汤<span class="pinyin">tāng</span></span>
+        <span class="character" onclick="showNotes('臣', 'Minister')">臣<span class="pinyin">chén</span></span>
+        <span class="character" onclick="showNotes('挚', 'Zhi')">挚<span class="pinyin">zhì</span></span>，
+        <span class="character" onclick="showNotes('后', 'Later')">后<span class="pinyin">hòu</span></span>
+        <span class="character" onclick="showNotes('兹', 'This')">兹<span class="pinyin">zī</span></span>
+        <span class="character" onclick="showNotes('承', 'Receive')">承<span class="pinyin">chéng</span></span>
+        <span class="character" onclick="showNotes('辅', 'Support')">辅<span class="pinyin">fǔ</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese20')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english20')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese20">起初伊尹为汤臣，后来如何承担辅佐重任？</div>
+        <div class="translation-content" id="english20">Initially Yi Yin served Tang as minister, how later did he receive such important support duties?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('卒', 'Finally')">卒<span class="pinyin">zú</span></span>
+        <span class="character" onclick="showNotes('官', 'Officer')">官<span class="pinyin">guān</span></span>
+        <span class="character" onclick="showNotes('汤', 'Tang')">汤<span class="pinyin">tāng</span></span>，
+        <span class="character" onclick="showNotes('尊', 'Honored')">尊<span class="pinyin">zūn</span></span>
+        <span class="character" onclick="showNotes('食', 'Sacrifice')">食<span class="pinyin">shí</span></span>
+        <span class="character" onclick="showNotes('宗', 'Ancestral')">宗<span class="pinyin">zōng</span></span>
+        <span class="character" onclick="showNotes('绪', 'Temple')">绪<span class="pinyin">xù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese21')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english21')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese21">为何最终成为汤的官员，在宗庙享受祭祀？</div>
+        <div class="translation-content" id="english21">Why did he finally become Tang's officer, receiving honors in ancestral temples?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('勋', 'Meritorious')">勋<span class="pinyin">xūn</span></span>
+        <span class="character" onclick="showNotes('阖', 'He')">阖<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('梦', 'Meng')">梦<span class="pinyin">mèng</span></span>
+        <span class="character" onclick="showNotes('生', 'Born')">生<span class="pinyin">shēng</span></span>，
+        <span class="character" onclick="showNotes('少', 'Young')">少<span class="pinyin">shào</span></span>
+        <span class="character" onclick="showNotes('离', 'Separated')">离<span class="pinyin">lí</span></span>
+        <span class="character" onclick="showNotes('散', 'Scattered')">散<span class="pinyin">sàn</span></span>
+        <span class="character" onclick="showNotes('亡', 'Lost')">亡<span class="pinyin">wáng</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese22')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english22')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese22">阖闾乃梦寿梦之孙，年少时离散流亡。</div>
+        <div class="translation-content" id="english22">He Lü was grandson of Meng, separated and exiled when young.</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'How')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('壮', 'Mature')">壮<span class="pinyin">zhuàng</span></span>
+        <span class="character" onclick="showNotes('武', 'Martial')">武<span class="pinyin">wǔ</span></span>
+        <span class="character" onclick="showNotes('厉', 'Fierce')">厉<span class="pinyin">lì</span></span>，
+        <span class="character" onclick="showNotes('能', 'Could')">能<span class="pinyin">néng</span></span>
+        <span class="character" onclick="showNotes('流', 'Spread')">流<span class="pinyin">liú</span></span>
+        <span class="character" onclick="showNotes('厥', 'His')">厥<span class="pinyin">jué</span></span>
+        <span class="character" onclick="showNotes('严', 'Majesty')">严<span class="pinyin">yán</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese23')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english23')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese23">为何成年后英武勇猛，威名远扬？</div>
+        <div class="translation-content" id="english23">How when mature he became martial and fierce, spreading his majesty?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('彭', 'Peng')">彭<span class="pinyin">péng</span></span>
+        <span class="character" onclick="showNotes('铿', 'Keng')">铿<span class="pinyin">kēng</span></span>
+        <span class="character" onclick="showNotes('斟', 'Pour')">斟<span class="pinyin">zhēn</span></span>
+        <span class="character" onclick="showNotes('雉', 'Pheasant')">雉<span class="pinyin">zhì</span></span>，
+        <span class="character" onclick="showNotes('帝', 'Emperor')">帝<span class="pinyin">dì</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('飨', 'Enjoy')">飨<span class="pinyin">xiǎng</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese24')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english24')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese24">彭祖烹调雉羹，尧帝为何享用？</div>
+        <div class="translation-content" id="english24">When Peng Keng cooked pheasant soup, why did the Emperor enjoy it?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('受', 'Receive')">受<span class="pinyin">shòu</span></span>
+        <span class="character" onclick="showNotes('寿', 'Longevity')">寿<span class="pinyin">shòu</span></span>
+        <span class="character" onclick="showNotes('永', 'Eternal')">永<span class="pinyin">yǒng</span></span>
+        <span class="character" onclick="showNotes('多', 'Much')">多<span class="pinyin">duō</span></span>，
+        <span class="character" onclick="showNotes('夫', 'He')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('久', 'Long')">久<span class="pinyin">jiǔ</span></span>
+        <span class="character" onclick="showNotes('长', 'Last')">长<span class="pinyin">cháng</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese25')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english25')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese25">获得长寿八百岁，为何能如此长久？</div>
+        <div class="translation-content" id="english25">Receiving longevity of 800 years, why could he last so long?</div>
+    </div>
+</div>
+
+
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('中央', 'Central Plains')">中央<span class="pinyin">zhōng yāng</span></span>
+        <span class="character" onclick="showNotes('共', 'Together')">共<span class="pinyin">gòng</span></span>
+        <span class="character" onclick="showNotes('牧', 'Grazing')">牧<span class="pinyin">mù</span></span>，
+        <span class="character" onclick="showNotes('后', 'Ruler')">后<span class="pinyin">hòu</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('怒', 'Angry')">怒<span class="pinyin">nù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese26')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english26')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese26">诸侯共同治理中原，君王为何发怒？</div>
+        <div class="translation-content" id="english26">When nobles jointly governed the central plains, why did the ruler rage?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('蜂', 'Bees')">蜂<span class="pinyin">fēng</span></span>
+        <span class="character" onclick="showNotes('蛾', 'Moths')">蛾<span class="pinyin">é</span></span>
+        <span class="character" onclick="showNotes('微', 'Tiny')">微<span class="pinyin">wēi</span></span>
+        <span class="character" onclick="showNotes('命', 'Lives')">命<span class="pinyin">mìng</span></span>，
+        <span class="character" onclick="showNotes('力', 'Strength')">力<span class="pinyin">lì</span></span>
+        <span class="character" onclick="showNotes('何', 'How')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('固', 'Strong')">固<span class="pinyin">gù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese27')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english27')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese27">蜂蛾微小的生命，力量为何如此顽强？</div>
+        <div class="translation-content" id="english27">Bees and moths with tiny lives, how is their strength so tenacious?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('惊', 'Startle')">惊<span class="pinyin">jīng</span></span>
+        <span class="character" onclick="showNotes('女', 'Maiden')">女<span class="pinyin">nǚ</span></span>
+        <span class="character" onclick="showNotes('采', 'Gather')">采<span class="pinyin">cǎi</span></span>
+        <span class="character" onclick="showNotes('薇', 'Fern')">薇<span class="pinyin">wēi</span></span>，
+        <span class="character" onclick="showNotes('鹿', 'Deer')">鹿<span class="pinyin">lù</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('祐', 'Bless')">祐<span class="pinyin">yòu</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese28')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english28')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese28">惊动采薇的女子，白鹿为何庇佑？</div>
+        <div class="translation-content" id="english28">Startling the fern-gathering maiden, why did the deer bless her?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('北', 'North')">北<span class="pinyin">běi</span></span>
+        <span class="character" onclick="showNotes('至', 'Arrive')">至<span class="pinyin">zhì</span></span>
+        <span class="character" onclick="showNotes('回', 'Winding')">回<span class="pinyin">huí</span></span>
+        <span class="character" onclick="showNotes('水', 'River')">水<span class="pinyin">shuǐ</span></span>，
+        <span class="character" onclick="showNotes('萃', 'Gather')">萃<span class="pinyin">cuì</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('喜', 'Joy')">喜<span class="pinyin">xǐ</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese29')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english29')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese29">北至回水之地相聚，为何欢喜？</div>
+        <div class="translation-content" id="english29">Gathering at the winding northern river, why such joy?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('兄', 'Elder Brother')">兄<span class="pinyin">xiōng</span></span>
+        <span class="character" onclick="showNotes('有', 'Had')">有<span class="pinyin">yǒu</span></span>
+        <span class="character" onclick="showNotes('噬', 'Biting')">噬<span class="pinyin">shì</span></span>
+        <span class="character" onclick="showNotes('犬', 'Dog')">犬<span class="pinyin">quǎn</span></span>，
+        <span class="character" onclick="showNotes('弟', 'Younger Brother')">弟<span class="pinyin">dì</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('欲', 'Desire')">欲<span class="pinyin">yù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese30')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english30')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese30">兄长有猛犬，弟弟为何想要？</div>
+        <div class="translation-content" id="english30">When elder brother had a fierce hound, why did younger brother covet it?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('易', 'Exchange')">易<span class="pinyin">yì</span></span>
+        <span class="character" onclick="showNotes('之', 'It')">之<span class="pinyin">zhī</span></span>
+        <span class="character" onclick="showNotes('以', 'With')">以<span class="pinyin">yǐ</span></span>
+        <span class="character" onclick="showNotes('百', 'Hundred')">百<span class="pinyin">bǎi</span></span>
+        <span class="character" onclick="showNotes('两', 'Taels')">两<span class="pinyin">liǎng</span></span>，
+        <span class="character" onclick="showNotes('卒', 'Finally')">卒<span class="pinyin">zú</span></span>
+        <span class="character" onclick="showNotes('无', 'No')">无<span class="pinyin">wú</span></span>
+        <span class="character" onclick="showNotes('禄', 'Fortune')">禄<span class="pinyin">lù</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese31')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english31')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese31">用百两黄金交换，为何最终失去福禄？</div>
+        <div class="translation-content" id="english31">Exchanging it for hundred taels of gold, why ultimately lose all fortune?</div>
+    </div>
+</div>
+
+
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('薄暮', 'Dusk')">薄暮<span class="pinyin">bó mù</span></span>
+        <span class="character" onclick="showNotes('雷电', 'Thunder')">雷电<span class="pinyin">léi diàn</span></span>，
+        <span class="character" onclick="showNotes('归', 'Return')">归<span class="pinyin">guī</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('忧', 'Worry')">忧<span class="pinyin">yōu</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese32')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english32')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese32">黄昏雷电交加，归去有何忧愁？</div>
+        <div class="translation-content" id="english32">At dusk with thunder roaring, why worry about returning?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('厥', 'His')">厥<span class="pinyin">jué</span></span>
+        <span class="character" onclick="showNotes('严', 'Majesty')">严<span class="pinyin">yán</span></span>
+        <span class="character" onclick="showNotes('不', 'Not')">不<span class="pinyin">bù</span></span>
+        <span class="character" onclick="showNotes('奉', 'Respect')">奉<span class="pinyin">fèng</span></span>，
+        <span class="character" onclick="showNotes('帝', 'God')">帝<span class="pinyin">dì</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('求', 'Seek')">求<span class="pinyin">qiú</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese33')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english33')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese33">威严不能保持，天帝还求什么？</div>
+        <div class="translation-content" id="english33">When his majesty isn't maintained, what does God seek?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('伏', 'Hide')">伏<span class="pinyin">fú</span></span>
+        <span class="character" onclick="showNotes('匿', 'Conceal')">匿<span class="pinyin">nì</span></span>
+        <span class="character" onclick="showNotes('穴', 'Cave')">穴<span class="pinyin">xué</span></span>
+        <span class="character" onclick="showNotes('处', 'Dwell')">处<span class="pinyin">chǔ</span></span>，
+        <span class="character" onclick="showNotes('爰', 'Then')">爰<span class="pinyin">yuán</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('云', 'Say')">云<span class="pinyin">yún</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese34')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english34')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese34">隐伏穴居荒野，还能说些什么？</div>
+        <div class="translation-content" id="english34">Hiding in cave dwellings, what more can be said?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('荆', 'Chu')">荆<span class="pinyin">jīng</span></span>
+        <span class="character" onclick="showNotes('勋', 'Merit')">勋<span class="pinyin">xūn</span></span>
+        <span class="character" onclick="showNotes('作', 'Raise')">作<span class="pinyin">zuò</span></span>
+        <span class="character" onclick="showNotes('师', 'Army')">师<span class="pinyin">shī</span></span>，
+        <span class="character" onclick="showNotes('夫', 'How')">夫<span class="pinyin">fū</span></span>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('长', 'Last')">长<span class="pinyin">cháng</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese35')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english35')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese35">楚国立功兴师，国运怎能长久？</div>
+        <div class="translation-content" id="english35">When Chu raised armies for merit, how could it last long?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('悟', 'Realize')">悟<span class="pinyin">wù</span></span>
+        <span class="character" onclick="showNotes('过', 'Mistake')">过<span class="pinyin">guò</span></span>
+        <span class="character" onclick="showNotes('改', 'Change')">改<span class="pinyin">gǎi</span></span>
+        <span class="character" onclick="showNotes('更', 'Correct')">更<span class="pinyin">gēng</span></span>，
+        <span class="character" onclick="showNotes('我', 'I')">我<span class="pinyin">wǒ</span></span>
+        <span class="character" onclick="showNotes('又', 'Again')">又<span class="pinyin">yòu</span></span>
+        <span class="character" onclick="showNotes('何', 'What')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('言', 'Say')">言<span class="pinyin">yán</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese36')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english36')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese36">若能悔过改正，我又有何可说？</div>
+        <div class="translation-content" id="english36">If mistakes are realized and corrected, what more need I say?</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('吴', 'Wu')">吴<span class="pinyin">wú</span></span>
+        <span class="character" onclick="showNotes('光', 'Guang')">光<span class="pinyin">guāng</span></span>
+        <span class="character" onclick="showNotes('争', 'Fight')">争<span class="pinyin">zhēng</span></span>
+        <span class="character" onclick="showNotes('国', 'State')">国<span class="pinyin">guó</span></span>，
+        <span class="character" onclick="showNotes('久', 'Long')">久<span class="pinyin">jiǔ</span></span>
+        <span class="character" onclick="showNotes('余', 'Me')">余<span class="pinyin">yú</span></span>
+        <span class="character" onclick="showNotes('是', 'This')">是<span class="pinyin">shì</span></span>
+        <span class="character" onclick="showNotes('胜', 'Victory')">胜<span class="pinyin">shèng</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese37')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english37')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese37">吴王阖闾争国，长久战胜于我。</div>
+        <div class="translation-content" id="english37">Wu Guang fought for the state, long defeating us.</div>
+    </div>
+</div>
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('环', 'Around')">环<span class="pinyin">huán</span></span>
+        <span class="character" onclick="showNotes('穿', 'Through')">穿<span class="pinyin">chuān</span></span>
+        <span class="character" onclick="showNotes('自', 'From')">自<span class="pinyin">zì</span></span>
+        <span class="character" onclick="showNotes('闾', 'Village')">闾<span class="pinyin">lǘ</span></span>
+        <span class="character" onclick="showNotes('社', 'Shrine')">社<span class="pinyin">shè</span></span>
+        <span class="character" onclick="showNotes('丘陵', 'Hills')">丘陵<span class="pinyin">qiū líng</span></span>，
+        <span class="character" onclick="showNotes('爰', 'Then')">爰<span class="pinyin">yuán</span></span>
+        <span class="character" onclick="showNotes('出', 'Born')">出<span class="pinyin">chū</span></span>
+        <span class="character" onclick="showNotes('子文', 'Ziwen')">子文<span class="pinyin">zǐ wén</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese38')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english38')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese38">为何绕行村社丘陵，便生出子文？</div>
+        <div class="translation-content" id="english38">Why winding through village shrines and hills was Ziwen born?</div>
+    </div>
+</div>
+
+
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('吾', 'I')">吾<span class="pinyin">wú</span></span>
+        <span class="character" onclick="showNotes('告', 'Tell')">告<span class="pinyin">gào</span></span>
+        <span class="character" onclick="showNotes('堵敖', 'Du Ao')">堵敖<span class="pinyin">dǔ áo</span></span>
+        <span class="character" onclick="showNotes('以', 'That')">以<span class="pinyin">yǐ</span></span>
+        <span class="character" onclick="showNotes('不', 'Not')">不<span class="pinyin">bù</span></span>
+        <span class="character" onclick="showNotes('长', 'Long')">长<span class="pinyin">cháng</span></span>。
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese39')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english39')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese39">我曾告诫堵敖，其位不会长久。</div>
+        <div class="translation-content" id="english39">I warned Du Ao his reign wouldn't last long.</div>
+    </div>
+</div>
+
+
+
+<div class="sentence">
+    <p>
+        <span class="character" onclick="showNotes('何', 'Why')">何<span class="pinyin">hé</span></span>
+        <span class="character" onclick="showNotes('试', 'Test')">试<span class="pinyin">shì</span></span>
+        <span class="character" onclick="showNotes('上', 'Superior')">上<span class="pinyin">shàng</span></span>
+        <span class="character" onclick="showNotes('自', 'Self')">自<span class="pinyin">zì</span></span>
+        <span class="character" onclick="showNotes('予', 'Give')">予<span class="pinyin">yǔ</span></span>，
+        <span class="character" onclick="showNotes('忠', 'Loyal')">忠<span class="pinyin">zhōng</span></span>
+        <span class="character" onclick="showNotes('名', 'Reputation')">名<span class="pinyin">míng</span></span>
+        <span class="character" onclick="showNotes('弥', 'More')">弥<span class="pinyin">mí</span></span>
+        <span class="character" onclick="showNotes('彰', 'Famous')">彰<span class="pinyin">zhāng</span></span>？
+    </p>
+    <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+    <div class="translation" style="display:none">
+
+        <div class="translation-header">
+            <div class="translation-tab active" onclick="switchTranslation(this, 'chinese40')">白话文</div>
+            <div class="translation-tab" onclick="switchTranslation(this, 'english40')">English</div>
+        </div>
+        <div class="translation-content active" id="chinese40">为何自荐于君上，忠名更加显扬？</div>
+        <div class="translation-content" id="english40">Why testing superiors with self-recommendation makes loyal fame brighter?</div>
+    </div>
+</div>
+
+
+
+
+</body>
+<script>
+    function toggleTranslation(button) {
+        const translationDiv = button.nextElementSibling;
+        if (translationDiv.style.display === "none") {
+            translationDiv.style.display = "block";
+            button.textContent = "隐藏翻译 ▲";
+        } else {
+            translationDiv.style.display = "none";
+            button.textContent = "显示翻译 ▼";
+        }
+    }
+    
+    function switchTranslation(tab, contentId) {
+        const header = tab.parentElement;
+        const contents = header.parentElement.querySelectorAll('.translation-content');
+        
+        // Remove active class from all tabs
+        header.querySelectorAll('.translation-tab').forEach(t => t.classList.remove('active'));
+        
+        // Add active class to clicked tab
+        tab.classList.add('active');
+        
+        // Hide all contents
+        contents.forEach(c => c.classList.remove('active'));
+        
+        // Show selected content
+        document.getElementById(contentId).classList.add('active');
+    }
+    
+    function showNotes(character, note) {
+        const notesWindow = document.createElement('div');
+        notesWindow.className = 'notes-window';
+        notesWindow.innerHTML = `
+            <span class="close-btn" onclick="this.parentElement.remove()">&times;</span>
+            <h3>${character}</h3>
+            <p>${note}</p>
+        `;
+        document.body.appendChild(notesWindow);
+    }
+    
+    function convertToSimplified() {
+        // Implementation would require a simplified-traditional character mapping
+        alert('转换为简体中文功能需要字符映射表支持');
+    }
+    
+    function convertToTraditional() {
+        // Implementation would require a simplified-traditional character mapping
+        alert('转换为繁體中文功能需要字符映射表支持');
+    }
+    
+    function showTranslation(language) {
+        // This would show/hide translations based on language selection
+        alert(`显示${language}翻译功能需要更多实现`);
+    }
+</script>
+</html>
