@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>声律启蒙</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋体", serif;
+            background-color: #000000;
+            color: #ffffff;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            font-size: 3em;
+        }
+        
+        h1 {
+            color: #ffffff;
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 60px;
+            border-bottom: 3px solid #666666;
+            padding-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.1);
+        }
+        
+        .sentence {
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 30px;
+            margin-bottom: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(255,255,255,0.05);
+            border-left: 6px solid #666666;
+        }
+        
+        .sentence p {
+            margin: 0;
+            color: #ffffff;
+            text-align: justify;
+            line-height: 2.0;
+        }
+        
+        .character {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .character:hover {
+            color: #ffcc00;
+            text-shadow: 0 0 3px rgba(255, 204, 0, 0.5);
+        }
+        
+        .pinyin {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffcc00;
+            color: #000000;
+            padding: 6px 16px;
+            border-radius: 5px;
+            white-space: nowrap;
+            z-index: 100;
+            font-size: 0.8em;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .character:hover .pinyin {
+            display: block;
+        }
+        
+        .toggle-translation {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #666666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .toggle-translation:hover {
+            background-color: #888888;
+        }
+        
+        .translation {
+            margin-top: 30px;
+            padding: 0;
+            background-color: rgba(40, 40, 40, 0.9);
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .translation-header {
+            display: flex;
+            background-color: #444444;
+            padding: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .translation-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+            font-size: 0.7em; /* 缩小翻译标签字号 */
+        }
+        
+        .translation-tab.active {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 30px;
+            background-color: rgba(50, 50, 50, 0.9);
+            color: #ffffff;
+            line-height: 1.8;
+            font-size: 0.7em; /* 缩小翻译内容字号30% */
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        .notes-window {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #222222;
+            padding: 40px;
+            border: 2px solid #666666;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.1);
+            z-index: 1000;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 0.9em;
+        }
+        
+        .notes-window h3 {
+            color: #ffcc00;
+            margin-top: 0;
+            border-bottom: 2px dashed #666666;
+            padding-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 40px;
+            color: #ffcc00;
+        }
+        
+        .section-divider {
+            text-align: center;
+            margin: 60px 0;
+            color: #aaaaaa;
+            font-style: italic;
+            font-size: 1.2em;
+        }
+        
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .control-btn {
+            padding: 8px 15px;
+            background-color: #666666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background-color: #888888;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+                font-size: 2em;
+            }
+            
+            .sentence {
+                padding: 20px;
+            }
+            
+            .translation-header {
+                flex-wrap: wrap;
+            }
+            
+            .translation-tab {
+                margin-bottom: 10px;
+                padding: 8px 15px;
+                font-size: 0.6em;
+            }
+            
+            .control-panel {
+                position: static;
+                margin-bottom: 20px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <button class="control-btn" onclick="convertToSimplified()">简体</button>
+        <button class="control-btn" onclick="convertToTraditional()">繁體</button>
+        <button class="control-btn" onclick="showTranslation('chinese')">白话文</button>
+        <button class="control-btn" onclick="showTranslation('english')">English</button>
+        <button class="control-btn" onclick="showTranslation('german')">Deutsch</button>
+        <button class="control-btn" onclick="showTranslation('french')">Français</button>
+        <button class="control-btn" onclick="showTranslation('russian')">Русский</button>
+        <button class="control-btn" onclick="showTranslation('spanish')">Español</button>
+        <button class="control-btn" onclick="showTranslation('italian')">Italiano</button>
+    </div>
+
+    <h1>聲律啟蒙</h1>
+
+    <div class="section-divider">【 卷上 】</div>
+
+    <div class="section-divider">一、東</div>
+
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('雲對雨', '云和雨相对')">雲<span class="pinyin">yún</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">雨<span class="pinyin">yǔ</span></span>，
+            <span class="character">雪<span class="pinyin">xuě</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">風<span class="pinyin">fēng</span></span>，
+            <span class="character">晚<span class="pinyin">wǎn</span></span>
+            <span class="character">照<span class="pinyin">zhào</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">晴<span class="pinyin">qíng</span></span>
+            <span class="character">空<span class="pinyin">kōng</span></span>。
+            <span class="character">來<span class="pinyin">lái</span></span>
+            <span class="character">鴻<span class="pinyin">hóng</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">去<span class="pinyin">qù</span></span>
+            <span class="character">燕<span class="pinyin">yàn</span></span>，
+            <span class="character">宿<span class="pinyin">sù</span></span>
+            <span class="character">鳥<span class="pinyin">niǎo</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">鳴<span class="pinyin">míng</span></span>
+            <span class="character">蟲<span class="pinyin">chóng</span></span>。
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese1')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english1')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german1')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french1')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian1')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish1')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian1')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese1">云对雨，雪对风，晚照对晴空。来鸿对去燕，宿鸟对鸣虫。</div>
+            <div class="translation-content" id="english1">Clouds pair with rain, snow with wind, sunset glow with clear sky. Arriving swans pair with departing swallows, roosting birds with chirping insects.</div>
+            <div class="translation-content" id="german1">Wolken gegenüber Regen, Schnee gegenüber Wind, Abendlicht gegenüber klarem Himmel. Ankommende Wildgänse gegenüber abfliegenden Schwalben, schlafende Vögel gegenüber zirpenden Insekten.</div>
+            <div class="translation-content" id="french1">Nuages contre pluie, neige contre vent, coucher de soleil contre ciel clair. Oies sauvages arrivantes contre hirondelles partantes, oiseaux perchés contre insectes chantants.</div>
+            <div class="translation-content" id="russian1">Облака к дождю, снег к ветру, закат к ясному небу. Прилетающие гуси к улетающим ласточкам, ночующие птицы к поющим насекомым.</div>
+            <div class="translation-content" id="spanish1">Nubes frente a lluvia, nieve frente a viento, atardecer frente a cielo despejado. Gansos que llegan frente a golondrinas que se van, aves que pernoctan frente a insectos que cantan.</div>
+            <div class="translation-content" id="italian1">Nuvole contro pioggia, neve contro vento, tramonto contro cielo sereno. Oche in arrivo contro rondini in partenza, uccelli che si appollaiano contro insetti che cantano.</div>
+        </div>
+    </div>
+
+    <div class="sentence">
+        <p>
+            <span class="character">三<span class="pinyin">sān</span></span>
+            <span class="character">尺<span class="pinyin">chǐ</span></span>
+            <span class="character">劍<span class="pinyin">jiàn</span></span>，
+            <span class="character">六<span class="pinyin">liù</span></span>
+            <span class="character">鈞<span class="pinyin">jūn</span></span>
+            <span class="character">弓<span class="pinyin">gōng</span></span>，
+            <span class="character">嶺<span class="pinyin">lǐng</span></span>
+            <span class="character">北<span class="pinyin">běi</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">江<span class="pinyin">jiāng</span></span>
+            <span class="character">東<span class="pinyin">dōng</span></span>。
+            <span class="character">人<span class="pinyin">rén</span></span>
+            <span class="character">間<span class="pinyin">jiān</span></span>
+            <span class="character">清<span class="pinyin">qīng</span></span>
+            <span class="character">暑<span class="pinyin">shǔ</span></span>
+            <span class="character">殿<span class="pinyin">diàn</span></span>，
+            <span class="character">天<span class="pinyin">tiān</span></span>
+            <span class="character">上<span class="pinyin">shàng</span></span>
+            <span class="character">廣<span class="pinyin">guǎng</span></span>
+            <span class="character">寒<span class="pinyin">hán</span></span>
+            <span class="character">宮<span class="pinyin">gōng</span></span>。
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese2')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english2')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german2')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french2')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian2')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish2')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian2')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese2">三尺剑，六钧弓，岭北对江东。人间清暑殿，天上广寒宫。</div>
+            <div class="translation-content" id="english2">Three-foot sword, six-jun bow, north of mountains versus east of river. On earth, the Summer-Cooling Palace; in heaven, the Vast-Cold Palace.</div>
+            <div class="translation-content" id="german2">Ein dreifußlanges Schwert, ein Sechs-Jun-Bogen, nördlich der Berge gegenüber östlich des Flusses. Auf der Erde der Sommerkühlungspalast, im Himmel der Weit-Kalte Palast.</div>
+            <div class="translation-content" id="french2">Épée de trois pieds, arc de six jun, nord des montagnes contre est du fleuve. Sur terre, le Palais de la Fraîcheur Estivale ; dans le ciel, le Palais de la Vaste Froideur.</div>
+            <div class="translation-content" id="russian2">Трехфутовый меч, шестицзюньский лук, север хребта против востока реки. На земле - Дворец Летней Прохлады, на небе - Лунный Дворец.</div>
+            <div class="translation-content" id="spanish2">Espada de tres pies, arco de seis jun, norte de las montañas frente a este del río. En la tierra, el Palacio del Frescor Estival; en el cielo, el Palacio de la Vasta Fría.</div>
+            <div class="translation-content" id="italian2">Spada di tre piedi, arco di sei jun, a nord delle montagne contro a est del fiume. Sulla terra, il Palazzo della Frescura Estiva; in cielo, il Palazzo del Vasto Freddo.</div>
+        </div>
+    </div>
+
+    <div class="sentence">
+        <p>
+            <span class="character">夾<span class="pinyin">jiā</span></span>
+            <span class="character">岸<span class="pinyin">àn</span></span>
+            <span class="character">曉<span class="pinyin">xiǎo</span></span>
+            <span class="character">煙<span class="pinyin">yān</span></span>
+            <span class="character">楊<span class="pinyin">yáng</span></span>
+            <span class="character">柳<span class="pinyin">liǔ</span></span>
+            <span class="character">綠<span class="pinyin">lǜ</span></span>，
+            <span class="character">滿<span class="pinyin">mǎn</span></span>
+            <span class="character">園<span class="pinyin">yuán</span></span>
+            <span class="character">春<span class="pinyin">chūn</span></span>
+            <span class="character">雨<span class="pinyin">yǔ</span></span>
+            <span class="character">杏<span class="pinyin">xìng</span></span>
+            <span class="character">花<span class="pinyin">huā</span></span>
+            <span class="character">紅<span class="pinyin">hóng</span></span>。
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese3')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english3')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german3')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french3')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian3')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish3')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian3')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese3">夹岸晓烟杨柳绿，满园春雨杏花红。</div>
+            <div class="translation-content" id="english3">Morning mist shrouds both banks where willow trees are green; Spring rain fills the garden where apricot blossoms glow red.</div>
+            <div class="translation-content" id="german3">Morgennebel umhüllt beide Ufer, wo Weiden grün sind; Frühlingsregen füllt den Garten, wo Aprikosenblüten rot leuchten.</div>
+            <div class="translation-content" id="french3">La brume matinale enveloppe les deux rives où les saules sont verts ; la pluie printanière remplit le jardin où les fleurs d'abricotier rougeoient.</div>
+            <div class="translation-content" id="russian3">Утренний туман окутывает оба берега, где зеленеют ивы; весенний дождь наполняет сад, где алеют цветы абрикоса.</div>
+            <div class="translation-content" id="spanish3">La niebla matutina envuelve ambas orillas donde los sauces están verdes; la lluvia primaveral llena el jardín donde las flores de albaricoque son rojas.</div>
+            <div class="translation-content" id="italian3">La nebbia mattutina avvolge entrambe le sponde dove i salici sono verdi; la pioggia primaverile riempie il giardino dove i fiori di albicocco sono rossi.</div>
+        </div>
+    </div>
+
+    <div class="sentence">
+        <p>
+            <span class="character">兩<span class="pinyin">liǎng</span></span>
+            <span class="character">鬢<span class="pinyin">bìn</span></span>
+            <span class="character">風<span class="pinyin">fēng</span></span>
+            <span class="character">霜<span class="pinyin">shuāng</span></span>
+            <span class="character">途<span class="pinyin">tú</span></span>
+            <span class="character">次<span class="pinyin">cì</span></span>
+            <span class="character">早<span class="pinyin">zǎo</span></span>
+            <span class="character">行<span class="pinyin">xíng</span></span>
+            <span class="character">之<span class="pinyin">zhī</span></span>
+            <span class="character">客<span class="pinyin">kè</span></span>；
+            <span class="character">一<span class="pinyin">yī</span></span>
+            <span class="character">蓑<span class="pinyin">suō</span></span>
+            <span class="character">煙<span class="pinyin">yān</span></span>
+            <span class="character">雨<span class="pinyin">yǔ</span></span>
+            <span class="character">溪<span class="pinyin">xī</span></span>
+            <span class="character">邊<span class="pinyin">biān</span></span>
+            <span class="character">晚<span class="pinyin">wǎn</span></span>
+            <span class="character">釣<span class="pinyin">diào</span></span>
+            <span class="character">之<span class="pinyin">zhī</span></span>
+            <span class="character">翁<span class="pinyin">wēng</span></span>。
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese4')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english4')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german4')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french4')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian4')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish4')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian4')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese4">两鬓风霜途次早行之客；一蓑烟雨溪边晚钓之翁。</div>
+            <div class="translation-content" id="english4">A traveler with temples frosted by wind, setting out early on the road; An old man in straw cloak fishing by the stream in evening mist and rain.</div>
+            <div class="translation-content" id="german4">Ein Reisender mit vom Wind gebleichten Schläfen, der früh am Morgen aufbricht; ein alter Mann in einem Strohumhang, der abends im Nebelregen am Bach fischt.</div>
+            <div class="translation-content" id="french4">Un voyageur aux tempes givrées par le vent, partant tôt sur la route ; un vieil homme en cape de paille pêchant au crépuscule dans la brume et la pluie.</div>
+            <div class="translation-content" id="russian4">Путник с висками, побелевшими от ветра и инея, отправляющийся в путь на рассвете; старик в соломенной накидке, ловящий рыбу вечером в тумане и дожде.</div>
+            <div class="translation-content" id="spanish4">Un viajero con las sienes escarchadas por el viento, que parte temprano por el camino; un anciano con capa de paja pescando al atardecer en la neblina y la lluvia.</div>
+            <div class="translation-content" id="italian4">Un viaggiatore con le tempie ingrigite dal vento, che parte presto al mattino; un vecchio in mantello di paglia che pesca al tramonto nella nebbia e nella pioggia.</div>
+        </div>
+    </div>
+
+    <div class="section-divider">二、冬</div>
+
+    <div class="sentence">
+        <p>
+            <span class="character">春<span class="pinyin">chūn</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">夏<span class="pinyin">xià</span></span>，
+            <span class="character">秋<span class="pinyin">qiū</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">冬<span class="pinyin">dōng</span></span>，
+            <span class="character">暮<span class="pinyin">mù</span></span>
+            <span class="character">鼓<span class="pinyin">gǔ</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">晨<span class="pinyin">chén</span></span>
+            <span class="character">鐘<span class="pinyin">zhōng</span></span>。
+            <span class="character">觀<span class="pinyin">guān</span></span>
+            <span class="character">山<span class="pinyin">shān</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">玩<span class="pinyin">wán</span></span>
+            <span class="character">水<span class="pinyin">shuǐ</span></span>，
+            <span class="character">綠<span class="pinyin">lǜ</span></span>
+            <span class="character">竹<span class="pinyin">zhú</span></span>
+            <span class="character">對<span class="pinyin">duì</span></span>
+            <span class="character">蒼<span class="pinyin">cāng</span></span>
+            <span class="character">松<span class="pinyin">sōng</span></span>。
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese5')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english5')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german5')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french5')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian5')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish5')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian5')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese5">春对夏，秋对冬，暮鼓对晨钟。观山对玩水，绿竹对苍松。</div>
+            <div class="translation-content" id="english5">Spring pairs with summer, autumn with winter, evening drum with morning bell. Viewing mountains pairs with enjoying waters, green bamboo with dark pine.</div>
+            <div class="translation-content" id="german5">Frühling gegenüber Sommer, Herbst gegenüber Winter, Abendtrommel gegenüber Morgenglocke. Berge betrachten gegenüber Wasser genießen, grüner Bambus gegenüber dunkler Kiefer.</div>
+            <div class="translation-content" id="french5">Printemps contre été, automne contre hiver, tambour du soir contre cloche du matin. Contempler les montagnes contre jouer avec l'eau, bambou vert contre pin sombre.</div>
+            <div class="translation-content" id="russian5">Весна к лету, осень к зиме, вечерний барабан к утреннему колоколу. Наблюдение гор к наслаждению водами, зеленый бамбук к темной сосне.</div>
+            <div class="translation-content" id="spanish5">Primavera frente a verano, otoño frente a invierno, tambor vespertino frente a campana matutina. Contemplar montañas frente a disfrutar del agua, bambú verde frente a pino oscuro.</div>
+            <div class="translation-content" id="italian5">Primavera contro estate, autunno contro inverno, tamburo serale contro campana mattutina. Osservare montagne contro godersi l'acqua, bambù verde contro pino scuro.</div>
+        </div>
+    </div>
+
+    <div class="notes-window" id="notes-window">
+        <span class="close-btn" onclick="closeNotes()">×</span>
+        <div id="notes-content"></div>
+    </div>
+
+    <script>
+        // 当前激活的翻译ID计数器
+        let translationIdCounter = 100;
+        
+        // 为每个句子生成唯一ID
+        document.addEventListener('DOMContentLoaded', function() {
+            const translations = document.querySelectorAll('.translation');
+            translations.forEach(trans => {
+                const chineseId = 'chinese' + translationIdCounter;
+                const englishId = 'english' + translationIdCounter;
+                const germanId = 'german' + translationIdCounter;
+                const frenchId = 'french' + translationIdCounter;
+                const russianId = 'russian' + translationIdCounter;
+                const spanishId = 'spanish' + translationIdCounter;
+                const italianId = 'italian' + translationIdCounter;
+                
+                const header = trans.querySelector('.translation-header');
+                const chineseTab = header.querySelector('.translation-tab');
+                const englishTab = header.querySelectorAll('.translation-tab')[1];
+                const germanTab = header.querySelectorAll('.translation-tab')[2];
+                const frenchTab = header.querySelectorAll('.translation-tab')[3];
+                const russianTab = header.querySelectorAll('.translation-tab')[4];
+                const spanishTab = header.querySelectorAll('.translation-tab')[5];
+                const italianTab = header.querySelectorAll('.translation-tab')[6];
+                
+                const contents = trans.querySelectorAll('.translation-content');
+                contents[0].id = chineseId;
+                contents[1].id = englishId;
+                if (contents[2]) contents[2].id = germanId;
+                if (contents[3]) contents[3].id = frenchId;
+                if (contents[4]) contents[4].id = russianId;
+                if (contents[5]) contents[5].id = spanishId;
+                if (contents[6]) contents[6].id = italianId;
+                
+                chineseTab.setAttribute('onclick', `switchTranslation(this, '${chineseId}')`);
+                englishTab.setAttribute('onclick', `switchTranslation(this, '${englishId}')`);
+                if (germanTab) germanTab.setAttribute('onclick', `switchTranslation(this, '${germanId}')`);
+                if (frenchTab) frenchTab.setAttribute('onclick', `switchTranslation(this, '${frenchId}')`);
+                if (russianTab) russianTab.setAttribute('onclick', `switchTranslation(this, '${russianId}')`);
+                if (spanishTab) spanishTab.setAttribute('onclick', `switchTranslation(this, '${spanishId}')`);
+                if (italianTab) italianTab.setAttribute('onclick', `switchTranslation(this, '${italianId}')`);
+                
+                translationIdCounter++;
+            });
+        });
+        
+        // 切换翻译显示/隐藏
+        function toggleTranslation(button) {
+            const translationDiv = button.nextElementSibling;
+            if (translationDiv.style.display === "none") {
+                translationDiv.style.display = "block";
+                button.textContent = "隐藏翻译 ▲";
+            } else {
+                translationDiv.style.display = "none";
+                button.textContent = "显示翻译 ▼";
+            }
+        }
+        
+        // 切换翻译语言
+        function switchTranslation(tab, language) {
+            const header = tab.parentElement;
+            const contents = header.parentElement.querySelectorAll('.translation-content');
+            
+            // 更新标签
+            header.querySelectorAll('.translation-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // 更新内容
+            contents.forEach(c => c.classList.remove('active'));
+            document.getElementById(language).classList.add('active');
+        }
+        
+        // 显示所有指定语言的翻译
+        function showTranslation(langPrefix) {
+            document.querySelectorAll('.translation').forEach(trans => {
+                const header = trans.querySelector('.translation-header');
+                const contents = trans.querySelectorAll('.translation-content');
+                
+                // 找到对应语言的标签和内容
+                let targetTab = null;
+                let targetContent = null;
+                
+                header.querySelectorAll('.translation-tab').forEach((tab, index) => {
+                    if (tab.getAttribute('onclick').includes(langPrefix)) {
+                        targetTab = tab;
+                        const contentId = tab.getAttribute('onclick').match(/'([^']+)'/)[1];
+                        targetContent = document.getElementById(contentId);
+                    }
+                });
+                
+                if (targetTab && targetContent) {
+                    // 更新标签
+                    header.querySelectorAll('.translation-tab').forEach(t => t.classList.remove('active'));
+                    targetTab.classList.add('active');
+                    
+                    // 更新内容
+                    contents.forEach(c => c.classList.remove('active'));
+                    targetContent.classList.add('active');
+                    
+                    // 确保翻译区域是展开的
+                    const toggleBtn = trans.previousElementSibling;
+                    if (trans.style.display === "none") {
+                        trans.style.display = "block";
+                        toggleBtn.textContent = "隐藏翻译 ▲";
+                    }
+                }
+            });
+        }
+        
+        // 显示注释
+        function showNotes(character, explanation) {
+            document.getElementById('notes-content').innerHTML = `
+                <h3>${character}</h3>
+                <p>${explanation}</p>
+            `;
+            document.getElementById('notes-window').style.display = 'block';
+        }
+        
+        // 关闭注释窗口
+        function closeNotes() {
+            document.getElementById('notes-window').style.display = 'none';
+        }
+        
+        // 点击文档其他地方关闭注释窗口
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.character') && !e.target.closest('.notes-window')) {
+                closeNotes();
+            }
+        });
+        
+        // 简体转换
+        function convertToSimplified() {
+            // 这里应该有简繁体转换的实际逻辑
+            // 由于实际转换需要字典支持，这里只是示例
+            document.body.innerHTML = document.body.innerHTML
+                .replace(/雲/g, '云')
+                .replace(/對/g, '对')
+                .replace(/風/g, '风')
+                .replace(/曉/g, '晓')
+                .replace(/煙/g, '烟')
+                .replace(/楊/g, '杨')
+                .replace(/綠/g, '绿')
+                .replace(/園/g, '园')
+                .replace(/紅/g, '红')
+                .replace(/兩/g, '两')
+                .replace(/鬢/g, '鬓')
+                .replace(/蒼/g, '苍')
+                .replace(/觀/g, '观')
+                .replace(/鐘/g, '钟')
+                .replace(/聲/g, '声')
+                .replace(/啟/g, '启')
+                .replace(/蒙/g, '蒙');
+        }
+        
+        // 繁体转换
+        function convertToTraditional() {
+            // 这里应该有繁简体转换的实际逻辑
+            // 由于实际转换需要字典支持，这里只是示例
+            document.body.innerHTML = document.body.innerHTML
+                .replace(/云/g, '雲')
+                .replace(/对/g, '對')
+                .replace(/风/g, '風')
+                .replace(/晓/g, '曉')
+                .replace(/烟/g, '煙')
+                .replace(/杨/g, '楊')
+                .replace(/绿/g, '綠')
+                .replace(/园/g, '園')
+                .replace(/红/g, '紅')
+                .replace(/两/g, '兩')
+                .replace(/鬓/g, '鬢')
+                .replace(/苍/g, '蒼')
+                .replace(/观/g, '觀')
+                .replace(/钟/g, '鐘')
+                .replace(/声/g, '聲')
+                .replace(/启/g, '啟')
+                .replace(/蒙/g, '蒙');
+        }
+    </script>
+</body>
+</html>

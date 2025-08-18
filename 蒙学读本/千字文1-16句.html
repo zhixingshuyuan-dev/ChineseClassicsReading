@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>千字文</title>
+    <style>
+        body {
+            font-family: "SimSun", "宋体", serif;
+            background-color: #000000;
+            color: #ffffff;
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            font-size: 3em;
+        }
+        
+        h1 {
+            color: #ffffff;
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 60px;
+            border-bottom: 3px solid #666666;
+            padding-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.1);
+        }
+        
+        .sentence {
+            background-color: rgba(30, 30, 30, 0.9);
+            padding: 30px;
+            margin-bottom: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(255,255,255,0.05);
+            border-left: 6px solid #666666;
+        }
+        
+        .sentence p {
+            margin: 0;
+            color: #ffffff;
+            text-align: justify;
+            line-height: 2.0;
+        }
+        
+        .character {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .character:hover {
+            color: #ffcc00;
+            text-shadow: 0 0 3px rgba(255, 204, 0, 0.5);
+        }
+        
+        .pinyin {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #ffcc00;
+            color: #000000;
+            padding: 6px 16px;
+            border-radius: 5px;
+            white-space: nowrap;
+            z-index: 100;
+            font-size: 0.8em;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .character:hover .pinyin {
+            display: block;
+        }
+        
+        .toggle-translation {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #666666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        .toggle-translation:hover {
+            background-color: #888888;
+        }
+        
+        .translation {
+            margin-top: 30px;
+            padding: 0;
+            background-color: rgba(40, 40, 40, 0.9);
+            border-radius: 10px;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .translation-header {
+            display: flex;
+            background-color: #444444;
+            padding: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .translation-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: white;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+            font-size: 0.7em;
+        }
+        
+        .translation-tab.active {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #000000;
+            font-weight: bold;
+        }
+        
+        .translation-content {
+            display: none;
+            padding: 30px;
+            background-color: rgba(50, 50, 50, 0.9);
+            color: #ffffff;
+            line-height: 1.8;
+            font-size: 0.7em;
+        }
+        
+        .translation-content.active {
+            display: block;
+        }
+        
+        .notes-window {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #222222;
+            padding: 40px;
+            border: 2px solid #666666;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.1);
+            z-index: 1000;
+            max-width: 80%;
+            max-height: 80%;
+            overflow: auto;
+            border-radius: 10px;
+            color: #ffffff;
+            font-size: 0.9em;
+        }
+        
+        .notes-window h3 {
+            color: #ffcc00;
+            margin-top: 0;
+            border-bottom: 2px dashed #666666;
+            padding-bottom: 15px;
+            font-size: 1.2em;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 40px;
+            color: #ffcc00;
+        }
+        
+        .section-divider {
+            text-align: center;
+            margin: 60px 0;
+            color: #aaaaaa;
+            font-style: italic;
+            font-size: 1.2em;
+        }
+        
+        .control-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .control-btn {
+            padding: 8px 15px;
+            background-color: #666666;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.6em;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background-color: #888888;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 20px;
+                font-size: 2em;
+            }
+            
+            .sentence {
+                padding: 20px;
+            }
+            
+            .translation-header {
+                flex-wrap: wrap;
+            }
+            
+            .translation-tab {
+                margin-bottom: 10px;
+                padding: 8px 15px;
+                font-size: 0.6em;
+            }
+            
+            .control-panel {
+                position: static;
+                margin-bottom: 20px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <button class="control-btn" onclick="convertToSimplified()">简体</button>
+        <button class="control-btn" onclick="convertToTraditional()">繁體</button>
+        <button class="control-btn" onclick="showTranslation('chinese')">白话文</button>
+        <button class="control-btn" onclick="showTranslation('english')">English</button>
+        <button class="control-btn" onclick="showTranslation('german')">Deutsch</button>
+        <button class="control-btn" onclick="showTranslation('french')">Français</button>
+        <button class="control-btn" onclick="showTranslation('russian')">Русский</button>
+        <button class="control-btn" onclick="showTranslation('spanish')">Español</button>
+        <button class="control-btn" onclick="showTranslation('italian')">Italiano</button>
+    </div>
+
+    <h1>千字文</h1>
+    <div class="section-divider">［梁］敕员外散骑侍郎·周兴嗣·撰</div>
+
+    <!-- 第1-2句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('天', 'Sky; The heavens above')">天<span class="pinyin">tiān</span></span>
+            <span class="character" onclick="showNotes('地', 'Earth; The ground beneath')">地<span class="pinyin">dì</span></span>
+            <span class="character" onclick="showNotes('玄', 'Black; Profound')">玄<span class="pinyin">xuán</span></span>
+            <span class="character" onclick="showNotes('黄', 'Yellow; The color')">黄<span class="pinyin">huáng</span></span>，
+            <span class="character" onclick="showNotes('宇', 'Space; The cosmos')">宇<span class="pinyin">yǔ</span></span>
+            <span class="character" onclick="showNotes('宙', 'Time; Eternity')">宙<span class="pinyin">zhòu</span></span>
+            <span class="character" onclick="showNotes('洪', 'Vast; Great')">洪<span class="pinyin">hóng</span></span>
+            <span class="character" onclick="showNotes('荒', 'Wild; Desolate')">荒<span class="pinyin">huāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese1')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english1')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german1')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french1')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian1')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish1')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian1')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese1">天空是玄黑色，大地是黄色，宇宙形成于混沌蒙昧的状态中。</div>
+            <div class="translation-content" id="english1">The sky is dark black, the earth is yellow; The universe was vast and wild in chaos.</div>
+            <div class="translation-content" id="german1">Der Himmel ist dunkel, die Erde ist gelb; Das Universum war in ursprünglichem Chaos.</div>
+            <div class="translation-content" id="french1">Le ciel est noir, la terre est jaune ; L'univers était vaste et sauvage dans le chaos.</div>
+            <div class="translation-content" id="russian1">Небо темное, земля желтая; Вселенная была обширной и дикой в хаосе.</div>
+            <div class="translation-content" id="spanish1">El cielo es negro oscuro, la tierra es amarilla; El universo era vasto y salvaje en el caos.</div>
+            <div class="translation-content" id="italian1">Il cielo è nero, la terra è gialla; L'universo era vasto e selvaggio nel caos.</div>
+        </div>
+    </div>
+
+    <!-- 第3-4句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('日', 'Sun; The day star')">日<span class="pinyin">rì</span></span>
+            <span class="character" onclick="showNotes('月', 'Moon; The night light')">月<span class="pinyin">yuè</span></span>
+            <span class="character" onclick="showNotes('盈', 'Full; Waxing')">盈<span class="pinyin">yíng</span></span>
+            <span class="character" onclick="showNotes('昃', 'Decline; Waning')">昃<span class="pinyin">zè</span></span>，
+            <span class="character" onclick="showNotes('辰', 'Stars; Celestial bodies')">辰<span class="pinyin">chén</span></span>
+            <span class="character" onclick="showNotes('宿', 'Constellations; Lodging')">宿<span class="pinyin">xiù</span></span>
+            <span class="character" onclick="showNotes('列', 'Arrange; Array')">列<span class="pinyin">liè</span></span>
+            <span class="character" onclick="showNotes('张', 'Spread out; Display')">张<span class="pinyin">zhāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese2')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english2')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german2')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french2')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian2')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish2')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian2')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese2">太阳有正有斜，月亮有缺有圆，星辰布满在无边的太空中。</div>
+            <div class="translation-content" id="english2">The sun rises and sets, the moon waxes and wanes; The stars are arrayed across the boundless firmament.</div>
+            <div class="translation-content" id="german2">Die Sonne geht auf und unter, der Mond nimmt zu und ab; Die Sterne sind über das grenzenlose Firmament verteilt.</div>
+            <div class="translation-content" id="french2">Le soleil se lève et se couche, la lune croît et décroît ; Les étoiles sont disposées à travers le firmament sans limites.</div>
+            <div class="translation-content" id="russian2">Солнце встает и заходит, луна растет и убывает; Звезды расположены по всему безграничному небосводу.</div>
+            <div class="translation-content" id="spanish2">El sol sale y se pone, la luna crece y mengua; Las estrellas están dispuestas en el firmamento sin límites.</div>
+            <div class="translation-content" id="italian2">Il sole sorge e tramonta, la luna cresce e cala; Le stelle sono disposte attraverso il firmamento senza confini.</div>
+        </div>
+    </div>
+
+    <!-- 第5-6句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('寒', 'Cold; Winter')">寒<span class="pinyin">hán</span></span>
+            <span class="character" onclick="showNotes('来', 'Come; Arrive')">来<span class="pinyin">lái</span></span>
+            <span class="character" onclick="showNotes('暑', 'Heat; Summer')">暑<span class="pinyin">shǔ</span></span>
+            <span class="character" onclick="showNotes('往', 'Go; Depart')">往<span class="pinyin">wǎng</span></span>，
+            <span class="character" onclick="showNotes('秋', 'Autumn; Fall')">秋<span class="pinyin">qiū</span></span>
+            <span class="character" onclick="showNotes('收', 'Harvest; Gather')">收<span class="pinyin">shōu</span></span>
+            <span class="character" onclick="showNotes('冬', 'Winter')">冬<span class="pinyin">dōng</span></span>
+            <span class="character" onclick="showNotes('藏', 'Store; Hide')">藏<span class="pinyin">cáng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese3')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english3')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german3')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french3')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian3')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish3')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian3')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese3">寒暑循环变换，来了又去，去了又来；秋季里忙着收割，冬天里忙着储藏。</div>
+            <div class="translation-content" id="english3">Cold and heat come and go in cycles; Autumn is for harvest, winter for storage.</div>
+            <div class="translation-content" id="german3">Kälte und Hitze kommen und gehen in Zyklen; Der Herbst ist für die Ernte, der Winter für die Lagerung.</div>
+            <div class="translation-content" id="french3">Le froid et la chaleur vont et viennent en cycles; L'automne est pour la récolte, l'hiver pour le stockage.</div>
+            <div class="translation-content" id="russian3">Холод и жара приходят и уходят циклами; Осень для сбора урожая, зима для хранения.</div>
+            <div class="translation-content" id="spanish3">El frío y el calor van y vienen en ciclos; El otoño es para la cosecha, el invierno para el almacenamiento.</div>
+            <div class="translation-content" id="italian3">Il freddo e il caldo vanno e vengono in cicli; L'autunno è per il raccolto, l'inverno per lo stoccaggio.</div>
+        </div>
+    </div>
+
+    <!-- 第7-8句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('闰', 'Intercalary; Leap')">闰<span class="pinyin">rùn</span></span>
+            <span class="character" onclick="showNotes('馀', 'Surplus; Extra')">馀<span class="pinyin">yú</span></span>
+            <span class="character" onclick="showNotes('成', 'Form; Become')">成<span class="pinyin">chéng</span></span>
+            <span class="character" onclick="showNotes('岁', 'Year; Age')">岁<span class="pinyin">suì</span></span>，
+            <span class="character" onclick="showNotes('律', 'Pitch-pipe; Rule')">律<span class="pinyin">lǜ</span></span>
+            <span class="character" onclick="showNotes('吕', 'Pitch-pipe; Musical tone')">吕<span class="pinyin">lǚ</span></span>
+            <span class="character" onclick="showNotes('调', 'Regulate; Adjust')">调<span class="pinyin">tiáo</span></span>
+            <span class="character" onclick="showNotes('阳', 'Yang; Sunlight')">阳<span class="pinyin">yáng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese4')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english4')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german4')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french4')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian4')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish4')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian4')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese4">积累数年的闰余并成一个月，放在闰年里；古人用六律六吕来调节阴阳。</div>
+            <div class="translation-content" id="english4">The intercalary days accumulate to form a leap month; The ancient pitch-pipes regulated yin and yang.</div>
+            <div class="translation-content" id="german4">Die Schalttage häufen sich zu einem Schaltmonat an; Die alten Tonpfeifen regulierten Yin und Yang.</div>
+            <div class="translation-content" id="french4">Les jours intercalaires s'accumulent pour former un mois bissextile; Les anciennes flûtes régulaient le yin et le yang.</div>
+            <div class="translation-content" id="russian4">Високосные дни накапливаются, образуя високосный месяц; Древние музыкальные трубки регулировали инь и ян.</div>
+            <div class="translation-content" id="spanish4">Los días intercalares se acumulan para formar un mes bisiesto; Las antiguas flautas regulaban el yin y el yang.</div>
+            <div class="translation-content" id="italian4">I giorni intercalari si accumulano per formare un mese bisestile; Gli antichi flauti regolavano lo yin e lo yang.</div>
+        </div>
+    </div>
+
+    <!-- 第9-10句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('云', 'Cloud')">云<span class="pinyin">yún</span></span>
+            <span class="character" onclick="showNotes('腾', 'Soar; Rise')">腾<span class="pinyin">téng</span></span>
+            <span class="character" onclick="showNotes('致', 'Cause; Result in')">致<span class="pinyin">zhì</span></span>
+            <span class="character" onclick="showNotes('雨', 'Rain')">雨<span class="pinyin">yǔ</span></span>，
+            <span class="character" onclick="showNotes('露', 'Dew')">露<span class="pinyin">lù</span></span>
+            <span class="character" onclick="showNotes('结', 'Form; Condense')">结<span class="pinyin">jié</span></span>
+            <span class="character" onclick="showNotes('为', 'Become; Turn into')">为<span class="pinyin">wéi</span></span>
+            <span class="character" onclick="showNotes('霜', 'Frost')">霜<span class="pinyin">shuāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese5')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english5')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german5')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french5')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian5')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish5')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian5')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese5">云气升到天空，遇冷就形成雨；露水碰上寒夜，很快凝结为霜。</div>
+            <div class="translation-content" id="english5">Clouds rise to form rain; Dew condenses into frost.</div>
+            <div class="translation-content" id="german5">Wolken steigen auf und bilden Regen; Tau kondensiert zu Frost.</div>
+            <div class="translation-content" id="french5">Les nuages montent pour former la pluie; La rosée se condense en givre.</div>
+            <div class="translation-content" id="russian5">Облака поднимаются, образуя дождь; Роса конденсируется в иней.</div>
+            <div class="translation-content" id="spanish5">Las nubes ascienden para formar lluvia; El rocío se condensa en escarcha.</div>
+            <div class="translation-content" id="italian5">Le nuvole salgono per formare la pioggia; La rugiada si condensa in brina.</div>
+        </div>
+    </div>
+
+    <!-- 第11-12句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('金', 'Gold; Metal')">金<span class="pinyin">jīn</span></span>
+            <span class="character" onclick="showNotes('生', 'Born; Produced')">生<span class="pinyin">shēng</span></span>
+            <span class="character" onclick="showNotes('丽', 'Beautiful')">丽<span class="pinyin">lì</span></span>
+            <span class="character" onclick="showNotes('水', 'Water')">水<span class="pinyin">shuǐ</span></span>，
+            <span class="character" onclick="showNotes('玉', 'Jade')">玉<span class="pinyin">yù</span></span>
+            <span class="character" onclick="showNotes('出', 'Come from')">出<span class="pinyin">chū</span></span>
+            <span class="character" onclick="showNotes('昆', 'Kunlun Mountains')">昆<span class="pinyin">kūn</span></span>
+            <span class="character" onclick="showNotes('冈', 'Ridge')">冈<span class="pinyin">gāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese6')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english6')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german6')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french6')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian6')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish6')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian6')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese6">黄金产在金沙江，玉石出在昆仑山岗。</div>
+            <div class="translation-content" id="english6">Gold is born in the Lishui River; Jade comes from Kunlun ridges.</div>
+            <div class="translation-content" id="german6">Gold wird im Lishui-Fluss geboren; Jade kommt von den Kunlun-Graten.</div>
+            <div class="translation-content" id="french6">L'or est né dans la rivière Lishui; Le jade provient des crêtes du Kunlun.</div>
+            <div class="translation-content" id="russian6">Золото рождается в реке Лишуй; Нефрит происходит из хребтов Куньлунь.</div>
+            <div class="translation-content" id="spanish6">El oro nace en el río Lishui; El jade proviene de las crestas de Kunlun.</div>
+            <div class="translation-content" id="italian6">L'oro nasce nel fiume Lishui; Il giada proviene dalle creste del Kunlun.</div>
+        </div>
+    </div>
+
+    <!-- 第13-14句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('剑', 'Sword')">剑<span class="pinyin">jiàn</span></span>
+            <span class="character" onclick="showNotes('号', 'Called; Named')">号<span class="pinyin">hào</span></span>
+            <span class="character" onclick="showNotes('巨', 'Huge')">巨<span class="pinyin">jù</span></span>
+            <span class="character" onclick="showNotes('阙', 'Tower')">阙<span class="pinyin">quē</span></span>，
+            <span class="character" onclick="showNotes('珠', 'Pearl')">珠<span class="pinyin">zhū</span></span>
+            <span class="character" onclick="showNotes('称', 'Called; Named')">称<span class="pinyin">chēng</span></span>
+            <span class="character" onclick="showNotes('夜', 'Night')">夜<span class="pinyin">yè</span></span>
+            <span class="character" onclick="showNotes('光', 'Light')">光<span class="pinyin">guāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese7')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english7')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german7')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french7')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian7')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish7')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian7')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese7">最有名的宝剑叫"巨阙"，最贵重的明珠叫"夜光"。</div>
+            <div class="translation-content" id="english7">The most famous sword is called "Juque"; The most precious pearl is named "Nocturnal Light".</div>
+            <div class="translation-content" id="german7">Das berühmteste Schwert heißt "Juque"; Die wertvollste Perle heißt "Nachtlicht".</div>
+            <div class="translation-content" id="french7">L'épée la plus célèbre s'appelle "Juque"; La perle la plus précieuse s'appelle "Lumière Nocturne".</div>
+            <div class="translation-content" id="russian7">Самый известный меч называется "Цзюйцюэ"; Самая драгоценная жемчужина называется "Ночной свет".</div>
+            <div class="translation-content" id="spanish7">La espada más famosa se llama "Juque"; La perla más preciosa se llama "Luz Nocturna".</div>
+            <div class="translation-content" id="italian7">La spada più famosa si chiama "Juque"; La perla più preziosa si chiama "Luce Notturna".</div>
+        </div>
+    </div>
+
+    <!-- 第15-16句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('果', 'Fruit')">果<span class="pinyin">guǒ</span></span>
+            <span class="character" onclick="showNotes('珍', 'Treasure; Precious')">珍<span class="pinyin">zhēn</span></span>
+            <span class="character" onclick="showNotes('李', 'Plum')">李<span class="pinyin">lǐ</span></span>
+            <span class="character" onclick="showNotes('柰', 'Pear')">柰<span class="pinyin">nài</span></span>，
+            <span class="character" onclick="showNotes('菜', 'Vegetable')">菜<span class="pinyin">cài</span></span>
+            <span class="character" onclick="showNotes('重', 'Important')">重<span class="pinyin">zhòng</span></span>
+            <span class="character" onclick="showNotes('芥', 'Mustard')">芥<span class="pinyin">jiè</span></span>
+            <span class="character" onclick="showNotes('姜', 'Ginger')">姜<span class="pinyin">jiāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese8')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english8')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german8')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french8')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian8')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish8')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian8')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese8">水果中的珍品是李子和柰子，蔬菜中最重要的是芥菜和生姜。</div>
+            <div class="translation-content" id="english8">Among fruits, the treasures are plums and pears; Among vegetables, the most important are mustard and ginger.</div>
+            <div class="translation-content" id="german8">Unter den Früchten sind die Schätze Pflaumen und Birnen; Unter den Gemüsen sind die wichtigsten Senf und Ingwer.</div>
+            <div class="translation-content" id="french8">Parmi les fruits, les trésors sont les prunes et les poires; Parmi les légumes, les plus importants sont la moutarde et le gingembre.</div>
+            <div class="translation-content" id="russian8">Среди фруктов сокровища - сливы и груши; Среди овощей самые важные - горчица и имбирь.</div>
+            <div class="translation-content" id="spanish8">Entre las frutas, los tesoros son las ciruelas y las peras; Entre las verduras, las más importantes son la mostaza y el jengibre.</div>
+            <div class="translation-content" id="italian8">Tra i frutti, i tesori sono le prugne e le pere; Tra le verdure, le più importanti sono la senape e lo zenzero.</div>
+        </div>
+    </div>
+
+    <!-- 第17-18句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('海', 'Sea')">海<span class="pinyin">hǎi</span></span>
+            <span class="character" onclick="showNotes('咸', 'Salty')">咸<span class="pinyin">xián</span></span>
+            <span class="character" onclick="showNotes('河', 'River')">河<span class="pinyin">hé</span></span>
+            <span class="character" onclick="showNotes('淡', 'Fresh; Light')">淡<span class="pinyin">dàn</span></span>，
+            <span class="character" onclick="showNotes('鳞', 'Scale; Fish')">鳞<span class="pinyin">lín</span></span>
+            <span class="character" onclick="showNotes('潜', 'Dive')">潜<span class="pinyin">qián</span></span>
+            <span class="character" onclick="showNotes('羽', 'Feather; Bird')">羽<span class="pinyin">yǔ</span></span>
+            <span class="character" onclick="showNotes('翔', 'Fly')">翔<span class="pinyin">xiáng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese9')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english9')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german9')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french9')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian9')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish9')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian9')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese9">海水是咸的，河水是淡的；鱼儿在水中潜游，鸟儿在空中飞翔。</div>
+            <div class="translation-content" id="english9">Seawater is salty, river water is fresh; Fish swim underwater, birds fly in the air.</div>
+            <div class="translation-content" id="german9">Meerwasser ist salzig, Flusswasser ist frisch; Fische schwimmen unter Wasser, Vögel fliegen in der Luft.</div>
+            <div class="translation-content" id="french9">L'eau de mer est salée, l'eau de rivière est douce; Les poissons nagent sous l'eau, les oiseaux volent dans les airs.</div>
+            <div class="translation-content" id="russian9">Морская вода соленая, речная вода пресная; Рыбы плавают под водой, птицы летают в воздухе.</div>
+            <div class="translation-content" id="spanish9">El agua de mar es salada, el agua de río es dulce; Los peces nadan bajo el agua, los pájaros vuelan en el aire.</div>
+            <div class="translation-content" id="italian9">L'acqua di mare è salata, l'acqua del fiume è dolce; I pesci nuotano sott'acqua, gli uccelli volano nell'aria.</div>
+        </div>
+    </div>
+
+    <!-- 第19-20句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('龙', 'Dragon')">龙<span class="pinyin">lóng</span></span>
+            <span class="character" onclick="showNotes('师', 'Teacher')">师<span class="pinyin">shī</span></span>
+            <span class="character" onclick="showNotes('火', 'Fire')">火<span class="pinyin">huǒ</span></span>
+            <span class="character" onclick="showNotes('帝', 'Emperor')">帝<span class="pinyin">dì</span></span>，
+            <span class="character" onclick="showNotes('鸟', 'Bird')">鸟<span class="pinyin">niǎo</span></span>
+            <span class="character" onclick="showNotes('官', 'Official')">官<span class="pinyin">guān</span></span>
+            <span class="character" onclick="showNotes('人', 'Human')">人<span class="pinyin">rén</span></span>
+            <span class="character" onclick="showNotes('皇', 'Emperor')">皇<span class="pinyin">huáng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese10')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english10')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german10')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french10')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian10')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish10')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian10')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese10">龙师、火帝、鸟官、人皇，这都是上古时代的帝皇官员。</div>
+            <div class="translation-content" id="english10">Dragon Teacher, Fire Emperor, Bird Official, Human Sovereign - these were the rulers and officials of ancient times.</div>
+            <div class="translation-content" id="german10">Drachenlehrer, Feuerkaiser, Vogelbeamter, Menschenkaiser - dies waren die Herrscher und Beamten der Antike.</div>
+            <div class="translation-content" id="french10">Maître Dragon, Empereur du Feu, Officier Oiseau, Souverain Humain - c'étaient les dirigeants et les fonctionnaires des temps anciens.</div>
+            <div class="translation-content" id="russian10">Учитель Дракон, Император Огня, Чиновник Птица, Владыка Людей - это были правители и чиновники древних времен.</div>
+            <div class="translation-content" id="spanish10">Maestro Dragón, Emperador Fuego, Oficial Pájaro, Soberano Humano - estos eran los gobernantes y funcionarios de los tiempos antiguos.</div>
+            <div class="translation-content" id="italian10">Maestro Drago, Imperatore Fuoco, Ufficiale Uccello, Sovrano Umano - questi erano i governanti e i funzionari dei tempi antichi.</div>
+        </div>
+    </div>
+
+    <!-- 第21-22句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('始', 'Begin')">始<span class="pinyin">shǐ</span></span>
+            <span class="character" onclick="showNotes('制', 'Create')">制<span class="pinyin">zhì</span></span>
+            <span class="character" onclick="showNotes('文', 'Writing')">文<span class="pinyin">wén</span></span>
+            <span class="character" onclick="showNotes('字', 'Character')">字<span class="pinyin">zì</span></span>，
+            <span class="character" onclick="showNotes('乃', 'Then')">乃<span class="pinyin">nǎi</span></span>
+            <span class="character" onclick="showNotes('服', 'Wear')">服<span class="pinyin">fú</span></span>
+            <span class="character" onclick="showNotes('衣', 'Clothes')">衣<span class="pinyin">yī</span></span>
+            <span class="character" onclick="showNotes('裳', 'Skirt')">裳<span class="pinyin">cháng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese11')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english11')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german11')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french11')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian11')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish11')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian11')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese11">仓颉创造了文字，嫘祖制作了衣裳。</div>
+            <div class="translation-content" id="english11">Cangjie created writing; Leizu made clothing.</div>
+            <div class="translation-content" id="german11">Cangjie schuf die Schrift; Leizu machte Kleidung.</div>
+            <div class="translation-content" id="french11">Cangjie a créé l'écriture; Leizu a fait des vêtements.</div>
+            <div class="translation-content" id="russian11">Цанцзе создал письменность; Лэйцзу сделала одежду.</div>
+            <div class="translation-content" id="spanish11">Cangjie creó la escritura; Leizu hizo ropa.</div>
+            <div class="translation-content" id="italian11">Cangjie creò la scrittura; Leizu fece i vestiti.</div>
+        </div>
+    </div>
+
+    <!-- 第23-24句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('推', 'Push; Yield')">推<span class="pinyin">tuī</span></span>
+            <span class="character" onclick="showNotes('位', 'Position')">位<span class="pinyin">wèi</span></span>
+            <span class="character" onclick="showNotes('让', 'Yield')">让<span class="pinyin">ràng</span></span>
+            <span class="character" onclick="showNotes('国', 'Country')">国<span class="pinyin">guó</span></span>，
+            <span class="character" onclick="showNotes('有', 'Have')">有<span class="pinyin">yǒu</span></span>
+            <span class="character" onclick="showNotes('虞', 'Emperor Shun')">虞<span class="pinyin">yú</span></span>
+            <span class="character" onclick="showNotes('陶', 'Pottery')">陶<span class="pinyin">táo</span></span>
+            <span class="character" onclick="showNotes('唐', 'Emperor Yao')">唐<span class="pinyin">táng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese12')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english12')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german12')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french12')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian12')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish12')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian12')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese12">主动把君位让给贤能的人，是尧帝和舜帝。</div>
+            <div class="translation-content" id="english12">Voluntarily yielding the throne to the worthy - these were Emperors Yao and Shun.</div>
+            <div class="translation-content" id="german12">Freiwillig den Thron an die Würdigen abgeben - das waren die Kaiser Yao und Shun.</div>
+            <div class="translation-content" id="french12">Céder volontairement le trône aux dignes - c'étaient les empereurs Yao et Shun.</div>
+            <div class="translation-content" id="russian12">Добровольно уступить трон достойным - это были императоры Яо и Шунь.</div>
+            <div class="translation-content" id="spanish12">Ceder voluntariamente el trono a los dignos - estos fueron los emperadores Yao y Shun.</div>
+            <div class="translation-content" id="italian12">Cedere volontariamente il trono ai degni - questi erano gli imperatori Yao e Shun.</div>
+        </div>
+    </div>
+
+    <!-- 第25-26句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('吊', 'Console')">吊<span class="pinyin">diào</span></span>
+            <span class="character" onclick="showNotes('民', 'People')">民<span class="pinyin">mín</span></span>
+            <span class="character" onclick="showNotes('伐', 'Attack')">伐<span class="pinyin">fá</span></span>
+            <span class="character" onclick="showNotes('罪', 'Crime')">罪<span class="pinyin">zuì</span></span>，
+            <span class="character" onclick="showNotes('周', 'Zhou Dynasty')">周<span class="pinyin">zhōu</span></span>
+            <span class="character" onclick="showNotes('发', 'King Wu of Zhou')">发<span class="pinyin">fā</span></span>
+            <span class="character" onclick="showNotes('殷', 'Shang Dynasty')">殷<span class="pinyin">yīn</span></span>
+            <span class="character" onclick="showNotes('汤', 'King Tang of Shang')">汤<span class="pinyin">tāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese13')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english13')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german13')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french13')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian13')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish13')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian13')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese13">安抚百姓，讨伐暴君，是周武王姬发和商王成汤。</div>
+            <div class="translation-content" id="english13">Consoling the people and attacking tyrants - these were King Wu of Zhou and King Tang of Shang.</div>
+            <div class="translation-content" id="german13">Das Volk trösten und Tyrannen angreifen - das waren König Wu von Zhou und König Tang von Shang.</div>
+            <div class="translation-content" id="french13">Consoler le peuple et attaquer les tyrans - c'étaient le roi Wu de Zhou et le roi Tang de Shang.</div>
+            <div class="translation-content" id="russian13">Утешать народ и нападать на тиранов - это были король У из Чжоу и король Тан из Шан.</div>
+            <div class="translation-content" id="spanish13">Consolar al pueblo y atacar a los tiranos - estos fueron el rey Wu de Zhou y el rey Tang de Shang.</div>
+            <div class="translation-content" id="italian13">Consolare il popolo e attaccare i tiranni - questi erano il re Wu di Zhou e il re Tang di Shang.</div>
+        </div>
+    </div>
+
+    <!-- 第27-28句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('坐', 'Sit')">坐<span class="pinyin">zuò</span></span>
+            <span class="character" onclick="showNotes('朝', 'Court')">朝<span class="pinyin">cháo</span></span>
+            <span class="character" onclick="showNotes('问', 'Ask')">问<span class="pinyin">wèn</span></span>
+            <span class="character" onclick="showNotes('道', 'Way')">道<span class="pinyin">dào</span></span>，
+            <span class="character" onclick="showNotes('垂', 'Hang down')">垂<span class="pinyin">chuí</span></span>
+            <span class="character" onclick="showNotes('拱', 'Fold hands')">拱<span class="pinyin">gǒng</span></span>
+            <span class="character" onclick="showNotes('平', 'Peace')">平<span class="pinyin">píng</span></span>
+            <span class="character" onclick="showNotes('章', 'Regulate')">章<span class="pinyin">zhāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese14')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english14')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german14')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french14')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian14')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish14')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian14')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese14">贤明的君主坐在朝廷上询问治国之道，垂衣拱手就能治理好天下。</div>
+            <div class="translation-content" id="english14">Wise rulers sit in court inquiring about governance; With folded hands they bring peace to the world.</div>
+            <div class="translation-content" id="german14">Weise Herrscher sitzen am Hof und erkundigen sich nach der Regierungsführung; Mit gefalteten Händen bringen sie Frieden in die Welt.</div>
+            <div class="translation-content" id="french14">Les sages dirigeants siègent à la cour pour s'enquérir de la gouvernance; Les mains jointes, ils apportent la paix au monde.</div>
+            <div class="translation-content" id="russian14">Мудрые правители сидят при дворе, расспрашивая об управлении; Сложив руки, они приносят мир в мир.</div>
+            <div class="translation-content" id="spanish14">Los gobernantes sabios se sientan en la corte preguntando sobre el gobierno; Con las manos juntas traen paz al mundo.</div>
+            <div class="translation-content" id="italian14">I governanti saggi siedono in tribunale chiedendo informazioni sul governo; Con le mani giunte portano la pace nel mondo.</div>
+        </div>
+    </div>
+
+    <!-- 第29-30句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('爱', 'Love')">爱<span class="pinyin">ài</span></span>
+            <span class="character" onclick="showNotes('育', 'Nurture')">育<span class="pinyin">yù</span></span>
+            <span class="character" onclick="showNotes('黎', 'Black-haired')">黎<span class="pinyin">lí</span></span>
+            <span class="character" onclick="showNotes('首', 'Head; People')">首<span class="pinyin">shǒu</span></span>，
+            <span class="character" onclick="showNotes('臣', 'Minister')">臣<span class="pinyin">chén</span></span>
+            <span class="character" onclick="showNotes('伏', 'Submit')">伏<span class="pinyin">fú</span></span>
+            <span class="character" onclick="showNotes('戎', 'Western tribes')">戎<span class="pinyin">róng</span></span>
+            <span class="character" onclick="showNotes('羌', 'Qiang people')">羌<span class="pinyin">qiāng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese15')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english15')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german15')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french15')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian15')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish15')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian15')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese15">他们爱护养育百姓，使四方各族人都来俯首称臣。</div>
+            <div class="translation-content" id="english15">They love and nurture the people, making all tribes submit and bow.</div>
+            <div class="translation-content" id="german15">Sie lieben und pflegen das Volk, lassen alle Stämme sich unterwerfen und verbeugen.</div>
+            <div class="translation-content" id="french15">Ils aiment et nourrissent le peuple, faisant se soumettre et s'incliner toutes les tribus.</div>
+            <div class="translation-content" id="russian15">Они любят и воспитывают народ, заставляя все племена подчиняться и кланяться.</div>
+            <div class="translation-content" id="spanish15">Ellos aman y nutren al pueblo, haciendo que todas las tribus se sometan y se inclinen.</div>
+            <div class="translation-content" id="italian15">Amano e nutrono il popolo, facendo sì che tutte le tribù si sottomettano e si inchinino.</div>
+        </div>
+    </div>
+
+    <!-- 第31-32句 -->
+    <div class="sentence">
+        <p>
+            <span class="character" onclick="showNotes('遐', 'Far')">遐<span class="pinyin">xiá</span></span>
+            <span class="character" onclick="showNotes('迩', 'Near')">迩<span class="pinyin">ěr</span></span>
+            <span class="character" onclick="showNotes('一', 'One')">一<span class="pinyin">yī</span></span>
+            <span class="character" onclick="showNotes('体', 'Body; Unity')">体<span class="pinyin">tǐ</span></span>，
+            <span class="character" onclick="showNotes('率', 'Lead')">率<span class="pinyin">shuài</span></span>
+            <span class="character" onclick="showNotes('宾', 'Guest')">宾<span class="pinyin">bīn</span></span>
+            <span class="character" onclick="showNotes('归', 'Return')">归<span class="pinyin">guī</span></span>
+            <span class="character" onclick="showNotes('王', 'King')">王<span class="pinyin">wáng</span></span>，
+        </p>
+        <div class="toggle-translation" onclick="toggleTranslation(this)">显示翻译 ▼</div>
+        <div class="translation" style="display:none">
+            <div class="translation-header">
+                <div class="translation-tab active" onclick="switchTranslation(this, 'chinese16')">白话文</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'english16')">English</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'german16')">Deutsch</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'french16')">Français</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'russian16')">Русский</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'spanish16')">Español</div>
+                <div class="translation-tab" onclick="switchTranslation(this, 'italian16')">Italiano</div>
+            </div>
+            <div class="translation-content active" id="chinese16">普天之下都统一成了一个整体，所有的老百姓都服服贴贴地归顺于他的统治。</div>
+            <div class="translation-content" id="english16">All under heaven is unified as one; All people obediently submit to his rule.</div>
+            <div class="translation-content" id="german16">Alles unter dem Himmel ist als eins vereint; Alle Menschen unterwerfen sich gehorsam seiner Herrschaft.</div>
+            <div class="translation-content" id="french16">Tout sous le ciel est unifié comme un seul; Tous les gens se soumettent docilement à son règne.</div>
+            <div class="translation-content" id="russian16">Все под небом объединено как одно; Все люди покорно подчиняются его правлению.</div>
+            <div class="translation-content" id="spanish16">Todo bajo el cielo está unificado como uno; Toda la gente se somete obedientemente a su gobierno.</div>
+            <div class="translation-content" id="italian16">Tutto sotto il cielo è unificato come uno; Tutte le persone si sottomettono obbedientemente al suo governo.</div>
+        </div>
+    </div>
+
+    <div class="notes-window" id="notes-window">
+        <span class="close-btn" onclick="closeNotes()">×</span>
+        <div id="notes-content"></div>
+    </div>
+
+    <script>
+        // 当前激活的翻译ID计数器
+        let translationIdCounter = 100;
+        
+        // 为每个句子生成唯一ID
+        document.addEventListener('DOMContentLoaded', function() {
+            const translations = document.querySelectorAll('.translation');
+            translations.forEach(trans => {
+                const chineseId = 'chinese' + translationIdCounter;
+                const englishId = 'english' + translationIdCounter;
+                const germanId = 'german' + translationIdCounter;
+                const frenchId = 'french' + translationIdCounter;
+                const russianId = 'russian' + translationIdCounter;
+                const spanishId = 'spanish' + translationIdCounter;
+                const italianId = 'italian' + translationIdCounter;
+                
+                const header = trans.querySelector('.translation-header');
+                const chineseTab = header.querySelector('.translation-tab');
+                const englishTab = header.querySelectorAll('.translation-tab')[1];
+                const germanTab = header.querySelectorAll('.translation-tab')[2];
+                const frenchTab = header.querySelectorAll('.translation-tab')[3];
+                const russianTab = header.querySelectorAll('.translation-tab')[4];
+                const spanishTab = header.querySelectorAll('.translation-tab')[5];
+                const italianTab = header.querySelectorAll('.translation-tab')[6];
+                
+                const contents = trans.querySelectorAll('.translation-content');
+                contents[0].id = chineseId;
+                contents[1].id = englishId;
+                if (contents[2]) contents[2].id = germanId;
+                if (contents[3]) contents[3].id = frenchId;
+                if (contents[4]) contents[4].id = russianId;
+                if (contents[5]) contents[5].id = spanishId;
+                if (contents[6]) contents[6].id = italianId;
+                
+                chineseTab.setAttribute('onclick', `switchTranslation(this, '${chineseId}')`);
+                englishTab.setAttribute('onclick', `switchTranslation(this, '${englishId}')`);
+                if (germanTab) germanTab.setAttribute('onclick', `switchTranslation(this, '${germanId}')`);
+                if (frenchTab) frenchTab.setAttribute('onclick', `switchTranslation(this, '${frenchId}')`);
+                if (russianTab) russianTab.setAttribute('onclick', `switchTranslation(this, '${russianId}')`);
+                if (spanishTab) spanishTab.setAttribute('onclick', `switchTranslation(this, '${spanishId}')`);
+                if (italianTab) italianTab.setAttribute('onclick', `switchTranslation(this, '${italianId}')`);
+                
+                translationIdCounter++;
+            });
+        });
+        
+        // 切换翻译显示/隐藏
+        function toggleTranslation(button) {
+            const translationDiv = button.nextElementSibling;
+            if (translationDiv.style.display === "none") {
+                translationDiv.style.display = "block";
+                button.textContent = "隐藏翻译 ▲";
+            } else {
+                translationDiv.style.display = "none";
+                button.textContent = "显示翻译 ▼";
+            }
+        }
+        
+        // 切换翻译语言
+        function switchTranslation(tab, language) {
+            const header = tab.parentElement;
+            const contents = header.parentElement.querySelectorAll('.translation-content');
+            
+            // 更新标签
+            header.querySelectorAll('.translation-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // 更新内容
+            contents.forEach(c => c.classList.remove('active'));
+            document.getElementById(language).classList.add('active');
+        }
+        
+        // 显示所有指定语言的翻译
+        function showTranslation(langPrefix) {
+            document.querySelectorAll('.translation').forEach(trans => {
+                const header = trans.querySelector('.translation-header');
+                const contents = trans.querySelectorAll('.translation-content');
+                
+                // 找到对应语言的标签和内容
+                let targetTab = null;
+                let targetContent = null;
+                
+                header.querySelectorAll('.translation-tab').forEach((tab, index) => {
+                    if (tab.getAttribute('onclick').includes(langPrefix)) {
+                        targetTab = tab;
+                        const contentId = tab.getAttribute('onclick').match(/'([^']+)'/)[1];
+                        targetContent = document.getElementById(contentId);
+                    }
+                });
+                
+                if (targetTab && targetContent) {
+                    // 更新标签
+                    header.querySelectorAll('.translation-tab').forEach(t => t.classList.remove('active'));
+                    targetTab.classList.add('active');
+                    
+                    // 更新内容
+                    contents.forEach(c => c.classList.remove('active'));
+                    targetContent.classList.add('active');
+                    
+                    // 确保翻译区域是展开的
+                    const toggleBtn = trans.previousElementSibling;
+                    if (trans.style.display === "none") {
+                        trans.style.display = "block";
+                        toggleBtn.textContent = "隐藏翻译 ▲";
+                    }
+                }
+            });
+        }
+        
+        // 显示注释
+        function showNotes(character, explanation) {
+            document.getElementById('notes-content').innerHTML = `
+                <h3>${character}</h3>
+                <p>${explanation}</p>
+            `;
+            document.getElementById('notes-window').style.display = 'block';
+        }
+        
+        // 关闭注释窗口
+        function closeNotes() {
+            document.getElementById('notes-window').style.display = 'none';
+        }
+        
+        // 点击文档其他地方关闭注释窗口
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.character') && !e.target.closest('.notes-window')) {
+                closeNotes();
+            }
+        });
+        
+        // 简体转换
+        function convertToSimplified() {
+            // 这里应该有简繁体转换的实际逻辑
+            // 由于实际转换需要字典支持，这里只是示例
+            document.body.innerHTML = document.body.innerHTML
+                .replace(/雲/g, '云')
+                .replace(/對/g, '对')
+                .replace(/風/g, '风')
+                .replace(/曉/g, '晓')
+                .replace(/煙/g, '烟')
+                .replace(/楊/g, '杨')
+                .replace(/綠/g, '绿')
+                .replace(/園/g, '园')
+                .replace(/紅/g, '红')
+                .replace(/兩/g, '两')
+                .replace(/鬢/g, '鬓')
+                .replace(/蒼/g, '苍')
+                .replace(/觀/g, '观')
+                .replace(/鐘/g, '钟')
+                .replace(/聲/g, '声')
+                .replace(/啟/g, '启')
+                .replace(/蒙/g, '蒙');
+        }
+        
+        // 繁体转换
+        function convertToTraditional() {
+            // 这里应该有繁简体转换的实际逻辑
+            // 由于实际转换需要字典支持，这里只是示例
+            document.body.innerHTML = document.body.innerHTML
+                .replace(/云/g, '雲')
+                .replace(/对/g, '對')
+                .replace(/风/g, '風')
+                .replace(/晓/g, '曉')
+                .replace(/烟/g, '煙')
+                .replace(/杨/g, '楊')
+                .replace(/绿/g, '綠')
+                .replace(/园/g, '園')
+                .replace(/红/g, '紅')
+                .replace(/两/g, '兩')
+                .replace(/鬓/g, '鬢')
+                .replace(/苍/g, '蒼')
+                .replace(/观/g, '觀')
+                .replace(/钟/g, '鐘')
+                .replace(/声/g, '聲')
+                .replace(/启/g, '啟')
+                .replace(/蒙/g, '蒙');
+        }
+    </script>
+</body>
+</html>
