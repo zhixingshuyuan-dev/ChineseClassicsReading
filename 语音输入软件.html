@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音输入字幕生成器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .display-area {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #444;
+        }
+        
+        #text-display {
+            font-size: 3rem;
+            text-align: center;
+            line-height: 1.5;
+            transition: all 0.3s ease;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            min-height: 150px;
+            cursor: text;
+        }
+        
+        #text-display:focus {
+            outline: 2px solid #ffcc00;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #ffcc00;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background: linear-gradient(to bottom, #ffcc00, #ff6b00);
+            border: none;
+            border-radius: 5px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 204, 0, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button.active {
+            background: linear-gradient(to bottom, #00cc66, #00994d);
+        }
+        
+        #pause-btn {
+            background: linear-gradient(to bottom, #ff3333, #cc0000);
+            color: white;
+        }
+        
+        #pause-btn.paused {
+            background: linear-gradient(to bottom, #00cc66, #00994d);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin: 10px 0;
+            -webkit-appearance: none;
+            height: 10px;
+            border-radius: 5px;
+            background: #333;
+            outline: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ffcc00;
+            cursor: pointer;
+        }
+        
+        .dictionary-card {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #ffcc00;
+            border-radius: 8px;
+            padding: 15px;
+            max-width: 300px;
+            display: none;
+            z-index: 100;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        .dictionary-card h3 {
+            color: #ffcc00;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+        }
+        
+        .dictionary-card p {
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+        
+        .pronunciation {
+            font-size: 1.2rem;
+            color: #00cc66;
+        }
+        
+        .meaning {
+            color: #cccccc;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff3333;
+            margin-left: 8px;
+        }
+        
+        .status-indicator.recording {
+            background: #00cc66;
+            box-shadow: 0 0 8px #00cc66;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            #text-display {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>语音输入字幕生成器</h1>
+        </header>
+        
+        <div class="display-area">
+            <div id="text-display" contenteditable="true"></div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <h2>语音控制 <span id="status-indicator" class="status-indicator"></span></h2>
+                <div class="button-group">
+                    <button id="start-btn">开始录音</button>
+                    <button id="pause-btn">暂停显示</button>
+                    <button id="clear-btn">清除文本</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h2>字体大小</h2>
+                <input type="range" id="font-size" min="20" max="100" value="48">
+                <span id="font-size-value">48px</span>
+            </div>
+            
+            <div class="control-group">
+                <h2>导出选项</h2>
+                <div class="button-group">
+                    <button id="export-txt">导出为TXT</button>
+                    <button id="export-doc">导出为DOC</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dictionary-card" class="dictionary-card">
+        <h3 id="word-title"></h3>
+        <p class="pronunciation" id="word-pinyin"></p>
+        <p class="meaning" id="word-meaning"></p>
+        <p class="meaning" id="word-detail"></p>
+    </div>
+
+    <script>
+        // DOM元素
+        const textDisplay = document.getElementById('text-display');
+        const startBtn = document.getElementById('start-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const fontSizeSlider = document.getElementById('font-size');
+        const fontSizeValue = document.getElementById('font-size-value');
+        const exportTxtBtn = document.getElementById('export-txt');
+        const exportDocBtn = document.getElementById('export-doc');
+        const dictionaryCard = document.getElementById('dictionary-card');
+        const wordTitle = document.getElementById('word-title');
+        const wordPinyin = document.getElementById('word-pinyin');
+        const wordMeaning = document.getElementById('word-meaning');
+        const wordDetail = document.getElementById('word-detail');
+        const statusIndicator = document.getElementById('status-indicator');
+        
+        // 状态变量
+        let isRecording = false;
+        let isPaused = false;
+        let recognition = null;
+        
+        // 初始化语音识别
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            
+            if (!SpeechRecognition) {
+                alert("很抱歉，您的浏览器不支持语音识别API。请使用Chrome浏览器。");
+                return;
+            }
+            
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'zh-CN';
+            
+            recognition.onresult = function(event) {
+                if (isPaused) return;
+                
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    if (event.results[i].isFinal) {
+                        transcript += event.results[i][0].transcript;
+                    }
+                }
+                
+                if (transcript) {
+                    textDisplay.textContent += transcript;
+                }
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('语音识别错误:', event.error);
+            };
+            
+            recognition.onend = function() {
+                if (isRecording) {
+                    // 如果仍在录音状态，重新启动
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.error('重新启动录音失败:', e);
+                    }
+                } else {
+                    statusIndicator.classList.remove('recording');
+                }
+            };
+        }
+        
+        // 开始/停止录音
+        startBtn.addEventListener('click', function() {
+            if (!isRecording) {
+                if (!recognition) {
+                    initSpeechRecognition();
+                }
+                
+                try {
+                    recognition.start();
+                    isRecording = true;
+                    startBtn.textContent = '停止录音';
+                    startBtn.classList.add('active');
+                    statusIndicator.classList.add('recording');
+                } catch (error) {
+                    console.error('录音启动失败:', error);
+                }
+            } else {
+                recognition.stop();
+                isRecording = false;
+                startBtn.textContent = '开始录音';
+                startBtn.classList.remove('active');
+                statusIndicator.classList.remove('recording');
+            }
+        });
+        
+        // 暂停/继续显示
+        pauseBtn.addEventListener('click', function() {
+            isPaused = !isPaused;
+            pauseBtn.classList.toggle('paused');
+            pauseBtn.textContent = isPaused ? '继续显示' : '暂停显示';
+            
+            if (isPaused) {
+                textDisplay.style.opacity = '0.5';
+            } else {
+                textDisplay.style.opacity = '1';
+            }
+        });
+        
+        // 清除文本
+        clearBtn.addEventListener('click', function() {
+            textDisplay.textContent = '';
+        });
+        
+        // 调整字体大小
+        fontSizeSlider.addEventListener('input', function() {
+            const size = this.value;
+            textDisplay.style.fontSize = size + 'px';
+            fontSizeValue.textContent = size + 'px';
+        });
+        
+        // 词义查询
+        textDisplay.addEventListener('click', function(e) {
+            // 获取点击的文本
+            const selection = window.getSelection();
+            const word = selection.toString().trim();
+            
+            if (word.length > 0) {
+                // 显示词典卡片
+                showDictionaryCard(word, e.clientX, e.clientY);
+            }
+        });
+        
+        // 显示词典卡片
+        function showDictionaryCard(word, x, y) {
+            // 模拟数据
+            const pinyinMap = {
+                '你好': 'nǐ hǎo',
+                '世界': 'shì jiè',
+                '语音': 'yǔ yīn',
+                '字幕': 'zì mù',
+                '生成器': 'shēng chéng qì',
+                '视频': 'shì pín',
+                '录音': 'lù yīn',
+                '暂停': 'zàn tíng',
+                '清除': 'qīng chú',
+                '导出': 'dǎo chū'
+            };
+            
+            const meaningMap = {
+                '你好': 'Hello',
+                '世界': 'World',
+                '语音': 'Voice',
+                '字幕': 'Subtitle',
+                '生成器': 'Generator',
+                '视频': 'Video',
+                '录音': 'Recording',
+                '暂停': 'Pause',
+                '清除': 'Clear',
+                '导出': 'Export'
+            };
+            
+            const detailMap = {
+                '你好': '表示问候的用语。',
+                '世界': '一切事物的总和。',
+                '语音': '人类语言的声音表现。',
+                '字幕': '显示在视频下方的文字信息。',
+                '生成器': '用于产生某种输出的工具或程序。',
+                '视频': '连续的静态图像以电信号方式捕捉并显示。',
+                '录音': '记录声音的过程。',
+                '暂停': '暂时停止当前操作。',
+                '清除': '删除所有内容。',
+                '导出': '将内容保存为文件。'
+            };
+            
+            wordTitle.textContent = word;
+            wordPinyin.textContent = pinyinMap[word] || '';
+            wordMeaning.textContent = meaningMap[word] || '';
+            wordDetail.textContent = detailMap[word] || '';
+            
+            dictionaryCard.style.display = 'block';
+            dictionaryCard.style.left = (x + 10) + 'px';
+            dictionaryCard.style.top = (y + 10) + 'px';
+        }
+        
+        // 点击其他地方隐藏词典卡片
+        document.addEventListener('click', function(e) {
+            if (e.target !== textDisplay && !dictionaryCard.contains(e.target)) {
+                dictionaryCard.style.display = 'none';
+            }
+        });
+        
+        // 导出功能
+        exportTxtBtn.addEventListener('click', function() {
+            const content = textDisplay.textContent;
+            if (!content) {
+                alert('没有内容可导出！');
+                return;
+            }
+            
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '字幕内容.txt';
+            a.click();
+            
+            URL.revokeObjectURL(url);
+        });
+        
+        exportDocBtn.addEventListener('click', function() {
+            const content = textDisplay.textContent;
+            if (!content) {
+                alert('没有内容可导出！');
+                return;
+            }
+            
+            // 创建一个简单的DOC文件
+            const header = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>字幕内容</title></head><body>';
+            const footer = '</body></html>';
+            const sourceHTML = header + content + footer;
+            
+            const blob = new Blob([sourceHTML], { type: 'application/msword' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '字幕内容.doc';
+            a.click();
+            
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
