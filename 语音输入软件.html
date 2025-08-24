@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -48,14 +49,16 @@
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
-            min-height: 200px;
+            min-height: 180px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             border: 2px solid #444;
+            position: relative;
         }
         
-        #text-display {
+        #current-sentence {
             font-size: 3rem;
             text-align: center;
             line-height: 1.5;
@@ -64,12 +67,18 @@
             border-radius: 8px;
             width: 100%;
             min-height: 150px;
-            cursor: text;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
-        #text-display:focus {
-            outline: 2px solid #ffcc00;
-            background: rgba(255, 255, 255, 0.1);
+        .sentence-indicator {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 0.9rem;
+            color: #ffcc00;
+            opacity: 0.7;
         }
         
         .controls {
@@ -209,7 +218,7 @@
                 font-size: 2rem;
             }
             
-            #text-display {
+            #current-sentence {
                 font-size: 2rem;
             }
             
@@ -226,7 +235,8 @@
         </header>
         
         <div class="display-area">
-            <div id="text-display" contenteditable="true"></div>
+            <div id="current-sentence">请点击"开始录音"按钮...</div>
+            <div class="sentence-indicator">句子: <span id="sentence-count">0</span></div>
         </div>
         
         <div class="controls">
@@ -264,7 +274,8 @@
 
     <script>
         // DOM元素
-        const textDisplay = document.getElementById('text-display');
+        const currentSentence = document.getElementById('current-sentence');
+        const sentenceCount = document.getElementById('sentence-count');
         const startBtn = document.getElementById('start-btn');
         const pauseBtn = document.getElementById('pause-btn');
         const clearBtn = document.getElementById('clear-btn');
@@ -283,6 +294,9 @@
         let isRecording = false;
         let isPaused = false;
         let recognition = null;
+        let fullText = ''; // 存储完整文本
+        let sentences = []; // 存储所有句子
+        let currentSentenceIndex = 0; // 当前显示的句子索引
         
         // 初始化语音识别
         function initSpeechRecognition() {
@@ -301,15 +315,38 @@
             recognition.onresult = function(event) {
                 if (isPaused) return;
                 
-                let transcript = '';
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     if (event.results[i].isFinal) {
-                        transcript += event.results[i][0].transcript;
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
                     }
                 }
                 
-                if (transcript) {
-                    textDisplay.textContent += transcript;
+                // 显示临时结果
+                if (interimTranscript) {
+                    currentSentence.textContent = interimTranscript;
+                }
+                
+                // 处理最终结果
+                if (finalTranscript) {
+                    // 添加到完整文本
+                    fullText += finalTranscript;
+                    
+                    // 分割成句子
+                    const newSentences = finalTranscript.split(/[。！？.!?]/).filter(s => s.trim().length > 0);
+                    
+                    if (newSentences.length > 0) {
+                        // 添加到句子数组
+                        sentences = sentences.concat(newSentences);
+                        
+                        // 更新当前显示的句子
+                        currentSentenceIndex = sentences.length - 1;
+                        updateSentenceDisplay();
+                    }
                 }
             };
             
@@ -331,6 +368,17 @@
             };
         }
         
+        // 更新句子显示
+        function updateSentenceDisplay() {
+            if (sentences.length > 0) {
+                currentSentence.textContent = sentences[currentSentenceIndex];
+                sentenceCount.textContent = (currentSentenceIndex + 1) + '/' + sentences.length;
+            } else {
+                currentSentence.textContent = '请点击"开始录音"按钮...';
+                sentenceCount.textContent = '0';
+            }
+        }
+        
         // 开始/停止录音
         startBtn.addEventListener('click', function() {
             if (!isRecording) {
@@ -344,6 +392,7 @@
                     startBtn.textContent = '停止录音';
                     startBtn.classList.add('active');
                     statusIndicator.classList.add('recording');
+                    currentSentence.textContent = '正在聆听...';
                 } catch (error) {
                     console.error('录音启动失败:', error);
                 }
@@ -353,6 +402,10 @@
                 startBtn.textContent = '开始录音';
                 startBtn.classList.remove('active');
                 statusIndicator.classList.remove('recording');
+                
+                if (sentences.length === 0) {
+                    currentSentence.textContent = '请点击"开始录音"按钮...';
+                }
             }
         });
         
@@ -363,26 +416,29 @@
             pauseBtn.textContent = isPaused ? '继续显示' : '暂停显示';
             
             if (isPaused) {
-                textDisplay.style.opacity = '0.5';
+                currentSentence.style.opacity = '0.5';
             } else {
-                textDisplay.style.opacity = '1';
+                currentSentence.style.opacity = '1';
             }
         });
         
         // 清除文本
         clearBtn.addEventListener('click', function() {
-            textDisplay.textContent = '';
+            fullText = '';
+            sentences = [];
+            currentSentenceIndex = 0;
+            updateSentenceDisplay();
         });
         
         // 调整字体大小
         fontSizeSlider.addEventListener('input', function() {
             const size = this.value;
-            textDisplay.style.fontSize = size + 'px';
+            currentSentence.style.fontSize = size + 'px';
             fontSizeValue.textContent = size + 'px';
         });
         
         // 词义查询
-        textDisplay.addEventListener('click', function(e) {
+        currentSentence.addEventListener('click', function(e) {
             // 获取点击的文本
             const selection = window.getSelection();
             const word = selection.toString().trim();
@@ -447,20 +503,19 @@
         
         // 点击其他地方隐藏词典卡片
         document.addEventListener('click', function(e) {
-            if (e.target !== textDisplay && !dictionaryCard.contains(e.target)) {
+            if (e.target !== currentSentence && !dictionaryCard.contains(e.target)) {
                 dictionaryCard.style.display = 'none';
             }
         });
         
         // 导出功能
         exportTxtBtn.addEventListener('click', function() {
-            const content = textDisplay.textContent;
-            if (!content) {
+            if (!fullText) {
                 alert('没有内容可导出！');
                 return;
             }
             
-            const blob = new Blob([content], { type: 'text/plain' });
+            const blob = new Blob([fullText], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             
             const a = document.createElement('a');
@@ -472,8 +527,7 @@
         });
         
         exportDocBtn.addEventListener('click', function() {
-            const content = textDisplay.textContent;
-            if (!content) {
+            if (!fullText) {
                 alert('没有内容可导出！');
                 return;
             }
@@ -481,7 +535,7 @@
             // 创建一个简单的DOC文件
             const header = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>字幕内容</title></head><body>';
             const footer = '</body></html>';
-            const sourceHTML = header + content + footer;
+            const sourceHTML = header + fullText + footer;
             
             const blob = new Blob([sourceHTML], { type: 'application/msword' });
             const url = URL.createObjectURL(blob);
@@ -492,6 +546,27 @@
             a.click();
             
             URL.revokeObjectURL(url);
+        });
+        
+        // 添加键盘导航支持
+        document.addEventListener('keydown', function(e) {
+            if (sentences.length === 0) return;
+            
+            if (e.key === 'ArrowLeft') {
+                // 上一句
+                e.preventDefault();
+                if (currentSentenceIndex > 0) {
+                    currentSentenceIndex--;
+                    updateSentenceDisplay();
+                }
+            } else if (e.key === 'ArrowRight') {
+                // 下一句
+                e.preventDefault();
+                if (currentSentenceIndex < sentences.length - 1) {
+                    currentSentenceIndex++;
+                    updateSentenceDisplay();
+                }
+            }
         });
     </script>
 </body>
