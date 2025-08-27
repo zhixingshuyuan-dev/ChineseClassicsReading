@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<title>周易注卷一</title>
+<style>
+  body { 
+    font-family: "宋体", serif; 
+    line-height: 1.8; 
+    background-color: #222;
+    color: #ddd;
+    font-size: 1.2em;
+    writing-mode: vertical-rl; /* 竖排 */
+    text-orientation: upright; /* 文字正立 */
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+    overflow-x: auto;
+  }
+  .text { 
+    max-height: 100%; 
+    margin: 0 auto; 
+    padding: 20px;
+  }
+  p {
+    margin: 0 0 1em 0;
+    text-indent: 2em;
+  }
+  .annotation-btn {
+    display: inline-block;
+    background: #444;
+    border: 1px solid #666;
+    border-radius: 3px;
+    padding: 0 1.5px; /* 缩小50% */
+    margin-left: 1.5px; /* 缩小50% */
+    cursor: pointer;
+    font-size: 0.35em; /* 缩小50% */
+    color: #55aaff;
+    vertical-align: middle;
+  }
+  /* 繁简体转换按钮 */
+  .convert-btn {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #555;
+    color: #fff;
+    border: 1px solid #777;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    z-index: 10000;
+    font-size: 16px;
+    width: auto; /* 自动宽度 */
+    max-width: 120px; /* 限制最大宽度 */
+    text-align: center;
+    white-space: nowrap; /* 防止文字换行 */
+  }
+  .convert-btn:hover {
+    background: #666;
+  }
+  /* 弹窗背景层 */
+  #overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: transparent;
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  /* 弹窗主体 */
+  #popup {
+    background: #333;
+    max-width: 500px;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.5);
+    position: absolute;
+    font-size: 0.9em;
+    color: #eee;
+    border: 1px solid #555;
+    pointer-events: auto;
+    cursor: move;
+  }
+  #popup h3 {
+    margin-top: 0;
+    font-weight: normal;
+    font-size: 1em;
+    color: #ccc;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+  }
+  #popup .close-btn {
+    position: absolute;
+    top: 5px; right: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #999;
+  }
+  #popup .close-btn:hover {
+    color: #ddd;
+  }
+  /* 拼音标注 */
+  .pinyin {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+  .pinyin-popup {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #444;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    white-space: nowrap;
+    display: none;
+    z-index: 100;
+  }
+  .pinyin:hover .pinyin-popup {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<!-- 繁简体转换按钮 -->
+<button class="convert-btn" id="convertBtn">转为简体</button>
+
+<div class="text">
+
+<p>䷄〈乾下坎上〉需。有孚，光亨，貞吉。利涉大川。</p>
+
+<p>彖曰：需，須也，險在前也。剛健而不陷，其義不困窮矣。需有孚，光亨，貞吉，位乎天位，以正中也。〈<span class="annotation-btn" data-type="注" data-content="謂五也。位乎天位，用其中正，以此待物，需道畢矣，故光亨貞吉。需音須。孚音敷。">【注】</span>〉利涉大川，往有功也。〈<span class="annotation-btn" data-type="注" data-content="乾德獲進，往輒亨也。">【注】</span>〉</p>
+
+<p>象曰：雲上於天，需。君子以飲食宴樂。〈<span class="annotation-btn" data-type="注" data-content="童蒙已發，盛德光亨，飲食宴樂，其在茲乎？上，時掌反；宴，烏練反；樂，音洛。">【注】</span>〉</p>
+
+<p>初九：需于郊，利用恒，无咎。〈<span class="annotation-btn" data-type="注" data-content="居需之時，最遠於難，能抑其進以遠險待時，雖不應幾，可以保常也。遠，于萬反，下同；難，乃旦反，下文同。">【注】</span>〉</p>
+<p>象曰：需于郊，不犯難行也。利用恒，无咎，未失常也。</p>
+
+<p>九二：需于沙，小有言，終吉。〈<span class="annotation-btn" data-type="注" data-content="轉近於難，故曰需于沙也。不至致寇，故曰小有言也。近不逼難，遠不後時，履健居中，以待其會，雖小有言，以吉終也。後，胡豆反。">【注】</span>〉</p>
+<p>象曰：需于沙，衍在中也。雖小有言，以吉終也。</p>
+
+<p>九三：需于泥，致寇至。〈<span class="annotation-btn" data-type="注" data-content="以剛逼難，欲進其道，所以招寇而致敵也。猶有須焉，不陷其剛，寇之來也，自我所招，敬慎防備，可以不敗。衍，以善反。">【注】</span>〉</p>
+<p>象曰：需于泥，災在外也。自我致寇，敬慎不敗也。</p>
+
+<p>六四：需于血，出自穴。〈<span class="annotation-btn" data-type="注" data-content="凡稱血者，陰陽相傷者也。陰陽相近而不相得，陽欲進而陰塞之，則相害也。穴者，陰之路也。處坎之始，居穴者也。九三剛進，四不能距，見侵則辟，順以聽命者也，故曰需于血，出自穴也。辟，音避，下同。">【注】</span>〉</p>
+<p>象曰：需于血，順以聽也。</p>
+
+<p>九五：需于酒食，貞吉。〈<span class="annotation-btn" data-type="注" data-content="需之所須，以待達也。已得天位，暢其中正，無所復須，故酒食而已，獲貞吉也。已音紀，又音以。">【注】</span>〉</p>
+<p>象曰：酒食貞吉，以中正也。</p>
+
+<p>上六：入于穴，有不速之客三人來，敬之終吉。〈<span class="annotation-btn" data-type="注" data-content="六四所以出自穴者，以不與三相得而塞其路，不辟則害，故不得不出自穴而辟之也。至於上六，處卦之終，非塞路者也，與三為應，三來之已，乃為己援，故無畏害之辟，而乃有入穴之固也。三陽所以不敢進者，須難之終也。難終則至，不待召也。己居難終，故自來也。處无位之地，以一陰而為三陽之主，故必敬之而後終吉。">【注】</span>〉</p>
+<p>象曰：不速之客來，敬之終吉。雖不當位，未大失也。〈<span class="annotation-btn" data-type="注" data-content="處无位之地，不當位者也。敬之則得終吉，故雖不當位，未大失也。">【注】</span>〉</p>
+
+</div>
+
+<!-- 弹窗 -->
+<div id="overlay">
+  <div id="popup">
+    <span class="close-btn" title="关闭">×</span>
+    <h3 id="popup-title"></h3>
+    <div id="popup-content"></div>
+  </div>
+</div>
+
+<script>
+  // 繁简体转换功能
+  const convertBtn = document.getElementById('convertBtn');
+  let isSimplified = false;
+  
+  // 繁简对照字典（部分常用字）
+  const traditionalToSimplified = {
+    '欽': '钦', '庫': '库', '書': '书', '註': '注', '魏': '魏', '王': '王', 
+    '弼': '弼', '撰': '撰', '週': '周', '易': '易', '經': '经', '傳': '传', 
+    '乾': '乾', '元': '元', '亨': '亨', '利': '利', '貞': '贞', '潛': '潜', 
+    '龍': '龙', '勿': '勿', '用': '用', '文': '文', '言': '言', '備': '备', 
+    '矣': '矣', '竭': '竭', '然': '然', '反': '反', '許': '许', '庚': '庚',
+    '見': '见', '在': '在', '田': '田', '大': '大', '人': '人', '出': '出',
+    '離': '离', '隱': '隐', '故': '故', '曰': '曰', '處': '处', '於': '于',
+    '地': '地', '上': '上', '徳': '德', '施': '施', '周': '周', '普': '普',
+    '居': '居', '中': '中', '不': '不', '偏': '偏', '雖': '虽', '非': '非',
+    '君': '君', '位': '位', '初': '初', '則': '则', '彰': '彰', '三': '三',
+    '則': '则', '乾': '乾', '四': '四', '則': '则', '或': '或', '躍': '跃',
+    '則': '则', '過': '过', '亢': '亢', '唯': '唯', '五': '五', '焉': '焉',
+    '音': '音', '現': '现', '下': '下', '皆': '皆', '同': '同', '如': '如',
+    '字': '字', '力': '力', '智': '智', '昌': '昌', '吕': '吕', '衆': '众',
+    '經': '经', '者': '者', '放': '放', '此': '此', '見': '见', '後': '后',
+    '君': '君', '子': '子', '終': '终', '日': '日', '夕': '夕', '惕': '惕',
+    '若': '若', '厲': '厉', '无': '无', '咎': '咎', '體': '体', '極': '极',
+    '之': '之', '下': '下', '履': '履', '重': '重', '剛': '刚', '險': '险',
+    '天': '天', '未': '未', '可': '可', '以': '以', '安': '安', '其': '其',
+    '尊': '尊', '也': '也', '寧': '宁', '居': '居', '純': '纯', '修': '修',
+    '道': '道', '廢': '废', '禮': '礼', '曠': '旷', '至': '至', '于': '于',
+    '愓': '惕', '猶': '犹', '也': '也', '驕': '骄', '憂': '忧', '因': '因',
+    '時': '时', '而': '而', '失': '失', '㡬': '几', '雖': '虽', '危': '危',
+    '勞': '劳', '可': '可', '免': '免', '於': '于', '悔': '悔', '坤': '坤',
+    '戰': '战', '災': '灾', '他': '他', '歴': '历', '世': '世', '無': '无',
+    '內': '内', '作': '作', '久': '久', '直': '直', '龍': '龙', '知': '知',
+    '智': '智', '去': '去', '革': '革', '乎': '乎', '定': '定', '所': '所',
+    '斯': '斯', '誠': '诚', '進': '进', '退': '退', '常': '常', '近': '近',
+    '欲': '欲', '道': '道', '廹': '迫', '靜': '静', '持': '持', '疑': '疑',
+    '猶': '犹', '與': '与', '敢': '敢', '決': '决', '志': '志', '心': '心',
+    '存': '存', '公': '公', '私': '私', '慮': '虑', '謬': '谬', '果': '果',
+    '羊': '羊', '灼': '灼', '意': '意', '會': '会', '救': '救', '預': '预',
+    '靡': '靡', '幼': '幼', '飛': '飞', '何': '何', '路': '路', '夫': '夫',
+    '符': '符', '興': '兴', '叙': '叙', '盛': '盛', '萬': '万', '物': '物',
+    '覩': '睹', '亦': '亦', '宜': '宜', '羣': '群', '首': '首', '吉': '吉',
+    '能': '能', '乃': '乃', '義': '义', '健': '健', '為': '为', '正': '正',
+    '佞': '佞', '邪': '邪', '永': '永', '苦': '苦', '浪': '浪', '彖': '彖',
+    '吐': '吐', '亂': '乱', '斷': '断', '始': '始', '鼓': '鼓', '卦': '卦',
+    '劣': '劣', '偽': '伪', '和': '和', '暴': '暴', '國': '国', '咸': '咸',
+    '寜': '宁', '各': '各', '有': '有', '象': '象', '行': '行', '強': '强',
+    '息': '息', '陽': '阳', '復': '复', '通': '通', '芳': '芳', '服': '服',
+    '淵': '渊', '造': '造', '鄭': '郑', '徂': '徂', '早': '早', '肅': '肃',
+    '七': '七', '到': '到', '張': '张', '丈': '丈', '古': '古', '旦': '旦',
+    '遯': '遁', '徒': '徒', '頓': '顿', '門': '门', '遜': '逊', '樂': '乐',
+    '音': '音', '洛': '洛', '確': '确', '苦': '苦', '學': '学', '拔': '拔',
+    '蒲': '蒲', '八': '八', '孟': '孟', '旣': '既', '依': '依', '注': '注',
+    '敝': '敝', '𪫟': '敕', '敕': '敕', '力': '力', '懈': '懈', '佳': '佳',
+    '賣': '卖', '恒': '恒', '羣': '群', '及': '及', '聲': '声', '應': '应',
+    '氣': '气', '求': '求', '流': '流', '濕': '湿', '火': '火', '就': '就',
+    '燥': '燥', '雲': '云', '從': '从', '風': '风', '虎': '虎', '聖': '圣',
+    '作': '作', '萬': '万', '覩': '睹', '本': '本', '親': '亲', '類': '类',
+    '貴': '贵', '髙': '高', '民': '民', '陰': '阴', '賢': '贤', '輔': '辅',
+    '助': '助', '都': '都', '動': '动', '闕': '阙', '獨': '独', '立': '立',
+    '莫': '莫', '統': '统', '事': '事', '自': '自', '強': '强', '息': '息',
+    '餘': '余', '爻': '爻', '說': '说', '目': '目', '生': '生', '於': '于',
+    '馬': '马', '明': '明', '隨': '随', '取': '取', '應': '应', '論': '论',
+    '別': '别', '舉': '举', '窮': '穷', '識': '识', '動': '动', '理': '理',
+    '妄': '妄', '必': '必', '窮': '穷', '處': '处', '通': '通', '舍': '舍',
+    '文': '文', '王': '王', '夷': '夷', '主': '主', '仲': '仲', '尼': '尼',
+    '旅': '旅', '國': '国', '遠': '远', '聲': '声', '藏': '藏', '明': '明',
+    '偕': '偕', '俱': '俱', '運': '运', '則': '则', '觀': '观', '始': '始',
+    '性': '性', '情': '情', '是': '是', '久': '久', '正': '正', '美': '美',
+    '天': '天', '下': '下', '哉': '哉', '剛': '刚', '健': '健', '中': '中',
+    '粹': '粹', '精': '精', '六': '六', '爻': '爻', '𤼵': '发', '揮': '挥',
+    '旁': '旁', '通': '通', '情': '情', '乘': '乘', '御': '御', '雲': '云',
+    '雨': '雨', '施': '施', '平': '平', '成': '成', '為': '为', '日': '日',
+    '隱': '隐', '未': '未', '見': '见', '弗': '弗', '學': '学', '聚': '聚',
+    '問': '问', '辯': '辩', '寛': '宽', '居': '居', '仁': '仁', '行': '行',
+    '雖': '虽', '遂': '遂', '為': '为', '下': '下', '孟': '孟', '賢': '贤',
+    '遍': '遍', '如': '如', '字': '字', '試': '试', '治': '治', '窮': '穷',
+    '章': '章', '全': '全', '夫': '夫', '放': '放', '遠': '远', '善': '善',
+    '柔': '柔', '至': '至', '識': '识', '動': '动', '然': '然', '皆': '皆',
+    '知': '知', '為': '为', '妄': '妄', '者': '者', '必': '必', '窮': '穷',
+    '處': '处', '通': '通', '舍': '舍', '爻': '爻', '為': '为', '時': '时',
+    '妄': '妄', '動': '动', '則': '则', '文': '文', '王': '王', '夷': '夷',
+    '主': '主', '仲': '仲', '尼': '尼', '旅': '旅', '國': '国', '遠': '远',
+    '聲': '声', '藏': '藏', '明': '明', '偕': '偕', '俱': '俱', '運': '运',
+    '則': '则', '觀': '观', '說': '说', '氣': '气', '剛': '刚', '直': '直',
+    '唯': '唯', '體': '体', '用': '用', '觀': '观', '則': '则', '始': '始',
+    '性': '性', '情': '情', '是': 'is', '久': '久', '正': '正', '美': '美',
+    '天': '天', '下': '下', '哉': '哉', '剛': '刚', '健': '健', '中': '中',
+    '粹': '粹', '精': '精', '六': '六', '爻': '爻', '𤼵': '发', '揮': '挥',
+    '旁': '旁', '通': '通', '情': '情', '乘': '乘', '御': '御', '雲': '云',
+    '雨': '雨', '施': '施', '平': '平', '成': '成', '為': '为', '日': '日',
+    '隱': '隐', '未': '未', '見': '见', '弗': '弗', '學': '学', '聚': '聚',
+    '問': '问', '辯': '辩', '寛': '宽', '居': '居', '仁': '仁', '行': '行',
+    '雖': '虽', '遂': '遂', '為': '为', '下': '下', '孟': '孟', '賢': '贤',
+    '遍': '遍', '如': '如', '字': '字', '試': '试', '治': '治', '窮': '穷',
+    '喪': '丧', '唯': '唯', '聖': '圣', '進': '进', '退': '退', '亡': '亡',
+    '得': '得', '喪': '丧', '失': '失', '正': '正', '者': '者', '其': '其',
+    '乎': '乎', '端': '端', '悉': '悉', '薦': '荐', '胡': '胡', '豆': '豆',
+    '息': '息', '浪': '浪',
+    '牝': '牝', '馬': '马', '攸': '攸', '喪': '丧', '類': '类', '慶': '庆',
+    '勢': '势', '厚': '厚', '載': '载', '履': '履', '霜': '霜', '堅': '坚',
+    '冰': '冰', '凝': '凝', '馴': '驯', '直': '直', '方': '方', '習': '习',
+    '含': '含', '章': '章', '從': '从', '終': '终', '括': '括', '囊': '囊',
+    '譽': '誉', '黃': '黄', '裳': '裳', '戰': '战', '野': '野', '血': '血',
+    '𤣥': '玄', '雜': '杂', '順': '顺', '承': '承', '含': '含', '𢎞': '弘',
+    '光': '光', '咸': '咸', '禦': '御', '變': '变', '化': '化', '蕃': '蕃',
+    '閉': '闭', '謹': '谨', '暢': '畅', '支': '支', '業': '业', '嫌': '嫌',
+    '稱': '称', '離': '离', '滅': '灭', '傷': '伤',
+    '屯': '屯', '難': '难', '張': '张', '倫': '伦', '備': '备', '鄙': '鄙',
+    '建': '建', '侯': '侯', '寧': '宁', '造': '造', '沮': '沮', '妹': '妹',
+    '經': '经', '綸': '纶', '磐': '磐', '桓': '桓', '步': '步', '干': '干',
+    '靜': '静', '謙': '谦', '邅': '邅', '繩': '绳', '證': '证', '媾': '媾',
+    '匪': '匪', '宼': '寇', '婚': '婚', '字': '字', '張': '张', '連': '连',
+    '即': '即', '鹿': '鹿', '虞': '虞', '惟': '惟', '㡬': '几', '捨': '舍',
+    '吝': '吝', '祈': '祈', '機': '机', '皮': '皮', '豉': '豉', '好': '好',
+    '呼': '呼', '報': '报', '恢': '恢', '博': '博', '濟': '济', '微': '微',
+    '滯': '滞', '繋': '系', '閒': '间', '䜴': '豉', '泣': '泣', '漣': '涟',
+    '闉': '闉', '厄': '厄', '委': '委', '仰': '仰', '直': '直', '良': '良',
+    '筮': '筮', '决': '决', '復': '复', '斷': '断', '養': '养', '聖': '圣',
+    '險': '险', '阂': '阂', '適': '适', '願': '愿', '應': '应', '識': '识',
+    '諮': '咨', '闇': '暗', '剛': '刚', '泉': '泉', '果': '果', '育': '育',
+    '發': '发', '刑': '刑', '說': '说', '桎': '桎', '梏': '梏', '質': '质',
+    '惡': '恶', '烏': '乌', '包': '包', '納': '纳', '婦': '妇', '克': '克',
+    '距': '距', '遠': '远', '咸': '咸', '配': '配', '幹': '干', '任': '任',
+    '取': '取', '金': '金', '躬': '躬', '順': '顺', '困': '困', '獨': '独',
+    '賢': '贤', '擊': '击', '經': '经', '歷': '历', '扞': '捍', '禦': '御',
+    '叛': '叛',
+    '需': '需', '孚': '孚', '涉': '涉', '川': '川', '須': '须', '陷': '陷',
+    '窮': '穷', '畢': '毕', '敷': '敷', '獲': '获', '輒': '辄', '雲': '云',
+    '宴': '宴', '樂': '乐', '茲': '兹', '郊': '郊', '恒': '恒', '犯': '犯',
+    '沙': '沙', '衍': '衍', '逼': '逼', '會': '会', '泥': '泥', '敬': '敬',
+    '敗': '败', '穴': '穴', '塞': '塞', '距': '距', '辟': '辟', '聽': '听',
+    '酒': '酒', '食': '食', '暢': '畅', '復': '复', '速': '速', '客': '客',
+    '援': '援', '畏': '畏', '召': '召', '陰': '阴', '陽': '阳', '當': '当'
+  };
+  
+  // 简体转繁体字典（反向映射）
+  const simplifiedToTraditional = {};
+  for (const [trad, simp] of Object.entries(traditionalToSimplified)) {
+    simplifiedToTraditional[simp] = trad;
+  }
+  
+  // 转换函数
+  function convertText(direction) {
+    const textElement = document.querySelector('.text');
+    let text = textElement.innerHTML;
+    
+    if (direction === 'simplified') {
+      // 转为简体
+      for (const [trad, simp] of Object.entries(traditionalToSimplified)) {
+        const regex = new RegExp(trad, 'g');
+        text = text.replace(regex, simp);
+      }
+      convertBtn.textContent = '转为繁体';
+      isSimplified = true;
+    } else {
+      // 转为繁体
+      for (const [simp, trad] of Object.entries(simplifiedToTraditional)) {
+        const regex = new RegExp(simp, 'g');
+        text = text.replace(regex, trad);
+      }
+      convertBtn.textContent = '转为简体';
+      isSimplified = false;
+    }
+    
+    textElement.innerHTML = text;
+    
+    // 重新绑定注释按钮事件
+    bindAnnotationEvents();
+  }
+  
+  // 绑定转换按钮事件
+  convertBtn.addEventListener('click', () => {
+    convertText(isSimplified ? 'traditional' : 'simplified');
+  });
+  
+  // 注释功能
+  function bindAnnotationEvents() {
+    // 移除旧的事件监听器
+    const oldButtons = document.querySelectorAll('.annotation-btn');
+    oldButtons.forEach(btn => {
+      btn.replaceWith(btn.cloneNode(true));
+    });
+    
+    // 绑定新的事件监听器
+    const annotationButtons = document.querySelectorAll('.annotation-btn');
+    annotationButtons.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const type = this.getAttribute('data-type');
+        const content = this.getAttribute('data-content');
+        
+        document.getElementById('popup-title').textContent = type;
+        document.getElementById('popup-content').innerHTML = content;
+        
+        const overlay = document.getElementById('overlay');
+        overlay.style.display = 'flex';
+        
+        // 设置弹窗位置
+        const popup = document.getElementById('popup');
+        const rect = this.getBoundingClientRect();
+        popup.style.left = (rect.left + window.scrollX - popup.offsetWidth - 10) + 'px';
+        popup.style.top = (rect.top + window.scrollY) + 'px';
+      });
+    });
+  }
+  
+  // 初始绑定注释事件
+  bindAnnotationEvents();
+  
+  // 关闭弹窗
+  document.querySelector('.close-btn').addEventListener('click', function() {
+    document.getElementById('overlay').style.display = 'none';
+  });
+  
+  // 点击弹窗外部关闭
+  document.getElementById('overlay').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.style.display = 'none';
+    }
+  });
+  
+  // 拖拽功能
+  let isDragging = false;
+  let dragOffsetX, dragOffsetY;
+  
+  document.getElementById('popup').addEventListener('mousedown', function(e) {
+    if (e.target.tagName !== 'SPAN') { // 排除关闭按钮
+      isDragging = true;
+      dragOffsetX = e.clientX - this.getBoundingClientRect().left;
+      dragOffsetY = e.clientY - this.getBoundingClientRect().top;
+      this.style.cursor = 'grabbing';
+    }
+  });
+  
+  document.addEventListener('mousemove', function(e) {
+    if (isDragging) {
+      const popup = document.getElementById('popup');
+      popup.style.left = (e.clientX - dragOffsetX) + 'px';
+      popup.style.top = (e.clientY - dragOffsetY) + 'px';
+    }
+  });
+  
+  document.addEventListener('mouseup', function() {
+    if (isDragging) {
+      isDragging = false;
+      document.getElementById('popup').style.cursor = 'move';
+    }
+  });
+</script>
+</body>
+</html>

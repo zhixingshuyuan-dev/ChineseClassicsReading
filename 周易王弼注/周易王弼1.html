@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<title>周易注卷一</title>
+<style>
+  body { 
+    font-family: "宋体", serif; 
+    line-height: 1.8; 
+    background-color: #222;
+    color: #ddd;
+    font-size: 1.2em;
+    writing-mode: vertical-rl; /* 竖排 */
+    text-orientation: upright; /* 文字正立 */
+    height: 100vh;
+    margin: 0;
+    padding: 20px;
+    overflow-x: auto;
+  }
+  .text { 
+    max-height: 100%; 
+    margin: 0 auto; 
+    padding: 20px;
+  }
+  p {
+    margin: 0 0 1em 0;
+    text-indent: 2em;
+  }
+  .annotation-btn {
+    display: inline-block;
+    background: #444;
+    border: 1px solid #666;
+    border-radius: 3px;
+    padding: 0 1.5px; /* 缩小50% */
+    margin-left: 1.5px; /* 缩小50% */
+    cursor: pointer;
+    font-size: 0.35em; /* 缩小50% */
+    color: #55aaff;
+    vertical-align: middle;
+  }
+  /* 繁简体转换按钮 */
+  .convert-btn {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #555;
+    color: #fff;
+    border: 1px solid #777;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    z-index: 10000;
+    font-size: 16px;
+    width: auto; /* 自动宽度 */
+    max-width: 120px; /* 限制最大宽度 */
+    text-align: center;
+    white-space: nowrap; /* 防止文字换行 */
+  }
+  .convert-btn:hover {
+    background: #666;
+  }
+  /* 弹窗背景层 */
+  #overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: transparent;
+    display: none;
+    justify-content: center;
+    align-items: flex-start;
+    z-index: 9999;
+    pointer-events: none;
+  }
+  /* 弹窗主体 */
+  #popup {
+    background: #333;
+    max-width: 500px;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 0 12px rgba(0,0,0,0.5);
+    position: absolute;
+    font-size: 0.9em;
+    color: #eee;
+    border: 1px solid #555;
+    pointer-events: auto;
+    cursor: move;
+  }
+  #popup h3 {
+    margin-top: 0;
+    font-weight: normal;
+    font-size: 1em;
+    color: #ccc;
+    border-bottom: 1px solid #555;
+    padding-bottom: 5px;
+  }
+  #popup .close-btn {
+    position: absolute;
+    top: 5px; right: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #999;
+  }
+  #popup .close-btn:hover {
+    color: #ddd;
+  }
+  /* 拼音标注 */
+  .pinyin {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+  .pinyin-popup {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #444;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    white-space: nowrap;
+    display: none;
+    z-index: 100;
+  }
+  .pinyin:hover .pinyin-popup {
+    display: block;
+  }
+</style>
+</head>
+<body>
+<!-- 繁简体转换按钮 -->
+<button class="convert-btn" id="convertBtn">转为简体</button>
+
+<div class="text">
+
+<p>欽定四庫全書</p>
+<p>　　周易註卷一</p>
+<p>　　魏　王弼　撰</p>
+<p>　　周易上經乾傳第一</p>
+<p>　　䷀〈乾下乾上〉乾元亨利貞初九潛龍勿用〈<span class="annotation-btn" data-type="注" data-content="文言備矣　乾竭然反亨許庚">【注】</span>〉九二見龍在田利見大人〈<span class="annotation-btn" data-type="注" data-content="出潛離隱故曰見龍處於地上故曰在田徳施周普">【注】</span>〉</p>
+<p>　　〈<span class="annotation-btn" data-type="注" data-content="居中不偏雖非君位君之徳也初則不彰三則乾乾四則或躍上則過亢利見大人唯二五焉　見龍音現下見龍皆同利見如字下皆同離力智反處昌吕反衆經不音者放此施亢見後">【注】</span>〉九三君子終日乾乾夕惕若厲无咎〈<span class="annotation-btn" data-type="注" data-content="處下體之極居上體之下在不中之位履重剛之險上不在天未可以安其尊也下不在田未可以寧其居也純修下道則居上之徳廢純修上道則處下之禮曠故終日乾乾至于夕愓 --（『昜』上『旦』之『日』與『一』相連）猶若厲也居上不驕在下不憂因時而惕不失其㡬雖危而勞可以无咎處下卦之極愈於上九之亢故竭知力而後免於咎也乾三以處下卦之上故免亢龍之悔坤三以處下卦之上故免龍戰之災　惕他歴反厲力世反无音無易内皆作此字咎其久反易内同重直龍反下同知音智">【注】</span>〉九四或躍在淵无咎〈<span class="annotation-btn" data-type="注" data-content="去下體之極居上體之下乾道革之時也上不在天下不在田中不在人履重剛之險而无定位所處斯誠進退无常之時也近乎尊位欲進其道廹乎在下非躍所及欲靜其居居非所安持疑猶與未敢決志用心存公進不在私疑以為慮不謬於果故元咎也躍羊灼反上音可意會猶以救反與音預謬靡幼反">【注】</span>〉九五飛龍在天利見大人〈<span class="annotation-btn" data-type="注" data-content="不行不躍而在乎天非飛如何故曰飛龍也龍徳在天則大人之路亨也夫位以徳興徳以位叙以至徳而處盛位萬物之覩不亦宜乎　夫音符下皆同">【注】</span>〉上九亢龍有悔用九見羣龍无首吉〈<span class="annotation-btn" data-type="注" data-content="九天之徳也能用天徳乃見羣龍之義焉夫以剛健而居人之首則物之所不與也以柔順而為不正則佞邪之道也故乾吉在无首坤利在永貞　亢苦浪反">【注】</span>〉彖曰大哉乾元萬物資始乃統天雲行雨施品物流形大明終始六位時成時乘六龍以御天乾道變化各正性命〈<span class="annotation-btn" data-type="注" data-content="天也者形之名也健也者用形者也夫形也者物之累也有天之形而能永保无虧為物之首統之者豈非至健哉大明乎終始之道故六位不失其時而成升降无常隨時而用處則乘潛龍出則乘飛龍故曰時乘六龍也乘變化而御大器靜專動直不失大和豈非正性命之情者邪　彖吐亂反斷也施始鼓反卦内皆同累劣偽反">【注】</span>〉保合大和乃利貞〈<span class="annotation-btn" data-type="注" data-content="不和而剛暴">【注】</span>〉首出庶物萬國咸寜〈<span class="annotation-btn" data-type="注" data-content="萬國所以寜各以有君也">【注】</span>〉象曰天行健君子以自强不息潛龍勿用陽在下也見龍在田徳施普也終日乾乾反復道也〈<span class="annotation-btn" data-type="注" data-content="以上言之則不驕以下言之則不憂反復皆通也　復芳服反">【注】</span>〉或躍在淵進无咎也飛龍在天大人造也亢龍有悔盈不可久也用九天徳不可為首也　文言曰元者善之長也亨者嘉之會也利者義之和也貞者事之幹也君子體仁足以長人嘉會足以合禮利物足以和義貞固足以幹事君子行此四徳者故曰乾元亨利貞初九曰潜龍勿用何謂也子曰龍徳而隱者也不易乎世〈<span class="annotation-btn" data-type="注" data-content="不為世俗所移易也　造鄭徂早反王肅七到反長張丈反幹古旦反">【注】</span>〉不成乎名遯世无悶不見是而无悶樂則行之憂則違之確乎其不可㧞潛龍也九二曰見龍在田利見大人何謂也子曰龍徳而正中者也庸言之信庸行之謹閑邪存其誠善世而不伐徳博而化易曰見龍在田利見大人君徳也九三曰君子終日乾乾夕惕若厲无咎何謂也子曰君子進徳修業忠信所以進徳也修辭立其誠所以居業也知至至之可與㡬也知終終之可與存義也〈<span class="annotation-btn" data-type="注" data-content="處一體之極是至也居一卦之盡是終也處事之至而不犯咎知至者也故可與成務矣處終而能全其終知終者也夫進物之速者義不若利存物之終者利不及義故靡不有初鮮克有終夫可與存義者其唯知終者乎　遯徒頓反悶門遜反樂音洛確苦學反拔蒲八反庸行下孟反㡬旣依反注同">【注】</span>〉是故居上位而不驕在下位而不憂〈<span class="annotation-btn" data-type="注" data-content="居下體之上在上體之下明夫終敝故不驕也知夫至至故不憂也">【注】</span>〉故乾乾因其時而惕雖危无咎矣〈<span class="annotation-btn" data-type="注" data-content="惕𪫟惕之謂也處事之極失時則廢懈怠則曠故因其時而愓 --（『昜』上『旦』之『日』與『一』相連）雖危無咎　𪫟敕力反懈佳賣反">【注】</span>〉九四曰或躍在淵无咎何謂也子曰上下无常非為邪也進退无恒非離羣也君子進徳修業欲及時也故无咎九五曰飛龍在天利見大人何謂也子曰同聲相應同氣相求水流濕火就燥雲從龍風從虎聖人作而萬物覩本乎天者親上本乎地者親下則各從其類也上九曰亢龍有悔何謂也子曰貴而无位髙而无民〈<span class="annotation-btn" data-type="注" data-content="下无陰也">【注】</span>〉賢人在下位而无輔〈<span class="annotation-btn" data-type="注" data-content="賢人雖在下而當位不為之助　當都浪反易内皆同">【注】</span>〉是以動而有悔也〈<span class="annotation-btn" data-type="注" data-content="處上卦之極而不當位故盡陳其闕也獨立而動物莫之與矣乾文言首不論乾而先說元下乃曰乾何也夫乾者統行四事者也君子以自强不息行此四者故首不論乾而下曰乾元亨利貞餘爻皆說龍至於九三獨以君子為目何也夫易者象也象之所生生於義也有斯義然後明之以其物故以龍叙乾以馬明坤隨其事義而取象焉是故初九九二龍徳皆應其義故可論龍以明之也至於九三乾乾夕愓 --（『昜』上『旦』之『日』與『一』相連）非龍徳也明以君子當其象矣統而舉之乾體皆龍别而叙之各隨其義">【注】</span>〉潛龍勿用下也見龍在田時舍也終日乾乾行事也或躍在淵自試也飛龍在天上治也亢龍有悔窮之災也乾元用九天下治也〈<span class="annotation-btn" data-type="注" data-content="此一章全以人事明之也九陽也陽剛直之物也夫能全用剛直放遠善柔非天下至理未之能也故乾元用九則天下治也夫識物之動則其所以然之理皆可知也龍之為徳不為妄者也潛而勿用何乎必窮處於下也見而在田必以時之通舍也以爻為人以位為時人不妄動則時皆可知也文王明夷則主可知矣仲尼旅人則國可知矣　遠去聲">【注】</span>〉潛龍勿用陽氣潛藏見龍在田天下文明終日乾乾與時偕行〈<span class="annotation-btn" data-type="注" data-content="與天時俱不息">【注】</span>〉或躍在淵乾道乃革飛龍在天乃位乎天徳亢龍有悔與時偕極〈<span class="annotation-btn" data-type="注" data-content="與時運俱終極">【注】</span>〉乾元用九乃見天則〈<span class="annotation-btn" data-type="注" data-content="此一章全説天氣以明之也九剛直之物唯乾體能用之用純剛以觀天天則可見矣">【注】</span>〉乾元者始而亨者也利貞者性情也〈<span class="annotation-btn" data-type="注" data-content="不為乾元何能通物之始不性其情何能久行其正是故始而亨者必乾元也利而正者必性情也">【注】</span>〉乾始能以美利利天下不言所利大矣哉大哉乾乎剛健中正純粹精也六爻𤼵揮旁通情也時乘六龍以御天也雲行雨施天下平也君子以成徳為行日可見之行也潛之為言也隱而未見行而未成是以君子弗用也君子學以聚之問以辯之〈<span class="annotation-btn" data-type="注" data-content="以君徳而處下體資納於物者也　粹雖遂反為行下孟反下之行行而皆同未見賢遍反辯如字">【注】</span>〉寛以居之仁以行之易曰見龍在田利見大人君徳也九三重剛而不中上不在天下不在田故乾乾因其時而愓 --（『昜』上『旦』之『日』與『一』相連）雖危无咎矣九四重剛而不中上不在天下不在田中不在人故或之或之者疑之也故无咎夫大人者與天地合其徳與日月合其明與四時合其序與鬼神合其吉凶先天而天弗違後天而奉天時天且弗違而况於人乎况於鬼神乎亢之為言也知進而不知退知存而不知亡知得而不知喪其唯聖人乎知進退存亡而不失其正者其唯聖人乎　〈<span class="annotation-btn" data-type="注" data-content="重剛直龍反下同夫音符𤼵端之字皆放此先悉薦反後胡豆反喪息浪反">【注】</span></p>
+
+</div>
+
+<!-- 弹窗 -->
+<div id="overlay">
+  <div id="popup">
+    <span class="close-btn" title="关闭">×</span>
+    <h3 id="popup-title"></h3>
+    <div id="popup-content"></div>
+  </div>
+</div>
+
+<script>
+  // 繁简体转换功能
+  const convertBtn = document.getElementById('convertBtn');
+  let isSimplified = false;
+  
+  // 繁简对照字典（部分常用字）
+  const traditionalToSimplified = {
+    '欽': '钦', '庫': '库', '書': '书', '註': '注', '魏': '魏', '王': '王', 
+    '弼': '弼', '撰': '撰', '週': '周', '易': '易', '經': '经', '傳': '传', 
+    '乾': '乾', '元': '元', '亨': '亨', '利': '利', '貞': '贞', '潛': '潜', 
+    '龍': '龙', '勿': '勿', '用': '用', '文': '文', '言': '言', '備': '备', 
+    '矣': '矣', '竭': '竭', '然': '然', '反': '反', '許': '许', '庚': '庚',
+    '見': '见', '在': '在', '田': '田', '大': '大', '人': '人', '出': '出',
+    '離': '离', '隱': '隐', '故': '故', '曰': '曰', '處': '处', '於': '于',
+    '地': '地', '上': '上', '徳': '德', '施': '施', '周': '周', '普': '普',
+    '居': '居', '中': '中', '不': '不', '偏': '偏', '雖': '虽', '非': '非',
+    '君': '君', '位': '位', '初': '初', '則': '则', '彰': '彰', '三': '三',
+    '則': '则', '乾': '乾', '四': '四', '則': '则', '或': '或', '躍': '跃',
+    '則': '则', '過': '过', '亢': '亢', '唯': '唯', '五': '五', '焉': '焉',
+    '音': '音', '現': '现', '下': '下', '皆': '皆', '同': '同', '如': '如',
+    '字': '字', '力': '力', '智': '智', '昌': '昌', '吕': '吕', '衆': '众',
+    '經': '经', '者': '者', '放': '放', '此': '此', '見': '见', '後': '后',
+    '君': '君', '子': '子', '終': '终', '日': '日', '夕': '夕', '惕': '惕',
+    '若': '若', '厲': '厉', '无': '无', '咎': '咎', '體': '体', '極': '极',
+    '之': '之', '下': '下', '履': '履', '重': '重', '剛': '刚', '險': '险',
+    '天': '天', '未': '未', '可': '可', '以': '以', '安': '安', '其': '其',
+    '尊': '尊', '也': '也', '寧': '宁', '居': '居', '純': '纯', '修': '修',
+    '道': '道', '廢': '废', '禮': '礼', '曠': '旷', '至': '至', '于': '于',
+    '愓': '惕', '猶': '犹', '也': '也', '驕': '骄', '憂': '忧', '因': '因',
+    '時': '时', '而': '而', '失': '失', '㡬': '几', '雖': '虽', '危': '危',
+    '勞': '劳', '可': '可', '免': '免', '於': '于', '悔': '悔', '坤': '坤',
+    '戰': '战', '災': '灾', '他': '他', '歴': '历', '世': '世', '無': '无',
+    '內': '内', '作': '作', '久': '久', '直': '直', '龍': '龙', '知': '知',
+    '智': '智', '去': '去', '革': '革', '乎': '乎', '定': '定', '所': '所',
+    '斯': '斯', '誠': '诚', '進': '进', '退': '退', '常': '常', '近': '近',
+    '欲': '欲', '道': '道', '廹': '迫', '靜': '静', '持': '持', '疑': '疑',
+    '猶': '犹', '與': '与', '敢': '敢', '決': '决', '志': '志', '心': '心',
+    '存': '存', '公': '公', '私': '私', '慮': '虑', '謬': '谬', '果': '果',
+    '羊': '羊', '灼': '灼', '意': '意', '會': '会', '救': '救', '預': '预',
+    '靡': '靡', '幼': '幼', '飛': '飞', '何': '何', '路': '路', '夫': '夫',
+    '符': '符', '興': '兴', '叙': '叙', '盛': '盛', '萬': '万', '物': '物',
+    '覩': '睹', '亦': '亦', '宜': '宜', '羣': '群', '首': '首', '吉': '吉',
+    '能': '能', '乃': '乃', '義': '义', '健': '健', '為': '为', '正': '正',
+    '佞': '佞', '邪': '邪', '永': '永', '苦': '苦', '浪': '浪', '彖': '彖',
+    '吐': '吐', '亂': '乱', '斷': '断', '始': '始', '鼓': '鼓', '卦': '卦',
+    '劣': '劣', '偽': '伪', '和': '和', '暴': '暴', '國': '国', '咸': '咸',
+    '寜': '宁', '各': '各', '有': '有', '象': '象', '行': '行', '強': '强',
+    '息': '息', '陽': '阳', '復': '复', '通': '通', '芳': '芳', '服': '服',
+    '淵': '渊', '造': '造', '鄭': '郑', '徂': '徂', '早': '早', '肅': '肃',
+    '七': '七', '到': '到', '張': '张', '丈': '丈', '古': '古', '旦': '旦',
+    '遯': '遁', '徒': '徒', '頓': '顿', '門': '门', '遜': '逊', '樂': '乐',
+    '音': '音', '洛': '洛', '確': '确', '苦': '苦', '學': '学', '拔': '拔',
+    '蒲': '蒲', '八': '八', '孟': '孟', '旣': '既', '依': '依', '注': '注',
+    '敝': '敝', '𪫟': '敕', '敕': '敕', '力': '力', '懈': '懈', '佳': '佳',
+    '賣': '卖', '恒': '恒', '羣': '群', '及': '及', '聲': '声', '應': '应',
+    '氣': '气', '求': '求', '流': '流', '濕': '湿', '火': '火', '就': '就',
+    '燥': '燥', '雲': '云', '從': '从', '風': '风', '虎': '虎', '聖': '圣',
+    '作': '作', '萬': '万', '覩': '睹', '本': '本', '親': '亲', '類': '类',
+    '貴': '贵', '髙': '高', '民': '民', '陰': '阴', '賢': '贤', '輔': '辅',
+    '助': '助', '都': '都', '動': '动', '闕': '阙', '獨': '独', '立': '立',
+    '莫': '莫', '統': '统', '事': '事', '自': '自', '強': '强', '息': '息',
+    '餘': '余', '爻': '爻', '說': '说', '目': '目', '生': '生', '於': '于',
+    '馬': '马', '明': '明', '隨': '随', '取': '取', '應': '应', '論': '论',
+    '別': '别', '舉': '举', '窮': '穷', '識': '识', '動': '动', '理': '理',
+    '妄': '妄', '必': '必', '窮': '穷', '處': '处', '通': '通', '舍': '舍',
+    '文': '文', '王': '王', '夷': '夷', '主': '主', '仲': '仲', '尼': '尼',
+    '旅': '旅', '國': '国', '遠': '远', '聲': '声', '藏': '藏', '明': '明',
+    '偕': '偕', '俱': '俱', '運': '运', '則': '则', '觀': '观', '始': '始',
+    '性': '性', '情': '情', '是': '是', '久': '久', '正': '正', '美': '美',
+    '天': '天', '下': '下', '哉': '哉', '剛': '刚', '健': '健', '中': '中',
+    '粹': '粹', '精': '精', '六': '六', '爻': '爻', '𤼵': '发', '揮': '挥',
+    '旁': '旁', '通': '通', '情': '情', '乘': '乘', '御': '御', '雲': '云',
+    '雨': '雨', '施': '施', '平': '平', '成': '成', '為': '为', '日': '日',
+    '隱': '隐', '未': '未', '見': '见', '弗': '弗', '學': '学', '聚': '聚',
+    '問': '问', '辯': '辩', '寛': '宽', '居': '居', '仁': '仁', '行': '行',
+    '雖': '虽', '遂': '遂', '為': '为', '下': '下', '孟': '孟', '賢': '贤',
+    '遍': '遍', '如': '如', '字': '字', '試': '试', '治': '治', '窮': '穷',
+    '章': '章', '全': '全', '夫': '夫', '放': '放', '遠': '远', '善': '善',
+    '柔': '柔', '至': '至', '識': '识', '動': '动', '然': '然', '皆': '皆',
+    '知': '知', '為': '为', '妄': '妄', '者': '者', '必': '必', '窮': '穷',
+    '處': '处', '通': '通', '舍': '舍', '爻': '爻', '為': '为', '時': '时',
+    '妄': '妄', '動': '动', '則': '则', '文': '文', '王': '王', '夷': '夷',
+    '主': '主', '仲': '仲', '尼': '尼', '旅': '旅', '國': '国', '遠': '远',
+    '聲': '声', '藏': '藏', '明': '明', '偕': '偕', '俱': '俱', '運': '运',
+    '則': '则', '觀': '观', '說': '说', '氣': '气', '剛': '刚', '直': '直',
+    '唯': '唯', '體': '体', '用': '用', '觀': '观', '則': '则', '始': '始',
+    '性': '性', '情': '情', '是': '是', '久': '久', '正': '正', '美': '美',
+    '天': '天', '下': '下', '哉': '哉', '剛': '刚', '健': '健', '中': '中',
+    '粹': '粹', '精': '精', '六': '六', '爻': '爻', '𤼵': '发', '揮': '挥',
+    '旁': '旁', '通': '通', '情': '情', '乘': '乘', '御': '御', '雲': '云',
+    '雨': '雨', '施': '施', '平': '平', '成': '成', '為': '为', '日': '日',
+    '隱': '隐', '未': '未', '見': '见', '弗': '弗', '學': '学', '聚': '聚',
+    '問': '问', '辯': '辩', '寛': '宽', '居': '居', '仁': '仁', '行': '行',
+    '雖': '虽', '遂': '遂', '為': '为', '下': '下', '孟': '孟', '賢': '贤',
+    '遍': '遍', '如': '如', '字': '字', '試': '试', '治': '治', '窮': '穷',
+    '喪': '丧', '唯': '唯', '聖': '圣', '進': '进', '退': '退', '亡': '亡',
+    '得': '得', '喪': '丧', '失': '失', '正': '正', '者': '者', '其': '其',
+    '乎': '乎', '端': '端', '悉': '悉', '薦': '荐', '胡': '胡', '豆': '豆',
+    '息': '息', '浪': '浪'
+  };
+  
+  // 简体转繁体字典（反向映射）
+  const simplifiedToTraditional = {};
+  for (const [trad, simp] of Object.entries(traditionalToSimplified)) {
+    simplifiedToTraditional[simp] = trad;
+  }
+  
+  // 转换函数
+  function convertText(direction) {
+    const textElement = document.querySelector('.text');
+    let text = textElement.innerHTML;
+    
+    if (direction === 'simplified') {
+      // 转为简体
+      for (const [trad, simp] of Object.entries(traditionalToSimplified)) {
+        const regex = new RegExp(trad, 'g');
+        text = text.replace(regex, simp);
+      }
+      convertBtn.textContent = '转为繁体';
+      isSimplified = true;
+    } else {
+      // 转为繁体
+      for (const [simp, trad] of Object.entries(simplifiedToTraditional)) {
+        const regex = new RegExp(simp, 'g');
+        text = text.replace(regex, trad);
+      }
+      convertBtn.textContent = '转为简体';
+      isSimplified = false;
+    }
+    
+    textElement.innerHTML = text;
+    
+    // 重新绑定注释按钮事件
+    bindAnnotationEvents();
+  }
+  
+  // 绑定转换按钮事件
+  convertBtn.addEventListener('click', () => {
+    convertText(isSimplified ? 'traditional' : 'simplified');
+  });
+  
+  // 注释功能
+  function bindAnnotationEvents() {
+    // 移除旧的事件监听器
+    const oldButtons = document.querySelectorAll('.annotation-btn');
+    oldButtons.forEach(btn => {
+      btn.replaceWith(btn.cloneNode(true));
+    });
+    
+    // 绑定新的事件监听器
+    const annotationButtons = document.querySelectorAll('.annotation-btn');
+    annotationButtons.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const type = this.getAttribute('data-type');
+        const content = this.getAttribute('data-content');
+        
+        document.getElementById('popup-title').textContent = type;
+        document.getElementById('popup-content').innerHTML = content;
+        
+        const overlay = document.getElementById('overlay');
+        overlay.style.display = 'flex';
+        
+        // 设置弹窗位置
+        const popup = document.getElementById('popup');
+        const rect = this.getBoundingClientRect();
+        popup.style.left = (rect.left + window.scrollX - popup.offsetWidth - 10) + 'px';
+        popup.style.top = (rect.top + window.scrollY) + 'px';
+      });
+    });
+  }
+  
+  // 初始绑定注释事件
+  bindAnnotationEvents();
+  
+  // 关闭弹窗
+  document.querySelector('.close-btn').addEventListener('click', function() {
+    document.getElementById('overlay').style.display = 'none';
+  });
+  
+  // 点击弹窗外部关闭
+  document.getElementById('overlay').addEventListener('click', function(e) {
+    if (e.target === this) {
+      this.style.display = 'none';
+    }
+  });
+  
+  // 拖拽功能
+  let isDragging = false;
+  let dragOffsetX, dragOffsetY;
+  
+  document.getElementById('popup').addEventListener('mousedown', function(e) {
+    if (e.target.tagName !== 'SPAN') { // 排除关闭按钮
+      isDragging = true;
+      dragOffsetX = e.clientX - this.getBoundingClientRect().left;
+      dragOffsetY = e.clientY - this.getBoundingClientRect().top;
+      this.style.cursor = 'grabbing';
+    }
+  });
+  
+  document.addEventListener('mousemove', function(e) {
+    if (isDragging) {
+      const popup = document.getElementById('popup');
+      popup.style.left = (e.clientX - dragOffsetX) + 'px';
+      popup.style.top = (e.clientY - dragOffsetY) + 'px';
+    }
+  });
+  
+  document.addEventListener('mouseup', function() {
+    if (isDragging) {
+      isDragging = false;
+      document.getElementById('popup').style.cursor = 'move';
+    }
+  });
+</script>
+</body>
+</html>
