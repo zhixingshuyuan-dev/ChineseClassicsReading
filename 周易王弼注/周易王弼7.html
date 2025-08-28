@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -10,22 +11,35 @@
     background-color: #222;
     color: #ddd;
     font-size: 1.2em;
-    writing-mode: vertical-rl; /* 竖排 */
+    writing-mode: vertical-rl; /* 默认竖排 */
     text-orientation: upright; /* 文字正立 */
     height: 100vh;
     margin: 0;
     padding: 20px;
     overflow-x: auto;
+    transition: all 0.3s ease;
   }
+  
+  /* 横版样式 */
+  body.horizontal-layout {
+    writing-mode: horizontal-tb;
+    text-orientation: mixed;
+    padding: 20px 40px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+  
   .text { 
     max-height: 100%; 
     margin: 0 auto; 
     padding: 20px;
   }
+  
   p {
     margin: 0 0 1em 0;
     text-indent: 2em;
   }
+  
   .annotation-btn {
     display: inline-block;
     background: #444;
@@ -38,6 +52,27 @@
     color: #55aaff;
     vertical-align: middle;
   }
+  
+  /* 布局转换按钮 */
+  .layout-btn {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #555;
+    color: #fff;
+    border: 1px solid #777;
+    border-radius: 4px;
+    padding: 8px 16px;
+    cursor: pointer;
+    z-index: 10000;
+    font-size: 16px;
+    width: auto;
+    max-width: 120px;
+    text-align: center;
+    white-space: nowrap;
+  }
+  
   /* 繁简体转换按钮 */
   .convert-btn {
     position: fixed;
@@ -57,34 +92,37 @@
     text-align: center;
     white-space: nowrap;
   }
-  .convert-btn:hover {
+  
+  .convert-btn:hover, .layout-btn:hover {
     background: #666;
   }
+  
   /* 弹窗背景层 */
   #overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: transparent;
+    background: rgba(0, 0, 0, 0.5);
     display: none;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     z-index: 9999;
-    pointer-events: none;
   }
+  
   /* 弹窗主体 */
   #popup {
     background: #333;
     max-width: 500px;
+    max-height: 80vh;
     padding: 15px;
     border-radius: 6px;
     box-shadow: 0 0 12px rgba(0,0,0,0.5);
-    position: absolute;
+    position: relative;
     font-size: 0.9em;
     color: #eee;
     border: 1px solid #555;
-    pointer-events: auto;
-    cursor: move;
+    overflow-y: auto;
   }
+  
   #popup h3 {
     margin-top: 0;
     font-weight: normal;
@@ -93,6 +131,7 @@
     border-bottom: 1px solid #555;
     padding-bottom: 5px;
   }
+  
   #popup .close-btn {
     position: absolute;
     top: 5px; right: 8px;
@@ -101,9 +140,11 @@
     cursor: pointer;
     color: #999;
   }
+  
   #popup .close-btn:hover {
     color: #ddd;
   }
+  
   /* 卦象分隔 */
   .divider {
     margin: 20px 0;
@@ -113,6 +154,9 @@
 </style>
 </head>
 <body>
+<!-- 布局转换按钮 -->
+<button class="layout-btn" id="layoutBtn">转为横版</button>
+
 <!-- 繁简体转换按钮 -->
 <button class="convert-btn" id="convertBtn">转为简体</button>
 
@@ -186,6 +230,22 @@
 </div>
 
 <script>
+  // 布局转换功能
+  const layoutBtn = document.getElementById('layoutBtn');
+  let isHorizontal = false;
+  
+  layoutBtn.addEventListener('click', () => {
+    const body = document.body;
+    if (isHorizontal) {
+      body.classList.remove('horizontal-layout');
+      layoutBtn.textContent = '转为横版';
+    } else {
+      body.classList.add('horizontal-layout');
+      layoutBtn.textContent = '转为竖版';
+    }
+    isHorizontal = !isHorizontal;
+  });
+  
   // 繁简体转换功能
   const convertBtn = document.getElementById('convertBtn');
   let isSimplified = false;
@@ -286,11 +346,12 @@
         const overlay = document.getElementById('overlay');
         overlay.style.display = 'flex';
         
-        // 设置弹窗位置
+        // 居中显示弹窗
         const popup = document.getElementById('popup');
-        const rect = this.getBoundingClientRect();
-        popup.style.left = (rect.left + window.scrollX - popup.offsetWidth - 10) + 'px';
-        popup.style.top = (rect.top + window.scrollY) + 'px';
+        popup.style.position = 'fixed';
+        popup.style.left = '50%';
+        popup.style.top = '50%';
+        popup.style.transform = 'translate(-50%, -50%)';
       });
     });
   }
@@ -307,34 +368,6 @@
   document.getElementById('overlay').addEventListener('click', function(e) {
     if (e.target === this) {
       this.style.display = 'none';
-    }
-  });
-  
-  // 拖拽功能
-  let isDragging = false;
-  let dragOffsetX, dragOffsetY;
-  
-  document.getElementById('popup').addEventListener('mousedown', function(e) {
-    if (e.target.tagName !== 'SPAN') { // 排除关闭按钮
-      isDragging = true;
-      dragOffsetX = e.clientX - this.getBoundingClientRect().left;
-      dragOffsetY = e.clientY - this.getBoundingClientRect().top;
-      this.style.cursor = 'grabbing';
-    }
-  });
-  
-  document.addEventListener('mousemove', function(e) {
-    if (isDragging) {
-      const popup = document.getElementById('popup');
-      popup.style.left = (e.clientX - dragOffsetX) + 'px';
-      popup.style.top = (e.clientY - dragOffsetY) + 'px';
-    }
-  });
-  
-  document.addEventListener('mouseup', function() {
-    if (isDragging) {
-      isDragging = false;
-      document.getElementById('popup').style.cursor = 'move';
     }
   });
 </script>
