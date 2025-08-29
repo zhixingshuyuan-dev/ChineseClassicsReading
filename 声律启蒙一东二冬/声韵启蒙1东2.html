@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声律启蒙 · 二冬</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "SimSun", "宋体", serif;
+            background-color: #0f1c2d;
+            color: #e0e0e0;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-image: linear-gradient(to bottom, #0f1c2d, #1a3658);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+        
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #2a4b8d;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #3a5ccc;
+        }
+        
+        h1 {
+            font-size: 2.8em;
+            color: #fff;
+            text-shadow: 0 0 15px #3a5ccc, 0 0 25px #3a5ccc;
+            margin-bottom: 15px;
+            letter-spacing: 5px;
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            color: #aac0e0;
+            font-style: italic;
+        }
+        
+        .control-panel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .control-btn {
+            padding: 12px 20px;
+            background: linear-gradient(to bottom, #3a5ccc, #2a4b8d);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-btn:hover {
+            background: linear-gradient(to bottom, #4a6ce4, #3a5ccc);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        .control-btn:active {
+            transform: translateY(0);
+        }
+        
+        .control-btn.active {
+            background: linear-gradient(to bottom, #ffcc00, #ff9900);
+            color: #000;
+        }
+        
+        .section-divider {
+            text-align: center;
+            margin: 40px 0;
+            color: #aac0e0;
+            font-style: italic;
+            font-size: 1.4em;
+            text-shadow: 0 0 10px #3a5ccc;
+        }
+        
+        .sentence {
+            background: linear-gradient(to bottom, rgba(30, 45, 70, 0.8), rgba(20, 35, 60, 0.8));
+            padding: 25px;
+            margin-bottom: 30px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            border-left: 5px solid #3a5ccc;
+        }
+        
+        .sentence p {
+            margin: 0;
+            color: #ffffff;
+            text-align: justify;
+            line-height: 2.2;
+            font-size: 1.8em;
+        }
+        
+        .character {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-block;
+            margin: 0 2px;
+        }
+        
+        .character:hover {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.7);
+            transform: translateY(-3px);
+        }
+        
+        /* 声旁展示窗口样式 */
+        .radical-window {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(10, 25, 47, 0.95);
+            border: 2px solid #ffcc00;
+            border-radius: 20px;
+            width: 600px;
+            height: 600px;
+            z-index: 2000;
+            box-shadow: 0 0 40px rgba(255, 204, 0, 0.4);
+            padding: 20px;
+        }
+        
+        .radical-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #1a1912, #1c1a18);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 4em;
+            font-weight: bold;
+            color: #f1ecec;
+            box-shadow: 0 0 40px #7e6d3ccc;
+            z-index: 10;
+        }
+        
+        .radical-pinyin {
+            font-size: 0.5em;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        .radical-char {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #2f3545, #171b24);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 3.2em;
+            color: #fff;
+            transition: all 0.3s;
+            border: 2px solid #391685;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+            z-index: 5;
+        }
+        
+        .radical-char:hover {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
+            transform: scale(1.15);
+            z-index: 15;
+        }
+        
+        .char-pinyin {
+            font-size: 0.4em;
+            margin-top: 2px;
+        }
+        
+        .char-example {
+            font-size: 0.45em;
+            color: #e2e7f0;
+            text-align: center;
+            margin-top: 2px;
+            padding: 0 3px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            cursor: pointer;
+            font-size: 40px;
+            color: #ffcc00;
+            z-index: 2010;
+        }
+        
+        /* 竖版样式 */
+        body.vertical-layout {
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            max-width: none;
+            height: 100vh;
+            padding: 20px 40px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        
+        body.vertical-layout .container {
+            display: inline-block;
+            vertical-align: top;
+            margin-right: 40px;
+            margin-bottom: 0;
+            width: auto;
+            padding: 40px 30px;
+        }
+        
+        body.vertical-layout .sentence {
+            display: block;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+        }
+        
+        body.vertical-layout .sentence p {
+            margin: 0;
+            text-align: start;
+            line-height: 1.8;
+        }
+        
+        body.vertical-layout .control-panel {
+            writing-mode: horizontal-tb;
+            margin-bottom: 40px;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .sentence p {
+                font-size: 1.4em;
+            }
+            
+            .radical-window {
+                width: 90vw;
+                height: 90vw;
+            }
+            
+            .radical-center {
+                width: 70px;
+                height: 70px;
+                font-size: 1.5em;
+            }
+            
+            .radical-char {
+                width: 50px;
+                height: 50px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>聲律啟蒙</h1>
+            <div class="subtitle">傳統文化經典 · 聲韻汉字啟蒙</div>
+        </header>
+        
+        <div class="control-panel">
+            <button id="simplified-btn" class="control-btn" onclick="convertToSimplified()">简体</button>
+            <button id="traditional-btn" class="control-btn active" onclick="convertToTraditional()">繁體</button>
+            <button id="layout-btn" class="control-btn" onclick="toggleLayout()">横版/竖版</button>
+        </div>
+
+        <div class="section-divider">【 卷上 】</div>
+
+        <div class="section-divider">二、冬</div>
+
+        <div class="sentence">
+            <p>
+                <span class="character" onclick="showRadical('沿', 'yán', '沿')">沿</span>
+                <span class="character" onclick="showRadical('對', 'duì', '对')">對</span>
+                <span class="character" onclick="showRadical('革', 'gé', '革')">革</span>，
+                <span class="character" onclick="showRadical('異', 'yì', '异')">異</span>
+                <span class="character" onclick="showRadical('對', 'duì', '对')">對</span>
+                <span class="character" onclick="showRadical('同', 'tóng', '同')">同</span>，
+                <span class="character" onclick="showRadical('白', 'bái', '白')">白</span>
+                <span class="character" onclick="showRadical('叟', 'sǒu', '叟')">叟</span>
+                <span class="character" onclick="showRadical('對', 'duì', '对')">對</span>
+                <span class="character" onclick="showRadical('黃', 'huáng', '黄')">黃</span>
+                <span class="character" onclick="showRadical('童', 'tóng', '童')">童</span>。
+            </p>
+        </div>
+
+        <div class="sentence">
+            <p>
+                <span class="character" onclick="showRadical('江', 'jiāng', '江')">江</span>
+                <span class="character" onclick="showRadical('風', 'fēng', '风')">風</span>
+                <span class="character" onclick="showRadical('對', 'duì', '对')">對</span>
+                <span class="character" onclick="showRadical('海', 'hǎi', '海')">海</span>
+                <span class="character" onclick="showRadical('霧', 'wù', '雾')">霧</span>，
+                <span class="character" onclick="showRadical('牧', 'mù', '牧')">牧</span>
+                <span class="character" onclick="showRadical('子', 'zǐ', '子')">子</span>
+                <span class="character" onclick="showRadical('對', 'duì', '对')">對</span>
+                <span class="character" onclick="showRadical('漁', 'yú', '渔')">漁</span>
+                <span class="character" onclick="showRadical('翁', 'wēng', '翁')">翁</span>。
+            </p>
+        </div>
+
+        <div class="sentence">
+            <p>
+                <span class="character" onclick="showRadical('顏', 'yán', '颜')">顏</span>
+                <span class="character" onclick="showRadical('巷', 'xiàng', '巷')">巷</span>
+                <span class="character" onclick="showRadical('陋', 'lòu', '陋')">陋</span>，
+                <span class="character" onclick="showRadical('阮', 'ruǎn', '阮')">阮</span>
+                <span class="character" onclick="showRadical('途', 'tú', '途')">途</span>
+                <span class="character" onclick="showRadical('窮', 'qióng', '穷')">窮</span>，
+                <span class="character" onclick="showRadical('冀', 'jì', '冀')">冀</span>
+                <span class="character" onclick="showRadical('北', 'běi', '北')">北</span>
+                <span class="character" onclick="showRadical('對', 'duì', '对')">對</span>
+                <span class="character" onclick="showRadical('遼', 'liáo', '辽')">遼</span>
+                <span class="character" onclick="showRadical('東', 'dōng', '东')">東</span>。
+            </p>
+        </div>
+
+        <div class="sentence">
+            <p>
+                <span class="character" onclick="showRadical('池', 'chí', '池')">池</span>
+                <span class="character" onclick="showRadical('中', 'zhōng', '中')">中</span>
+                <span class="character" onclick="showRadical('濯', 'zhuó', '濯')">濯</span>
+                <span class="character" onclick="showRadical('足', 'zú', '足')">足</span>
+                <span class="character" onclick="showRadical('水', 'shuǐ', '水')">水</span>，
+                <span class="character" onclick="showRadical('門', 'mén', '门')">門</span>
+                <span class="character" onclick="showRadical('外', 'wài', '外')">外</span>
+                <span class="character" onclick="showRadical('打', 'dǎ', '打')">打</span>
+                <span class="character" onclick="showRadical('頭', 'tóu', '头')">頭</span>
+                <span class="character" onclick="showRadical('風', 'fēng', '风')">風</span>。
+            </p>
+        </div>
+
+        <div class="sentence">
+            <p>
+                <span class="character" onclick="showRadical('梁', 'liáng', '梁')">梁</span>
+                <span class="character" onclick="showRadical('帝', 'dì', '帝')">帝</span>
+                <span class="character" onclick="showRadical('講', 'jiǎng', '讲')">講</span>
+                <span class="character" onclick="showRadical('經', 'jīng', '经')">經</span>
+                <span class="character" onclick="showRadical('同', 'tóng', '同')">同</span>
+                <span class="character" onclick="showRadical('泰', 'tài', '泰')">泰</span>
+                <span class="character" onclick="showRadical('寺', 'sì', '寺')">寺</span>，
+                <span class="character" onclick="showRadical('漢', 'hàn', '汉')">漢</span>
+                <span class="character" onclick="showRadical('皇', 'huáng', '皇')">皇</span>
+                <span class="character" onclick="showRadical('置', 'zhì', '置')">置</span>
+                <span class="character" onclick="showRadical('酒', 'jiǔ', '酒')">酒</span>
+                <span class="character" onclick="showRadical('未', 'wèi', '未')">未</span>
+                <span class="character" onclick="showRadical('央', 'yāng', '央')">央</span>
+                <span class="character" onclick="showRadical('宮', 'gōng', '宫')">宮</span>。
+            </p>
+        </div>
+
+        <div class="sentence">
+            <p>
+                <span class="character" onclick="showRadical('塵', 'chén', '尘')">塵</span>
+                <span class="character" onclick="showRadical('慮', 'lǜ', '虑')">慮</span>
+                <span class="character" onclick="showRadical('縈', 'yíng', '萦')">縈</span>
+                <span class="character" onclick="showRadical('心', 'xīn', '心')">心</span>
+                <span class="character" onclick="showRadical('懶', 'lǎn', '懒')">懶</span>
+                <span class="character" onclick="showRadical('撫', 'fǔ', '抚')">撫</span>
+                <span class="character" onclick="showRadical('七', 'qī', '七')">七</span>
+                <span class="character" onclick="showRadical('弦', 'xián', '弦')">弦</span>
+                <span class="character" onclick="showRadical('綠', 'lǜ', '绿')">綠</span>
+                <span class="character" onclick="showRadical('綺', 'qǐ', '绮')">綺</span>；
+                <span class="character" onclick="showRadical('霜', 'shuāng', '霜')">霜</span>
+                <span class="character" onclick="showRadical('華', 'huá', '华')">華</span>
+                <span class="character" onclick="showRadical('滿', 'mǎn', '满')">滿</span>
+                <span class="character" onclick="showRadical('鬢', 'bìn', '鬓')">鬢</span>
+                <span class="character" onclick="showRadical('羞', 'xiū', '羞')">羞</span>
+                <span class="character" onclick="showRadical('看', 'kàn', '看')">看</span>
+                <span class="character" onclick="showRadical('百', 'bǎi', '百')">百</span>
+                <span class="character" onclick="showRadical('煉', 'liàn', '炼')">煉</span>
+                <span class="character" onclick="showRadical('青', 'qīng', '青')">青</span>
+                <span class="character" onclick="showRadical('銅', 'tóng', '铜')">銅</span>。
+            </p>
+        </div>
+
+        <div class="radical-window" id="radical-window">
+            <span class="close-btn" onclick="closeRadical()">×</span>
+            <div class="radical-center" id="radical-center">
+                <div id="center-char">声</div>
+                <div class="radical-pinyin" id="center-pinyin">shēng</div>
+            </div>
+            <!-- 动态生成的汉字会在这里 -->
+        </div>
+    </div>
+
+    <script>
+        // 简繁体转换映射表
+        const simplifiedToTraditional = {
+            '云': '雲', '对': '對', '风': '風', '鸟': '鳥', '鸣': '鳴', '虫': '蟲', '剑': '劍',
+            '钧': '鈞', '岭': '嶺', '东': '東', '间': '間', '广': '廣', '宫': '宮', '夹': '夾',
+            '晓': '曉', '烟': '煙', '杨': '楊', '绿': '綠', '满': '滿', '园': '園', '两': '兩',
+            '鬓': '鬢', '边': '邊', '钓': '釣', '异': '異', '黄': '黃', '雾': '霧', '渔': '漁',
+            '颜': '顏', '穷': '窮', '辽': '遼', '门': '門', '头': '頭', '讲': '講', '经': '經',
+            '汉': '漢', '尘': '塵', '虑': '慮', '萦': '縈', '懒': '懶', '抚': '撫', '绿': '綠',
+            '绮': '綺', '华': '華', '炼': '煉', '铜': '銅', '贫': '貧', '齿': '齒', '唇': '唇',
+            '红': '紅', '弯': '彎', '树': '樹', '戏': '戲', '纤': '纖', '额': '額', '现': '現',
+            '儿': '兒', '气': '氣', '壮': '壯', '万': '萬', '长': '長'
+        };
+
+        const traditionalToSimplified = {};
+        for (const [simp, trad] of Object.entries(simplifiedToTraditional)) {
+            traditionalToSimplified[trad] = simp;
+        }
+
+        // 简繁体转换函数
+        function convertToSimplified() {
+            const elements = document.querySelectorAll('.character');
+            elements.forEach(el => {
+                const text = el.textContent;
+                if (traditionalToSimplified[text]) {
+                    el.textContent = traditionalToSimplified[text];
+                    // 更新onclick事件中的参数
+                    const onclickAttr = el.getAttribute('onclick');
+                    if (onclickAttr) {
+                        const params = onclickAttr.split("'");
+                        if (params.length >= 5) {
+                            params[1] = traditionalToSimplified[params[1]] || params[1];
+                            params[3] = traditionalToSimplified[params[3]] || params[3];
+                            el.setAttribute('onclick', params.join("'"));
+                        }
+                    }
+                }
+            });
+            
+            // 更新按钮状态
+            document.getElementById('simplified-btn').classList.add('active');
+            document.getElementById('traditional-btn').classList.remove('active');
+        }
+
+        function convertToTraditional() {
+            const elements = document.querySelectorAll('.character');
+            elements.forEach(el => {
+                const text = el.textContent;
+                if (simplifiedToTraditional[text]) {
+                    el.textContent = simplifiedToTraditional[text];
+                    // 更新onclick事件中的参数
+                    const onclickAttr = el.getAttribute('onclick');
+                    if (onclickAttr) {
+                        const params = onclickAttr.split("'");
+                        if (params.length >= 5) {
+                            params[1] = simplifiedToTraditional[params[1]] || params[1];
+                            params[3] = simplifiedToTraditional[params[3]] || params[3];
+                            el.setAttribute('onclick', params.join("'"));
+                        }
+                    }
+                }
+            });
+            
+            // 更新按钮状态
+            document.getElementById('traditional-btn').classList.add('active');
+            document.getElementById('simplified-btn').classList.remove('active');
+        }
+
+        // 横版/竖版切换
+        function toggleLayout() {
+            const isVertical = document.body.classList.toggle('vertical-layout');
+            const layoutBtn = document.getElementById('layout-btn');
+            
+            if (isVertical) {
+                layoutBtn.textContent = '竖版/横版';
+            } else {
+                layoutBtn.textContent = '横版/竖版';
+            }
+        }
+
+        // 声旁数据库（示例数据）
+        const radicalData = {
+            '沿': { 'pinyin': 'yán', 'chars': [
+                { 'char': '船', 'pinyin': 'chuán', 'example': '船舶' },
+                { 'char': '铅', 'pinyin': 'qiān', 'example': '铅笔' },
+                { 'char': '沿', 'pinyin': 'yán', 'example': '沿途' },
+{ 'char': '鉛', 'pinyin': 'qiān', 'example': '鉛筆' },
+{ 'char': '舷', 'pinyin': 'xián', 'example': '船舷' },
+{ 'char': '艦', 'pinyin': 'jiàn', 'example': '軍艦' },
+{ 'char': '艇', 'pinyin': 'tǐng', 'example': '快艇' }
+            ]},
+            '革': { 'pinyin': 'gé', 'chars': [
+                { 'char': '鞋', 'pinyin': 'xié', 'example': '皮鞋' },
+                { 'char': '鞍', 'pinyin': 'ān', 'example': '马鞍' },
+                { 'char': '鞘', 'pinyin': 'qiào', 'example': '刀鞘' },
+                { 'char': '鞵', 'pinyin': 'xié', 'example': '革鞵（古同“鞋”）' },
+{ 'char': '鮭', 'pinyin': 'guī', 'example': '鮭魚' },
+{ 'char': '桂', 'pinyin': 'guì', 'example': '桂花' },
+{ 'char': '挂', 'pinyin': 'guà', 'example': '悬挂' },
+{ 'char': '卦', 'pinyin': 'guà', 'example': '八卦' }
+            ]},
+            '异': { 'pinyin': 'yì', 'chars': [
+                   { 'char': '戴', 'pinyin': 'dài', 'example': '爱戴' },
+                { 'char': '冀', 'pinyin': 'jì', 'example': '希冀' }
+            ]},
+            '同': { 'pinyin': 'tóng', 'chars': [
+                { 'char': '洞', 'pinyin': 'dòng', 'example': '山洞' },
+                { 'char': '铜', 'pinyin': 'tóng', 'example': '铜器' },
+                { 'char': '筒', 'pinyin': 'tǒng', 'example': '竹筒' },
+                { 'char': '筒', 'pinyin': 'tǒng', 'example': '竹筒' },
+{ 'char': '桐', 'pinyin': 'tóng', 'example': '梧桐' },
+{ 'char': '酮', 'pinyin': 'tóng', 'example': '丙酮' },
+{ 'char': '恫', 'pinyin': 'dòng', 'example': '恫吓' },
+{ 'char': '硐', 'pinyin': 'dòng', 'example': '硐堡' }
+            ]},
+            '白': { 'pinyin': 'bái', 'chars': [
+                { 'char': '百', 'pinyin': 'bǎi', 'example': '百个' },
+                { 'char': '柏', 'pinyin': 'bǎi', 'example': '柏树' },
+                { 'char': '泊', 'pinyin': 'bó', 'example': '停泊' }
+            ]},
+            '叟': { 'pinyin': 'sǒu', 'chars': [
+                { 'char': '搜', 'pinyin': 'sōu', 'example': '搜索' },
+                { 'char': '艘', 'pinyin': 'sōu', 'example': '一艘' },
+                { 'char': '飕', 'pinyin': 'sōu', 'example': '凉飕飕' }
+            ]},
+            '黄': { 'pinyin': 'huáng', 'chars': [
+                { 'char': '横', 'pinyin': 'héng', 'example': '横竖' },
+                { 'char': '簧', 'pinyin': 'huáng', 'example': '弹簧' },
+                { 'char': '潢', 'pinyin': 'huáng', 'example': '装潢' }
+            ]},
+            '童': { 'pinyin': 'tóng', 'chars': [
+                { 'char': '撞', 'pinyin': 'zhuàng', 'example': '碰撞' },
+                { 'char': '瞳', 'pinyin': 'tóng', 'example': '瞳孔' },
+                { 'char': '幢', 'pinyin': 'chuáng', 'example': '经幢' }
+            ]},
+            '江': { 'pinyin': 'jiāng', 'chars': [
+                { 'char': '河', 'pinyin': 'hé', 'example': '河流' },
+                { 'char': '湖', 'pinyin': 'hú', 'example': '湖泊' },
+                { 'char': '海', 'pinyin': 'hǎi', 'example': '海洋' }
+            ]},
+            '风': { 'pinyin': 'fēng', 'chars': [
+                { 'char': '枫', 'pinyin': 'fēng', 'example': '枫叶' },
+                { 'char': '疯', 'pinyin': 'fēng', 'example': '疯狂' },
+                { 'char': '讽', 'pinyin': 'fěng', 'example': '讽刺' }
+            ]},
+            '海': { 'pinyin': 'hǎi', 'chars': [
+                { 'char': '梅', 'pinyin': 'méi', 'example': '梅花' },
+                { 'char': '侮', 'pinyin': 'wǔ', 'example': '侮辱' },
+                { 'char': '晦', 'pinyin': 'huì', 'example': '晦气' }
+            ]},
+            '雾': { 'pinyin': 'wù', 'chars': [
+                { 'char': '务', 'pinyin': 'wù', 'example': '任务' },
+                { 'char': '雾', 'pinyin': 'wù', 'example': '雾气' },
+{ 'char': '雰', 'pinyin': 'fēn', 'example': '雰围' },
+{ 'char': '務', 'pinyin': 'wù', 'example': '事務（“务”的繁体）' },
+{ 'char': '霚', 'pinyin': 'wù', 'example': '古同“雾”' },
+{ 'char': '婺', 'pinyin': 'wù', 'example': '婺源（地名）' }
+            ]},
+            '牧': { 'pinyin': 'mù', 'chars': [
+                { 'char': '物', 'pinyin': 'wù', 'example': '物品' },
+                { 'char': '牡', 'pinyin': 'mǔ', 'example': '牡丹' },
+                { 'char': '特', 'pinyin': 'tè', 'example': '特别' }
+            ]},
+            '渔': { 'pinyin': 'yú', 'chars': [
+                { 'char': '鱼', 'pinyin': 'yú', 'example': '鱼类' },
+                { 'char': '鲁', 'pinyin': 'lǔ', 'example': '粗鲁' },
+                { 'char': '鲜', 'pinyin': 'xiān', 'example': '新鲜' }
+            ]},
+            '颜': { 'pinyin': 'yán', 'chars': [
+                { 'char': '谚', 'pinyin': 'yàn', 'example': '谚语' },
+                { 'char': '嵃', 'pinyin': 'yǎn', 'example': '山嵃' },
+                { 'char': '楌', 'pinyin': 'yán', 'example': '木名' }
+            ]},
+            '巷': { 'pinyin': 'xiàng', 'chars': [
+                { 'char': '港', 'pinyin': 'gǎng', 'example': '港口' },
+                { 'char': '闂', 'pinyin': 'hòng', 'example': '巷战' },
+                { 'char': '衖', 'pinyin': 'xiàng', 'example': '小巷' }
+            ]},
+            '陋': { 'pinyin': 'lòu', 'chars': [
+                { 'char': '漏', 'pinyin': 'lòu', 'example': '漏洞' },
+                { 'char': '瘘', 'pinyin': 'lòu', 'example': '痔瘘' },
+                { 'char': '镂', 'pinyin': 'lòu', 'example': '镂空' }
+            ]},
+            '阮': { 'pinyin': 'ruǎn', 'chars': [
+                { 'char': '院', 'pinyin': 'yuàn', 'example': '院子' },
+                { 'char': '完', 'pinyin': 'wán', 'example': '完成' },
+                { 'char': '皖', 'pinyin': 'wǎn', 'example': '安徽' }
+            ]},
+            '途': { 'pinyin': 'tú', 'chars': [
+                { 'char': '涂', 'pinyin': 'tú', 'example': '涂抹' },
+                { 'char': '徐', 'pinyin': 'xú', 'example': '徐缓' },
+                { 'char': '斜', 'pinyin': 'xié', 'example': '倾斜' }
+            ]},
+            '穷': { 'pinyin': 'qióng', 'chars': [
+                { 'char': '穹', 'pinyin': 'qióng', 'example': '苍穹' },
+                { 'char': '空', 'pinyin': 'kōng', 'example': '空气' },
+                { 'char': '窍', 'pinyin': 'qiào', 'example': '窍门' }
+            ]},
+            '冀': { 'pinyin': 'jì', 'chars': [
+                { 'char': '翼', 'pinyin': 'yì', 'example': '羽翼' },
+                { 'char': '骥', 'pinyin': 'jì', 'example': '老骥' },
+                { 'char': '觊', 'pinyin': 'jì', 'example': '觊觎' }
+            ]},
+            '辽': { 'pinyin': 'liáo', 'chars': [
+                { 'char': '疗', 'pinyin': 'liáo', 'example': '治疗' },
+                { 'char': '僚', 'pinyin': 'liáo', 'example': '官僚' },
+                { 'char': '寥', 'pinyin': 'liáo', 'example': '寂寥' }
+            ]},
+            '池': { 'pinyin': 'chí', 'chars': [
+                { 'char': '驰', 'pinyin': 'chí', 'example': '奔驰' },
+                { 'char': '施', 'pinyin': 'shī', 'example': '实施' },
+                { 'char': '他', 'pinyin': 'tā', 'example': '他们' }
+            ]},
+            '濯': { 'pinyin': 'zhuó', 'chars': [
+                { 'char': '耀', 'pinyin': 'yào', 'example': '照耀' },
+                { 'char': '曜', 'pinyin': 'yào', 'example': '七曜' },
+                { 'char': '擢', 'pinyin': 'zhuó', 'example': '擢升' }
+            ]},
+            '足': { 'pinyin': 'zú', 'chars': [
+                { 'char': '促', 'pinyin': 'cù', 'example': '促进' },
+                { 'char': '捉', 'pinyin': 'zhuō', 'example': '捉拿' },
+                { 'char': '距', 'pinyin': 'jù', 'example': '距离' }
+            ]},
+            '水': { 'pinyin': 'shuǐ', 'chars': [
+                { 'char': '冰', 'pinyin': 'bīng', 'example': '冰雪' },
+                { 'char': '泉', 'pinyin': 'quán', 'example': '泉水' },
+                { 'char': '永', 'pinyin': 'yǒng', 'example': '永远' },
+                { 'char': '泳', 'pinyin': 'yǒng', 'example': '游泳' }
+            ]},
+
+            '门': { 'pinyin': 'mén', 'chars': [
+                { 'char': '们', 'pinyin': 'men', 'example': '我们' },
+                { 'char': '闪', 'pinyin': 'shǎn', 'example': '闪电' },
+                { 'char': '闲', 'pinyin': 'xián', 'example': '空闲' }
+            ]},
+
+            '打': { 'pinyin': 'dǎ', 'chars': [
+                { 'char': '订', 'pinyin': 'dìng', 'example': '订正' },
+                { 'char': '灯', 'pinyin': 'dēng', 'example': '灯光' },
+                { 'char': '顶', 'pinyin': 'dǐng', 'example': '山顶' }
+            ]},
+            '梁': { 'pinyin': 'liáng', 'chars': [
+                { 'char': '梁', 'pinyin': 'liáng', 'example': '房梁' },
+                { 'char': '粱', 'pinyin': 'liáng', 'example': '高粱' },
+                { 'char': '渠', 'pinyin': 'qú', 'example': '渠道' }
+            ]},
+            '帝': { 'pinyin': 'dì', 'chars': [
+                { 'char': '谛', 'pinyin': 'dì', 'example': '真谛' },
+                { 'char': '缔', 'pinyin': 'dì', 'example': '缔造' },
+                { 'char': '啼', 'pinyin': 'tí', 'example': '啼哭' }
+            ]},
+            '講': { 'pinyin': 'jiǎng', 'chars': [
+               { 'char': '構', 'pinyin': 'gòu', 'example': '構造' },
+{ 'char': '購', 'pinyin': 'gòu', 'example': '購買' },
+{ 'char': '媾', 'pinyin': 'gòu', 'example': '媾和' },
+{ 'char': '篝', 'pinyin': 'gōu', 'example': '篝火' },
+
+            ]},
+            '经': { 'pinyin': 'jīng', 'chars': [
+                { 'char': '径', 'pinyin': 'jìng', 'example': '路径' },
+                { 'char': '茎', 'pinyin': 'jīng', 'example': '根茎' },
+                { 'char': '颈', 'pinyin': 'jǐng', 'example': '颈部' }
+            ]},
+            '泰': { 'pinyin': 'tài', 'chars': [
+                { 'char': '太', 'pinyin': 'tài', 'example': '太阳' },
+                { 'char': '汰', 'pinyin': 'tài', 'example': '淘汰' },
+                { 'char': '态', 'pinyin': 'tài', 'example': '态度' }
+            ]},
+            '寺': { 'pinyin': 'sì', 'chars': [
+                { 'char': '侍', 'pinyin': 'shì', 'example': '侍从' },
+                { 'char': '待', 'pinyin': 'dài', 'example': '等待' },
+                { 'char': '持', 'pinyin': 'chí', 'example': '坚持' }
+            ]},
+            '汉': { 'pinyin': 'hàn', 'chars': [
+                { 'char': '难', 'pinyin': 'nán', 'example': '困难' },
+                { 'char': '滩', 'pinyin': 'tān', 'example': '沙滩' },
+                { 'char': '叹', 'pinyin': 'tàn', 'example': '叹息' }
+            ]},
+            '皇': { 'pinyin': 'huáng', 'chars': [
+                { 'char': '凰', 'pinyin': 'huáng', 'example': '凤凰' },
+                { 'char': '惶', 'pinyin': 'huáng', 'example': '惶恐' },
+                { 'char': '煌', 'pinyin': 'huáng', 'example': '辉煌' }
+            ]},
+            '置': { 'pinyin': 'zhì', 'chars': [
+                { 'char': '值', 'pinyin': 'zhí', 'example': '价值' },
+                { 'char': '植', 'pinyin': 'zhí', 'example': '植物' },
+                { 'char': '直', 'pinyin': 'zhí', 'example': '直接' }
+            ]},
+            '酒': { 'pinyin': 'jiǔ', 'chars': [
+                { 'char': '酉', 'pinyin': 'yǒu', 'example': '酉时' },
+                { 'char': '酋', 'pinyin': 'qiú', 'example': '酋长' },
+                { 'char': '醉', 'pinyin': 'zuì', 'example': '醉酒' }
+            ]},
+            '未': { 'pinyin': 'wèi', 'chars': [
+                { 'char': '味', 'pinyin': 'wèi', 'example': '味道' },
+                { 'char': '妹', 'pinyin': 'mèi', 'example': '姐妹' },
+                { 'char': '寐', 'pinyin': 'mèi', 'example': '梦寐' }
+            ]},
+            '央': { 'pinyin': 'yāng', 'chars': [
+                { 'char': '秧', 'pinyin': 'yāng', 'example': '秧苗' },
+                { 'char': '殃', 'pinyin': 'yāng', 'example': '遭殃' },
+                { 'char': '鸯', 'pinyin': 'yāng', 'example': '鸳鸯' }
+            ]},
+            '宫': { 'pinyin': 'gōng', 'chars': [
+                { 'char': '官', 'pinyin': 'guān', 'example': '官员' },
+                { 'char': '管', 'pinyin': 'guǎn', 'example': '管理' },
+                { 'char': '馆', 'pinyin': 'guǎn', 'example': '旅馆' }
+            ]},
+            '尘': { 'pinyin': 'chén', 'chars': [
+                { 'char': '尖', 'pinyin': 'jiān', 'example': '尖锐' },
+                { 'char': '少', 'pinyin': 'shǎo', 'example': '多少' },
+                { 'char': '小', 'pinyin': 'xiǎo', 'example': '大小' }
+            ]},
+            '虑': { 'pinyin': 'lǜ', 'chars': [
+                { 'char': '滤', 'pinyin': 'lǜ', 'example': '过滤' },
+                { 'char': '虚', 'pinyin': 'xū', 'example': '虚实' },
+                { 'char': '虎', 'pinyin': 'hǔ', 'example': '老虎' }
+            ]},
+            '萦': { 'pinyin': 'yíng', 'chars': [
+                { 'char': '营', 'pinyin': 'yíng', 'example': '经营' },
+                { 'char': '萤', 'pinyin': 'yíng', 'example': '萤火虫' },
+                { 'char': '荧', 'pinyin': 'yíng', 'example': '荧光' }
+            ]},
+            '懒': { 'pinyin': 'lǎn', 'chars': [
+                { 'char': '赖', 'pinyin': 'lài', 'example': '依赖' },
+                { 'char': '獭', 'pinyin': 'tǎ', 'example': '水獭' },
+                { 'char': '癞', 'pinyin': 'lài', 'example': '癞蛤蟆' }
+            ]},
+            '抚': { 'pinyin': 'fǔ', 'chars': [
+                { 'char': '无', 'pinyin': 'wú', 'example': '有无' },
+                { 'char': '芜', 'pinyin': 'wú', 'example': '荒芜' },
+                { 'char': '怃', 'pinyin': 'wǔ', 'example': '怃然' }
+            ]},
+            '七': { 'pinyin': 'qī', 'chars': [
+                { 'char': '柒', 'pinyin': 'qī', 'example': '大写七' },
+                { 'char': '皂', 'pinyin': 'zào', 'example': '肥皂' }
+            ]},
+            '弦': { 'pinyin': 'xián', 'chars': [
+                { 'char': '舷', 'pinyin': 'xián', 'example': '船舷' },
+                { 'char': '炫', 'pinyin': 'xuàn', 'example': '炫耀' },
+                { 'char': '玄', 'pinyin': 'xuán', 'example': '玄妙' }
+            ]},
+            '绿': { 'pinyin': 'lǜ', 'chars': [
+                { 'char': '禄', 'pinyin': 'lù', 'example': '俸禄' },
+                { 'char': '碌', 'pinyin': 'lù', 'example': '忙碌' },
+                { 'char': '录', 'pinyin': 'lù', 'example': '记录' }
+            ]},
+            '绮': { 'pinyin': 'qǐ', 'chars': [
+                { 'char': '椅', 'pinyin': 'yǐ', 'example': '椅子' },
+                { 'char': '崎', 'pinyin': 'qí', 'example': '崎岖' },
+                { 'char': '骑', 'pinyin': 'qí', 'example': '骑马' }
+            ]},
+            '霜': { 'pinyin': 'shuāng', 'chars': [
+                { 'char': '相', 'pinyin': 'xiāng', 'example': '相互' },
+                { 'char': '想', 'pinyin': 'xiǎng', 'example': '思想' },
+                { 'char': '箱', 'pinyin': 'xiāng', 'example': '箱子' }
+            ]},
+            '华': { 'pinyin': 'huá', 'chars': [
+                { 'char': '花', 'pinyin': 'huā', 'example': '花朵' },
+                { 'char': '化', 'pinyin': 'huà', 'example': '变化' },
+                { 'char': '桦', 'pinyin': 'huà', 'example': '白桦' }
+            ]},
+            '满': { 'pinyin': 'mǎn', 'chars': [
+                { 'char': '瞒', 'pinyin': 'mán', 'example': '隐瞒' },
+                { 'char': '螨', 'pinyin': 'mǎn', 'example': '螨虫' },
+                { 'char': '颟', 'pinyin': 'mān', 'example': '颟顸' }
+            ]},
+            '鬓': { 'pinyin': 'bìn', 'chars': [
+                { 'char': '宾', 'pinyin': 'bīn', 'example': '宾客' },
+                { 'char': '滨', 'pinyin': 'bīn', 'example': '海滨' },
+                { 'char': '殡', 'pinyin': 'bìn', 'example': '殡葬' }
+            ]},
+            '羞': { 'pinyin': 'xiū', 'chars': [
+                { 'char': '差', 'pinyin': 'chà', 'example': '差劲' },
+                { 'char': '着', 'pinyin': 'zhe', 'example': '看着' }
+            ]},
+
+            '看': { 'pinyin': 'kàn', 'chars': [
+                { 'char': '着', 'pinyin': 'zhe', 'example': '看着' },
+                { 'char': '目', 'pinyin': 'mù', 'example': '目光' },
+                { 'char': '盼', 'pinyin': 'pàn', 'example': '盼望' }
+            ]},
+            '百': { 'pinyin': 'bǎi', 'chars': [
+                { 'char': '白', 'pinyin': 'bái', 'example': '白色' },
+                { 'char': '伯', 'pinyin': 'bó', 'example': '伯父' },
+                { 'char': '陌', 'pinyin': 'mò', 'example': '陌生' }
+            ]},
+            '炼': { 'pinyin': 'liàn', 'chars': [
+                { 'char': '练', 'pinyin': 'liàn', 'example': '练习' },
+                  { 'char': '拣', 'pinyin': 'jiǎn', 'example': '挑拣' }
+            ]},
+            '青': { 'pinyin': 'qīng', 'chars': [
+                { 'char': '清', 'pinyin': 'qīng', 'example': '清澈' },
+                { 'char': '晴', 'pinyin': 'qíng', 'example': '晴朗' },
+                { 'char': '请', 'pinyin': 'qǐng', 'example': '请求' }
+            ]},
+            '铜': { 'pinyin': 'tóng', 'chars': [
+                { 'char': '筒', 'pinyin': 'tǒng', 'example': '竹筒' },
+                { 'char': '桐', 'pinyin': 'tóng', 'example': '梧桐' },
+                { 'char': '同', 'pinyin': 'tóng', 'example': '相同' }
+            ]}
+        };
+
+        // 显示声旁窗口
+        function showRadical(char, pinyin, simplifiedChar) {
+            const radicalWindow = document.getElementById('radical-window');
+            const centerChar = document.getElementById('center-char');
+            const centerPinyin = document.getElementById('center-pinyin');
+            
+            // 设置中心字符
+            centerChar.textContent = char;
+            centerPinyin.textContent = pinyin;
+            
+            // 清空之前的字符
+            const existingChars = document.querySelectorAll('.radical-char');
+            existingChars.forEach(el => el.remove());
+            
+            // 获取声旁数据
+            const data = radicalData[simplifiedChar] || radicalData[char];
+            
+            if (data) {
+                // 添加相关字符
+                const positions = [
+                    { top: '20%', left: '50%' },
+                    { top: '30%', left: '20%' },
+                    { top: '30%', left: '80%' },
+                    { top: '50%', left: '10%' },
+                    { top: '50%', left: '90%' },
+                    { top: '70%', left: '20%' },
+                    { top: '70%', left: '80%' },
+                    { top: '80%', left: '50%' }
+                ];
+                
+                data.chars.forEach((charData, index) => {
+                    const pos = positions[index % positions.length];
+                    const charEl = document.createElement('div');
+                    charEl.className = 'radical-char';
+                    charEl.style.top = pos.top;
+                    charEl.style.left = pos.left;
+                    charEl.innerHTML = `
+                        <div>${charData.char}</div>
+                        <div class="char-pinyin">${charData.pinyin}</div>
+                        <div class="char-example">${charData.example}</div>
+                    `;
+                    radicalWindow.appendChild(charEl);
+                });
+            }
+            
+            // 显示窗口
+            radicalWindow.style.display = 'block';
+        }
+
+        // 关闭声旁窗口
+        function closeRadical() {
+            document.getElementById('radical-window').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
