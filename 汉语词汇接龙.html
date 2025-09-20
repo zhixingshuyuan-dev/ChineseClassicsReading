@@ -1,0 +1,2788 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉语词汇接龙游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980 0%, #26d0ce 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        header {
+            background: linear-gradient(90deg, #4b6cb7 0%, #182848 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        
+        .description {
+            font-size: 1rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.4;
+        }
+        
+        .game-area {
+            display: flex;
+            padding: 15px;
+            gap: 15px;
+        }
+        
+        .word-chain {
+            flex: 3;
+            min-width: 300px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .chain-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+            justify-content: center;
+            min-height: 120px;
+            align-items: center;
+        }
+        
+        .word-card {
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+            min-width: 80px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .word-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .word-card.highlighted {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .word-card .word {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .word-card .pinyin {
+            font-size: 1rem;
+            color: #666;
+        }
+        
+        .arrow {
+            font-size: 1.5rem;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+            padding: 0 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .arrow:hover {
+            color: #4b6cb7;
+            transform: scale(1.2);
+        }
+        
+        .controls {
+            flex: 1;
+            min-width: 200px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        h2 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #343a40;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 6px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 4px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-start {
+            background: linear-gradient(135deg, #42e695 0%, #3bb2b8 100%);
+        }
+        
+        .btn-next {
+            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+        }
+        
+        .btn-settings {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            text-align: center;
+            gap: 8px;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+            min-width: 80px;
+            flex: 1;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4b6cb7;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        .word-detail {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .detail-heading {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .detail-word {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .detail-pinyin {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+        
+        .detail-meaning {
+            font-size: 1.5rem;
+            line-height: 10;
+            color: #343a40;
+        }
+        
+        .voice-btn {
+            background: #4b6cb7;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+        
+        .voice-btn:hover {
+            background: #3556a3;
+            transform: scale(1.1);
+        }
+        
+        .game-message {
+            text-align: center;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .voice-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .btn-voice-word {
+            background: linear-gradient(135deg, #5ee7df 0%, #b490ca 100%);
+            font-size: 1rem;
+            padding: 6px 12px;
+        }
+        
+        .btn-voice-meaning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            font-size: 0.8rem;
+            padding: 6px 12px;
+        }
+        
+        /* 仓库相关样式 */
+        .repository {
+            flex: 1;
+            min-width: 200px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            max-height: 600px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .repository.active {
+            display: block;
+        }
+        
+        .chain-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .chain-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .chain-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #4b6cb7;
+        }
+        
+        .chain-info {
+            font-size: 0.8rem;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .btn-repository {
+            background: linear-gradient(135deg, #8e44ad 0%, #3498db 100%);
+        }
+        
+        .repository-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .modal-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #343a40;
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .chain-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+                padding: 4px 0;
+            }
+            
+            .stats {
+                flex-wrap: wrap;
+            }
+            
+            .stat-item {
+                flex-basis: calc(50% - 8px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>汉语词汇接龙游戏</h1>
+            <p class="description">包含200个词汇链组，点击箭头可自动呈现下一个单词，支持朗读单词和释义功能。</p>
+        </header>
+        
+        <div class="game-area">
+            <div class="word-chain">
+                <h2>词汇衍生链 <small>(已生成: <span id="current-count">0</span>/200)</small></h2>
+                <div class="chain-container" id="chain-container">
+                    <div class="game-message">
+                        点击"开始游戏"按钮以启动游戏
+                    </div>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="chain-length">0</div>
+                        <div class="stat-label">链长度</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="unique-words">0</div>
+                        <div class="stat-label">唯一汉字</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="level">1</div>
+                        <div class="stat-label">难度</div>
+                    </div>
+                </div>
+                
+                <div class="word-detail">
+                    <div class="detail-heading">
+                        <div class="detail-word" id="detail-word">词汇</div>
+                        <div class="detail-pinyin" id="detail-pinyin">pīn yīn</div>
+                        <div class="voice-controls">
+                            <button class="btn btn-voice-word" id="voice-word-btn">朗读词汇</button>
+                            <button class="btn btn-voice-meaning" id="voice-meaning-btn">朗读释义</button>
+                        </div>
+                    </div>
+                    <div class="detail-meaning" id="detail-meaning">点击上方词汇查看详情</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <h2>游戏控制</h2>
+                <div class="control-group">
+                    <button class="btn btn-start" id="start-btn">开始游戏</button>
+                    <button class="btn btn-next" id="next-btn" disabled>下一个词</button>
+                    <button class="btn btn-next" id="generate-10-btn" disabled>生成10个词</button>
+                    <button class="btn btn-settings" id="settings-btn">游戏设置</button>
+                    <button class="btn btn-repository" id="repository-btn">词汇仓库</button>
+                </div>
+                
+                <h2>设置</h2>
+                <div class="control-group">
+                    <label for="auto-voice">自动朗读词汇和释义:</label>
+                    <input type="checkbox" id="auto-voice" checked>
+                </div>
+            </div>
+            
+            <!-- 新增的仓库区域 -->
+            <div class="repository" id="repository">
+                <h2>词汇锁链仓库</h2>
+                <div id="repository-list">
+                    <div class="game-message">
+                        仓库为空，完成游戏后可保存词汇锁链
+                    </div>
+                </div>
+                <div class="repository-controls">
+                    <button class="btn btn-start" id="back-to-game-btn">返回游戏</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 保存模态框 -->
+    <div class="modal" id="save-modal">
+        <div class="modal-content">
+            <div class="modal-title">保存词汇锁链</div>
+            <input type="text" class="modal-input" id="chain-name" placeholder="输入锁链名称">
+            <div class="modal-buttons">
+                <button class="btn" id="cancel-save-btn">取消</button>
+                <button class="btn btn-start" id="confirm-save-btn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 扩展词汇数据库（200个词汇）
+        const wordDatabase = {
+            "光明": { pinyin: "guāng míng", meaning: "明亮的光线；比喻正义或有希望的" },
+            "明天": { pinyin: "míng tiān", meaning: "今天的下一天；未来" },
+            "天空": { pinyin: "tiān kōng", meaning: "地球周围的广大空间" },
+            "空气": { pinyin: "kōng qì", meaning: "地球周围的气体；气氛" },
+            "气候": { pinyin: "qì hòu", meaning: "某一地区长期的天气状况" },
+            "候鸟": { pinyin: "hòu niǎo", meaning: "随季节变化而迁徙的鸟类" },
+            "鸟类": { pinyin: "niǎo lèi", meaning: "鸟纲动物的总称" },
+            "类似": { pinyin: "lèi sì", meaning: "大致相像" },
+            "似乎": { pinyin: "sì hū", meaning: "好像；仿佛" },
+            "在乎": { pinyin: "zài hu", meaning: "在意；放在心上" },
+            "在意": { pinyin: "zài yì", meaning: "留心；注意" },
+            "意义": { pinyin: "yì yì", meaning: "含义；价值" },
+            "义务": { pinyin: "yì wù", meaning: "应尽的责任" },
+            "务实": { pinyin: "wù shí", meaning: "从事实际工作；讲究实际" },
+            "实际": { pinyin: "shí jì", meaning: "客观存在的事物；实在的" },
+            "际遇": { pinyin: "jì yù", meaning: "遭遇；机遇" },
+            "遇见": { pinyin: "yù jiàn", meaning: "碰到" },
+            "见解": { pinyin: "jiàn jiě", meaning: "对事物的认识和看法" },
+            "解决": { pinyin: "jiě jué", meaning: "处理问题使有结果" },
+            "决心": { pinyin: "jué xīn", meaning: "坚定的意志" },
+            "心情": { pinyin: "xīn qíng", meaning: "感情状态" },
+            "情感": { pinyin: "qíng gǎn", meaning: "人对外界 stimuli 的心理反应" },
+            "感觉": { pinyin: "gǎn jué", meaning: "客观事物的个别特性在人脑中引起的反应" },
+            "觉悟": { pinyin: "jué wù", meaning: "由迷惑而明白；由模糊而认清" },
+            "语言": { pinyin: "yǔ yán", meaning: "人类最重要的交际工具" },
+            "言论": { pinyin: "yán lùn", meaning: "关于政治和公共事务的议论" },
+            "论文": { pinyin: "lùn wén", meaning: "讨论或研究某种问题的文章" },
+            "文学": { pinyin: "wén xué", meaning: "以语言文字为工具形象化地反映客观现实的艺术" },
+            "学习": { pinyin: "xué xí", meaning: "通过阅读、听讲、研究、实践等获得知识或技能" },
+            "习惯": { pinyin: "xí guàn", meaning: "长时期养成的不易改变的行为或倾向" },
+            "惯性": { pinyin: "guàn xìng", meaning: "物体保持自身原有运动状态的性质" },
+            "性能": { pinyin: "xìng néng", meaning: "器材、物品等所具有的性质和功能" },
+            "能力": { pinyin: "néng lì", meaning: "能胜任某项任务的主观条件" },
+            "力量": { pinyin: "lì liàng", meaning: "力气；能力；作用" },
+            "量度": { pinyin: "liáng dù", meaning: "测定各种物理量的数值" },
+            "度过": { pinyin: "dù guò", meaning: "让时间在工作、生活、娱乐中消失" },
+            "过去": { pinyin: "guò qù", meaning: "现在以前的时期" },
+            "去往": { pinyin: "qù wǎng", meaning: "前往；去到" },
+            "往来": { pinyin: "wǎng lái", meaning: "去和来；交往" },
+            "来由": { pinyin: "lái yóu", meaning: "缘故；原因" },
+            "由于": { pinyin: "yóu yú", meaning: "因为" },
+            "于是": { pinyin: "yú shì", meaning: "表示后一事紧接着前一事" },
+            "是否": { pinyin: "shì fǒu", meaning: "是不是" },
+            "否认": { pinyin: "fǒu rèn", meaning: "不承认" },
+            "认识": { pinyin: "rèn shi", meaning: "能够确定某一人或事物是这个人或事物而不是别的" },
+            "识别": { pinyin: "shí bié", meaning: "辨别；辨认" },
+            "别离": { pinyin: "bié lí", meaning: "离别；分手" },
+            "离开": { pinyin: "lí kāi", meaning: "跟人、物或地方分开" },
+            "开始": { pinyin: "kāi shǐ", meaning: "从头起；着手进行" },
+            "始终": { pinyin: "shǐ zhōng", meaning: "从开始到最后的整个过程" },
+            "终点": { pinyin: "zhōng diǎn", meaning: "一段路程结束的地方" },
+            "点明": { pinyin: "diǎn míng", meaning: "指出来使人知道" },
+            "明确": { pinyin: "míng què", meaning: "清晰明白而确定不移" },
+            "确定": { pinyin: "què dìng", meaning: "明确肯定" },
+            "定论": { pinyin: "dìng lùn", meaning: "确定的论断" },
+            "论证": { pinyin: "lùn zhèng", meaning: "论述并证明" },
+            "证明": { pinyin: "zhēng míng", meaning: "用可靠的材料来表明或断定人或事物的真实性" },
+            "明亮": { pinyin: "míng liàng", meaning: "光线充足；发亮的" },
+            "亮光": { pinyin: "liàng guāng", meaning: "黑暗中的一点或一道光" },
+            "光辉": { pinyin: "guāng huī", meaning: "闪烁耀眼的光；光明，灿烂" },
+            "辉煌": { pinyin: "huī huáng", meaning: "光辉灿烂；显著的，出色的" },
+            "煌煌": { pinyin: "huáng huáng", meaning: "明亮辉耀的样子" },
+            "皇帝": { pinyin: "huáng dì", meaning: "封建时代国家的最高统治者" },
+            "帝国": { pinyin: "dì guó", meaning: "一般指版图很大或有殖民地的君主国家" },
+            "国家": { pinyin: "guó jiā", meaning: "阶级统治的工具，是统治阶级对被统治阶级实行专政的暴力组织" },
+            "家庭": { pinyin: "jiā tíng", meaning: "以婚姻和血统关系为基础的社会单位" },
+            "庭院": { pinyin: "tíng yuàn", meaning: "正房前的院子，泛指院子" },
+            "院落": { pinyin: "yuàn luò", meaning: "庭院；宅院" },
+            "落成": { pinyin: "luò chéng", meaning: "建筑物完工" },
+            "成就": { pinyin: "chéng jiù", meaning: "事业上的成绩" },
+            "就业": { pinyin: "jiù yè", meaning: "得到职业；参加工作" },
+            "业务": { pinyin: "yè wù", meaning: "个人的或某个机构的专业工作" },
+            "务必": { pinyin: "wù bì", meaning: "必须；一定要" },
+            "必须": { pinyin: "bì xū", meaning: "表示事理上和情理上的必要；一定要" },
+            "需要": { pinyin: "xū yào", meaning: "应该有或必须有" },
+            "要求": { pinyin: "yāo qiú", meaning: "提出具体愿望或条件，希望得到满足或实现" },
+            "求学": { pinyin: "qiú xué", meaning: "在学校学习；探求学问" },
+            "学生": { pinyin: "xué sheng", meaning: "在学校读书的人" },
+            "生活": { pinyin: "shēng huó", meaning: "人或生物为了生存和发展而进行的各种活动" },
+            "活动": { pinyin: "huó dòng", meaning: "肢体运动；为某种目的而行动" },
+            "动作": { pinyin: "dòng zuò", meaning: "全身或身体的一部分的活动" },
+            "作为": { pinyin: "zuò wéi", meaning: "行为，所作所为；做出成绩" },
+            "为人": { pinyin: "wéi rén", meaning: "做人处世的态度" },
+            "人民": { pinyin: "rén mín", meaning: "以劳动群众为主体的社会基本成员" },
+            "民主": { pinyin: "mín zhǔ", meaning: "指人民有参与国事或对国事有自由发表意见的权利" },
+            "主要": { pinyin: "zhǔ yào", meaning: "有关事物中最重要的；起决定作用的" },
+            "求实": { pinyin: "qiú shí", meaning: "讲求实际" },
+            "实践": { pinyin: "shí jiàn", meaning: "人们改造自然和改造社会的有意识的活动" },
+            "践行": { pinyin: "jiàn xíng", meaning: "实践；实行" },
+            "行为": { pinyin: "xíng wéi", meaning: "受思想支配而表现出来的活动" },
+            "人才": { pinyin: "rén cái", meaning: "德才兼备的人；有某种特长的人" },
+            "才能": { pinyin: "cái néng", meaning: "知识和能力" },
+            "量变": { pinyin: "liàng biàn", meaning: "事物在数量上的变化" },
+            "变化": { pinyin: "biàn huà", meaning: "事物在形态上或本质上产生新的状况" },
+            "化学": { pinyin: "huà xué", meaning: "研究物质的组成、结构、性质及其变化规律的科学" },
+            "学术": { pinyin: "xué shù", meaning: "系统专门的学问" },
+            "术语": { pinyin: "shù yǔ", meaning: "某门学科中的专门用语" },
+            "言语": { pinyin: "yán yǔ", meaning: "说的话；语言" },
+            "语法": { pinyin: "yǔ fǎ", meaning: "语言的结构方式" },
+            "法则": { pinyin: "fǎ zé", meaning: "规律；法规" },
+            "规则": { pinyin: "guī zé", meaning: "规定出来供大家共同遵守的制度或章程" },
+            "准则": { pinyin: "zhǔn zé", meaning: "言论、行动等所依据的原则" },
+            "原则": { pinyin: "yuán zé", meaning: "说话或行事所依据的法则或标准" },
+            "则则": { pinyin: "zé zé", meaning: "赞叹的声音" },
+            "声音": { pinyin: "shēng yīn", meaning: "声波通过听觉所产生的印象" },
+            "音乐": { pinyin: "yīn yuè", meaning: "用有组织的乐音来表达人们思想感情的艺术" },
+            "乐趣": { pinyin: "lè qù", meaning: "使人感到快乐的意味" },
+            "趣味": { pinyin: "qù wèi", meaning: "使人感到愉快、有吸引力的特性" },
+            "味道": { pinyin: "wèi dào", meaning: "舌头尝东西所得到的感觉" },
+            "道德": { pinyin: "dào dé", meaning: "社会意识形态之一，是人们共同生活及其行为的准则和规范" },
+            "德行": { pinyin: "dé xíng", meaning: "道德和品行" },
+            
+    "扪心自问": {
+        "pinyin": "mén xīn zì wèn",
+        "meaning": {
+            "zh": "摸着胸口自己问自己，表示自我反省",
+            "en": "Search one's heart; engage in self-reflection",
+            "de": "Selbstreflexion betreiben; in sich gehen",
+            "fr": "Interroger sa conscience; faire son examen de conscience",
+            "es": "Examinar la conciencia; hacer examen de conciencia",
+            "it": "Interrogare la propria coscienza; fare esame di coscienza",
+            "nl": "Zijn geweten onderzoeken; zelfreflectie toepassen",
+            "el": "Εξετάζω τη συνείδησή μου; ασκώ αυτοανάκριση",
+            "la": "Cor suum interrogare; conscientiam examinare"
+        },
+        "example": {
+            "zh": "在做出决定之前，我们应该先扪心自问。",
+            "en": "Before making a decision, we should first search our hearts."
+        }
+    },
+    "质疑问难": {
+        "pinyin": "zhì yí wèn nàn",
+        "meaning": {
+            "zh": "提出疑问，进行辩驳",
+            "en": "Raise doubts and argue against; question and challenge",
+            "de": "Zweifel äußern und dagegen argumentieren; in Frage stellen und herausfordern",
+            "fr": "Exprimer des doutes et argumenter contre; questionner et contester",
+            "es": "Plantear dudas y argumentar en contra; cuestionar y desafiar",
+            "it": "Esprimere dubbi e argomentare contro; mettere in discussione e sfidare",
+            "nl": "Twijfels uiten en ertegen argumenteren; in vraag stellen en uitdagen",
+            "el": "Εκφράζω αμφιβολίες και επιχειρηματολογώ εναντίον; αμφισβητώ και προκαλώ",
+            "la": "Dubia movere et contra disputare; interrogare et provocare"
+        },
+        "example": {
+            "zh": "在学术讨论中，我们应该勇于质疑问难。",
+            "en": "In academic discussions, we should be courageous in raising doubts and challenging arguments."
+        }
+    },
+    "问心无愧": {
+        "pinyin": "wèn xīn wú kuì",
+        "meaning": {
+            "zh": "扪心自问，毫无愧疚",
+            "en": "Have a clear conscience; feel no guilt upon self-reflection",
+            "de": "Ein reines Gewissen haben; bei Selbstreflexion keine Schuld empfinden",
+            "fr": "Avoir la conscience tranquille; ne ressentir aucune culpabilité lors de l'examen de conscience",
+            "es": "Tener la conciencia tranquila; no sentir culpa al examinar la conciencia",
+            "it": "Avere la coscienza pulita; non provare colpa nell'esame di coscienza",
+            "nl": "Een gerust geweten hebben; bij zelfreflectie geen schuld voelen",
+            "el": "Έχω καθαρή συνείδηση; δεν αισθάνομαι ενοχή στην αυτοανάκριση",
+            "la": "Conscientiam puram habere; nullum culpatum sentire in sui examinatione"
+        },
+        "example": {
+            "zh": "我做事一向光明磊落，所以问心无愧。",
+            "en": "I always act openly and aboveboard, so I have a clear conscience."
+        }
+    },
+
+    
+    "问道于盲": {
+        "pinyin": "wèn dào yú máng",
+        "meaning": {
+            "zh": "向瞎子问路，比喻向无知的人求教",
+            "en": "Asking the blind for directions;比喻 seeking advice from an ignorant person",
+            "de": "Den Blinden nach dem Weg fragen; metaphorisch: einen Unwissenden um Rat bitten",
+            "fr": "Demander son chemin à un aveugle; métaphore: demander conseil à une personne ignorante",
+            "es": "Preguntar el camino a un ciego; metáfora: buscar consejo de una persona ignorante",
+            "it": "Chiedere la strada a un cieco; metafora: chiedere consiglio a una persona ignorante",
+            "nl": "De blinde om weg vragen; metafoor: advies vragen aan een onwetend persoon",
+            "el": "Ρωτώντας το δρόμο από τυφλό; μεταφορά: ζητώντας συμβουλές από αδαή άτομο",
+            "la": "Viam a caeco petere; metaphora: consilium ab ignaro petere"
+        },
+        "example": {
+            "zh": "你问我音乐知识，简直是问道于盲。",
+            "en": "Asking me about music knowledge is like asking the blind for directions."
+        }
+    },
+    "不耻下问": {
+        "pinyin": "bù chǐ xià wèn",
+        "meaning": {
+            "zh": "不以向地位、学问较低的人请教为耻",
+            "en": "Not ashamed to ask questions of those of lower status or knowledge",
+            "de": "Nicht beschämt, Leute mit niedrigerem Status oder weniger Wissen zu fragen",
+            "fr": "Ne pas avoir honte de poser des questions à ceux de statut ou de connaissances inférieurs",
+            "es": "No avergonzarse de hacer preguntas a aquellos de estatus o conocimiento inferior",
+            "it": "Non vergognarsi di fare domande a persone di status o conoscenza inferiori",
+            "nl": "Niet beschaamd zijn om vragen te stellen aan mensen met een lagere status of kennis",
+            "el": "Μη ντρέπεσαι να κάνεις ερωτήσεις σε άτομα χαμηλότερου status ή γνώσης",
+            "la": "Non pudet interrogare eos qui inferiore statu vel scientia sunt"
+        },
+        "example": {
+            "zh": "这位教授博学多才，却总是不耻下问。",
+            "en": "This professor is knowledgeable and talented, yet always willing to ask questions humbly."
+        }
+    },
+    "答非所问": {
+        "pinyin": "dá fēi suǒ wèn",
+        "meaning": {
+            "zh": "回答的不是所问的内容",
+            "en": "Answering something unrelated to the question asked",
+            "de": "Etwas beantworten, das nicht mit der gestellten Frage zusammenhängt",
+            "fr": "Répondre à quelque chose sans rapport avec la question posée",
+            "es": "Contestar algo no relacionado con la pregunta hecha",
+            "it": "Rispondere a qualcosa di non correlato alla domanda posta",
+            "nl": "Iets beantwoorden dat niet gerelateerd is aan de gestelde vraag",
+            "el": "Απαντώντας σε κάτι που δεν σχετίζεται με την ερώτηση",
+            "la": "Respondere aliquid non connexum quaesito"
+        },
+        "example": {
+            "zh": "我问他时间，他却告诉我天气，真是答非所问。",
+            "en": "I asked him the time, but he told me about the weather - completely missing the point."
+        }
+    },
+
+
+
+    
+    "明知故问": {
+        "pinyin": "míng zhī gù wèn",
+        "meaning": {
+            "zh": "明明知道，还故意问",
+            "en": "Asking intentionally despite knowing clearly",
+            "de": "Absichtlich fragen, obwohl man es genau weiß",
+            "fr": "Demander intentionnellement bien que sachant clairement",
+            "es": "Preguntar intencionalmente a pesar de saber claramente",
+            "it": "Chiedere intenzionalmente nonostante si sappia chiaramente",
+            "nl": "Opzettelijk vragen ondanks duidelijk weten",
+            "el": "Ρωτώντας σκόπιμα παρά το ότι γνωρίζει καθαρά",
+            "la": "Consultans deliberate quamquam clare sciens"
+        },
+        "example": {
+            "zh": "他明明知道答案，却还要明知故问。",
+            "en": "He clearly knows the answer, yet he still asks intentionally."
+        }
+    },
+    "问题": {
+        "pinyin": "wèn tí",
+        "meaning": {
+            "zh": "需要研究讨论并加以解决的矛盾、疑难",
+            "en": "Contradictions or difficulties that need to be studied, discussed and resolved",
+            "de": "Widersprüche oder Schwierigkeiten, die studiert, diskutiert und gelöst werden müssen",
+            "fr": "Contradictions ou difficultés qui doivent être étudiées, discutées et résolues",
+            "es": "Contradicciones o dificultades que deben ser estudiadas, discutidas y resueltas",
+            "it": "Contraddizioni o difficoltà che devono essere studiate, discusse e risolte",
+            "nl": "Tegenstrijdigheden of moeilijkheden die moeten worden bestudeerd, besproken en opgelost",
+            "el": "Αντιφάσεις ή δυσκολίες που πρέπει να μελετηθούν, συζητηθούν και επιλυθούν",
+            "la": "Contradictiones vel difficultates quae studeri, disputari et solvi debent"
+        },
+        "example": {
+            "zh": "我们要认真解决这个问题。",
+            "en": "We need to seriously solve this problem."
+        }
+    },
+    "题名道姓": {
+        "pinyin": "tí míng dào xìng",
+        "meaning": {
+            "zh": "直接说出姓名",
+            "en": "Directly stating the full name",
+            "de": "Direkte Nennung des vollständigen Namens",
+            "fr": "Énonciation directe du nom complet",
+            "es": "Declaración directa del nombre completo",
+            "it": "Dichiarazione diretta del nome completo",
+            "nl": "Directe vermelding van de volledige naam",
+            "el": "Άμεση δήλωση του πλήρους ονόματος",
+            "la": "Directa pronuntiatio nominis integri"
+        },
+        "example": {
+            "zh": "他题名道姓地指出了责任人。",
+            "en": "He directly named the responsible person by full name."
+        }
+    },
+
+
+
+"刨根问底": {
+"pinyin": "páo gēn wèn dǐ",
+"meaning": {
+"zh": "追究底细，弄清根本",
+"en": "Getting to the bottom of things, clarifying the root cause",
+"de": "Eine Sache bis auf den Grund verfolgen, die Ursache klären",
+"fr": "Approfondir les détails, clarifier la cause fondamentale",
+"es": "Investigar a fondo los detalles, aclarar la causa raíz",
+"it": "Indagare a fondo i dettagli, chiarire la causa principale",
+"nl": "Tot de bodem van de zaken doorgronden, de hoofdoorzaak ophelderen",
+"el": "Εξετάζω τα πάντα σε βάθος, αποσαφηνίζω τη ριζική cause",
+"la": "Rem inquisitione persequi, causam radicalem clarificare"
+},
+"example": {
+"zh": "他对任何事都喜欢刨根问底。",
+"en": "He likes to get to the bottom of everything."
+}
+},
+
+"民主": {
+"pinyin": "mín zhǔ",
+"meaning": {
+"zh": "人民享有参与国事或对国事有自由发表意见的权利",
+"en": "The people have the right to participate in state affairs or freely express opinions on state affairs",
+"de": "Das Volk hat das Recht, an Staatsangelegenheiten teilzunehmen oder frei Meinungen zu Staatsangelegenheiten zu äußern",
+"fr": "Le peuple a le droit de participer aux affaires de l'État ou d'exprimer librement des opinions sur les affaires de l'État",
+"es": "El pueblo tiene derecho a participar en los asuntos estatales o expresar libremente opiniones sobre asuntos estatales",
+"it": "Il popolo ha il diritto di partecipare agli affari di stato o di esprimere liberamente opinioni sugli affari di stato",
+"nl": "Het volk heeft het recht om deel te nemen aan staatszaken of vrijelijk meningen te uiten over staatszaken",
+"el": "Ο λαός έχει το δικαίωμα να συμμετέχει σε κρατικές υποθέσεις ή να εκφράζει ελεύθερα απόψεις για κρατικές υποθέσεις",
+"la": "Populus ius habet participandi in rebus publicis vel sententias libere exprimendi de rebus publicis"
+},
+"example": {
+"zh": "民主是社会进步的重要标志。",
+"en": "Democracy is an important sign of social progress."
+}
+},
+"主次分明": {
+"pinyin": "zhǔ cì fēn míng",
+"meaning": {
+"zh": "主要和次要区分得很清楚",
+"en": "Clear distinction between primary and secondary",
+"de": "Klarer Unterschied zwischen primär und sekundär",
+"fr": "Distinction claire entre primaire et secondaire",
+"es": "Clara distinción entre primario y secundario",
+"it": "Chiara distinzione tra primario e secondario",
+"nl": "Duidelijk onderscheid tussen primair en secundair",
+"el": "Σαφής διάκριση μεταξύ πρωτεύοντος και δευτερεύοντος",
+"la": "Distinctio clara inter primarium et secundarium"
+},
+"example": {
+"zh": "写文章要主次分明，重点突出。",
+"en": "Writing should have a clear distinction between primary and secondary, with emphasis on key points."
+}
+},
+"分明": {
+"pinyin": "fēn míng",
+"meaning": {
+"zh": "清楚；明显",
+"en": "Clear; obvious",
+"de": "Klar; offensichtlich",
+"fr": "Clair; évident",
+"es": "Claro; obvio",
+"it": "Chiaro; ovvio",
+"nl": "Duidelijk; duidelijk",
+"el": "Σαφής; προφανής",
+"la": "Clarus; obvius"
+},
+"example": {
+"zh": "是非分明是做人基本原则。",
+"en": "Distinguishing right from wrong is a basic principle of life."
+}
+},
+"明知故问": {
+"pinyin": "míng zhī gù wèn",
+"meaning": {
+"zh": "明明知道，还故意问",
+"en": "Asking intentionally despite knowing clearly",
+"de": "Absichtlich fragen, obwohl man es genau weiß",
+"fr": "Demander intentionnellement bien que sachant clairement",
+"es": "Preguntar intencionalmente a pesar de saber claramente",
+"it": "Chiedere intenzionalmente nonostante si sappia chiaramente",
+"nl": "Opzettelijk vragen ondanks duidelijk weten",
+"el": "Ρωτώντας σκόπιμα παρά το ότι γνωρίζει καθαρά",
+"la": "Consultans deliberate quamquam clare sciens"
+},
+"example": {
+"zh": "他明明知道答案，却还要明知故问。",
+"en": "He clearly knows the answer, yet he still asks intentionally."
+}
+},
+"问题": {
+"pinyin": "wèn tí",
+"meaning": {
+"zh": "需要研究讨论并加以解决的矛盾、疑难",
+"en": "Contradictions or difficulties that need to be studied, discussed and resolved",
+"de": "Widersprüche oder Schwierigkeiten, die studiert, diskutiert und gelöst werden müssen",
+"fr": "Contradictions ou difficultés qui doivent être étudiées, discutées et résolues",
+"es": "Contradicciones o dificultades que deben ser estudiadas, discutidas y resueltas",
+"it": "Contraddizioni o difficoltà che devono essere studiate, discusse e risolte",
+"nl": "Tegenstrijdigheden of moeilijkheden die moeten worden bestudeerd, besproken en opgelost",
+"el": "Αντιφάσεις ή δυσκολίες που πρέπει να μελετηθούν, συζητηθούν και επιλυθούν",
+"la": "Contradictiones vel difficultates quae studeri, disputari et solvi debent"
+},
+"example": {
+"zh": "我们要认真解决这个问题。",
+"en": "We need to seriously solve this problem."
+}
+},
+"题名道姓": {
+"pinyin": "tí míng dào xìng",
+"meaning": {
+"zh": "直接说出姓名",
+"en": "Directly stating the full name",
+"de": "Direkte Nennung des vollständigen Namens",
+"fr": "Énonciation directe du nom complet",
+"es": "Declaración directa del nombre completo",
+"it": "Dichiarazione diretta del nome completo",
+"nl": "Directe vermelding van de volledige naam",
+"el": "Άμεση δήλωση του πλήρους ονόματος",
+"la": "Directa pronuntiatio nominis integri"
+},
+"example": {
+"zh": "他题名道姓地指出了责任人。",
+"en": "He directly named the responsible person by full name."
+}
+},
+"姓名": {
+"pinyin": "xìng míng",
+"meaning": {
+"zh": "人的姓氏和名字",
+"en": "A person's surname and given name",
+"de": "Der Nachname und Vorname einer Person",
+"fr": "Le nom de famille et le prénom d'une personne",
+"es": "El apellido y nombre de pila de una persona",
+"it": "Il cognome e il nome di battesimo di una persona",
+"nl": "De achternaam en voornaam van een persoon",
+"el": "Το επώνυμό και το μικρό όνομα ενός ατόμου",
+"la": "Nomen gentilicium et praenomen hominis"
+},
+"example": {
+"zh": "请在这里填写您的姓名。",
+"en": "Please fill in your name here."
+
+}
+},
+
+"年轻": {
+"pinyin": "nián qīng", 
+"meaning": {
+"zh": "年纪不大，多指十几岁到二十几岁",
+"en": "Not old in age, usually referring to teens to twenties",
+"de": "Nicht alt im Alter, usually referring to teenagers to twenties",
+"fr": "Pas vieux en âge, usually referring to adolescents to twenties",
+"es": "No viejo en edad, usually referring to adolescentes to twenties",
+"it": "Non vecchio di età, usually referring to adolescents to twenties",
+"nl": "Niet oud in leeftijd, usually referring to tieners to twenties",
+"el": "Όχι παλιά στην ηλικία, usually referring to teenagers to twenties",
+"la": "Non vetus aetate, usually referring to adolescents to twenties"
+},
+"example": {
+"zh": "年轻人应该多学习新知识。",
+"en": "Young people should learn more new knowledge."
+}
+},
+"轻车熟路": {
+"pinyin": "qīng chē shú lù",
+"meaning": {
+"zh": "驾着轻车走熟路，比喻对事情熟悉，做起来容易",
+"en": "Driving a light carriage on a familiar road, metaphor for being familiar with something and finding it easy to do",
+"de": "Eine leichte Kutsche auf einer vertrauten Straße fahren, Metapher für Vertrautheit mit etwas und Leichtigkeit bei der Ausführung",
+"fr": "Conduire un chariot léger sur une route familière, métaphore pour être familier avec quelque chose et le trouver facile à faire",
+"es": "Conducir un carruaje ligero por un camino familiar, metáfora de estar familiarizado con algo y encontrarlo fácil de hacer",
+"it": "Guidare un carro leggero su una strada familiare, metafora per essere familiare con qualcosa e trovarlo facile da fare",
+"nl": "Een lichte koets op een vertrouwde weg besturen, metafoor voor vertrouwd zijn met iets en het gemakkelijk vinden om te doen",
+"el": "Οδήγηση ελαφριού αμαξιού σε έναν οικείο δρόμο, μεταφορά για την εξοικείωση με κάτι και την ευκολία στην εκτέλεσή του",
+"la": "Currum levem in via nota agere, metaphora pro familiaritate cum re et facilitate faciendi"
+},
+"example": {
+"zh": "他做这项工作真是轻车熟路。",
+"en": "He is very familiar with this work and finds it easy to do."
+}
+},
+"路线": {
+"pinyin": "lù xiàn",
+"meaning": {
+"zh": "从一地到另一地所经过的道路",
+"en": "The path taken from one place to another",
+"de": "Der Weg von einem Ort zum anderen",
+"fr": "Le chemin parcouru d'un endroit à un autre",
+"es": "El camino tomado de un lugar a otro",
+"it": "Il percorso intrapreso da un luogo all'altro",
+"nl": "Het pad genomen van de ene plaats naar de andere",
+"el": "Το μονοπάτι που λαμβάνεται από το ένα μέρος στο άλλο",
+"la": "Iter ab uno loco ad alterum taken"
+},
+"example": {
+"zh": "我们制定了详细的旅行路线。",
+"en": "We have made a detailed travel route."
+}
+},
+"线索引人入胜": {
+"pinyin": "xiàn suǒ yǐn rén rù shèng",
+"meaning": {
+"zh": "线索吸引人进入胜境，多指故事情节引人入胜",
+"en": "Clues attract people into wonderful realms, often referring to fascinating plotlines",
+"de": "Hinweise ziehen Menschen in wunderbare Bereiche, often referring to faszinierende Handlungsstränge",
+"fr": "Des indices attirent les gens dans des royaumes merveilleux, often referring to des intrigues fascinantes",
+"es": "Las pistas atraen a las personas a reinos maravillosos, often referring to tramas fascinantes",
+"it": "Indizi attirano le persone in regni meravigliosi, often referring to trame affascinanti",
+"nl": "Aanwijzingen trekken mensen naar wonderlijke rijken, often referring to fascinerende plotlijnen",
+"el": "Τα στοιχεία προσελκύουν τους ανθρώπους σε υπέροχους τομείς, often referring to συναρπαστικές πλοκές",
+"la": "Indicia homines in regna mirabilia attrahunt, often referring to fascinantes argumenta"
+},
+"example": {
+"zh": "这部小说的线索引人入胜，让人欲罢不能。",
+"en": "The clues in this novel are fascinating and make people unable to stop reading."
+}
+},
+"胜利": {
+"pinyin": "shèng lì",
+"meaning": {
+"zh": "在斗争或竞赛中打败对方",
+"en": "Defeating the opponent in struggle or competition",
+"de": "Den Gegner im Kampf oder Wettbewerb besiegen",
+"fr": "Vaincre l'adversaire dans la lutte ou la compétition",
+"es": "Derrotar al oponente en la lucha o competencia",
+"it": "Sconfiggere l'avversario nella lotta o nella competizione",
+"nl": "De tegenstander verslaan in strijd of competitie",
+"el": "Νικώντας τον αντίπαλο στον αγώνα ή τον ανταγωνισμό",
+"la": "Hostem in certamine vel competitione vincere"
+},
+"example": {
+"zh": "我们终于取得了胜利。",
+"en": "We finally achieved victory."
+}
+},
+"利国利民": {
+"pinyin": "lì guó lì mín",
+"meaning": {
+"zh": "对国家有利，对人民有利",
+"en": "Beneficial to the country and beneficial to the people",
+"de": "Vorteilhaft für das Land und vorteilhaft für das Volk",
+"fr": "Bénéfique pour le pays et bénéfique pour le peuple",
+"es": "Beneficioso para el país y beneficioso para el pueblo",
+"it": "Vantaggioso per il paese e vantaggioso per il popolo",
+"nl": "Gunstig voor het land en gunstig voor het volk",
+"el": "Ωφέλιμο για τη χώρα και ωφέλιμο για το λαό",
+"la": "Utilis patriae et utilis populo"
+},
+"example": {
+"zh": "这项政策利国利民，深受欢迎。",
+"en": "This policy benefits both the country and the people and is very popular."
+}
+},
+"民主": {
+"pinyin": "mín zhǔ",
+"meaning": {
+"zh": "人民享有参与国事或对国事有自由发表意见的权利",
+"en": "The people have the right to participate in state affairs or freely express opinions on state affairs",
+"de": "Das Volk hat das Recht, an Staatsangelegenheiten teilzunehmen oder frei Meinungen zu Staatsangelegenheiten zu äußern",
+"fr": "Le peuple a le droit de participer aux affaires de l'État ou d'exprimer librement des opinions sur les affaires de l'État",
+"es": "El pueblo tiene derecho a participar en los asuntos estatales o expresar libremente opiniones sobre asuntos estatales",
+"it": "Il popolo ha il diritto di partecipare agli affari di stato o di esprimere liberamente opinioni sugli affari di stato",
+"nl": "Het volk heeft het recht om deel te nemen aan staatszaken of vrijelijk meningen te uiten over staatszaken",
+"el": "Ο λαός έχει το δικαίωμα να συμμετέχει σε κρατικές υποθέσεις ή να εκφράζει ελεύθερα απόψεις για κρατικές υποθέσεις",
+"la": "Populus ius habet participandi in rebus publicis vel sententias libere exprimendi de rebus publicis"
+},
+"example": {
+"zh": "民主是社会进步的重要标志。",
+"en": "Democracy is an important sign of social progress."
+}
+
+},
+
+
+"艾草": {
+"pinyin": "ài cǎo",
+"meaning": {
+"zh": "一种多年生草本植物，中医常用药材",
+"en": "A perennial herb commonly used in traditional Chinese medicine",
+"de": "Eine mehrjährige Heilpflanze, die häufig in der traditionellen chinesischen Medizin verwendet wird",
+"fr": "Une herbe vivace couramment utilisée en médecine traditionnelle chinoise",
+"es": "Una hierba perenne comúnmente utilizada en la medicina tradicional china",
+"it": "Un'erba perenne comunemente usata nella medicina tradizionale cinese",
+"nl": "Een vaste plant die veel wordt gebruikt in de traditionele Chinese geneeskunde",
+"el": "Μια πολυετές βότανο που χρησιμοποιείται συνήθως στην παραδοσιακή κινεζική ιατρική",
+"la": "Herba perennis in medicina traditione Sinica vulgo adhibita"
+},
+"example": {
+"zh": "端午节人们常用艾草驱邪。",
+"en": "People often use mugwort during the Dragon Boat Festival to ward off evil."
+}
+},
+"草木皆兵": {
+"pinyin": "cǎo mù jiē bīng",
+"meaning": {
+"zh": "形容人惊慌时疑神疑鬼，把草木都当成敌兵",
+"en": "Describes being so panicked that one sees enemies everywhere, mistaking grass and trees for soldiers",
+"de": "Beschreibt, dass man so in Panik ist, dass man überall Feinde sieht und Gras und Bäume für Soldaten hält",
+"fr": "Décrit être si paniqué que l'on voit des ennemis partout, prenant les herbes et les arbres pour des soldats",
+"es": "Describe estar tan alarmado que se ven enemigos por todas partes, confundiendo hierbas y árboles con soldados",
+"it": "Descrive l'essere così in panico da vedere nemici ovunque, scambiando erba e alberi per soldati",
+"nl": "Beschrijft zo in paniek zijn dat men overal vijanden ziet, grassen en bomen voor soldaten aanziet",
+"el": "Περιγράφει ότι είστε τόσο πανικόβλητοι που βλέπετε εχθρούς παντού, μπερδεύοντας χόρτα και δέντρα με στρατιώτες",
+"la": "Describit tam perterritum esse ut hostes ubique videat, herbis et arboribus pro militibus errore"
+},
+"example": {
+"zh": "经过那场惊吓，他现在是草木皆兵，一点声音都害怕。",
+"en": "After that scare, he now sees enemies everywhere and is afraid of any sound."
+}
+},
+"士兵": {
+"pinyin": "shì bīng",
+"meaning": {
+"zh": "军队中的基本战斗人员",
+"en": "Basic combat personnel in the military",
+"de": "Grundlegendes Kampfpersonal im Militär",
+"fr": "Personnel de combat de base dans l'armée",
+"es": "Personal de combate básico en el ejército",
+"it": "Personale di combattimento di base nelle forze armate",
+"nl": "Basis gevechtspersoneel in het leger",
+"el": "Βατικό προσωπικό μάχης στο στρατό",
+"la": "Fundamentalis pugnatorum personnel in militari"
+},
+"example": {
+"zh": "士兵们正在接受严格的训练。",
+"en": "The soldiers are undergoing rigorous training."
+}
+},
+"兵贵神速": {
+"pinyin": "bīng guì shén sù",
+"meaning": {
+"zh": "用兵以行动迅速为可贵",
+"en": "In warfare, speed is precious",
+"de": "Im Krieg ist Geschwindigkeit kostbar",
+"fr": "Dans la guerre, la rapidité est précieuse",
+"es": "En la guerra, la velocidad es preciosa",
+"it": "Nella guerra, la velocità è preziosa",
+"nl": "In oorlogvoering is snelheid kostbaar",
+"el": "Στον πόλεμο, η ταχύτητα είναι πολύτιμη",
+"la": "In bello, celeritas pretiosa est"
+},
+"example": {
+"zh": "兵贵神速，我们必须立即行动。",
+"en": "Speed is precious in war, we must act immediately."
+}
+},
+"速度": {
+"pinyin": "sù dù",
+"meaning": {
+"zh": "物体运动的快慢程度",
+"en": "The rate at which an object moves",
+"de": "Die Geschwindigkeit, mit der sich ein Objekt bewegt",
+"fr": "La vitesse à laquelle un objet se déplace",
+"es": "La velocidad a la que se mueve un objeto",
+"it": "La velocità con cui un oggetto si muove",
+"nl": "De snelheid waarmee een object beweegt",
+"el": "Ο ρυθμός με τον οποίο κινείται ένα αντικείμενο",
+"la": "Rapido motus rei"
+},
+"example": {
+"zh": "这辆车的速度很快。",
+"en": "This car has high speed."
+}
+},
+"度日如年": {
+"pinyin": "dù rì rú nián",
+"meaning": {
+"zh": "过一天像过一年那样漫长，形容日子难熬",
+"en": "One day feels as long as a year, describing difficult days",
+"de": "Ein Tag fühlt sich so lang an wie ein Jahr, beschreibt schwere Tage",
+"fr": "Un jour semble aussi long qu'une année, décrivant des jours difficiles",
+"es": "Un día se siente tan largo como un año, describiendo días difíciles",
+"it": "Un giorno sembra lungo come un anno, descrivendo giorni difficili",
+"nl": "Een dag voelt zo lang als een jaar, wat moeilijke dagen beschrijft",
+"el": "Μια μέρα αισθάνεται τόσο μεγάλη όσο ένα χρόνο, περιγράφοντας δύσκολες μέρες",
+"la": "Unus dies tam longus sentitur quam annus, dies difficiles describens"
+},
+"example": {
+"zh": "等待考试结果的日子真是度日如年。",
+"en": "The days waiting for exam results really feel like years."
+}
+},
+"年轻": {
+"pinyin": "nián qīng",
+"meaning": {
+"zh": "年纪不大，多指十几岁到二十几岁",
+"en": "Not old in age, usually referring to teens to twenties",
+"de": "Nicht alt im Alter, bezieht sich usually auf Teenager bis Zwanzigjährige",
+"fr": "Pas vieux en âge, se référant usually aux adolescents jusqu'à la vingtaine",
+"es": "No viejo en edad, usually refiriéndose a adolescentes hasta veinteañeros",
+"it": "Non vecchio di età, usually riferito agli adolescenti fino ai ventenni",
+"nl": "Niet oud in leeftijd, usually verwijzend naar tieners tot twintigers",
+"el": "Όχι παλιά στην ηλικία, συνήθως αναφέρεται σε έφηβους έως είκοσι χρονών",
+"la": "Non vetus aetate, usually referens ad adolescentes usque ad viginti annos"
+},
+"example": {
+"zh": "年轻人应该多学习新知识。",
+"en": "Young people should learn more new knowledge."
+}
+},
+
+
+
+"武": {
+"pinyin": "wǔ",
+"meaning": {
+"zh": "与军事、技击相关的；勇猛",
+"en": "Related to military or martial arts; brave",
+"de": "Militärisch oder kampfkunstbezogen; mutig",
+"fr": "Relatif au militaire ou aux arts martiaux ; courageux",
+"es": "Relacionado con lo militar o las artes marciales; valiente",
+"it": "Relativo al militare o alle arti marziali; coraggioso",
+"nl": "Gerelateerd aan militair of vechtkunst; dapper",
+"el": "Σχετικό με το στρατιωτικό ή τις πολεμικές τέχνες; γενναίος",
+"la": "Ad militarem vel artes martiales pertinens; fortis"
+},
+"example": {
+"zh": "他练过武术。",
+"en": "He has practiced martial arts."
+}
+},
+"文武双全": {
+"pinyin": "wén wǔ shuāng quán",
+"meaning": {
+"zh": "文才和武艺都很出众",
+"en": "Excelling in both literary and martial arts",
+"de": "Sowohl in literarischen als auch in kampfkunstlichen Fähigkeiten hervorragend",
+"fr": "Excellent à la fois dans les arts littéraires et martiaux",
+"es": "Sobresaliente tanto en artes literarias como marciales",
+"it": "Eccellente sia nelle arti letterarie che marziali",
+"nl": "Uitstekend in zowel literaire als vechtkunsten",
+"el": "Εξαιρετικός τόσο στη λογοτεχνία όσο και στις πολεμικές τέχνες",
+"la": "Tam in artibus litterariis quam martialibus excellens"
+},
+"example": {
+"zh": "这位将军文武双全，既能带兵打仗，又能写诗作赋。",
+"en": "This general is accomplished in both civil and military affairs, capable of leading troops in battle and composing poetry."
+}
+},
+"全文": {
+"pinyin": "quán wén",
+"meaning": {
+"zh": "文章、文件的全部文字",
+"en": "The complete text of an article or document",
+"de": "Der vollständige Text eines Artikels oder Dokuments",
+"fr": "Le texte complet d'un article ou d'un document",
+"es": "El texto completo de un artículo o documento",
+"it": "Il testo completo di un articolo o documento",
+"nl": "De volledige tekst van een artikel of document",
+"el": "Το πλήρες κείμενο ενός άρθρου ή εγγράφου",
+"la": "Integrum textum articuli vel documenti"
+},
+"example": {
+"zh": "请阅读全文后再做决定。",
+"en": "Please read the full text before making a decision."
+}
+},
+"文化": {
+"pinyin": "wén huà",
+"meaning": {
+"zh": "人类在社会历史发展过程中所创造的物质和精神财富的总和",
+"en": "The sum of material and spiritual wealth created by humankind in the process of social and historical development",
+"de": "Die Summe des materiellen und geistigen Reichtums, den die Menschheit im Prozess der gesellschaftlichen und historischen Entwicklung geschaffen hat",
+"fr": "La somme des richesses matérielles et spirituelles créées par l'humanité dans le processus de développement social et historique",
+"es": "La suma de la riqueza material y espiritual creada por la humanidad en el proceso de desarrollo social e histórico",
+"it": "La somma della ricchezza materiale e spirituale creata dall'umanità nel processo di sviluppo sociale e storico",
+"nl": "De som van materiële en spirituele rijkdom gecreëerd door de mensheid in het proces van sociale en historische ontwikkeling",
+"el": "Το άθροισμα του υλικού και πνευματικού πλούτου που δημιουργήθηκε από την ανθρωπότητα στη διαδικασία της κοινωνικής και ιστορικής ανάπτυξης",
+"la": "Summa opum materialium et spiritualium ab humanitate in processu developmenti socialis et historicae creatarum"
+},
+"example": {
+"zh": "中国文化源远流长。",
+"en": "Chinese culture has a long history."
+}
+},
+"化险为夷": {
+"pinyin": "huà xiǎn wéi yí",
+"meaning": {
+"zh": "化危险为平安",
+"en": "Turn danger into safety",
+"de": "Gefahr in Sicherheit verwandeln",
+"fr": "Transformer le danger en sécurité",
+"es": "Convertir el peligro en seguridad",
+"it": "Trasformare il pericolo in sicurezza",
+"nl": "Gevaar in veiligheid veranderen",
+"el": "Μετατρέψτε τον κίνδυνο σε ασφάλεια",
+"la": "Periculum in salutem vertere"
+},
+"example": {
+"zh": "幸亏医生及时赶到，化险为夷。",
+"en": "Fortunately, the doctor arrived in time to turn danger into safety."
+}
+},
+"夷为平地": {
+"pinyin": "yí wéi píng dì",
+"meaning": {
+"zh": "把建筑物等彻底摧毁，使成为平地",
+"en": "Completely destroy buildings etc., making them level ground",
+"de": "Gebäude usw. vollständig zerstören und zu ebenem Boden machen",
+"fr": "Détruire complètement les bâtiments etc., les transformant en terrain plat",
+"es": "Destruir completamente edificios etc., convirtiéndolos en terreno plano",
+"it": "Distruggere completamente edifici ecc., rendendoli terreno pianeggiante",
+"nl": "Gebouwen etc. volledig vernietigen en tot vlakke grond maken",
+"el": "Καταστρέψτε πλήρως κτίρια κ.λπ., μετατρέποντάς τα σε επίπεδο έδαφος",
+"la": "Aedificia etc. funditus delere, in planum solum redigere"
+},
+"example": {
+"zh": "地震后，整个城市夷为平地。",
+"en": "After the earthquake, the entire city was razed to the ground."
+}
+},
+"地方": {
+"pinyin": "dì fāng",
+"meaning": {
+"zh": "某一区域；空间的一部分",
+"en": "A certain area; part of space",
+"de": "Ein bestimmtes Gebiet; Teil des Raums",
+"fr": "Une certaine zone ; partie de l'espace",
+"es": "Cierta área; parte del espacio",
+"it": "Una certa area; parte dello spazio",
+"nl": "Een bepaald gebied; deel van de ruimte",
+"el": "Συγκεκριμένη περιοχή? μέρος του χώρου",
+"la": "Certus locus; pars spatii"
+},
+"example": {
+"zh": "这是个好地方，风景很美。",
+"en": "This is a good place with beautiful scenery."
+}
+},
+"方兴未艾": {
+"pinyin": "fāng xīng wèi ài",
+"meaning": {
+"zh": "正在蓬勃发展，一时不会停止",
+"en": "Vigorously developing and not stopping anytime soon",
+"de": "Kräftig entwickelnd und nicht so bald stoppend",
+"fr": "Se développant vigoureusement et ne s'arrêtant pas de sitôt",
+"es": "Desarrollándose vigorosamente y sin detenerse pronto",
+"it": "Sviluppandosi vigorosamente e non fermandosi presto",
+"nl": "Krachtig ontwikkelend en niet snel stoppend",
+"el": "Αναπτύσσεται ευρωστικά και δεν σταματά σύντομα",
+"la": "Vigenter crescens et non cito desinens"
+},
+"example": {
+"zh": "新能源汽车产业方兴未艾。",
+"en": "The new energy vehicle industry is vigorously developing."
+}
+},
+"艾草": {
+"pinyin": "ài cǎo",
+"meaning": {
+"zh": "一种多年生草本植物，中医常用药材",
+"en": "A perennial herb commonly used in traditional Chinese medicine",
+"de": "Eine mehrjährige Heilpflanze, die häufig in der traditionellen chinesischen Medizin verwendet wird",
+"fr": "Une herbe vivace couramment utilisée en médecine traditionnelle chinoise",
+"es": "Una hierba perenne comúnmente utilizada en la medicina tradicional china",
+"it": "Un'erba perenne comunemente usata nella medicina tradizionale cinese",
+"nl": "Een vaste plant die veel wordt gebruikt in de traditionele Chinese geneeskunde",
+"el": "Μια πολυετές βότανο που χρησιμοποιείται συνήθως στην παραδοσιακή κινεζική ιατρική",
+"la": "Herba perennis in medicina traditione Sinica vulgo adhibita"
+},
+"example": {
+"zh": "端午节人们常用艾草驱邪。",
+"en": "People often use mugwort during the Dragon Boat Festival to ward off evil."
+}
+},
+
+"征求": {
+"pinyin": "zhēng qiú",
+"meaning": {
+"zh": "公开请求提供或给予",
+"en": "Publicly requesting to provide or give",
+"de": "Öffentliche Bitte um Bereitstellung oder Gabe", 
+"fr": "Demande publique de fourniture ou de don",
+"es": "Solicitud pública de provisión o donación",
+"it": "Richiesta pubblica di fornitura o donazione",
+"nl": "Openbaar verzoek om verstrekking of donatie",
+"el": "Δημόσια αίτηση για παροχή ή δωρεά",
+"la": "Postulatio publica ad praebendum vel dandum"
+},
+"example": {
+"zh": "公司正在征求新的广告创意。",
+"en": "The company is soliciting new advertising ideas."
+}
+},
+"求职": {
+"pinyin": "qiú zhí", 
+"meaning": {
+"zh": "寻找工作，应聘职位",
+"en": "Looking for a job, applying for a position",
+"de": "Auf Jobsuche, sich um eine Stelle bewerben",
+"fr": "Chercher un emploi, postuler à un poste",
+"es": "Buscar trabajo, solicitar un puesto",
+"it": "Cercare lavoro, candidarsi per una posizione",
+"nl": "Op zoek naar een baan, solliciteren op een functie",
+"el": "Αναζήτηση εργασίας, αίτηση για θέση",
+"la": "Quaerere munus, petere positionem"
+},
+"example": {
+"zh": "他正在网上求职。",
+"en": "He is looking for a job online."
+}
+},
+"职业": {
+"pinyin": "zhí yè",
+"meaning": {
+"zh": "个人所从事的作为主要生活来源的工作",
+"en": "Work engaged in as the main source of livelihood",
+"de": "Berufstätigkeit als Hauptlebensunterhalt",
+"fr": "Travail exercé comme principale source de subsistance",
+"es": "Trabajo realizado como principal fuente de sustento",
+"it": "Lavoro svolto come principale fonte di sostentamento", 
+"nl": "Werkzaamheden als belangrijkste bron van levensonderhoud",
+"el": "Εργασία ως κύρια πηγή διαβίωσης",
+"la": "Opus quod praecipuum victus subsidium est"
+},
+"example": {
+"zh": "医生是一个受人尊敬的职业。",
+"en": "Doctor is a respected profession."
+}
+},
+"业务": {
+"pinyin": "yè wù",
+"meaning": {
+"zh": "个人或某个机构的专业工作",
+"en": "Professional work of an individual or organization", 
+"de": "Berufliche Tätigkeit einer Person oder Organisation",
+"fr": "Travail professionnel d'un individu ou d'une organisation",
+"es": "Trabajo profesional de un individuo u organización",
+"it": "Lavoro professionale di un individuo o organizzazione",
+"nl": "Professioneel werk van een individu of organisatie",
+"el": "Επαγγελματική εργασία ατόμου ή οργανισμού",
+"la": "Opus professionale individui vel organizationis"
+},
+"example": {
+"zh": "他负责公司的海外业务。",
+"en": "He is responsible for the company's overseas business."
+}
+},
+"务必": {
+"pinyin": "wù bì",
+"meaning": {
+"zh": "必须，一定要",
+"en": "Must, definitely have to",
+"de": "Muss, unbedingt müssen",
+"fr": "Il faut, absolument doit",
+"es": "Debe, definitivamente tiene que",
+"it": "Deve, assolutamente deve",
+"nl": "Moet, absoluut moeten",
+"el": "Πρέπει, σίγουρα πρέπει",
+"la": "Debet, certe debet"
+},
+"example": {
+"zh": "明天务必准时到达。",
+"en": "You must arrive on time tomorrow."
+}
+},
+"必须": {
+"pinyin": "bì xū",
+"meaning": {
+"zh": "表示事理上和情理上的必要",
+"en": "Indicating necessity in reason and情理",
+"de": "Notwendigkeit in Vernunft und情理anzeigend",
+"fr": "Indiquant la nécessité en raison et情理",
+"es": "Indicando necesidad en razón y情理",
+"it": "Indicando necessità in ragione e情理",
+"nl": "Aanduiding van noodzaak in rede en情理",
+"el": "Υποδεικνύοντας την αναγκαιότητα στη λογική και情理",
+"la": "Necessitatem in ratione et情理indicans"
+},
+"example": {
+"zh": "学生必须完成作业。",
+"en": "Students must complete their homework."
+}
+},
+"需要": {
+"pinyin": "xū yào",
+"meaning": {
+"zh": "应该有或必须有",
+"en": "Should have or must have",
+"de": "Sollte haben oder muss haben",
+"fr": "Devrait avoir ou doit avoir",
+"es": "Debería tener o debe tener",
+"it": "Dovrebbe avere o deve avere",
+"nl": "Zou moeten hebben of moet hebben",
+"el": "Θα πρέπει να έχει ή πρέπει να έχει",
+"la": "Debet habere vel debet habere"
+},
+"example": {
+"zh": "我们需要更多的时间。",
+"en": "We need more time."
+}
+},
+"要求": {
+"pinyin": "yāo qiú",
+"meaning": {
+"zh": "提出具体愿望或条件，希望得到满足",
+"en": "Put forward specific wishes or conditions, hoping to be satisfied",
+"de": "Konkrete Wünsche oder Bedingungen vorbringen, in der Hoffnung erfüllt zu werden",
+"fr": "Avancer des souhaits ou conditions spécifiques, en espérant être satisfait",
+"es": "Plantear deseos o condiciones específicas, con la esperanza de ser satisfechos",
+"it": "Avanzare desideri o condizioni specifiche, sperando di essere soddisfatti",
+"nl": "Specifieke wensen of voorwaarden naar voren brengen, in de hoop vervuld te worden",
+"el": "Προβάλλετε συγκεκριμένες επιθυμίες ή συνθήκες, ελπίζοντας να ικανοποιηθείτε",
+"la": "Specifica vota vel conditiones proponere, sperans satisfieri"
+},
+"example": {
+"zh": "老师对作业有严格的要求。",
+"en": "The teacher has strict requirements for homework."
+}
+},
+
+
+"放松": {
+"pinyin": "fàng sōng", 
+"meaning": {
+"zh": "使轻松，不紧张",
+"en": "Making relaxed, not tense",
+"de": "Entspannung, nicht angespannt",
+"fr": "Se détendre, ne pas être tendu",
+"es": "Relajarse, no estar tenso",
+"it": "Rilassarsi, non essere tesi",
+"nl": "Ontspannen, niet gespannen",
+"el": "Χαλάρωση, μην είστε τεταμένοι",
+"la": "Remissio, non intentus"
+}
+},
+"松树": {
+"pinyin": "sōng shù",
+"meaning": {
+"zh": "一种常见的常绿乔木",
+"en": "A common evergreen tree",
+"de": "Ein immergrüner Baum",
+"fr": "Un arbre à feuilles persistantes",
+"es": "Un árbol de hoja perenne común",
+"it": "Un albero sempreverde comune",
+"nl": "Een veelvoorkomende groenblijvende boom",
+"el": "Ένα κοινό αειθαλές δέντρο",
+"la": "Arbor sempervirens vulgaris"
+}
+},
+"树木": {
+"pinyin": "shù mù",
+"meaning": {
+"zh": "树的总称",
+"en": "General term for trees",
+"de": "Allgemeine Bezeichnung für Bäume",
+"fr": "Terme général pour les arbres",
+"es": "Término general para los árboles",
+"it": "Termine generale per gli alberi",
+"nl": "Algemene term voor bomen",
+"el": "Γενικός όρος για τα δέντρα",
+"la": "Terminus generalis pro arboribus"
+}
+},
+"木材": {
+"pinyin": "mù cái",
+"meaning": {
+"zh": "树木采伐后经过初步加工的材料",
+"en": "Material from felled trees after preliminary processing",
+"de": "Material von gefällten Bäumen nach vorläufiger Verarbeitung",
+"fr": "Matériau provenant d'arbres abattus après traitement préliminaire",
+"es": "Material de árboles talados después del procesamiento preliminar",
+"it": "Materiale da alberi tagliati dopo la lavorazione preliminare",
+"nl": "Materiaal van gekapte bomen na voorbewerking",
+"el": "Υλικό από κομμένα δέντρα μετά από προκαταρκτική επεξεργασία",
+"la": "Materia ex arboribus caesis post processionem preliminarem"
+}
+},
+"材料": {
+"pinyin": "cái liào",
+"meaning": {
+"zh": "可供制作成品的物质",
+"en": "Substance that can be made into products",
+"de": "Substanz, die zu Produkten verarbeitet werden kann",
+"fr": "Substance pouvant être transformée en produits",
+"es": "Sustancia que puede convertirse en productos",
+"it": "Sostanza che può essere trasformata in prodotti",
+"nl": "Stof die tot producten kan worden verwerkt",
+"el": "Ουσία που μπορεί να μετατραπεί σε προϊόντα",
+"la": "Substantia quae in products transformari potest"
+}
+},
+"料理": {
+"pinyin": "liào lǐ",
+"meaning": {
+"zh": "菜肴的制作和处理",
+"en": "Preparation and handling of dishes",
+"de": "Zubereitung und Handhabung von Gerichten",
+"fr": "Préparation et manipulation des plats",
+"es": "Preparación y manipulación de platos",
+"it": "Preparazione e gestione dei piatti",
+"nl": "Bereiding en hantering van gerechten",
+"el": "Προετοιμασία και χειρισμός πιάτων",
+"la": "Praeparatio et tractatio ferculorum"
+}
+},
+"理想": {
+"pinyin": "lǐ xiǎng",
+"meaning": {
+"zh": "对未来事物的美好想象和希望",
+"en": "Beautiful imagination and hope for future things",
+"de": "Schöne Vorstellung und Hoffnung für zukünftige Dinge",
+"fr": "Belle imagination et espoir pour les choses futures",
+"es": "Hermosa imaginación y esperanza para las cosas futuras",
+"it": "Bella immaginazione e speranza per le cose future",
+"nl": "Mooie verbeelding en hoop voor toekomstige dingen",
+"el": "Όμορφη φαντασία και ελπίδα για μελλοντικά πράγματα",
+"la": "Pulchra imaginatio et spes rerum futurarum"
+}
+},
+"想象": {
+"pinyin": "xiǎng xiàng",
+"meaning": {
+"zh": "在头脑中构思出未知事物的形象",
+"en": "Conceiving images of unknown things in the mind",
+"de": "Vorstellung von unbekannten Dingen im Geiste",
+"fr": "Concevoir des images de choses inconnues dans l'esprit",
+"es": "Concebir imágenes de cosas desconocidas en la mente",
+"it": "Concepire immagini di cose sconosciute nella mente",
+"nl": "Beelden van onbekende dingen in de geest vormen",
+"el": "Σκιαγράφηση εικόνων άγνωστων πραγμάτων στο μυαλό",
+"la": "Imagines rerum ignotarum in mente concipere"
+}
+},
+"象征": {
+"pinyin": "xiàng zhēng",
+"meaning": {
+"zh": "用具体事物代表抽象意义",
+"en": "Using concrete things to represent abstract meanings",
+"de": "Konkrete Dinge zur Darstellung abstrakter Bedeutungen verwenden",
+"fr": "Utiliser des choses concrètes pour représenter des significations abstraites",
+"es": "Usar cosas concretas para representar significados abstractos",
+"it": "Usare cose concrete per rappresentare significati astratti",
+"nl": "Concrete dingen gebruiken om abstracte betekenissen te vertegenwoordigen",
+"el": "Χρήση συγκεκριμένων πραγμάτων για να αντιπροσωπεύουν αφηρημένες έννοιες",
+"la": "Rebus concretis uti ad significationes abstractas repraesentandas"
+}
+},
+"征求": {
+"pinyin": "zhēng qiú",
+"meaning": {
+"zh": "公开请求提供或给予",
+"en": "Publicly requesting to provide or give",
+"de": "Öffentliche Bitte um Bereitstellung oder Gabe",
+"fr": "Demande publique de fourniture ou de don",
+"es": "Solicitud pública de provisión o donación",
+"it": "Richiesta pubblica di fornitura o donazione",
+"nl": "Openbaar verzoek om verstrekking of donatie",
+"el": "Δημόσια αίτηση για παροχή ή δωρεά",
+"la": "Postulatio publica ad praebendum vel dandum"
+}
+},
+
+
+
+"践行": {
+"pinyin": "jiàn xíng",
+"meaning": {
+"zh": "实践并实行某种理念或承诺",
+"en": "Practicing and implementing certain ideas or commitments",
+"de": "Bestimmte Ideen oder Verpflichtungen praktizieren und umsetzen",
+"fr": "Pratiquer et mettre en œuvre certaines idées ou engagements",
+"es": "Practicar e implementar ciertas ideas o compromisos",
+"it": "Praticare e implementare determinate idee o impegni",
+"nl": "Bepaalde ideeën of verplichtingen in de praktijk brengen en implementeren",
+"el": "Πρακτική και εφαρμογή ορισμένων ιδεών ή δεσμεύσεων",
+"la": "Ideas quasdam vel commitmenta exercere et implere"
+}
+},
+"行为": {
+"pinyin": "xíng wéi",
+"meaning": {
+"zh": "受思想支配而表现出来的外表活动",
+"en": "External activities manifested under the influence of thoughts",
+"de": "Äußere Aktivitäten, die unter dem Einfluss von Gedanken manifestiert werden",
+"fr": "Activités externes manifestées sous l'influence des pensées",
+"es": "Actividades externas manifestadas bajo la influencia de pensamientos",
+"it": "Attività esterne manifestate sotto l'influenza dei pensieri",
+"nl": "Externe activiteiten die zich manifesteren onder invloed van gedachten",
+"el": "Εξωτερικές δραστηριότητες που εκδηλώνονται υπό την επίδραση των σκέψεων",
+"la": "Actiones externae sub cogitationum influxu manifestatae"
+}
+},
+"为人": {
+"pinyin": "wéi rén",
+"meaning": {
+"zh": "做人处世的态度",
+"en": "Attitude towards life and dealing with others",
+"de": "Einstellung zum Leben und Umgang mit anderen",
+"fr": "Attitude envers la vie et les relations avec les autres",
+"es": "Actitud hacia la vida y el trato con los demás",
+"it": "Atteggiamento verso la vita e il rapporto con gli altri",
+"nl": "Houding ten opzichte van het leven en omgang met anderen",
+"el": "Στάση απέναντι στη ζωή και στη συναναστροφή με τους άλλους",
+"la": "Habitus erga vitam et commercium cum aliis"
+}
+},
+"人民": {
+"pinyin": "rén mín",
+"meaning": {
+"zh": "以劳动群众为主体的社会基本成员",
+"en": "Basic social members mainly composed of working masses",
+"de": "Grundlegende soziale Mitglieder, die hauptsächlich aus arbeitenden Massen bestehen",
+"fr": "Membres sociaux de base composés principalement de masses laborieuses",
+"es": "Miembros sociales básicos compuestos principalmente por masas trabajadoras",
+"it": "Membri sociali di base composti principalmente da masse lavoratrici",
+"nl": "Basissociale leden die voornamelijk bestaan uit werkende massa's",
+"el": "Βασικά κοινωνικά μέλη που αποτελούνται principalmente από εργαζόμενες μάζες",
+"la": "Membra socialia fundamentalia ex laborantibus massis praecipue composita"
+}
+},
+"民主": {
+"pinyin": "mín zhǔ",
+"meaning": {
+"zh": "人民享有参与国事或对国事有自由发表意见的权利",
+"en": "The right of people to participate in state affairs or freely express opinions on state affairs",
+"de": "Das Recht der Menschen, an Staatsangelegenheiten teilzunehmen oder frei Meinungen zu Staatsangelegenheiten zu äußern",
+"fr": "Le droit des personnes de participer aux affaires de l'État ou d'exprimer librement des opinions sur les affaires de l'État",
+"es": "El derecho de las personas a participar en asuntos estatales o expresar libremente opiniones sobre asuntos estatales",
+"it": "Il diritto delle persone di partecipare agli affari di stato o di esprimere liberamente opinioni sugli affari di stato",
+"nl": "Het recht van mensen om deel te nemen aan staatszaken of vrijelijk meningen te uiten over staatszaken",
+"el": "Το δικαίωμα των ανθρώπων να συμμετέχουν σε κρατικές υποθέσεις ή να εκφράζουν ελεύθερα απόψεις για κρατικές υποθέσεις",
+"la": "Ius populi participandi in rebus publicis vel sententias libere exprimendi de rebus publicis"
+}
+},
+"主动": {
+"pinyin": "zhǔ dòng",
+"meaning": {
+"zh": "不待外力推动而行动",
+"en": "Acting without external force propulsion",
+"de": "Handeln ohne Antrieb durch äußere Kräfte",
+"fr": "Agir sans propulsion par une force externe",
+"es": "Actuar sin propulsión de fuerza externa",
+"it": "Agire senza propulsione di forza esterna",
+"nl": "Handelen zonder voortstuwing door externe kracht",
+"el": "Δράση χωρίς πρόωση από εξωτερική δύναμη",
+"la": "Agere sine vi externa propulsione"
+}
+},
+"动物": {
+"pinyin": "dòng wù",
+"meaning": {
+"zh": "生物的一大类，与植物相对",
+"en": "A major category of organisms, opposite to plants",
+"de": "Eine Hauptkategorie von Organismen, im Gegensatz zu Pflanzen",
+"fr": "Une catégorie majeure d'organismes, par opposition aux plantes",
+"es": "Una categoría principal de organismos, opuesta a las plantas",
+"it": "Una categoria principale di organismi, opposta alle piante",
+"nl": "Een belangrijke categorie organismen, tegenover planten",
+"el": "Μια κύρια κατηγορία οργανισμών, αντίθετη με τα φυτά",
+"la": "Praecipua organismorum categoria, plantis opposita"
+}
+},
+"物理": {
+"pinyin": "wù lǐ",
+"meaning": {
+"zh": "研究物质和能量的自然科学",
+"en": "Natural science that studies matter and energy",
+"de": "Naturwissenschaft, die Materie und Energie untersucht",
+"fr": "Science naturelle qui étudie la matière et l'énergie",
+"es": "Ciencia natural que estudia la materia y la energía",
+"it": "Scienza naturale che studia la materia e l'energia",
+"nl": "Natuurwetenschap die materie en energie bestudeert",
+"el": "Φυσική επιστήμη που μελετά την ύλη και την ενέργεια",
+"la": "Scientia naturalis quae materiam et energiam studet"
+}
+},
+"理解": {
+"pinyin": "lǐ jiě",
+"meaning": {
+"zh": "通过思考认识事物的本质",
+"en": "Understanding the essence of things through thinking",
+"de": "Das Wesen der Dinge durch Denken verstehen",
+"fr": "Comprendre l'essence des choses par la réflexion",
+"es": "Comprender la esencia de las cosas mediante el pensamiento",
+"it": "Comprendere l'essenza delle cose attraverso il pensiero",
+"nl": "Het wezen der dingen begrijpen door denken",
+"el": "Κατανόηση της ουσίας των πραγμάτων μέσω της σκέψης",
+"la": "Essentiam rerum per cogitationem comprehendere"
+}
+},
+"解放": {
+"pinyin": "jiě fàng",
+"meaning": {
+"zh": "解除束缚，获得自由",
+"en": "Removing restraints and gaining freedom",
+"de": "Befreiung von Zwängen und Erlangung von Freiheit",
+"fr": "Se libérer des contraintes et acquérir la liberté",
+"es": "Eliminar restricciones y ganar libertad",
+"it": "Rimuovere i vincoli e guadagnare libertà",
+"nl": "Beperkingen wegnemen en vrijheid verwerven",
+"el": "Αφαίρεση περιορισμών και απόκτηση ελευθερίας",
+"la": "Vincula removere et libertatem acquirere"
+}
+},
+"放松": {
+"pinyin": "fàng sōng",
+"meaning": {
+"zh": "使轻松，不紧张",
+"en": "Making relaxed, not tense",
+"de": "Entspannung, nicht angespannt",
+"fr": "Se détendre, ne pas être tendu",
+"es": "Relajarse, no estar tenso",
+"it": "Rilassarsi, non essere tesi",
+"nl": "Ontspannen, niet gespannen",
+"el": "Χαλάρωση, μην είστε τεταμένοι",
+"la": "Remissio, non intentus"
+}
+},
+
+"心情": {
+"pinyin": "xīn qíng",
+"meaning": {
+"zh": "内心的感情状态",
+"en": "Inner emotional state",
+"de": "Innerer emotionaler Zustand",
+"fr": "État émotionnel intérieur"
+}
+},
+"情感": {
+"pinyin": "qíng gǎn",
+"meaning": {
+"zh": "人对外界事物产生的心理反应",
+"en": "Psychological reactions to external things",
+"de": "Psychologische Reaktionen auf äußere Dinge",
+"fr": "Réactions psychologiques aux choses extérieures"
+}
+},
+"感动": {
+"pinyin": "gǎn dòng",
+"meaning": {
+"zh": "受外界影响而内心激动",
+"en": "Being emotionally moved by external influences",
+"de": "Emotionale Bewegung durch äußere Einflüsse",
+"fr": "Être émotionnellement touché par des influences extérieures"
+}
+},
+"动物": {
+"pinyin": "dòng wù",
+"meaning": {
+"zh": "生物的一大类，与植物相对",
+"en": "A major category of organisms, opposite to plants",
+"de": "Eine Hauptkategorie von Organismen, im Gegensatz zu Pflanzen",
+"fr": "Une catégorie majeure d'organismes, par opposition aux plantes"
+}
+},
+"物理": {
+"pinyin": "wù lǐ",
+"meaning": {
+"zh": "研究物质和能量的自然科学",
+"en": "Natural science that studies matter and energy",
+"de": "Naturwissenschaft, die Materie und Energie untersucht",
+"fr": "Science naturelle qui étudie la matière et l'énergie"
+}
+},
+"理想": {
+"pinyin": "lǐ xiǎng",
+"meaning": {
+"zh":"对未来事物的美好想象和希望",
+"en": "Beautiful imagination and hope for future things",
+"de": "Schöne Vorstellung und Hoffnung für zukünftige Dinge",
+"fr": "Belle imagination et espoir pour les choses futures"
+}
+},
+"想象": {
+"pinyin": "xiǎng xiàng",
+"meaning": {
+"zh": "在头脑中构思出未知事物的形象",
+"en": "Conceiving images of unknown things in the mind",
+"de": "Vorstellung von unbekannten Dingen im Geiste",
+"fr": "Concevoir des images de choses inconnues dans l'esprit"
+}
+},
+"象征": {
+"pinyin": "xiàng zhēng",
+"meaning": {
+"zh": "用具体事物代表抽象意义",
+"en": "Using concrete things to represent abstract meanings",
+"de": "Konkrete Dinge zur Darstellung abstrakter Bedeutungen verwenden",
+"fr": "Utiliser des choses concrètes pour représenter des significations abstraites"
+}
+},
+"征求": {
+"pinyin": "zhēng qiú",
+"meaning": {
+"zh": "公开请求提供或给予",
+"en": "Publicly requesting to provide or give",
+"de": "Öffentliche Bitte um Bereitstellung oder Gabe",
+"fr": "Demande publique de fourniture ou de don"
+}
+},
+"求实": {
+"pinyin": "qiú shí",
+"meaning": {
+"zh": "讲求实际，实事求是",
+"en": "Being practical and seeking truth from facts",
+"de": "Pragmatisch sein und Wahrheit aus Tatsachen suchen",
+"fr": "Être pratique et chercher la vérité dans les faits"
+}
+},
+"实践": {
+"pinyin": "shí jiàn",
+"meaning": {
+"zh": "实际去做，履行",
+"en": "Actually doing, fulfilling",
+"de": "Tatsächlich tun, erfüllen",
+"fr": "Faire réellement, accomplir"
+}
+},
+"践行": {
+"pinyin": "jiàn xíng",
+"meaning": {
+"zh": "实践并实行某种理念或承诺",
+"en": "Practicing and implementing certain ideas or commitments",
+"de": "Bestimmte Ideen oder Verpflichtungen praktizieren und umsetzen",
+"fr": "Pratiquer et mettre en œuvre certaines idées ou engagements"
+}
+},
+
+
+"期待": {
+"pinyin": "qī dài", 
+"meaning": {
+"zh": "期盼等待",
+"en": "Eagerly waiting", 
+"de": "Erwartungsvoll warten",
+"fr": "Attendre avec impatience"
+}
+},
+"待遇": {
+"pinyin": "dài yù",
+"meaning": {
+"zh": "享有的权利和报酬",
+"en": "Rights and remuneration enjoyed",
+"de": "Genossene Rechte und Vergütung",
+"fr": "Droits et rémunération dont on bénéficie"
+}
+},
+"遇见": {
+"pinyin": "yù jiàn",
+"meaning": {
+"zh": "偶然碰到",
+"en": "Meeting by chance",
+"de": "Zufälliges Treffen",
+"fr": "Rencontre fortuite"
+}
+},
+"见解": {
+"pinyin": "jiàn jiě",
+"meaning": {
+"zh": "对事物的认识和看法",
+"en": "Understanding and views on things",
+"de": "Verständnis und Ansichten über Dinge",
+"fr": "Compréhension et points de vue sur les choses"
+}
+},
+"解放": {
+"pinyin": "jiě fàng",
+"meaning": {
+"zh": "解除束缚，获得自由",
+"en": "Removing restraints and gaining freedom",
+"de": "Befreiung von Zwängen und Erlangung von Freiheit",
+"fr": "Se libérer des contraintes et acquérir la liberté"
+}
+},
+"放松": {
+"pinyin": "fàng sōng",
+"meaning": {
+"zh": "使轻松，不紧张",
+"en": "Making relaxed, not tense",
+"de": "Entspannung, nicht angespannt",
+"fr": "Se détendre, ne pas être tendu"
+}
+},
+"轻松": {
+"pinyin": "qīng sōng",
+"meaning": {
+"zh": "不感到有负担",
+"en": "Not feeling burdened",
+"de": "Keine Belastung empfinden",
+"fr": "Ne pas se sentir chargé"
+}
+},
+"轻重": {
+"pinyin": "qīng zhòng",
+"meaning": {
+"zh": "重量的大小；程度的深浅",
+"en": "The magnitude of weight; the depth of degree",
+"de": "Das Gewichtsausmaß; die Tiefe des Grades",
+"fr": "L'ampleur du poids ; la profondeur du degré"
+}
+},
+"重要": {
+"pinyin": "zhòng yào",
+"meaning": {
+"zh": "具有重大意义或影响",
+"en": "Having great significance or influence",
+"de": "Von großer Bedeutung oder Einfluss",
+"fr": "Ayant une grande importance ou influence"
+}
+},
+"要点": {
+"pinyin": "yào diǎn",
+"meaning": {
+"zh": "主要内容或关键部分",
+"en": "Main content or key parts",
+"de": "Hauptinhalt oder Schlüsselteile",
+"fr": "Contenu principal ou parties clés"
+}
+},
+"点心": {
+"pinyin": "diǎn xīn",
+"meaning": {
+"zh": "糕饼之类的食品",
+"en": "Food such as pastries",
+"de": "Lebensmittel wie Gebäck",
+"fr": "Nourriture telle que pâtisseries"
+}
+},
+"心情": {
+"pinyin": "xīn qíng",
+"meaning": {
+"zh": "内心的感情状态",
+"en": "Inner emotional state",
+"de": "Innerer emotionaler Zustand",
+"fr": "État émotionnel intérieur"
+}
+},
+
+
+"学习": {
+"pinyin": "xué xí",
+"meaning": {
+"zh": "通过阅读、听讲等获得知识技能",
+"en": "Acquiring knowledge and skills through reading, listening, etc.",
+"de": "Erwerb von Wissen und Fähigkeiten durch Lesen, Zuhören usw.",
+"fr": "Acquisition de connaissances et de compétences par la lecture, l'écoute, etc."
+}
+},
+"习惯": {
+"pinyin": "xí guàn",
+"meaning": {
+"zh": "长期养成的生活方式或行为模式",
+"en": "Long-term developed lifestyle or behavior pattern",
+"de": "Langfristig entwickelte Lebensweise oder Verhaltensmuster",
+"fr": "Mode de vie ou modèle de comportement développé à long terme"
+}
+},
+"惯性": {
+"pinyin": "guàn xìng",
+"meaning": {
+"zh": "物体保持原有运动状态的性质",
+"en": "The property of an object to maintain its original state of motion",
+"de": "Die Eigenschaft eines Objekts, seinen ursprünglichen Bewegungszustand beizubehalten",
+"fr": "Propriété d'un objet à maintenir son état de mouvement original"
+}
+},
+"性格": {
+"pinyin": "xìng gé",
+"meaning": {
+"zh": "人对现实的态度和行为方式中表现出来的心理特征",
+"en": "Psychological characteristics manifested in a person's attitude towards reality and behavior",
+"de": "Psychologische Merkmale, die sich in der Einstellung eines Menschen zur Realität und im Verhalten zeigen",
+"fr": "Caractéristiques psychologiques manifestées dans l'attitude d'une personne envers la réalité et le comportement"
+}
+},
+"格局": {
+"pinyin": "gé jú",
+"meaning": {
+"zh": "结构和格式；人的眼界和胸襟",
+"en": "Structure and format; a person's vision and breadth of mind",
+"de": "Struktur und Format; die Vision und Weite des Geistes einer Person",
+"fr": "Structure et format ; la vision et l'ampleur d'esprit d'une personne"
+}
+},
+"局部": {
+"pinyin": "jú bù",
+"meaning": {
+"zh": "整体中的一部分",
+"en": "A part of the whole",
+"de": "Ein Teil des Ganzen",
+"fr": "Une partie du tout"
+}
+},
+"部分": {
+"pinyin": "bù fen",
+"meaning": {
+"zh": "整体中的一些个体",
+"en": "Some individuals within a whole",
+"de": "Einige Individuen innerhalb eines Ganzen",
+"fr": "Quelques individus dans un ensemble"
+}
+},
+"分析": {
+"pinyin": "fēn xī",
+"meaning": {
+"zh": "把事物分解成各个部分加以考察",
+"en": "Breaking things down into parts for examination",
+"de": "Dinge in Teile zerlegen zur Untersuchung",
+"fr": "Décomposer les choses en parties pour examen"
+}
+},
+"细节": {
+"pinyin": "xì jié",
+"meaning": {
+"zh": "细小的环节或情节",
+"en": "Small links or details",
+"de": "Kleine Verbindungen oder Details",
+"fr": "Petits liens ou détails"
+}
+},
+"节日": {
+"pinyin": "jié rì",
+"meaning": {
+"zh": "传统的庆祝或纪念日",
+"en": "Traditional celebration or memorial day",
+"de": "Traditioneller Feier- oder Gedenktag",
+"fr": "Jour de célébration ou de commémoration traditionnelle"
+}
+},
+"日期": {
+"pinyin": "rì qī",
+"meaning": {
+"zh": "具体的日子或时间",
+"en": "Specific day or time",
+"de": "Bestimmter Tag oder Zeit",
+"fr": "Jour ou heure spécifique"
+}
+},
+"期待": {
+"pinyin": "qī dài",
+"meaning": {
+"zh": "期盼等待",
+"en": "Eagerly waiting",
+"de": "Erwartungsvoll warten",
+"fr": "Attendre avec impatience"
+}
+},
+
+
+
+"求学": {
+"pinyin": "qiú xué",  
+"meaning": {
+"zh": "在学校学习；探求学问",  
+"en": "Studying at school; seeking knowledge",  
+"de": "Lernen in der Schule; Wissen suchen",  
+"fr": "Étudier à l'école; chercher la connaissance"  
+}  
+},  
+"学生": {  
+"pinyin": "xué sheng",  
+"meaning": {  
+"zh": "在学校读书的人",  
+"en": "A person who studies at school",  
+"de": "Eine Person, die in der Schule lernt",  
+"fr": "Une personne qui étudie à l'école"  
+}  
+},  
+"生活": {  
+"pinyin": "shēng huó",  
+"meaning": {  
+"zh": "人或生物为了生存和发展而进行的各种活动",  
+"en": "Various activities carried out by humans or organisms for survival and development",  
+"de": "Verschiedene Aktivitäten, die von Menschen oder Organismen zum Überleben und zur Entwicklung durchgeführt werden",  
+"fr": "Diverses activités menées par les humains ou les organismes pour survivre et se développer"  
+}  
+},  
+"活动": {  
+"pinyin": "huó dòng",  
+"meaning": {  
+"zh": "有组织的行动或运动",  
+"en": "Organized action or movement",  
+"de": "Organisierte Aktion oder Bewegung",  
+"fr": "Action ou mouvement organisé"  
+}  
+},  
+"动物": {  
+"pinyin": "dòng wù",  
+"meaning": {  
+"zh": "生物的一大类，与植物相对",  
+"en": "A major category of organisms, opposite to plants",  
+"de": "Eine Hauptkategorie von Organismen, im Gegensatz zu Pflanzen",  
+"fr": "Une catégorie majeure d'organismes, par opposition aux plantes"  
+}  
+},  
+"物理": {  
+"pinyin": "wù lǐ",  
+"meaning": {  
+"zh": "研究物质和能量的自然科学",  
+"en": "Natural science that studies matter and energy",  
+"de": "Naturwissenschaft, die Materie und Energie untersucht",  
+"fr": "Science naturelle qui étudie la matière et l'énergie"  
+}  
+},  
+"理解": {  
+"pinyin": "lǐ jiě",  
+"meaning": {  
+"zh": "通过思考认识事物的本质",  
+"en": "Understanding the essence of things through thinking",  
+"de": "Das Wesen der Dinge durch Denken verstehen",  
+"fr": "Comprendre l'essence des choses par la réflexion"  
+}  
+},  
+"解决": {  
+"pinyin": "jiě jué",  
+"meaning": {  
+"zh": "处理问题使有结果",  
+"en": "Dealing with problems to achieve results",  
+"de": "Probleme behandeln, um Ergebnisse zu erzielen",  
+"fr": "Traiter les problèmes pour obtenir des résultats"  
+}  
+},  
+"决定": {  
+"pinyin": "jué dìng",  
+"meaning": {  
+"zh": "做出主张或选择",  
+"en": "Making a claim or choice",  
+"de": "Eine Aussage oder Wahl treffen",  
+"fr": "Faire une affirmation ou un choix"  
+}  
+},  
+"定论": {  
+"pinyin": "dìng lùn",  
+"meaning": {  
+"zh": "确定的结论或判断",  
+"en": "Definitive conclusion or judgment",  
+"de": "Endgültige Schlussfolgerung oder Urteil",  
+"fr": "Conclusion ou jugement définitif"  
+}  
+},  
+"论文": {  
+"pinyin": "lùn wén",  
+"meaning": {  
+"zh": "系统讨论某个问题的文章",  
+"en": "A systematic discussion article on a certain topic",  
+"de": "Ein systematischer Diskussionsartikel zu einem bestimmten Thema",  
+"fr": "Un article de discussion systématique sur un certain sujet"  
+}  
+},  
+"文学": {  
+"pinyin": "wén xué",  
+"meaning": {  
+"zh": "以语言文字为工具的艺术形式",  
+"en": "An art form using language as a tool",  
+"de": "Eine Kunstform, die Sprache als Werkzeug verwendet",  
+"fr": "Une forme d'art utilisant le langage comme outil"  
+}  
+},  
+"学习": {  
+"pinyin": "xué xí",  
+"meaning": {  
+"zh": "通过阅读、听讲等获得知识技能",  
+"en": "Acquiring knowledge and skills through reading, listening, etc.",  
+"de": "Erwerb von Wissen und Fähigkeiten durch Lesen, Zuhören usw.",  
+"fr": "Acquisition de connaissances et de compétences par la lecture, l'écoute, etc."  
+}  
+},
+
+
+        };
+
+        // 初始化变量
+        let currentChain = [];
+        let usedWords = new Set();
+        let currentWord = "";
+        let autoVoice = true;
+        let currentCount = 0;
+        const MAX_WORDS = 200;
+        let savedChains = JSON.parse(localStorage.getItem('wordChainsRepository')) || [];
+
+        // DOM元素
+        const chainContainer = document.getElementById('chain-container');
+        const startBtn = document.getElementById('start-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const generate10Btn = document.getElementById('generate-10-btn');
+        const settingsBtn = document.getElementById('settings-btn');
+        const repositoryBtn = document.getElementById('repository-btn');
+        const backToGameBtn = document.getElementById('back-to-game-btn');
+        const autoVoiceCheckbox = document.getElementById('auto-voice');
+        const chainLengthEl = document.getElementById('chain-length');
+        const uniqueWordsEl = document.getElementById('unique-words');
+        const levelEl = document.getElementById('level');
+        const detailWordEl = document.getElementById('detail-word');
+        const detailPinyinEl = document.getElementById('detail-pinyin');
+        const detailMeaningEl = document.getElementById('detail-meaning');
+        const voiceWordBtn = document.getElementById('voice-word-btn');
+        const voiceMeaningBtn = document.getElementById('voice-meaning-btn');
+        const currentCountEl = document.getElementById('current-count');
+        const repositoryEl = document.getElementById('repository');
+        const repositoryListEl = document.getElementById('repository-list');
+        const saveModalEl = document.getElementById('save-modal');
+        const chainNameInput = document.getElementById('chain-name');
+        const cancelSaveBtn = document.getElementById('cancel-save-btn');
+        const confirmSaveBtn = document.getElementById('confirm-save-btn');
+
+        // 初始化游戏
+        function initGame() {
+            currentChain = [];
+            usedWords = new Set([...getAllSavedWords()]); // 排除已保存的词汇
+            chainContainer.innerHTML = '';
+            currentCount = 0;
+            updateStats();
+            
+            // 显示开始消息
+            const message = document.createElement('div');
+            message.className = 'game-message';
+            message.textContent = '游戏已开始！即将生成第一个词汇...';
+            chainContainer.appendChild(message);
+            
+            // 随机选择一个起始汉字（排除已保存的词汇）
+            const initialWords = Object.keys(wordDatabase).filter(word => !usedWords.has(word));
+            
+            if (initialWords.length === 0) {
+                const message = document.createElement('div');
+                message.className = 'game-message error';
+                message.textContent = '所有词汇已被使用，请从仓库中激活旧链或重置游戏';
+                chainContainer.appendChild(message);
+                return;
+            }
+            
+            const randomWord = initialWords[Math.floor(Math.random() * initialWords.length)];
+            currentWord = randomWord;
+            usedWords.add(randomWord);
+            
+            // 添加到链中
+            setTimeout(() => {
+                chainContainer.innerHTML = '';
+                addWordToChain(randomWord);
+                nextBtn.disabled = false;
+                generate10Btn.disabled = false;
+            }, 1000);
+        }
+
+        // 获取所有已保存词汇
+        function getAllSavedWords() {
+            const allWords = new Set();
+            savedChains.forEach(chain => {
+                chain.words.forEach(word => allWords.add(word));
+            });
+            return allWords;
+        }
+
+        // 添加词汇到链中
+        function addWordToChain(word) {
+            currentChain.push(word);
+            currentCount++;
+            updateStats();
+            
+            // 创建词汇卡片
+            const wordCard = document.createElement('div');
+            wordCard.className = 'word-card';
+            wordCard.dataset.word = word;
+            
+            const wordEl = document.createElement('div');
+            wordEl.className = 'word';
+            wordEl.textContent = word;
+            
+            const pinyinEl = document.createElement('div');
+            pinyinEl.className = 'pinyin';
+            pinyinEl.textContent = wordDatabase[word].pinyin;
+            
+            wordCard.appendChild(wordEl);
+            wordCard.appendChild(pinyinEl);
+            
+            // 添加点击事件
+            wordCard.addEventListener('click', () => {
+                highlightWord(word);
+                showWordDetail(word);
+                if (autoVoice) {
+                    speakWord(word);
+                    // 延迟朗读释义，让词汇朗读完成
+                    setTimeout(() => {
+                        speakMeaning(word);
+                    }, 1000);
+                }
+            });
+            
+            // 添加到容器
+            chainContainer.appendChild(wordCard);
+            
+            // 如果不是第一个词，添加箭头
+            if (currentChain.length > 1) {
+                const arrow = document.createElement('div');
+                arrow.className = 'arrow';
+                arrow.textContent = '→';
+                arrow.addEventListener('click', () => {
+                    generateNextWord();
+                });
+                chainContainer.appendChild(arrow);
+            }
+            
+            // 添加动画效果
+            setTimeout(() => {
+                wordCard.style.opacity = '1';
+                wordCard.style.transform = 'scale(1)';
+            }, 100);
+            
+            // 自动滚动到最新词汇
+            chainContainer.scrollTop = chainContainer.scrollHeight;
+            
+            // 自动显示详情和朗读
+            highlightWord(word);
+            showWordDetail(word);
+            if (autoVoice) {
+                speakWord(word);
+                // 延迟朗读释义，让词汇朗读完成
+                setTimeout(() => {
+                    speakMeaning(word);
+                }, 1000);
+            }
+            
+            // 检查是否达到最大词汇数
+            if (currentCount >= MAX_WORDS) {
+                showSaveOption();
+            }
+        }
+
+        // 显示保存选项
+        function showSaveOption() {
+            const message = document.createElement('div');
+            message.className = 'game-message success';
+            message.innerHTML = '恭喜！已生成200个词汇，游戏完成！<br>' +
+                               '<button class="btn btn-start" id="save-chain-btn" style="margin-top: 10px;">保存词汇锁链</button>';
+            chainContainer.appendChild(message);
+            
+            document.getElementById('save-chain-btn').addEventListener('click', () => {
+                openSaveModal();
+            });
+            
+            nextBtn.disabled = true;
+            generate10Btn.disabled = true;
+        }
+
+        // 打开保存模态框
+        function openSaveModal() {
+            saveModalEl.style.display = 'flex';
+            chainNameInput.value = `词汇链-${new Date().toLocaleDateString()}`;
+            chainNameInput.focus();
+        }
+
+        // 关闭保存模态框
+        function closeSaveModal() {
+            saveModalEl.style.display = 'none';
+        }
+
+        // 保存词汇链到仓库
+        function saveCurrentChain(name) {
+            const chain = {
+                id: Date.now().toString(),
+                name: name,
+                words: [...currentChain],
+                date: new Date().toISOString(),
+                length: currentChain.length,
+                uniqueChars: calculateUniqueChars(currentChain)
+            };
+            
+            savedChains.push(chain);
+            localStorage.setItem('wordChainsRepository', JSON.stringify(savedChains));
+            
+            // 显示成功消息
+            const message = document.createElement('div');
+            message.className = 'game-message success';
+            message.textContent = `词汇锁链"${name}"已保存到仓库！`;
+            chainContainer.appendChild(message);
+            
+            // 更新仓库显示
+            updateRepositoryDisplay();
+        }
+
+        // 计算唯一字符数
+        function calculateUniqueChars(chain) {
+            const uniqueChars = new Set();
+            chain.forEach(word => {
+                for (const char of word) {
+                    uniqueChars.add(char);
+                }
+            });
+            return uniqueChars.size;
+        }
+
+        // 更新仓库显示
+        function updateRepositoryDisplay() {
+            if (savedChains.length === 0) {
+                repositoryListEl.innerHTML = '<div class="game-message">仓库为空，完成游戏后可保存词汇锁链</div>';
+                return;
+            }
+            
+            repositoryListEl.innerHTML = '';
+            savedChains.forEach(chain => {
+                const chainItem = document.createElement('div');
+                chainItem.className = 'chain-item';
+                chainItem.dataset.id = chain.id;
+                
+                const title = document.createElement('div');
+                title.className = 'chain-title';
+                title.textContent = chain.name;
+                
+                const info = document.createElement('div');
+                info.className = 'chain-info';
+                info.innerHTML = `
+                    <span>${chain.words.length}个词汇</span>
+                    <span>${chain.uniqueChars}个唯一汉字</span>
+                    <span>${new Date(chain.date).toLocaleDateString()}</span>
+                `;
+                
+                chainItem.appendChild(title);
+                chainItem.appendChild(info);
+                
+                // 添加点击事件
+                chainItem.addEventListener('click', () => {
+                    activateChain(chain.id);
+                });
+                
+                repositoryListEl.appendChild(chainItem);
+            });
+        }
+
+        // 激活选中的词汇链
+        function activateChain(chainId) {
+            const chain = savedChains.find(c => c.id === chainId);
+            if (!chain) return;
+            
+            // 切换到游戏界面
+            repositoryEl.classList.remove('active');
+            
+            // 清空当前链并加载保存的链
+            currentChain = [...chain.words];
+            usedWords = new Set([...getAllSavedWords()]);
+            currentCount = currentChain.length;
+            
+            // 更新显示
+            chainContainer.innerHTML = '';
+            currentChain.forEach((word, index) => {
+                // 创建词汇卡片
+                const wordCard = document.createElement('div');
+                wordCard.className = 'word-card';
+                wordCard.dataset.word = word;
+                
+                const wordEl = document.createElement('div');
+                wordEl.className = 'word';
+                wordEl.textContent = word;
+                
+                const pinyinEl = document.createElement('div');
+                pinyinEl.className = 'pinyin';
+                pinyinEl.textContent = wordDatabase[word].pinyin;
+                
+                wordCard.appendChild(wordEl);
+                wordCard.appendChild(pinyinEl);
+                
+                // 添加点击事件
+                wordCard.addEventListener('click', () => {
+                    highlightWord(word);
+                    showWordDetail(word);
+                    if (autoVoice) {
+                        speakWord(word);
+                        setTimeout(() => {
+                            speakMeaning(word);
+                        }, 1000);
+                    }
+                });
+                
+                chainContainer.appendChild(wordCard);
+                
+                // 如果不是最后一个词，添加箭头
+                if (index < currentChain.length - 1) {
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow';
+                    arrow.textContent = '→';
+                    chainContainer.appendChild(arrow);
+                }
+            });
+            
+            // 设置当前词为链的最后一个词
+            currentWord = currentChain[currentChain.length - 1];
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 高亮最后一个词并显示详情
+            highlightWord(currentWord);
+            showWordDetail(currentWord);
+            
+            // 启用按钮
+            nextBtn.disabled = false;
+            generate10Btn.disabled = false;
+        }
+
+        // 生成下一个词
+        function generateNextWord() {
+            if (currentCount >= MAX_WORDS) {
+                showSaveOption();
+                return;
+            }
+            
+            // 获取当前词的最后一个字
+            const lastChar = currentWord.charAt(currentWord.length - 1);
+            
+            // 查找包含这个字的其他词汇（排除已使用的词）
+            const possibleWords = Object.keys(wordDatabase).filter(word => {
+                return word.includes(lastChar) && !usedWords.has(word);
+            });
+            
+            if (possibleWords.length === 0) {
+                const message = document.createElement('div');
+                message.className = 'game-message error';
+                message.textContent = '没有更多可用的词汇了！';
+                chainContainer.appendChild(message);
+                
+                // 如果已经有词汇，提供保存选项
+                if (currentChain.length > 0) {
+                    const saveBtn = document.createElement('button');
+                    saveBtn.className = 'btn btn-start';
+                    saveBtn.textContent = '保存词汇锁链';
+                    saveBtn.style.marginTop = '10px';
+                    saveBtn.addEventListener('click', openSaveModal);
+                    message.appendChild(document.createElement('br'));
+                    message.appendChild(saveBtn);
+                }
+                
+                nextBtn.disabled = true;
+                generate10Btn.disabled = true;
+                return;
+            }
+            
+            // 随机选择一个词
+            const nextWord = possibleWords[Math.floor(Math.random() * possibleWords.length)];
+            currentWord = nextWord;
+            usedWords.add(nextWord);
+            
+            // 添加到链中
+            addWordToChain(nextWord);
+        }
+
+        // 生成多个词
+        function generateMultipleWords(count) {
+            for (let i = 0; i < count; i++) {
+                if (currentCount >= MAX_WORDS) break;
+                generateNextWord();
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            chainLengthEl.textContent = currentChain.length;
+            currentCountEl.textContent = currentCount;
+            
+            // 计算唯一汉字数量
+            const uniqueChars = new Set();
+            currentChain.forEach(word => {
+                for (const char of word) {
+                    uniqueChars.add(char);
+                }
+            });
+            uniqueWordsEl.textContent = uniqueChars.size;
+            
+            // 更新难度级别
+            levelEl.textContent = Math.min(5, Math.floor(currentChain.length / 10) + 1);
+        }
+
+        // 朗读词汇
+        function speakWord(word) {
+            if ('speechSynthesis' in window) {
+                // 停止之前的朗读
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.log('您的浏览器不支持语音合成功能');
+            }
+        }
+
+        // 朗读释义
+        function speakMeaning(word) {
+            if ('speechSynthesis' in window && wordDatabase[word]) {
+                const meaning = wordDatabase[word].meaning;
+                const utterance = new SpeechSynthesisUtterance(meaning);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.log('您的浏览器不支持语音合成功能');
+            }
+        }
+
+        // 高亮显示选中的词汇
+        function highlightWord(word) {
+            // 移除所有高亮
+            document.querySelectorAll('.word-card').forEach(card => {
+                card.classList.remove('highlighted');
+            });
+            
+            // 高亮选中的词汇
+            const selectedCard = document.querySelector(`.word-card[data-word="${word}"]`);
+            if (selectedCard) {
+                selectedCard.classList.add('highlighted');
+            }
+        }
+
+        // 显示词汇详情
+        function showWordDetail(word) {
+            if (wordDatabase[word]) {
+                detailWordEl.textContent = word;
+                detailPinyinEl.textContent = wordDatabase[word].pinyin;
+                detailMeaningEl.textContent = wordDatabase[word].meaning;
+            }
+        }
+
+        // 事件监听
+        startBtn.addEventListener('click', () => {
+            initGame();
+            nextBtn.disabled = false;
+            generate10Btn.disabled = false;
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            if (currentChain.length === 0) {
+                alert('请先开始游戏！');
+                return;
+            }
+            generateNextWord();
+        });
+        
+        generate10Btn.addEventListener('click', () => {
+            if (currentChain.length === 0) {
+                alert('请先开始游戏！');
+                return;
+            }
+            generateMultipleWords(10);
+        });
+        
+        settingsBtn.addEventListener('click', () => {
+            alert('游戏设置功能将在未来版本中提供');
+        });
+        
+        repositoryBtn.addEventListener('click', () => {
+            // 切换到仓库界面
+            repositoryEl.classList.add('active');
+            updateRepositoryDisplay();
+        });
+        
+        backToGameBtn.addEventListener('click', () => {
+            // 切换回游戏界面
+            repositoryEl.classList.remove('active');
+        });
+        
+        autoVoiceCheckbox.addEventListener('change', () => {
+            autoVoice = autoVoiceCheckbox.checked;
+        });
+        
+        voiceWordBtn.addEventListener('click', () => {
+            speakWord(detailWordEl.textContent);
+        });
+        
+        voiceMeaningBtn.addEventListener('click', () => {
+            if (detailWordEl.textContent !== "汉字") {
+                speakMeaning(detailWordEl.textContent);
+            }
+        });
+        
+        cancelSaveBtn.addEventListener('click', closeSaveModal);
+        
+        confirmSaveBtn.addEventListener('click', () => {
+            const name = chainNameInput.value.trim();
+            if (name) {
+                saveCurrentChain(name);
+                closeSaveModal();
+            } else {
+                alert('请输入锁链名称');
+            }
+        });
+
+        // 初始显示
+        detailWordEl.textContent = "汉字";
+        detailPinyinEl.textContent = "hàn zì";
+        detailMeaningEl.textContent = "汉语的书写符号，是汉语的基本单位";
+        
+        // 初始更新仓库显示
+        updateRepositoryDisplay();
+    </script>
+</body>
+</html>
