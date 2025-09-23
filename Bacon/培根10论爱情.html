@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>培根散文阅读助手 - 论爱情</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%231a1a1a" width="100" height="100"/><path fill="%23222" d="M0 0L100 100M100 0L0 100" stroke-width="0.5"/></svg>');
+        }
+        .essay-title {
+            color: #d4a017;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        .essay-subtitle {
+            color: #a0a0a0;
+            text-align: center;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+        .chapter-title {
+            color: #d4a017;
+            margin: 30px 0 15px;
+            font-size: 1.5em;
+            border-left: 4px solid #d4a017;
+            padding-left: 10px;
+        }
+        .stage-direction {
+            color: #888;
+            font-style: italic;
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .line {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .line:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-radius: 5px;
+        }
+        .word-container {
+            position: relative;
+            display: inline-block;
+            margin-right: 8px;
+            cursor: pointer;
+            vertical-align: top;
+        }
+        .english {
+            font-size: 1.1em;
+            color: #e0e0e0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            transition: all 0.3s;
+        }
+        .english:hover {
+            background-color: #333;
+            color: #d4a017;
+        }
+        .translation {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(45, 45, 45, 0.95);
+            padding: 6px 10px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            white-space: nowrap;
+            display: none;
+            font-size: 0.9em;
+            color: #f0f0f0;
+            z-index: 100;
+            min-width: 100px;
+            text-align: center;
+            border: 1px solid #555;
+            margin-bottom: 8px;
+        }
+        .explanation {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 51, 102, 0.95);
+            padding: 10px 14px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            font-size: 0.9em;
+            color: #b3d9ff;
+            display: none;
+            z-index: 100;
+            min-width: 280px;
+            max-width: 450px;
+            text-align: left;
+            margin-top: 8px;
+            border: 1px solid #0066cc;
+            line-height: 1.4;
+            white-space: normal;
+        }
+        .toggle-translation {
+            background-color: transparent;
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .toggle-translation:hover {
+            color: #3e8e41;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .play-audio {
+            background-color: transparent;
+            color: #d4a017;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        .play-audio:hover {
+            color: #e0b040;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .line-number {
+            color: #888;
+            font-size: 0.8em;
+            margin-right: 10px;
+            display: inline-block;
+            width: 30px;
+            text-align: right;
+        }
+        .container {
+            background-color: #222;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+        .footer-note {
+            color: #888;
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .nav-button {
+            background-color: #333;
+            color: #d4a017;
+            border: 1px solid #555;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .nav-button:hover {
+            background-color: #d4a017;
+            color: #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="essay-title">培根散文集</h1>
+            <div class="essay-subtitle">弗朗西斯·培根</div>
+        </div>
+
+        <div class="chapter-title">十. 论爱情</div>
+
+        <div class="line">
+            <span class="line-number">1</span>
+            <span class="word-container">
+                <span class="english">The stage is more beholding to love than the life of man; for as to the stage, love is ever matter of comedies, and now and then of tragedies; but in life it doth much mischief, sometimes like a Siren, sometimes like a Fury.</span>
+                <span class="translation">舞台比人生更受惠于爱情；因为在舞台上，爱情永远是喜剧的题材，偶尔也是悲剧的题材；但在人生中，爱情常常招致祸患，它有时如诱惑人的海妖，有时如复仇的厄里倪厄斯。</span>
+                <span class="explanation">修辞手法：对比舞台与人生中的爱情。神话引用：Siren（海妖）用歌声诱惑水手导致船沉，Fury（复仇女神）象征惩罚与报复。语法：分号连接对比结构。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">2</span>
+            <span class="word-container">
+                <span class="english">You may observe, that, amongst all the great and worthy persons (whereof the memory remaineth, either ancient or recent), there is not one that hath been transported to the mad degree of love, which shows that great spirits and great business do keep out this weak passion.</span>
+                <span class="translation">你可以观察到，在所有伟大而可敬的人物中（无论是古代还是近代留名青史的），没有一个人曾被爱情冲昏头脑至疯狂程度，这表明伟大的精神和事业能够抵御这种脆弱的情感。</span>
+                <span class="explanation">历史观察：培根指出伟大人物不被爱情左右。语法：插入语"whereof the memory remaineth"修饰persons，which引导非限制性定语从句。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">3</span>
+            <span class="word-container">
+                <span class="english">You must except, nevertheless, Marcus Antonius, the half partner of the empire of Rome, and Appius Claudius, the decemvir and lawgiver; whereof the former was indeed a voluptuous man, and inordinate, but the latter was an austere and wise man;</span>
+                <span class="translation">然而，你必须将马克·安东尼——罗马帝国的半个统治者，以及阿庇乌斯·克劳狄——十八执政官和立法者排除在外；前者确实是个放纵无度的人，但后者却是个严肃而智慧的人；</span>
+                <span class="explanation">历史例外：安东尼以迷恋克娄巴特拉闻名，阿庇乌斯·克劳狄因迷恋维吉尼亚而倒台。语法：分号连接两个并列的例外情况，"whereof"指代前文两人。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">4</span>
+            <span class="word-container">
+                <span class="english">and therefore it seems (though rarely) that love can find entrance, not only into an open heart, but also into a heart well fortified, if watch be not well kept.</span>
+                <span class="translation">因此看来（虽然罕见），爱情不仅能进入敞开的心扉，也能进入防守严密的心灵，如果守备不严的话。</span>
+                <span class="explanation">军事隐喻：将心灵比作需要守卫的堡垒。语法：括号插入语表示让步，"not only...but also"表示递进关系。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">5</span>
+            <span class="word-container">
+                <span class="english">It is a poor saying of Epicurus, "Satis magnum alter alteri theatrum sumus;" as if man, made for the contemplation of heaven and all noble objects, should do nothing but kneel before a little idol, and make himself subject, though not of the mouth (as beasts are) yet of the eye, which was given him for higher purposes.</span>
+                <span class="translation">伊壁鸠鲁有句蹩脚的话："我们彼此都是足够大的剧场;"仿佛人类，被创造来沉思天国和一切崇高事物，却只应跪在一个小偶像前，使自己臣服，虽然不是口头上（如野兽般）而是视觉上，而视觉本是赋予他更高目的的。</span>
+                <span class="explanation">哲学批判：培根批评伊壁鸠鲁降低人性尊严。拉丁引语："Satis magnum alter alteri theatrum sumus"（我们彼此都是足够大的剧场）。语法：长句结构，包含比喻和对比。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">6</span>
+            <span class="word-container">
+                <span class="english">It is a strange thing to note the excess of this passion, and how it braves the nature and value of things, by this, that the speaking in a perpetual hyperbole is comely in nothing but in love, neither is it merely in the phrase;</span>
+                <span class="translation">注意到这种情感的过度是件奇怪的事，它如何蔑视事物的本质和价值，表现在：除了爱情之外，在任何事情上持续使用夸张言辞都是不得体的，而且这不仅限于言辞；</span>
+                <span class="explanation">修辞分析：指出爱情中夸张表达的独特性。词汇："hyperbole"（夸张法）是爱情表达的典型特征。语法："by this, that"引导解释性从句。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">7</span>
+            <span class="word-container">
+                <span class="english">for whereas it hath been well said, "That the arch flatterer, with whom all the petty flatterers have intelligence, is a man's self;" certainly, the lover is more; for there was never proud man thought so absurdly well of himself as the lover doth of the person loved;</span>
+                <span class="translation">因为虽然有人说得好："最大的奉承者（所有小奉承者都与之通气）是一个人自己;"但恋人更是如此；因为从未有骄傲的人像恋人看待所爱之人那样荒谬地高看自己；</span>
+                <span class="explanation">心理学观察：爱情使人产生过度理想化的倾向。语法：对比结构"whereas...certainly"和"never...so...as"。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">8</span>
+            <span class="word-container">
+                <span class="english">and therefore it was well said, "That it is impossible to love and to be wise."</span>
+                <span class="translation">因此有人说得好："爱情与明智不可能并存。"</span>
+                <span class="explanation">格言引用：古希腊谚语，强调爱情与理性的对立。语法：被动结构"it was well said"引入名言。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">9</span>
+            <span class="word-container">
+                <span class="english">Neither doth this weakness appear to others only, and not to the party loved, but to the loved most of all, except the love be reciprocal;</span>
+                <span class="translation">这种弱点不仅对他人显现，不仅不对被爱者显现，反而对被爱者显现得最明显，除非爱情是相互的；</span>
+                <span class="explanation">心理洞察：单恋中最能暴露一个人的弱点。语法："neither...only...but"复杂否定结构。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">10</span>
+            <span class="word-container">
+                <span class="english">for it is a true rule, that love is ever rewarded, either with the reciprocal, or with an inward and secret contempt; by how much the more men ought to beware of this passion, which loseth not only other things, but itself.</span>
+                <span class="translation">因为这是一个真实的规律：爱情总是得到回报，要么是相互的爱，要么是内心隐秘的轻视；人们更应该警惕这种情感，它不仅失去其他东西，还会失去自身。</span>
+                <span class="explanation">爱情定律：培根提出爱情回报的两种可能。语法：分号连接因果关系，"by how much the more"表示程度。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">11</span>
+            <span class="word-container">
+                <span class="english">As for the other losses, the poet's relation doth well figure them: "That he that preferred Helena, quitted the gifts of Juno and Pallas;" for whosoever esteemeth too much of amorous affection, quitteth both riches and wisdom.</span>
+                <span class="translation">至于其他损失，诗人的故事很好地说明了这一点："那个选择海伦的人，放弃了朱诺和帕拉斯的礼物;"因为无论谁过分重视爱情，都会既放弃财富也放弃智慧。</span>
+                <span class="explanation">神话引用：帕里斯选择爱情（海伦）而放弃权力（朱诺）和智慧（帕拉斯）。语法：引号内为间接引语，for引导解释性分句。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">12</span>
+            <span class="word-container">
+                <span class="english">This passion hath his floods in the very times of weakness, which are, great prosperity and great adversity, though this latter hath been less observed;</span>
+                <span class="translation">这种情感在人性最脆弱的时刻最为泛滥，即大顺境和大逆境之时，虽然后者较少被注意到；</span>
+                <span class="explanation">心理学观察：极端处境下爱情容易占据人心。语法：which引导非限制性定语从句，though引导让步状语从句。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">13</span>
+            <span class="word-container">
+                <span class="english">both which times kindle love, and make it more fervent, and therefore show it to be the child of folly.</span>
+                <span class="translation">这两种时刻都会点燃爱情，使之更加热烈，因此表明它是愚蠢的产物。</span>
+                <span class="explanation">价值判断：培根认为爱情是理智缺失的表现。隐喻："child of folly"将爱情人格化。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">14</span>
+            <span class="word-container">
+                <span class="english">They do best who, if they cannot but admit love, yet make it keep quarter, and sever it wholly from their serious affairs and actions of life;</span>
+                <span class="translation">那些做得最好的人，如果不得不接受爱情，也会限制它的范围，将它完全与严肃事务和生活行动分离开来；</span>
+                <span class="explanation">实用建议：培根主张将爱情与重要事务分离。军事隐喻："keep quarter"原指限制军队活动范围。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">15</span>
+            <span class="word-container">
+                <span class="english">for if it check once with business, it troubleth men's fortunes, and maketh men that they can nowise be true to their own ends.</span>
+                <span class="translation">因为一旦爱情与事业冲突，它就会扰乱人的命运，使人无法忠于自己的目标。</span>
+                <span class="explanation">后果警告：爱情干扰事业追求。语法：条件句"if it check once with business"，"that"引导结果从句。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">16</span>
+            <span class="word-container">
+                <span class="english">I know not how, but martial men are given to love; I think it is, but as they are given to wine, for perils commonly ask to be paid in pleasures.</span>
+                <span class="translation">我不知道为什么，但尚武之人往往沉溺于爱情；我想，正如他们沉溺于酒一样，因为危险通常需要以快乐来补偿。</span>
+                <span class="explanation">心理分析：危险职业者需要情感宣泄。语法：并列结构"I know not...I think..."，for引导解释性分句。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">17</span>
+            <span class="word-container">
+                <span class="english">There is in man's nature a secret inclination and motion towards love of others, which, if it be not spent upon some one or a few, doth naturally spread itself towards many, and maketh men become humane and charitable, as it is seen sometimes in friars.</span>
+                <span class="translation">人性中有一种爱他人的隐秘倾向和动力，如果它没有倾注于某个人或少数人，自然会扩散到许多人，使人变得仁爱慈善，正如有时在修道士身上所见的那样。</span>
+                <span class="explanation">人性观察：爱的能量需要出口，否则会泛化。语法：which引导定语从句，内含条件状语"if it be not spent..."。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="line">
+            <span class="line-number">18</span>
+            <span class="word-container">
+                <span class="english">Nuptial love maketh mankind, friendly love perfecteth it, but wanton love corrupted and embaseth it.</span>
+                <span class="translation">婚姻之爱创造人类，友谊之爱完善人类，但淫荡之爱腐蚀并贬低人类。</span>
+                <span class="explanation">爱的分类：培根区分三种爱及其不同价值。修辞：平行结构"maketh...perfecteth...corrupted and embaseth"。</span>
+            </span>
+            <button class="toggle-translation" title="显示/隐藏翻译"><i class="fas fa-language"></i></button>
+            <button class="play-audio" title="朗读"><i class="fas fa-volume-up"></i></button>
+        </div>
+
+        <div class="footer-note">
+            注：本文为弗朗西斯·培根《随笔集》中的"论爱情"，写于1597年，1612年和1625年修订。
+        </div>
+
+        <div class="navigation">
+            <button class="nav-button" onclick="location.href='#'"><i class="fas fa-arrow-left"></i> 上一篇：论嫉妒</button>
+            <button class="nav-button" onclick="location.href='#'">下一篇：论高位 <i class="fas fa-arrow-right"></i></button>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.word-container').forEach(container => {
+            const english = container.querySelector('.english');
+            const translation = container.querySelector('.translation');
+            const explanation = container.querySelector('.explanation');
+            
+            english.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                // 关闭所有其他解释框
+                document.querySelectorAll('.explanation').forEach(item => {
+                    if (item !== explanation) item.style.display = 'none';
+                });
+                
+                // 切换当前解释框
+                if (explanation.style.display === 'block') {
+                    explanation.style.display = 'none';
+                } else {
+                    explanation.style.display = 'block';
+                    translation.style.display = 'block';
+                }
+            });
+            
+            // 点击其他地方关闭解释框
+            document.addEventListener('click', function(e) {
+                if (!container.contains(e.target)) {
+                    explanation.style.display = 'none';
+                }
+            });
+        });
+        
+        // 切换翻译显示
+        document.querySelectorAll('.toggle-translation').forEach(button => {
+            button.addEventListener('click', function() {
+                const container = this.previousElementSibling;
+                const translation = container.querySelector('.translation');
+                
+                if (translation.style.display === 'block') {
+                    translation.style.display = 'none';
+                } else {
+                    translation.style.display = 'block';
+                }
+            });
+        });
+        
+        // 朗读功能
+        document.querySelectorAll('.play-audio').forEach(button => {
+            button.addEventListener('click', function() {
+                const container = this.previousElementSibling.previousElementSibling;
+                const text = container.querySelector('.english').textContent;
+                
+                if ('speechSynthesis' in window) {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 0.9;
+                    speechSynthesis.speak(utterance);
+                } else {
+                    alert('您的浏览器不支持语音合成功能');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
