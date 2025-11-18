@@ -1,11 +1,12 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>字卡与文本辅助阅读游戏</title>
+    <title>字卡与文本-辅助阅读游戏</title>
     <style>
-        /* 样式保持不变，只修复JavaScript逻辑 */
+        /* 样式保持不变，只修改菜单部分 */
         * {
             margin: 0;
             padding: 0;
@@ -137,7 +138,7 @@
         .character-card.flying {
             position: fixed;
             z-index: 1000;
-            transition: all 1.5s ease-in-out;
+            transition: all 0.5s ease-in-out;
         }
         
         .character-card.used {
@@ -294,9 +295,10 @@
             margin-top: 20px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             flex-wrap: wrap;
+            gap: 10px;
         }
         
-        .genre-selector, .language-selector {
+        .genre-selector {
             margin-right: 30px;
         }
         
@@ -493,13 +495,60 @@
             align-items: center;
             border: 2px dashed #ccc;
         }
+        
+        /* 新增样式 - 瞬间移动效果 */
+        .character-card.instant-move {
+            animation: instantMove 0.5s ease-out forwards;
+        }
+        
+        @keyframes instantMove {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* 修改菜单样式 */
+        .genre-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .genre-btn {
+            padding: 10px 15px;
+            background: #f0f4ff;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .genre-btn:hover {
+            background: #e0e8ff;
+        }
+        
+        .genre-btn.active {
+            background: #6a11cb;
+            color: white;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <div class="header-content">
-                <div class="logo">字卡文本生成游戏</div>
+                <div class="logo">字卡造句游戏</div>
                 <div class="mode-toggle">
                     <button class="mode-btn active" id="study-mode">学习模式</button>
                     <button class="mode-btn" id="practice-mode">练习模式</button>
@@ -508,16 +557,8 @@
         </header>
         
         <div class="menu-bar">
-            <div class="genre-selector">
-                <div class="dropdown">
-                    <button class="dropbtn" id="genre-btn">选择文体</button>
-                    <div class="dropdown-content">
-                        <a href="#" data-genre="dialogue">日常情景对话</a>
-                        <a href="#" data-genre="poetry">诗词歌赋</a>
-                        <a href="#" data-genre="story">故事</a>
-                        <a href="#" data-genre="novel">小说</a>
-                    </div>
-                </div>
+            <div class="genre-buttons" id="genre-buttons">
+                <!-- 文体按钮将动态生成 -->
             </div>
             
             <div class="works-menu" id="works-menu">
@@ -525,13 +566,11 @@
                     <!-- 作品标签将动态生成 -->
                 </div>
             </div>
-            
-                        
         </div>
         
         <div class="main-content">
             <div class="left-panel">
-                <div class="panel-title">字卡区</div>
+                <div class="panel-title">Cards</div>
                 <div class="character-cards" id="character-cards">
                     <!-- 字卡将动态生成 -->
                 </div>
@@ -567,14 +606,14 @@
             </div>
             
             <div class="right-panel">
-                <div class="panel-title">文本区</div>
+                <div class="panel-title">Sentences</div>
                 <div class="text-container" id="text-container">
                     <!-- 文本句子将动态生成 -->
                 </div>
                 
                 <div class="right-audio-controls">
                     <button class="audio-btn" id="read-all-btn">
-                        <span>朗读整篇</span>
+                        <span>listen</span>
                     </button>
                 </div>
                 
@@ -593,9 +632,9 @@
         // 按文体分类的示例数据
         const sampleTexts = {
             dialogue: {
-                title: "日常情景对话",
+                title: "living",
                 works: {
-                    "餐厅点餐": "你好，我想点一份牛排。请问要几分熟？七分熟。需要配什么饮料？一杯橙汁。好的，请稍等。",
+                   "餐厅点餐": "你好，我想点一份牛排。请问要几分熟？七分熟。需要配什么饮料？一杯橙汁。好的，请稍等。",
                     "问路": "请问，去火车站怎么走？往前走两个路口，然后右转。谢谢！不客气。",
                     "购物": "这件衣服多少钱？三百五十元。可以试穿吗？当然可以，试衣间在那边。",
                     "医院就诊": "医生，我头疼发烧。请坐，量一下体温。三十八度五，感冒了。开些药，多喝水休息。谢谢医生。",
@@ -603,9 +642,9 @@
                 }
             },
             poetry: {
-                title: "诗词歌赋", 
+                title: "poem", 
                 works: {
-                    "静夜思": "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+                      "静夜思": "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
                     "春晓": "春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。",
                     "登鹳雀楼": "白日依山尽，黄河入海流。欲穷千里目，更上一层楼。",
                     "悯农": "锄禾日当午，汗滴禾下土。谁知盘中餐，粒粒皆辛苦。",
@@ -613,8 +652,8 @@
                     "江雪": "千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。"
                 }
             },
-            story: {
-                title: "故事",
+             story: {
+                title: "story",
                 works: {
                     "龟兔赛跑": "从前，有一只兔子和一只乌龟。兔子跑得很快，乌龟爬得很慢。有一天，它们决定比赛。兔子一开始跑得很快，但它很骄傲，在半路上睡觉。乌龟虽然慢，但它一直坚持爬。最后，乌龟赢了比赛。",
                     "狼来了": "从前，有个放羊的孩子。他觉得很无聊，就大声喊：狼来了！狼来了！村民们听到后，赶紧跑来帮忙。但是，他们发现没有狼。孩子哈哈大笑。第二天，孩子又喊：狼来了！狼来了！村民们又跑来，但还是没有狼。后来，真的狼来了。孩子大声呼救，但没有人相信他。最后，狼吃掉了所有的羊。",
@@ -624,7 +663,7 @@
                 }
             },
             novel: {
-                title: "小说",
+                title: "roman",
                 works: {
                     "红楼梦片段": "贾母因问黛玉念何书。黛玉道：只刚念了《四书》。黛玉又问姊妹们读何书。贾母道：读的是什么书，不过是认得两个字，不是睁眼的瞎子罢了！",
                     "西游记片段": "孙悟空从石头里蹦出来，他拜师学艺，学会了七十二变。后来，他大闹天宫，被如来佛祖压在五行山下。五百年后，唐僧救了他，他们一起去西天取经。",
@@ -637,7 +676,7 @@
 
         // 拼音和翻译数据（简化示例）
         const characterData = {
-            "你": { pinyin: "nǐ", translation: "you" },
+           "你": { pinyin: "nǐ", translation: "you" },
             "好": { pinyin: "hǎo", translation: "good" },
             "我": { pinyin: "wǒ", translation: "I/me" },
             "想": { pinyin: "xiǎng", translation: "want" },
@@ -1140,7 +1179,6 @@
 "巨": { pinyin: "jù", translation: "huge" },
 "变": { pinyin: "biàn", translation: "change" },
 "化": { pinyin: "huà", translation: "change" }
-
         };
 
         // 多语言菜单文本
@@ -1177,6 +1215,7 @@
         let practiceInterval = null;
         let currentPracticeCharIndex = 0;
         let isWaitingForUserSelection = false;
+        let audioContext = null;
 
         // DOM元素
         const studyModeBtn = document.getElementById('study-mode');
@@ -1196,8 +1235,7 @@
         const startBtn = document.getElementById('start-btn');
         const readCurrentBtn = document.getElementById('read-current-btn');
         const readAllBtn = document.getElementById('read-all-btn');
-        const genreBtn = document.getElementById('genre-btn');
-        const langBtn = document.getElementById('lang-btn');
+        const genreButtons = document.getElementById('genre-buttons');
         const currentSentenceText = document.getElementById('current-sentence-text');
 
         // 初始化事件监听
@@ -1205,22 +1243,6 @@
             // 模式切换
             studyModeBtn.addEventListener('click', () => switchMode('study'));
             practiceModeBtn.addEventListener('click', () => switchMode('practice'));
-            
-            // 文体选择
-            document.querySelectorAll('[data-genre]').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    selectGenre(e.target.getAttribute('data-genre'));
-                });
-            });
-            
-            // 语言选择
-            document.querySelectorAll('[data-lang]').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    switchLanguage(e.target.getAttribute('data-lang'));
-                });
-            });
             
             // 句子导航
             prevSentenceBtn.addEventListener('click', goToPrevSentence);
@@ -1234,6 +1256,20 @@
             readAllBtn.addEventListener('click', readAllSentences);
         }
 
+        // 初始化文体按钮
+        function initGenreButtons() {
+            genreButtons.innerHTML = '';
+            
+            Object.keys(sampleTexts).forEach(genre => {
+                const button = document.createElement('button');
+                button.className = 'genre-btn';
+                button.textContent = sampleTexts[genre].title;
+                button.setAttribute('data-genre', genre);
+                button.addEventListener('click', () => selectGenre(genre));
+                genreButtons.appendChild(button);
+            });
+        }
+
         // 切换语言
         function switchLanguage(lang) {
             currentLanguage = lang;
@@ -1245,8 +1281,6 @@
             const texts = menuTexts[currentLanguage];
             
             // 更新按钮文本
-            genreBtn.textContent = texts.genre;
-            langBtn.textContent = texts.language;
             studyModeBtn.textContent = texts.studyMode;
             practiceModeBtn.textContent = texts.practiceMode;
             prevSentenceBtn.innerHTML = `<span>${texts.prevSentence}</span>`;
@@ -1301,6 +1335,12 @@
         // 选择文体
         function selectGenre(genre) {
             currentGenre = genre;
+            
+            // 更新文体按钮状态
+            document.querySelectorAll('.genre-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.genre-btn[data-genre="${genre}"]`).classList.add('active');
             
             // 显示作品菜单
             worksMenu.style.display = 'block';
@@ -1425,15 +1465,113 @@
                 card.setAttribute('data-char', char);
                 card.setAttribute('data-index', startIndex + index);
                 
-                if (currentMode === 'study') {
-                    card.addEventListener('click', () => showCharacterInfo(char, card));
-                } else {
-                    // 练习模式下点击字卡进行选择
-                    card.addEventListener('click', () => handleCharacterSelection(char, card));
-                }
+                // 为所有模式添加点击事件
+                card.addEventListener('click', () => handleCharacterClick(char, card));
                 
                 characterCards.appendChild(card);
             });
+        }
+
+        // 处理字卡点击事件
+        function handleCharacterClick(char, card) {
+            if (currentMode === 'study') {
+                // 学习模式下显示字符信息
+                showCharacterInfo(char, card);
+                
+                // 播放清脆音效
+                playCardSound();
+                
+                // 添加瞬间移动动画
+                card.classList.add('instant-move');
+                
+                // 找到对应的句子位置并填充
+                setTimeout(() => {
+                    fillCharacterInSentence(char);
+                    card.classList.add('used');
+                }, 500);
+            } else {
+                // 练习模式下进行选择
+                handleCharacterSelection(char, card);
+            }
+        }
+
+        // 播放清脆音效
+        function playCardSound() {
+            try {
+                // 创建音频上下文
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                // 创建清脆的"发牌"音效
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5音
+                oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.2); // 降到A4音
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                console.log("无法播放音效:", e);
+            }
+        }
+
+        // 在句子中填充字符
+        function fillCharacterInSentence(char) {
+            const currentSentence = document.getElementById(`sentence-${currentSentenceIndex}`);
+            if (!currentSentence) return;
+            
+            // 找到第一个空位置
+            const emptySlots = Array.from(currentSentence.children).filter(
+                child => child.textContent === '' && child.classList.contains('sentence-placeholder')
+            );
+            
+            if (emptySlots.length > 0) {
+                const slot = emptySlots[0];
+                
+                // 填充字符
+                slot.textContent = char;
+                slot.className = 'sentence-character';
+                slot.classList.add('highlight');
+                
+                // 添加拼音和英文信息
+                const charInfo = document.createElement('div');
+                charInfo.className = 'sentence-character-info';
+                
+                const pinyin = document.createElement('div');
+                pinyin.className = 'pinyin';
+                pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
+                
+                const translation = document.createElement('div');
+                translation.className = 'translation';
+                translation.textContent = characterData[char] ? characterData[char].translation : '--';
+                
+                charInfo.appendChild(pinyin);
+                charInfo.appendChild(translation);
+                slot.appendChild(charInfo);
+                
+                // 添加鼠标事件显示拼音英文
+                slot.addEventListener('mouseenter', () => {
+                    charInfo.style.display = 'block';
+                });
+                
+                slot.addEventListener('mouseleave', () => {
+                    charInfo.style.display = 'none';
+                });
+                
+                // 检查句子是否完成
+                if (isSentenceComplete(currentSentence)) {
+                    feedback.textContent = '句子完成！';
+                }
+            }
         }
 
         // 渲染文本区域
@@ -1498,7 +1636,7 @@
             
             // 重置所有字卡
             document.querySelectorAll('.character-card').forEach(card => {
-                card.classList.remove('used');
+                card.classList.remove('used', 'instant-move');
                 card.style.visibility = 'visible';
             });
             
@@ -1510,7 +1648,7 @@
             renderCurrentSentenceCharacters();
             
             // 在学习模式下，自动填充字符
-            if (currentMode === 'study') {
+            if (currentMode === 'study' && isPlaying) {
                 let index = 0;
                 // 过滤掉标点符号，只保留汉字
                 const chars = getCurrentSentenceChars();
@@ -1528,8 +1666,13 @@
                             readCharacter(char);
                             
                             setTimeout(() => {
-                                // 模拟字卡飞到句子中
-                                flyCharacterToSentence(card, charDiv, () => {
+                                // 播放清脆音效
+                                playCardSound();
+                                
+                                // 添加瞬间移动动画
+                                card.classList.add('instant-move');
+                                
+                                setTimeout(() => {
                                     // 移除高亮并填充到句子中
                                     card.classList.remove('highlight');
                                     // 标记字卡为已使用（隐藏）
@@ -1564,9 +1707,9 @@
                                     });
                                     
                                     index++;
-                                    setTimeout(fillNextChar, 800); // 减慢速度
-                                });
-                            }, 800); // 减慢速度
+                                    setTimeout(fillNextChar, 500); // 减慢速度
+                                }, 500);
+                            }, 500);
                         }
                     } else {
                         // 所有字符填充完成
@@ -1575,10 +1718,8 @@
                     }
                 };
                 
-                if (isPlaying) {
-                    fillNextChar();
-                }
-            } else if (currentMode === 'practice') {
+                fillNextChar();
+            } else if (currentMode === 'practice' && isPlaying) {
                 // 练习模式下开始逐字朗读
                 startPracticeReading();
             }
@@ -1627,31 +1768,6 @@
                 };
                 speechSynthesis.speak(utterance);
             }
-        }
-
-        // 字卡飞到句子中的动画
-        function flyCharacterToSentence(card, target, callback) {
-            const cardRect = card.getBoundingClientRect();
-            const targetRect = target.getBoundingClientRect();
-            
-            // 创建飞行副本
-            const flyingCard = card.cloneNode(true);
-            flyingCard.className = 'character-card flying';
-            flyingCard.style.left = `${cardRect.left}px`;
-            flyingCard.style.top = `${cardRect.top}px`;
-            document.body.appendChild(flyingCard);
-            
-            // 执行飞行动画
-            setTimeout(() => {
-                flyingCard.style.left = `${targetRect.left}px`;
-                flyingCard.style.top = `${targetRect.top}px`;
-                flyingCard.style.transform = 'scale(0.7)';
-                
-                setTimeout(() => {
-                    document.body.removeChild(flyingCard);
-                    if (callback) callback();
-                }, 1500); // 减慢飞行速度
-            }, 100);
         }
 
         // 渲染分页
@@ -1713,66 +1829,67 @@
             
             if (char === expectedChar) {
                 // 选择正确
-                card.classList.add('highlight');
                 feedback.textContent = '正确！';
                 
+                // 播放清脆音效
+                playCardSound();
+                
+                // 添加瞬间移动动画
+                card.classList.add('instant-move');
+                
                 setTimeout(() => {
-                    card.classList.remove('highlight');
-                    // 标记字卡为已使用（隐藏）
                     card.classList.add('used');
                     
                     const charDiv = currentSentence.children[currentPracticeCharIndex];
                     
-                    // 添加字卡跳跃动画
-                    flyCharacterToSentence(card, charDiv, () => {
-                        charDiv.textContent = char;
-                        charDiv.className = 'sentence-character';
-                        charDiv.classList.add('highlight');
-                        
-                        // 添加拼音和英文信息
-                        const charInfo = document.createElement('div');
-                        charInfo.className = 'sentence-character-info';
-                        
-                        const pinyin = document.createElement('div');
-                        pinyin.className = 'pinyin';
-                        pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
-                        
-                        const translation = document.createElement('div');
-                        translation.className = 'translation';
-                        translation.textContent = characterData[char] ? characterData[char].translation : '--';
-                        
-                        charInfo.appendChild(pinyin);
-                        charInfo.appendChild(translation);
-                        charDiv.appendChild(charInfo);
-                        
-                        // 添加点击事件显示拼音英文
-                        charDiv.addEventListener('mouseenter', () => {
-                            charInfo.style.display = 'block';
-                        });
-                        
-                        charDiv.addEventListener('mouseleave', () => {
-                            charInfo.style.display = 'none';
-                        });
-                        
-                        // 移动到下一个字符
-                        currentPracticeCharIndex++;
-                        isWaitingForUserSelection = false;
-                        
-                        // 检查是否完成句子
-                        if (currentPracticeCharIndex >= chars.length) {
-                            // 句子完成，给予表扬
-                            setTimeout(() => {
-                                readSentence("太棒了！句子完成！");
-                                feedback.textContent = '句子完成！太棒了！';
-                            }, 1000);
-                        } else {
-                            // 继续朗读下一个字符
-                            setTimeout(() => {
-                                readPracticeCharacter(chars[currentPracticeCharIndex]);
-                            }, 1000);
-                        }
+                    // 填充到句子中
+                    charDiv.textContent = char;
+                    charDiv.className = 'sentence-character';
+                    charDiv.classList.add('highlight');
+                    
+                    // 添加拼音和英文信息
+                    const charInfo = document.createElement('div');
+                    charInfo.className = 'sentence-character-info';
+                    
+                    const pinyin = document.createElement('div');
+                    pinyin.className = 'pinyin';
+                    pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
+                    
+                    const translation = document.createElement('div');
+                    translation.className = 'translation';
+                    translation.textContent = characterData[char] ? characterData[char].translation : '--';
+                    
+                    charInfo.appendChild(pinyin);
+                    charInfo.appendChild(translation);
+                    charDiv.appendChild(charInfo);
+                    
+                    // 添加点击事件显示拼音英文
+                    charDiv.addEventListener('mouseenter', () => {
+                        charInfo.style.display = 'block';
                     });
-                }, 300);
+                    
+                    charDiv.addEventListener('mouseleave', () => {
+                        charInfo.style.display = 'none';
+                    });
+                    
+                    // 移动到下一个字符
+                    currentPracticeCharIndex++;
+                    isWaitingForUserSelection = false;
+                    
+                    // 检查是否完成句子
+                    if (currentPracticeCharIndex >= chars.length) {
+                        // 句子完成，给予表扬
+                        setTimeout(() => {
+                            readSentence("太棒了！句子完成！");
+                            feedback.textContent = '句子完成！太棒了！';
+                        }, 1000);
+                    } else {
+                        // 继续朗读下一个字符
+                        setTimeout(() => {
+                            readPracticeCharacter(chars[currentPracticeCharIndex]);
+                        }, 1000);
+                    }
+                }, 500);
             } else {
                 // 选择错误
                 feedback.textContent = '选择错误，请再试一次';
@@ -1784,16 +1901,6 @@
                     feedback.textContent = `请选择: ${chars[currentPracticeCharIndex]}`;
                 }, 1000);
             }
-        }
-
-        // 获取句子中下一个空位置
-        function getNextEmptyPosition(sentenceElement) {
-            for (let i = 0; i < sentenceElement.children.length; i++) {
-                if (!sentenceElement.children[i].textContent) {
-                    return i;
-                }
-            }
-            return -1;
         }
 
         // 检查句子是否完成
@@ -1889,6 +1996,7 @@
         // 初始化应用
         function initApp() {
             initEventListeners();
+            initGenreButtons();
             updateMenuTexts();
             feedback.textContent = '请选择文体和作品开始学习';
         }
