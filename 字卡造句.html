@@ -550,8 +550,8 @@
             <div class="header-content">
                 <div class="logo">字卡造句游戏</div>
                 <div class="mode-toggle">
-                    <button class="mode-btn active" id="study-mode">学习模式</button>
-                    <button class="mode-btn" id="practice-mode">练习模式</button>
+                    <button class="mode-btn active" id="study-mode">study</button>
+                    <button class="mode-btn" id="practice-mode">practice</button>
                 </div>
             </div>
         </header>
@@ -581,6 +581,589 @@
                 <div class="navigation">
                     <div class="left-navigation">
                         <button class="nav-btn" id="prev-sentence">
+                            <span>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字卡与文本辅助阅读游戏</title>
+    <style>
+        /* 样式保持不变，只修改菜单部分 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 15px 0;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 5px;
+        }
+        
+        .mode-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 30px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .mode-btn.active {
+            background: white;
+            color: #6a11cb;
+            font-weight: bold;
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .left-panel, .right-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            flex: 1;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #444;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .character-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            min-height: 300px;
+            align-content: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .character-card {
+            width: 70px;
+            height: 70px;
+            background: #f0f4ff;
+            border: 2px solid #d0d8ff;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        
+        .character-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-color: #6a11cb;
+        }
+        
+        .character-card.highlight {
+            background: #ffeb3b;
+            border-color: #ffc107;
+            animation: flash 1s ease;
+        }
+        
+        @keyframes flash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .character-card.flying {
+            position: fixed;
+            z-index: 1000;
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .character-card.used {
+            visibility: hidden;
+        }
+        
+        .sentence-container {
+            margin-bottom: 20px;
+        }
+        
+        .sentence {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            min-height: 60px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #6a11cb;
+        }
+        
+        .sentence-character {
+            width: 50px;
+            height: 50px;
+            background: #e8f4ff;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            transition: all 0.5s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .sentence-character.highlight {
+            background: #c8e6ff;
+            transform: scale(1.1);
+        }
+        
+        .sentence-character-info {
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 8px 12px;
+            z-index: 10;
+            min-width: 120px;
+            text-align: center;
+            display: none;
+        }
+        
+        .sentence-character-info .pinyin {
+            font-size: 14px;
+            color: #6a11cb;
+            margin-bottom: 2px;
+        }
+        
+        .sentence-character-info .translation {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .sentence-character:hover .sentence-character-info {
+            display: block;
+        }
+        
+        .sentence-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .control-btn {
+            padding: 6px 12px;
+            background: #6a11cb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: #5a0db3;
+        }
+        
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #6a11cb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+        }
+        
+        .icon-btn:hover {
+            background: #5a0db3;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .left-navigation {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: #6a11cb;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: #5a0db3;
+            transform: translateY(-2px);
+        }
+        
+        .start-btn {
+            background: #4CAF50;
+        }
+        
+        .start-btn:hover {
+            background: #45a049;
+        }
+        
+        .menu-bar {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .genre-selector {
+            margin-right: 30px;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropbtn {
+            background: #f0f4ff;
+            color: #333;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .dropbtn:hover {
+            background: #e0e8ff;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            z-index: 1;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .dropdown-content a:hover {
+            background: #f5f7fa;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .works-menu {
+            display: none;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .works-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .work-tab {
+            padding: 8px 16px;
+            background: #f0f4ff;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .work-tab:hover {
+            background: #e0e8ff;
+        }
+        
+        .work-tab.active {
+            background: #6a11cb;
+            color: white;
+        }
+        
+        .character-info {
+            position: fixed;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            max-width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .character-info .char {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .character-info .pinyin {
+            font-size: 18px;
+            color: #6a11cb;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .character-info .translation {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .page-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .page-btn.active {
+            background: #6a11cb;
+            color: white;
+            border-color: #6a11cb;
+        }
+        
+        .feedback {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #6a11cb;
+            min-height: 24px;
+        }
+        
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .audio-btn {
+            padding: 8px 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .audio-btn:hover {
+            background: #0b7dda;
+        }
+        
+        .current-sentence {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .current-sentence-text {
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .right-audio-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: flex-end;
+        }
+        
+        .sentence-placeholder {
+            width: 50px;
+            height: 50px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #ccc;
+        }
+        
+        /* 新增样式 - 瞬间移动效果 */
+        .character-card.instant-move {
+            animation: instantMove 0.5s ease-out forwards;
+        }
+        
+        @keyframes instantMove {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* 修改菜单样式 */
+        .genre-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .genre-btn {
+            padding: 10px 15px;
+            background: #f0f4ff;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .genre-btn:hover {
+            background: #e0e8ff;
+        }
+        
+        .genre-btn.active {
+            background: #6a11cb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo">字卡阅读助手</div>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="study-mode">学习模式</button>
+                    <button class="mode-btn" id="practice-mode">练习模式</button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="menu-bar">
+            <div class="genre-buttons" id="genre-buttons">
+                <!-- 文体按钮将动态生成 -->
+            </div>
+            
+            <div class="works-menu" id="works-menu">
+                <div class="works-tabs" id="works-tabs">
+                    <!-- 作品标签将动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-title">字卡区</div>
+                <div class="character-cards" id="character-cards">
+                    <!-- 字卡将动态生成 -->
+                </div>
+                <div class="pagination" id="pagination">
+                    <!-- 分页按钮将动态生成 -->
+                </div>
+                
+                <div class="navigation">
+                    <div class="left-navigation">
+                        <button class="nav-btn" id="prev-sentence">
                             <span>上一句</span>
                         </button>
                         <button class="nav-btn" id="next-sentence">
@@ -589,6 +1172,3437 @@
                     </div>
                     <button class="nav-btn start-btn" id="start-btn">
                         <span>开始学习</span>
+                    </button>
+                </div>
+                
+                <div class="audio-controls">
+                    <button class="icon-btn" id="read-current-btn" title="朗读当前句">
+                        🔊
+                    </button>
+                </div>
+                
+                <div class="current-sentence">
+                    <div class="current-sentence-text" id="current-sentence-text">
+                        <!-- 当前句子将显示在这里 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="panel-title">文本区</div>
+                <div class="text-container" id="text-container">
+                    <!-- 文本句子将动态生成 -->
+                </div>
+                
+                <div class="right-audio-controls">
+                    <button class="audio-btn" id="read-all-btn">
+                        <span>朗读整篇</span>
+                    </button>
+                </div>
+                
+                <div class="feedback" id="feedback"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="character-info" id="character-info">
+        <div class="char" id="info-char"></div>
+        <div class="pinyin" id="info-pinyin"></div>
+        <div class="translation" id="info-translation"></div>
+    </div>
+
+    <script>
+        // 按文体分类的示例数据
+        const sampleTexts = {
+            dialogue: {
+                title: "日常情景对话",
+                works: {
+                   "餐厅点餐": "你好，我想点一份牛排。请问要几分熟？七分熟。需要配什么饮料？一杯橙汁。好的，请稍等。",
+                    "问路": "请问，去火车站怎么走？往前走两个路口，然后右转。谢谢！不客气。",
+                    "购物": "这件衣服多少钱？三百五十元。可以试穿吗？当然可以，试衣间在那边。",
+                    "医院就诊": "医生，我头疼发烧。请坐，量一下体温。三十八度五，感冒了。开些药，多喝水休息。谢谢医生。",
+                    "酒店入住": "您好，我预订了房间。请出示身份证。这是您的房卡，在五楼。早餐在二楼餐厅。谢谢。"
+                }
+            },
+            poetry: {
+                title: "诗词歌赋", 
+                works: {
+                      "静夜思": "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+                    "春晓": "春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。",
+                    "登鹳雀楼": "白日依山尽，黄河入海流。欲穷千里目，更上一层楼。",
+                    "悯农": "锄禾日当午，汗滴禾下土。谁知盘中餐，粒粒皆辛苦。",
+                    "相思": "红豆生南国，春来发几枝。愿君多采撷，此物最相思。",
+                    "江雪": "千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。"
+                }
+            },
+             story: {
+                title: "故事",
+                works: {
+                    "龟兔赛跑": "从前，有一只兔子和一只乌龟。兔子跑得很快，乌龟爬得很慢。有一天，它们决定比赛。兔子一开始跑得很快，但它很骄傲，在半路上睡觉。乌龟虽然慢，但它一直坚持爬。最后，乌龟赢了比赛。",
+                    "狼来了": "从前，有个放羊的孩子。他觉得很无聊，就大声喊：狼来了！狼来了！村民们听到后，赶紧跑来帮忙。但是，他们发现没有狼。孩子哈哈大笑。第二天，孩子又喊：狼来了！狼来了！村民们又跑来，但还是没有狼。后来，真的狼来了。孩子大声呼救，但没有人相信他。最后，狼吃掉了所有的羊。",
+                    "乌鸦喝水": "一只乌鸦口渴了，它看到一瓶水。但是瓶口很小，乌鸦喝不到水。它想到一个办法，把石子扔进瓶子里。水位上升了，乌鸦终于喝到了水。",
+                    "三只小猪": "有三只小猪要盖房子。老大用稻草盖，老二用木头盖，老三用砖头盖。大灰狼来了，吹倒了稻草房和木头房。但是砖头房很坚固，大灰狼进不去。最后，三只小猪安全地住在砖头房里。",
+                    "小红帽": "小红帽去看望奶奶。路上遇到大灰狼，大灰狼先到奶奶家，把奶奶吃掉了。然后假装成奶奶等小红帽。猎人听到声音，救出了奶奶和小红帽。"
+                }
+            },
+            novel: {
+                title: "小说",
+                works: {
+                    "红楼梦片段": "贾母因问黛玉念何书。黛玉道：只刚念了《四书》。黛玉又问姊妹们读何书。贾母道：读的是什么书，不过是认得两个字，不是睁眼的瞎子罢了！",
+                    "西游记片段": "孙悟空从石头里蹦出来，他拜师学艺，学会了七十二变。后来，他大闹天宫，被如来佛祖压在五行山下。五百年后，唐僧救了他，他们一起去西天取经。",
+                    "水浒传片段": "武松来到景阳冈，他看到山上有只老虎。武松喝了酒，壮着胆子上山。果然遇到老虎，他与老虎搏斗，最后打死了老虎。",
+                    "三国演义片段": "刘备三顾茅庐请诸葛亮。第一次没见到，第二次也没见到，第三次终于见到了。诸葛亮为刘备分析了天下形势，这就是著名的《隆中对》。",
+                    "儒林外史片段": "范进中举后高兴得疯了。他的岳父胡屠户打了他一巴掌，他才清醒过来。从此，范进的生活发生了巨大变化。"
+                }
+            }
+        };
+
+        // 拼音和翻译数据（简化示例）
+        const characterData = {
+           "你": { pinyin: "nǐ", translation: "you" },
+            "好": { pinyin: "hǎo", translation: "good" },
+            "我": { pinyin: "wǒ", translation: "I/me" },
+            "想": { pinyin: "xiǎng", translation: "want" },
+            "点": { pinyin: "diǎn", translation: "order" },
+            "一": { pinyin: "yī", translation: "one" },
+            "份": { pinyin: "fèn", translation: "portion" },
+            "牛": { pinyin: "niú", translation: "cow" },
+            "排": { pinyin: "pái", translation: "steak" },
+            "请": { pinyin: "qǐng", translation: "please" },
+            "问": { pinyin: "wèn", translation: "ask" },
+            "要": { pinyin: "yào", translation: "want" },
+            "几": { pinyin: "jǐ", translation: "how many" },
+            "分": { pinyin: "fēn", translation: "minutes/degree" },
+            "熟": { pinyin: "shú", translation: "cooked" },
+            "七": { pinyin: "qī", translation: "seven" },
+            "需": { pinyin: "xū", translation: "need" },
+            "配": { pinyin: "pèi", translation: "with" },
+            "什": { pinyin: "shén", translation: "what" },
+            "么": { pinyin: "me", translation: "(question particle)" },
+            "饮": { pinyin: "yǐn", translation: "drink" },
+            "料": { pinyin: "liào", translation: "material" },
+            "杯": { pinyin: "bēi", translation: "cup" },
+            "橙": { pinyin: "chéng", translation: "orange" },
+            "汁": { pinyin: "zhī", translation: "juice" },
+            "的": { pinyin: "de", translation: "(possessive particle)" },
+            "稍": { pinyin: "shāo", translation: "a little" },
+            "等": { pinyin: "děng", translation: "wait" },
+            "床": { pinyin: "chuáng", translation: "bed" },
+            "前": { pinyin: "qián", translation: "front" },
+            "明": { pinyin: "míng", translation: "bright" },
+            "月": { pinyin: "yuè", translation: "moon" },
+            "光": { pinyin: "guāng", translation: "light" },
+            "疑": { pinyin: "yí", translation: "doubt" },
+            "是": { pinyin: "shì", translation: "is" },
+            "地": { pinyin: "dì", translation: "ground" },
+            "上": { pinyin: "shàng", translation: "on" },
+            "霜": { pinyin: "shuāng", translation: "frost" },
+            "举": { pinyin: "jǔ", translation: "lift" },
+            "头": { pinyin: "tóu", translation: "head" },
+            "望": { pinyin: "wàng", translation: "gaze" },
+            "低": { pinyin: "dī", translation: "lower" },
+            "思": { pinyin: "sī", translation: "think" },
+            "故": { pinyin: "gù", translation: "hometown" },
+            "乡": { pinyin: "xiāng", translation: "village" },
+            "从": { pinyin: "cóng", translation: "from" },
+            "有": { pinyin: "yǒu", translation: "have" },
+            "只": { pinyin: "zhī", translation: "measure word" },
+            "兔": { pinyin: "tù", translation: "rabbit" },
+            "子": { pinyin: "zǐ", translation: "child" },
+            "和": { pinyin: "hé", translation: "and" },
+            "乌": { pinyin: "wū", translation: "crow" },
+            "龟": { pinyin: "guī", translation: "turtle" },
+            "跑": { pinyin: "pǎo", translation: "run" },
+            "得": { pinyin: "de", translation: "particle" },
+            "很": { pinyin: "hěn", translation: "very" },
+            "快": { pinyin: "kuài", translation: "fast" },
+            "爬": { pinyin: "pá", translation: "crawl" },
+            "慢": { pinyin: "màn", translation: "slow" },
+            "天": { pinyin: "tiān", translation: "day" },
+            "它": { pinyin: "tā", translation: "it" },
+            "们": { pinyin: "men", translation: "plural" },
+            "决": { pinyin: "jué", translation: "decide" },
+            "定": { pinyin: "dìng", translation: "fix" },
+            "比": { pinyin: "bǐ", translation: "compare" },
+            "赛": { pinyin: "sài", translation: "contest" },
+            "但": { pinyin: "dàn", translation: "but" },
+            "骄": { pinyin: "jiāo", translation: "proud" },
+            "傲": { pinyin: "ào", translation: "arrogant" },
+            "在": { pinyin: "zài", translation: "at" },
+            "半": { pinyin: "bàn", translation: "half" },
+            "路": { pinyin: "lù", translation: "road" },
+            "睡": { pinyin: "shuì", translation: "sleep" },
+            "觉": { pinyin: "jiào", translation: "sleep" },
+            "虽": { pinyin: "suī", translation: "although" },
+            "然": { pinyin: "rán", translation: "however" },
+            "坚": { pinyin: "jiān", translation: "firm" },
+            "持": { pinyin: "chí", translation: "persist" },
+            "最": { pinyin: "zuì", translation: "most" },
+            "后": { pinyin: "hòu", translation: "after" },
+            "赢": { pinyin: "yíng", translation: "win" },
+            "了": { pinyin: "le", translation: "particle" },
+            "贾": { pinyin: "jiǎ", translation: "surname" },
+            "母": { pinyin: "mǔ", translation: "mother" },
+            "因": { pinyin: "yīn", translation: "because" },
+            "林": { pinyin: "lín", translation: "forest" },
+            "黛": { pinyin: "dài", translation: "eyebrow" },
+            "玉": { pinyin: "yù", translation: "jade" },
+            "念": { pinyin: "niàn", translation: "read" },
+            "何": { pinyin: "hé", translation: "what" },
+            "书": { pinyin: "shū", translation: "book" },
+            "道": { pinyin: "dào", translation: "say" },
+            "只": { pinyin: "zhǐ", translation: "only" },
+            "刚": { pinyin: "gāng", translation: "just" },
+            "四": { pinyin: "sì", translation: "four" },
+            "姊": { pinyin: "zǐ", translation: "elder sister" },
+            "妹": { pinyin: "mèi", translation: "younger sister" },
+            "读": { pinyin: "dú", translation: "read" },
+            "认": { pinyin: "rèn", translation: "recognize" },
+            "两": { pinyin: "liǎng", translation: "two" },
+            "个": { pinyin: "gè", translation: "measure word" },
+            "字": { pinyin: "zì", translation: "character" },
+            "睁": { pinyin: "zhēng", translation: "open eyes" },
+            "眼": { pinyin: "yǎn", translation: "eye" },
+            "瞎": { pinyin: "xiā", translation: "blind" },
+            "春": { pinyin: "chūn", translation: "spring" },
+            "眠": { pinyin: "mián", translation: "sleep" },
+            "不": { pinyin: "bù", translation: "not" },
+            "觉": { pinyin: "jué", translation: "feel" },
+            "晓": { pinyin: "xiǎo", translation: "dawn" },
+            "处": { pinyin: "chù", translation: "place" },
+            "闻": { pinyin: "wén", translation: "hear" },
+            "啼": { pinyin: "tí", translation: "cry" },
+            "鸟": { pinyin: "niǎo", translation: "bird" },
+            "夜": { pinyin: "yè", translation: "night" },
+            "来": { pinyin: "lái", translation: "come" },
+            "风": { pinyin: "fēng", translation: "wind" },
+            "雨": { pinyin: "yǔ", translation: "rain" },
+            "声": { pinyin: "shēng", translation: "sound" },
+            "花": { pinyin: "huā", translation: "flower" },
+            "落": { pinyin: "luò", translation: "fall" },
+            "知": { pinyin: "zhī", translation: "know" },
+            "多": { pinyin: "duō", translation: "many" },
+            "少": { pinyin: "shǎo", translation: "few" },
+            "白": { pinyin: "bái", translation: "white" },
+            "日": { pinyin: "rì", translation: "sun" },
+            "依": { pinyin: "yī", translation: "rely" },
+            "山": { pinyin: "shān", translation: "mountain" },
+            "尽": { pinyin: "jìn", translation: "end" },
+            "黄": { pinyin: "huáng", translation: "yellow" },
+            "河": { pinyin: "hé", translation: "river" },
+            "入": { pinyin: "rù", translation: "enter" },
+            "海": { pinyin: "hǎi", translation: "sea" },
+            "流": { pinyin: "liú", translation: "flow" },
+            "欲": { pinyin: "yù", translation: "want" },
+            "穷": { pinyin: "qióng", translation: "poor" },
+            "千": { pinyin: "qiān", translation: "thousand" },
+            "里": { pinyin: "lǐ", translation: "mile" },
+            "目": { pinyin: "mù", translation: "eye" },
+            "更": { pinyin: "gèng", translation: "more" },
+            "层": { pinyin: "céng", translation: "layer" },
+            "楼": { pinyin: "lóu", translation: "building" },
+            "这": { pinyin: "zhè", translation: "this" },
+            "件": { pinyin: "jiàn", translation: "piece" },
+            "衣": { pinyin: "yī", translation: "clothes" },
+            "服": { pinyin: "fú", translation: "clothing" },
+            "多": { pinyin: "duō", translation: "how much" },
+            "钱": { pinyin: "qián", translation: "money" },
+            "三": { pinyin: "sān", translation: "three" },
+            "百": { pinyin: "bǎi", translation: "hundred" },
+            "五": { pinyin: "wǔ", translation: "five" },
+            "十": { pinyin: "shí", translation: "ten" },
+            "元": { pinyin: "yuán", translation: "yuan" },
+            "可": { pinyin: "kě", translation: "can" },
+            "以": { pinyin: "yǐ", translation: "may" },
+            "试": { pinyin: "shì", translation: "try" },
+            "穿": { pinyin: "chuān", translation: "wear" },
+            "吗": { pinyin: "ma", translation: "(question particle)" },
+            "当": { pinyin: "dāng", translation: "of course" },
+            "然": { pinyin: "rán", translation: "certainly" },
+            "试": { pinyin: "shì", translation: "fitting" },
+            "衣": { pinyin: "yī", translation: "fitting" },
+            "间": { pinyin: "jiān", translation: "room" },
+            "在": { pinyin: "zài", translation: "at" },
+            "那": { pinyin: "nà", translation: "that" },
+            "边": { pinyin: "biān", translation: "side" },
+            "医": { pinyin: "yī", translation: "doctor" },
+            "生": { pinyin: "shēng", translation: "life" },
+            "疼": { pinyin: "téng", translation: "pain" },
+            "发": { pinyin: "fā", translation: "have" },
+            "烧": { pinyin: "shāo", translation: "fever" },
+            "坐": { pinyin: "zuò", translation: "sit" },
+            "量": { pinyin: "liáng", translation: "measure" },
+            "体": { pinyin: "tǐ", translation: "body" },
+            "温": { pinyin: "wēn", translation: "temperature" },
+            "感": { pinyin: "gǎn", translation: "catch" },
+            "冒": { pinyin: "mào", translation: "cold" },
+            "开": { pinyin: "kāi", translation: "prescribe" },
+            "些": { pinyin: "xiē", translation: "some" },
+            "药": { pinyin: "yào", translation: "medicine" },
+            "喝": { pinyin: "hē", translation: "drink" },
+            "休": { pinyin: "xiū", translation: "rest" },
+            "息": { pinyin: "xī", translation: "rest" },
+            "酒": { pinyin: "jiǔ", translation: "hotel" },
+            "店": { pinyin: "diàn", translation: "shop" },
+            "入": { pinyin: "rù", translation: "enter" },
+            "预": { pinyin: "yù", translation: "reserve" },
+            "订": { pinyin: "dìng", translation: "book" },
+            "房": { pinyin: "fáng", translation: "room" },
+            "出": { pinyin: "chū", translation: "show" },
+            "示": { pinyin: "shì", translation: "show" },
+            "身": { pinyin: "shēn", translation: "body" },
+            "份": { pinyin: "fèn", translation: "identity" },
+            "证": { pinyin: "zhèng", translation: "card" },
+            "卡": { pinyin: "kǎ", translation: "card" },
+            "早": { pinyin: "zǎo", translation: "morning" },
+            "餐": { pinyin: "cān", translation: "meal" },
+            "厅": { pinyin: "tīng", translation: "hall" },
+            "锄": { pinyin: "chú", translation: "hoe" },
+            "禾": { pinyin: "hé", translation: "grain" },
+            "当": { pinyin: "dāng", translation: "at" },
+            "午": { pinyin: "wǔ", translation: "noon" },
+            "汗": { pinyin: "hàn", translation: "sweat" },
+            "滴": { pinyin: "dī", translation: "drop" },
+            "土": { pinyin: "tǔ", translation: "soil" },
+            "谁": { pinyin: "shuí", translation: "who" },
+            "盘": { pinyin: "pán", translation: "plate" },
+            "中": { pinyin: "zhōng", translation: "middle" },
+            "餐": { pinyin: "cān", translation: "meal" },
+            "粒": { pinyin: "lì", translation: "grain" },
+            "皆": { pinyin: "jiē", translation: "all" },
+            "辛": { pinyin: "xīn", translation: "hard" },
+            "苦": { pinyin: "kǔ", translation: "bitter" },
+            "红": { pinyin: "hóng", translation: "red" },
+            "豆": { pinyin: "dòu", translation: "bean" },
+            "生": { pinyin: "shēng", translation: "grow" },
+            "南": { pinyin: "nán", translation: "south" },
+            "国": { pinyin: "guó", translation: "country" },
+            "发": { pinyin: "fā", translation: "sprout" },
+            "枝": { pinyin: "zhī", translation: "branch" },
+            "愿": { pinyin: "yuàn", translation: "wish" },
+            "君": { pinyin: "jūn", translation: "you" },
+            "采": { pinyin: "cǎi", translation: "pick" },
+            "撷": { pinyin: "xié", translation: "pick" },
+            "此": { pinyin: "cǐ", translation: "this" },
+            "物": { pinyin: "wù", translation: "thing" },
+            "相": { pinyin: "xiāng", translation: "mutual" },
+            "思": { pinyin: "sī", translation: "longing" },
+            "千": { pinyin: "qiān", translation: "thousand" },
+            "飞": { pinyin: "fēi", translation: "fly" },
+            "绝": { pinyin: "jué", translation: "disappear" },
+            "万": { pinyin: "wàn", translation: "ten thousand" },
+            "径": { pinyin: "jìng", translation: "path" },
+            "踪": { pinyin: "zōng", translation: "trace" },
+            "灭": { pinyin: "miè", translation: "extinct" },
+            "孤": { pinyin: "gū", translation: "lonely" },
+            "舟": { pinyin: "zhōu", translation: "boat" },
+            "蓑": { pinyin: "suō", translation: "straw raincoat" },
+            "笠": { pinyin: "lì", translation: "bamboo hat" },
+            "翁": { pinyin: "wēng", translation: "old man" },
+            "独": { pinyin: "dú", translation: "alone" },
+            "钓": { pinyin: "diào", translation: "fish" },
+            "寒": { pinyin: "hán", translation: "cold" },
+            "江": { pinyin: "jiāng", translation: "river" },
+            "雪": { pinyin: "xuě", translation: "snow" },
+           "从": { pinyin: "cóng", translation: "from" },
+"前": { pinyin: "qián", translation: "before" },
+"有": { pinyin: "yǒu", translation: "have" },
+"只": { pinyin: "zhī", translation: "measure word" },
+"兔": { pinyin: "tù", translation: "rabbit" },
+"子": { pinyin: "zǐ", translation: "child" },
+"和": { pinyin: "hé", translation: "and" },
+"乌": { pinyin: "wū", translation: "crow" },
+"龟": { pinyin: "guī", translation: "turtle" },
+"跑": { pinyin: "pǎo", translation: "run" },
+"得": { pinyin: "de", translation: "particle" },
+"很": { pinyin: "hěn", translation: "very" },
+"快": { pinyin: "kuài", translation: "fast" },
+"爬": { pinyin: "pá", translation: "crawl" },
+"慢": { pinyin: "màn", translation: "slow" },
+"天": { pinyin: "tiān", translation: "day" },
+"它": { pinyin: "tā", translation: "it" },
+"们": { pinyin: "men", translation: "plural" },
+"决": { pinyin: "jué", translation: "decide" },
+"定": { pinyin: "dìng", translation: "fix" },
+"比": { pinyin: "bǐ", translation: "compare" },
+"赛": { pinyin: "sài", translation: "contest" },
+"但": { pinyin: "dàn", translation: "but" },
+"骄": { pinyin: "jiāo", translation: "proud" },
+"傲": { pinyin: "ào", translation: "arrogant" },
+"在": { pinyin: "zài", translation: "at" },
+"半": { pinyin: "bàn", translation: "half" },
+"路": { pinyin: "lù", translation: "road" },
+"睡": { pinyin: "shuì", translation: "sleep" },
+"觉": { pinyin: "jiào", translation: "sleep" },
+"虽": { pinyin: "suī", translation: "although" },
+"然": { pinyin: "rán", translation: "however" },
+"坚": { pinyin: "jiān", translation: "firm" },
+"持": { pinyin: "chí", translation: "persist" },
+"最": { pinyin: "zuì", translation: "most" },
+"后": { pinyin: "hòu", translation: "after" },
+"赢": { pinyin: "yíng", translation: "win" },
+"了": { pinyin: "le", translation: "particle" },
+"放": { pinyin: "fàng", translation: "herd" },
+"羊": { pinyin: "yáng", translation: "sheep" },
+"孩": { pinyin: "hái", translation: "child" },
+"觉": { pinyin: "jué", translation: "feel" },
+"无": { pinyin: "wú", translation: "without" },
+"聊": { pinyin: "liáo", translation: "bored" },
+"就": { pinyin: "jiù", translation: "then" },
+"大": { pinyin: "dà", translation: "big" },
+"声": { pinyin: "shēng", translation: "voice" },
+"喊": { pinyin: "hǎn", translation: "shout" },
+"狼": { pinyin: "láng", translation: "wolf" },
+"来": { pinyin: "lái", translation: "come" },
+"村": { pinyin: "cūn", translation: "village" },
+"民": { pinyin: "mín", translation: "people" },
+"听": { pinyin: "tīng", translation: "hear" },
+"到": { pinyin: "dào", translation: "arrive" },
+"赶": { pinyin: "gǎn", translation: "hurry" },
+"紧": { pinyin: "jǐn", translation: "quickly" },
+"帮": { pinyin: "bāng", translation: "help" },
+"忙": { pinyin: "máng", translation: "busy" },
+"发": { pinyin: "fā", translation: "discover" },
+"现": { pinyin: "xiàn", translation: "find" },
+"没": { pinyin: "méi", translation: "not" },
+"哈": { pinyin: "hā", translation: "ha" },
+"第": { pinyin: "dì", translation: "ordinal" },
+"二": { pinyin: "èr", translation: "two" },
+"还": { pinyin: "hái", translation: "still" },
+"真": { pinyin: "zhēn", translation: "real" },
+"呼": { pinyin: "hū", translation: "call" },
+"救": { pinyin: "jiù", translation: "save" },
+"没": { pinyin: "méi", translation: "no" },
+"人": { pinyin: "rén", translation: "person" },
+"相": { pinyin: "xiāng", translation: "believe" },
+"信": { pinyin: "xìn", translation: "trust" },
+"吃": { pinyin: "chī", translation: "eat" },
+"掉": { pinyin: "diào", translation: "finish" },
+"所": { pinyin: "suǒ", translation: "all" },
+"有": { pinyin: "yǒu", translation: "have" },
+"口": { pinyin: "kǒu", translation: "thirsty" },
+"渴": { pinyin: "kě", translation: "thirst" },
+"看": { pinyin: "kàn", translation: "see" },
+"瓶": { pinyin: "píng", translation: "bottle" },
+"水": { pinyin: "shuǐ", translation: "water" },
+"但": { pinyin: "dàn", translation: "but" },
+"小": { pinyin: "xiǎo", translation: "small" },
+"喝": { pinyin: "hē", translation: "drink" },
+"到": { pinyin: "dào", translation: "reach" },
+"想": { pinyin: "xiǎng", translation: "think" },
+"办": { pinyin: "bàn", translation: "method" },
+"法": { pinyin: "fǎ", translation: "way" },
+"把": { pinyin: "bǎ", translation: "take" },
+"石": { pinyin: "shí", translation: "stone" },
+"扔": { pinyin: "rēng", translation: "throw" },
+"进": { pinyin: "jìn", translation: "into" },
+"位": { pinyin: "wèi", translation: "level" },
+"上": { pinyin: "shàng", translation: "up" },
+"升": { pinyin: "shēng", translation: "rise" },
+"终": { pinyin: "zhōng", translation: "finally" },
+"于": { pinyin: "yú", translation: "at last" },
+"三": { pinyin: "sān", translation: "three" },
+"猪": { pinyin: "zhū", translation: "pig" },
+"要": { pinyin: "yào", translation: "want" },
+"盖": { pinyin: "gài", translation: "build" },
+"房": { pinyin: "fáng", translation: "house" },
+"老": { pinyin: "lǎo", translation: "old" },
+"大": { pinyin: "dà", translation: "big" },
+"用": { pinyin: "yòng", translation: "use" },
+"稻": { pinyin: "dào", translation: "rice" },
+"草": { pinyin: "cǎo", translation: "straw" },
+"老": { pinyin: "lǎo", translation: "second" },
+"木": { pinyin: "mù", translation: "wood" },
+"头": { pinyin: "tóu", translation: "material" },
+"老": { pinyin: "lǎo", translation: "third" },
+"砖": { pinyin: "zhuān", translation: "brick" },
+"灰": { pinyin: "huī", translation: "grey" },
+"吹": { pinyin: "chuī", translation: "blow" },
+"倒": { pinyin: "dǎo", translation: "down" },
+"坚": { pinyin: "jiān", translation: "strong" },
+"固": { pinyin: "gù", translation: "solid" },
+"进": { pinyin: "jìn", translation: "enter" },
+"去": { pinyin: "qù", translation: "go" },
+"安": { pinyin: "ān", translation: "safe" },
+"全": { pinyin: "quán", translation: "secure" },
+"地": { pinyin: "de", translation: "adverb" },
+"住": { pinyin: "zhù", translation: "live" },
+"红": { pinyin: "hóng", translation: "red" },
+"帽": { pinyin: "mào", translation: "hat" },
+"去": { pinyin: "qù", translation: "go" },
+"看": { pinyin: "kàn", translation: "visit" },
+"望": { pinyin: "wàng", translation: "see" },
+"奶": { pinyin: "nǎi", translation: "grandma" },
+"遇": { pinyin: "yù", translation: "meet" },
+"先": { pinyin: "xiān", translation: "first" },
+"假": { pinyin: "jiǎ", translation: "pretend" },
+"装": { pinyin: "zhuāng", translation: "disguise" },
+"成": { pinyin: "chéng", translation: "become" },
+"猎": { pinyin: "liè", translation: "hunter" },
+"出": { pinyin: "chū", translation: "rescue" },
+"贾": { pinyin: "jiǎ", translation: "Jia" },
+"母": { pinyin: "mǔ", translation: "mother" },
+"因": { pinyin: "yīn", translation: "because" },
+"问": { pinyin: "wèn", translation: "ask" },
+"林": { pinyin: "lín", translation: "Lin" },
+"黛": { pinyin: "dài", translation: "Dai" },
+"玉": { pinyin: "yù", translation: "Yu" },
+"念": { pinyin: "niàn", translation: "read" },
+"何": { pinyin: "hé", translation: "what" },
+"书": { pinyin: "shū", translation: "book" },
+"道": { pinyin: "dào", translation: "say" },
+"只": { pinyin: "zhǐ", translation: "only" },
+"刚": { pinyin: "gāng", translation: "just" },
+"四": { pinyin: "sì", translation: "four" },
+"姊": { pinyin: "zǐ", translation: "sister" },
+"妹": { pinyin: "mèi", translation: "sister" },
+"读": { pinyin: "dú", translation: "read" },
+"认": { pinyin: "rèn", translation: "recognize" },
+"两": { pinyin: "liǎng", translation: "two" },
+"个": { pinyin: "gè", translation: "measure word" },
+"字": { pinyin: "zì", translation: "character" },
+"睁": { pinyin: "zhēng", translation: "open" },
+"眼": { pinyin: "yǎn", translation: "eye" },
+"瞎": { pinyin: "xiā", translation: "blind" },
+"罢": { pinyin: "bà", translation: "stop" },
+"孙": { pinyin: "sūn", translation: "Sun" },
+"悟": { pinyin: "wù", translation: "Wu" },
+"空": { pinyin: "kōng", translation: "Kong" },
+"石": { pinyin: "shí", translation: "stone" },
+"头": { pinyin: "tóu", translation: "head" },
+"蹦": { pinyin: "bèng", translation: "jump" },
+"出": { pinyin: "chū", translation: "out" },
+"拜": { pinyin: "bài", translation: "worship" },
+"师": { pinyin: "shī", translation: "master" },
+"学": { pinyin: "xué", translation: "learn" },
+"艺": { pinyin: "yì", translation: "art" },
+"会": { pinyin: "huì", translation: "can" },
+"七": { pinyin: "qī", translation: "seven" },
+"十": { pinyin: "shí", translation: "ten" },
+"变": { pinyin: "biàn", translation: "change" },
+"闹": { pinyin: "nào", translation: "make trouble" },
+"天": { pinyin: "tiān", translation: "heaven" },
+"宫": { pinyin: "gōng", translation: "palace" },
+"如": { pinyin: "rú", translation: "Buddha" },
+"佛": { pinyin: "fó", translation: "Buddha" },
+"祖": { pinyin: "zǔ", translation: "ancestor" },
+"压": { pinyin: "yā", translation: "press" },
+"五": { pinyin: "wǔ", translation: "five" },
+"行": { pinyin: "xíng", translation: "element" },
+"山": { pinyin: "shān", translation: "mountain" },
+"唐": { pinyin: "táng", translation: "Tang" },
+"僧": { pinyin: "sēng", translation: "monk" },
+"救": { pinyin: "jiù", translation: "save" },
+"他": { pinyin: "tā", translation: "him" },
+"一": { pinyin: "yī", translation: "together" },
+"起": { pinyin: "qǐ", translation: "together" },
+"西": { pinyin: "xī", translation: "west" },
+"取": { pinyin: "qǔ", translation: "fetch" },
+"经": { pinyin: "jīng", translation: "scripture" },
+"武": { pinyin: "wǔ", translation: "Wu" },
+"松": { pinyin: "sōng", translation: "Song" },
+"景": { pinyin: "jǐng", translation: "Jing" },
+"阳": { pinyin: "yáng", translation: "Yang" },
+"冈": { pinyin: "gāng", translation: "ridge" },
+"看": { pinyin: "kàn", translation: "see" },
+"老": { pinyin: "lǎo", translation: "tiger" },
+"虎": { pinyin: "hǔ", translation: "tiger" },
+"喝": { pinyin: "hē", translation: "drink" },
+"酒": { pinyin: "jiǔ", translation: "alcohol" },
+"壮": { pinyin: "zhuàng", translation: "strengthen" },
+"胆": { pinyin: "dǎn", translation: "courage" },
+"果": { pinyin: "guǒ", translation: "indeed" },
+"搏": { pinyin: "bó", translation: "fight" },
+"斗": { pinyin: "dòu", translation: "struggle" },
+"死": { pinyin: "sǐ", translation: "die" },
+"刘": { pinyin: "liú", translation: "Liu" },
+"备": { pinyin: "bèi", translation: "Bei" },
+"顾": { pinyin: "gù", translation: "visit" },
+"茅": { pinyin: "máo", translation: "thatched" },
+"庐": { pinyin: "lú", translation: "cottage" },
+"诸": { pinyin: "zhū", translation: "Zhu" },
+"葛": { pinyin: "gě", translation: "Ge" },
+"亮": { pinyin: "liàng", translation: "Liang" },
+"第": { pinyin: "dì", translation: "time" },
+"次": { pinyin: "cì", translation: "time" },
+"见": { pinyin: "jiàn", translation: "see" },
+"终": { pinyin: "zhōng", translation: "finally" },
+"于": { pinyin: "yú", translation: "at last" },
+"分": { pinyin: "fēn", translation: "analyze" },
+"析": { pinyin: "xī", translation: "analyze" },
+"天": { pinyin: "tiān", translation: "world" },
+"下": { pinyin: "xià", translation: "under" },
+"形": { pinyin: "xíng", translation: "situation" },
+"势": { pinyin: "shì", translation: "situation" },
+"著": { pinyin: "zhù", translation: "famous" },
+"名": { pinyin: "míng", translation: "famous" },
+"隆": { pinyin: "lóng", translation: "Long" },
+"对": { pinyin: "duì", translation: "reply" },
+"范": { pinyin: "fàn", translation: "Fan" },
+"进": { pinyin: "jìn", translation: "Jin" },
+"中": { pinyin: "zhòng", translation: "pass" },
+"举": { pinyin: "jǔ", translation: "examination" },
+"高": { pinyin: "gāo", translation: "high" },
+"兴": { pinyin: "xìng", translation: "excited" },
+"疯": { pinyin: "fēng", translation: "crazy" },
+"岳": { pinyin: "yuè", translation: "father-in-law" },
+"父": { pinyin: "fù", translation: "father" },
+"胡": { pinyin: "hú", translation: "Hu" },
+"屠": { pinyin: "tú", translation: "butcher" },
+"户": { pinyin: "hù", translation: "household" },
+"打": { pinyin: "dǎ", translation: "hit" },
+"巴": { pinyin: "bā", translation: "slap" },
+"掌": { pinyin: "zhǎng", translation: "palm" },
+"清": { pinyin: "qīng", translation: "clear" },
+"醒": { pinyin: "xǐng", translation: "awake" },
+"此": { pinyin: "cǐ", translation: "from then" },
+"生": { pinyin: "shēng", translation: "life" },
+"活": { pinyin: "huó", translation: "life" },
+"发": { pinyin: "fā", translation: "occur" },
+"巨": { pinyin: "jù", translation: "huge" },
+"变": { pinyin: "biàn", translation: "change" },
+"化": { pinyin: "huà", translation: "change" }
+        };
+
+        // 多语言菜单文本
+        const menuTexts = {
+            zh: {
+                genre: "选择文体",
+                works: "选择作品",
+                language: "中文",
+                studyMode: "学习模式",
+                practiceMode: "练习模式",
+                prevSentence: "上一句",
+                nextSentence: "下一句",
+                start: "开始学习",
+                readCurrent: "朗读当前句",
+                readAll: "朗读整篇",
+                characterArea: "字卡区",
+                textArea: "文本区"
+            }
+        };
+
+        // 应用状态
+        let currentMode = 'study';
+        let currentGenre = '';
+        let currentText = '';
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let currentPage = 1;
+        let charactersPerPage = 30;
+        let totalPages = 1;
+        let allCharacters = [];
+        let currentLanguage = 'zh';
+        let isPlaying = false;
+        let speechSynthesis = window.speechSynthesis;
+        let practiceInterval = null;
+        let currentPracticeCharIndex = 0;
+        let isWaitingForUserSelection = false;
+        let audioContext = null;
+
+        // DOM元素
+        const studyModeBtn = document.getElementById('study-mode');
+        const practiceModeBtn = document.getElementById('practice-mode');
+        const characterCards = document.getElementById('character-cards');
+        const textContainer = document.getElementById('text-container');
+        const prevSentenceBtn = document.getElementById('prev-sentence');
+        const nextSentenceBtn = document.getElementById('next-sentence');
+        const worksMenu = document.getElementById('works-menu');
+        const worksTabs = document.getElementById('works-tabs');
+        const pagination = document.getElementById('pagination');
+        const feedback = document.getElementById('feedback');
+        const characterInfo = document.getElementById('character-info');
+        const infoChar = document.getElementById('info-char');
+        const infoPinyin = document.getElementById('info-pinyin');
+        const infoTranslation = document.getElementById('info-translation');
+        const startBtn = document.getElementById('start-btn');
+        const readCurrentBtn = document.getElementById('read-current-btn');
+        const readAllBtn = document.getElementById('read-all-btn');
+        const genreButtons = document.getElementById('genre-buttons');
+        const currentSentenceText = document.getElementById('current-sentence-text');
+
+        // 初始化事件监听
+        function initEventListeners() {
+            // 模式切换
+            studyModeBtn.addEventListener('click', () => switchMode('study'));
+            practiceModeBtn.addEventListener('click', () => switchMode('practice'));
+            
+            // 句子导航
+            prevSentenceBtn.addEventListener('click', goToPrevSentence);
+            nextSentenceBtn.addEventListener('click', goToNextSentence);
+            
+            // 开始按钮
+            startBtn.addEventListener('click', startLearning);
+            
+            // 朗读按钮
+            readCurrentBtn.addEventListener('click', readCurrentSentence);
+            readAllBtn.addEventListener('click', readAllSentences);
+        }
+
+        // 初始化文体按钮
+        function initGenreButtons() {
+            genreButtons.innerHTML = '';
+            
+            Object.keys(sampleTexts).forEach(genre => {
+                const button = document.createElement('button');
+                button.className = 'genre-btn';
+                button.textContent = sampleTexts[genre].title;
+                button.setAttribute('data-genre', genre);
+                button.addEventListener('click', () => selectGenre(genre));
+                genreButtons.appendChild(button);
+            });
+        }
+
+        // 切换语言
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            updateMenuTexts();
+        }
+
+        // 更新菜单文本
+        function updateMenuTexts() {
+            const texts = menuTexts[currentLanguage];
+            
+            // 更新按钮文本
+            studyModeBtn.textContent = texts.studyMode;
+            practiceModeBtn.textContent = texts.practiceMode;
+            prevSentenceBtn.innerHTML = `<span>${texts.prevSentence}</span>`;
+            nextSentenceBtn.innerHTML = `<span>${texts.nextSentence}</span>`;
+            startBtn.innerHTML = `<span>${texts.start}</span>`;
+            readAllBtn.innerHTML = `<span>${texts.readAll}</span>`;
+            
+            // 更新面板标题
+            document.querySelectorAll('.panel-title')[0].textContent = texts.characterArea;
+            document.querySelectorAll('.panel-title')[1].textContent = texts.textArea;
+        }
+
+        // 切换模式
+        function switchMode(mode) {
+            // 清空界面
+            clearInterface();
+            
+            currentMode = mode;
+            
+            if (mode === 'study') {
+                studyModeBtn.classList.add('active');
+                practiceModeBtn.classList.remove('active');
+                // 停止练习模式的朗读
+                if (practiceInterval) {
+                    clearInterval(practiceInterval);
+                    practiceInterval = null;
+                }
+            } else {
+                studyModeBtn.classList.remove('active');
+                practiceModeBtn.classList.add('active');
+            }
+            
+            // 重新渲染当前句子
+            if (sentences.length > 0) {
+                renderCurrentSentence();
+            }
+        }
+
+        // 清空界面
+        function clearInterface() {
+            characterCards.innerHTML = '';
+            textContainer.innerHTML = '';
+            pagination.innerHTML = '';
+            currentSentenceText.textContent = '';
+            feedback.textContent = '';
+            currentSentenceIndex = 0;
+            isPlaying = false;
+            currentPracticeCharIndex = 0;
+            isWaitingForUserSelection = false;
+        }
+
+        // 选择文体
+        function selectGenre(genre) {
+            currentGenre = genre;
+            
+            // 更新文体按钮状态
+            document.querySelectorAll('.genre-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.genre-btn[data-genre="${genre}"]`).classList.add('active');
+            
+            // 显示作品菜单
+            worksMenu.style.display = 'block';
+            
+            // 清空作品标签
+            worksTabs.innerHTML = '';
+            
+            // 添加作品标签
+            const works = Object.keys(sampleTexts[genre].works);
+            works.forEach(work => {
+                const tab = document.createElement('div');
+                tab.className = 'work-tab';
+                tab.textContent = work;
+                tab.setAttribute('data-work', work);
+                tab.addEventListener('click', (e) => {
+                    // 移除其他标签的active类
+                    document.querySelectorAll('.work-tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    // 添加当前标签的active类
+                    tab.classList.add('active');
+                    selectWork(genre, work);
+                });
+                worksTabs.appendChild(tab);
+            });
+        }
+
+        // 选择作品
+        function selectWork(genre, work) {
+            currentText = sampleTexts[genre].works[work];
+            
+            // 分割文本为句子
+            sentences = splitIntoSentences(currentText);
+            currentSentenceIndex = 0;
+            
+            // 渲染界面
+            renderCurrentSentenceCharacters();
+            renderText();
+            renderCurrentSentence();
+            renderPagination();
+            
+            feedback.textContent = `已加载: ${work}`;
+        }
+
+        // 渲染当前句子的字卡
+        function renderCurrentSentenceCharacters() {
+            if (sentences.length === 0 || currentSentenceIndex >= sentences.length) return;
+            
+            // 获取当前句子的所有汉字（包括重复的）
+            const currentSentenceChars = getCurrentSentenceCharsWithDuplicates();
+            
+            // 随机打乱
+            shuffleArray(currentSentenceChars);
+            
+            allCharacters = currentSentenceChars;
+            
+            // 计算分页
+            totalPages = Math.ceil(allCharacters.length / charactersPerPage);
+            currentPage = 1;
+            
+            // 渲染字卡
+            renderCharacterCards();
+        }
+
+        // 获取当前句子的所有汉字（包括重复的）
+        function getCurrentSentenceCharsWithDuplicates() {
+            const sentenceText = sentences[currentSentenceIndex];
+            return sentenceText.split('').filter(c => 
+                c.trim() && !['，', '。', '！', '？', '：', '；', '、', '《', '》', '“', '”', '‘', '’', '（', '）', '【', '】', '—', '…', '·'].includes(c)
+            );
+        }
+
+        // 将文本分割为句子（以逗号、句号、问号、叹号为单位）
+        function splitIntoSentences(text) {
+            // 使用正则表达式分割文本，保留分割符号
+            const segments = text.split(/([，。！？])/);
+            const result = [];
+            let currentSentence = '';
+            
+            for (let i = 0; i < segments.length; i++) {
+                const segment = segments[i];
+                if (segment === '，' || segment === '。' || segment === '！' || segment === '？') {
+                    // 遇到标点符号，将当前句子加入结果
+                    if (currentSentence.trim()) {
+                        result.push(currentSentence.trim());
+                    }
+                    currentSentence = '';
+                } else {
+                    currentSentence += segment;
+                }
+            }
+            
+            // 添加最后一个句子（如果没有以标点符号结尾）
+            if (currentSentence.trim()) {
+                result.push(currentSentence.trim());
+            }
+            
+            return result;
+        }
+
+        // 随机打乱数组
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 渲染字卡
+        function renderCharacterCards() {
+            characterCards.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * charactersPerPage;
+            const endIndex = Math.min(startIndex + charactersPerPage, allCharacters.length);
+            const pageCharacters = allCharacters.slice(startIndex, endIndex);
+            
+            pageCharacters.forEach((char, index) => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.textContent = char;
+                card.setAttribute('data-char', char);
+                card.setAttribute('data-index', startIndex + index);
+                
+                // 为所有模式添加点击事件
+                card.addEventListener('click', () => handleCharacterClick(char, card));
+                
+                characterCards.appendChild(card);
+            });
+        }
+
+        // 处理字卡点击事件
+        function handleCharacterClick(char, card) {
+            if (currentMode === 'study') {
+                // 学习模式下显示字符信息
+                showCharacterInfo(char, card);
+                
+                // 播放清脆音效
+                playCardSound();
+                
+                // 添加瞬间移动动画
+                card.classList.add('instant-move');
+                
+                // 找到对应的句子位置并填充
+                setTimeout(() => {
+                    fillCharacterInSentence(char);
+                    card.classList.add('used');
+                }, 500);
+            } else {
+                // 练习模式下进行选择
+                handleCharacterSelection(char, card);
+            }
+        }
+
+        // 播放清脆音效
+        function playCardSound() {
+            try {
+                // 创建音频上下文
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                // 创建清脆的"发牌"音效
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5音
+                oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.2); // 降到A4音
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                console.log("无法播放音效:", e);
+            }
+        }
+
+        // 在句子中填充字符
+        function fillCharacterInSentence(char) {
+            const currentSentence = document.getElementById(`sentence-${currentSentenceIndex}`);
+            if (!currentSentence) return;
+            
+            // 找到第一个空位置
+            const emptySlots = Array.from(currentSentence.children).filter(
+                child => child.textContent === '' && child.classList.contains('sentence-placeholder')
+            );
+            
+            if (emptySlots.length > 0) {
+                const slot = emptySlots[0];
+                
+                // 填充字符
+                slot.textContent = char;
+                slot.className = 'sentence-character';
+                slot.classList.add('highlight');
+                
+                // 添加拼音和英文信息
+                const charInfo = document.createElement('div');
+                charInfo.className = 'sentence-character-info';
+                
+                const pinyin = document.createElement('div');
+                pinyin.className = 'pinyin';
+                pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
+                
+                const translation = document.createElement('div');
+                translation.className = 'translation';
+                translation.textContent = characterData[char] ? characterData[char].translation : '--';
+                
+                charInfo.appendChild(pinyin);
+                charInfo.appendChild(translation);
+                slot.appendChild(charInfo);
+                
+                // 添加鼠标事件显示拼音英文
+                slot.addEventListener('mouseenter', () => {
+                    charInfo.style.display = 'block';
+                });
+                
+                slot.addEventListener('mouseleave', () => {
+                    charInfo.style.display = 'none';
+                });
+                
+                // 检查句子是否完成
+                if (isSentenceComplete(currentSentence)) {
+                    feedback.textContent = '句子完成！';
+                }
+            }
+        }
+
+        // 渲染文本区域
+        function renderText() {
+            textContainer.innerHTML = '';
+            
+            sentences.forEach((sentence, index) => {
+                const sentenceContainer = document.createElement('div');
+                sentenceContainer.className = 'sentence-container';
+                
+                const sentenceDiv = document.createElement('div');
+                sentenceDiv.className = 'sentence';
+                sentenceDiv.id = `sentence-${index}`;
+                
+                // 为每个字符创建占位符（只显示汉字，不显示标点符号）
+                for (let char of sentence) {
+                    // 只显示汉字，过滤掉标点符号
+                    if (char.trim() && 
+                        !['，', '。', '！', '？', '：', '；', '、', '《', '》', '“', '”', '‘', '’', '（', '）', '【', '】', '—', '…', '·'].includes(char)) {
+                        const charDiv = document.createElement('div');
+                        charDiv.className = 'sentence-placeholder';
+                        charDiv.textContent = ''; // 初始为空占位符
+                        charDiv.setAttribute('data-expected-char', char);
+                        
+                        sentenceDiv.appendChild(charDiv);
+                    }
+                }
+                
+                const controls = document.createElement('div');
+                controls.className = 'sentence-controls';
+                
+                const readBtn = document.createElement('button');
+                readBtn.className = 'icon-btn';
+                readBtn.innerHTML = '🔊';
+                readBtn.title = '朗读此句';
+                readBtn.addEventListener('click', () => readSentence(sentence));
+                
+                controls.appendChild(readBtn);
+                
+                sentenceContainer.appendChild(sentenceDiv);
+                sentenceContainer.appendChild(controls);
+                
+                textContainer.appendChild(sentenceContainer);
+            });
+        }
+
+        // 渲染当前句子
+        function renderCurrentSentence() {
+            // 更新当前句子显示
+            if (sentences.length > 0 && currentSentenceIndex < sentences.length) {
+                currentSentenceText.textContent = sentences[currentSentenceIndex];
+            }
+            
+            // 重置当前句子的字符显示
+            const currentSentence = document.getElementById(`sentence-${currentSentenceIndex}`);
+            if (currentSentence) {
+                currentSentence.querySelectorAll('.sentence-placeholder').forEach(charDiv => {
+                    charDiv.textContent = '';
+                    charDiv.className = 'sentence-placeholder';
+                });
+            }
+            
+            // 重置所有字卡
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('used', 'instant-move');
+                card.style.visibility = 'visible';
+            });
+            
+            // 重置练习状态
+            currentPracticeCharIndex = 0;
+            isWaitingForUserSelection = false;
+            
+            // 重新渲染当前句子的字卡
+            renderCurrentSentenceCharacters();
+            
+            // 在学习模式下，自动填充字符
+            if (currentMode === 'study' && isPlaying) {
+                let index = 0;
+                // 过滤掉标点符号，只保留汉字
+                const chars = getCurrentSentenceChars();
+                
+                const fillNextChar = () => {
+                    if (index < chars.length) {
+                        const char = chars[index];
+                        const charDiv = currentSentence.children[index];
+                        
+                        // 找到对应的字卡
+                        const card = document.querySelector(`.character-card[data-char="${char}"]:not(.used)`);
+                        if (card) {
+                            // 高亮字卡并朗读
+                            card.classList.add('highlight');
+                            readCharacter(char);
+                            
+                            setTimeout(() => {
+                                // 播放清脆音效
+                                playCardSound();
+                                
+                                // 添加瞬间移动动画
+                                card.classList.add('instant-move');
+                                
+                                setTimeout(() => {
+                                    // 移除高亮并填充到句子中
+                                    card.classList.remove('highlight');
+                                    // 标记字卡为已使用（隐藏）
+                                    card.classList.add('used');
+                                    charDiv.textContent = char;
+                                    charDiv.className = 'sentence-character';
+                                    charDiv.classList.add('highlight');
+                                    
+                                    // 添加拼音和英文信息
+                                    const charInfo = document.createElement('div');
+                                    charInfo.className = 'sentence-character-info';
+                                    
+                                    const pinyin = document.createElement('div');
+                                    pinyin.className = 'pinyin';
+                                    pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
+                                    
+                                    const translation = document.createElement('div');
+                                    translation.className = 'translation';
+                                    translation.textContent = characterData[char] ? characterData[char].translation : '--';
+                                    
+                                    charInfo.appendChild(pinyin);
+                                    charInfo.appendChild(translation);
+                                    charDiv.appendChild(charInfo);
+                                    
+                                    // 添加点击事件显示拼音英文
+                                    charDiv.addEventListener('mouseenter', () => {
+                                        charInfo.style.display = 'block';
+                                    });
+                                    
+                                    charDiv.addEventListener('mouseleave', () => {
+                                        charInfo.style.display = 'none';
+                                    });
+                                    
+                                    index++;
+                                    setTimeout(fillNextChar, 500); // 减慢速度
+                                }, 500);
+                            }, 500);
+                        }
+                    } else {
+                        // 所有字符填充完成
+                        feedback.textContent = '句子学习完成！';
+                        isPlaying = false;
+                    }
+                };
+                
+                fillNextChar();
+            } else if (currentMode === 'practice' && isPlaying) {
+                // 练习模式下开始逐字朗读
+                startPracticeReading();
+            }
+        }
+
+        // 获取当前句子的汉字（过滤标点符号）
+        function getCurrentSentenceChars() {
+            const sentenceText = sentences[currentSentenceIndex];
+            return sentenceText.split('').filter(c => 
+                c.trim() && !['，', '。', '！', '？', '：', '；', '、', '《', '》', '“', '”', '‘', '’', '（', '）', '【', '】', '—', '…', '·'].includes(c)
+            );
+        }
+
+        // 练习模式下的逐字朗读
+        function startPracticeReading() {
+            // 清除之前的朗读间隔
+            if (practiceInterval) {
+                clearInterval(practiceInterval);
+                practiceInterval = null;
+            }
+            
+            const chars = getCurrentSentenceChars();
+            currentPracticeCharIndex = 0;
+            isWaitingForUserSelection = false;
+            
+            // 开始朗读第一个字
+            if (chars.length > 0) {
+                readPracticeCharacter(chars[currentPracticeCharIndex]);
+            }
+        }
+
+        // 朗读练习模式下的字符
+        function readPracticeCharacter(char) {
+            if (speechSynthesis && speechSynthesis.speak) {
+                // 停止当前语音
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(char);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.7;
+                utterance.volume = 1;
+                utterance.onend = () => {
+                    // 朗读完成后等待用户选择
+                    isWaitingForUserSelection = true;
+                    feedback.textContent = `请选择: ${char}`;
+                };
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            pagination.innerHTML = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('div');
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderCharacterCards();
+                    renderPagination();
+                });
+                pagination.appendChild(pageBtn);
+            }
+        }
+
+        // 显示字符信息
+        function showCharacterInfo(char, element) {
+            const rect = element.getBoundingClientRect();
+            characterInfo.style.left = `${rect.left + window.scrollX}px`;
+            characterInfo.style.top = `${rect.bottom + window.scrollY + 10}px`;
+            
+            infoChar.textContent = char;
+            
+            if (characterData[char]) {
+                infoPinyin.textContent = characterData[char].pinyin;
+                infoTranslation.textContent = characterData[char].translation;
+            } else {
+                infoPinyin.textContent = '--';
+                infoTranslation.textContent = '--';
+            }
+            
+            characterInfo.style.display = 'block';
+            
+            // 点击其他地方隐藏信息
+            setTimeout(() => {
+                document.addEventListener('click', hideCharacterInfo);
+            }, 100);
+        }
+
+        // 隐藏字符信息
+        function hideCharacterInfo() {
+            characterInfo.style.display = 'none';
+            document.removeEventListener('click', hideCharacterInfo);
+        }
+
+        // 处理字符选择（练习模式）
+        function handleCharacterSelection(char, card) {
+            if (currentMode !== 'practice' || !isWaitingForUserSelection) {
+                return;
+            }
+            
+            const currentSentence = document.getElementById(`sentence-${currentSentenceIndex}`);
+            const chars = getCurrentSentenceChars();
+            const expectedChar = chars[currentPracticeCharIndex];
+            
+            if (char === expectedChar) {
+                // 选择正确
+                feedback.textContent = '正确！';
+                
+                // 播放清脆音效
+                playCardSound();
+                
+                // 添加瞬间移动动画
+                card.classList.add('instant-move');
+                
+                setTimeout(() => {
+                    card.classList.add('used');
+                    
+                    const charDiv = currentSentence.children[currentPracticeCharIndex];
+                    
+                    // 填充到句子中
+                    charDiv.textContent = char;
+                    charDiv.className = 'sentence-character';
+                    charDiv.classList.add('highlight');
+                    
+                    // 添加拼音和英文信息
+                    const charInfo = document.createElement('div');
+                    charInfo.className = 'sentence-character-info';
+                    
+                    const pinyin = document.createElement('div');
+                    pinyin.className = 'pinyin';
+                    pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
+                    
+                    const translation = document.createElement('div');
+                    translation.className = 'translation';
+                    translation.textContent = characterData[char] ? characterData[char].translation : '--';
+                    
+                    charInfo.appendChild(pinyin);
+                    charInfo.appendChild(translation);
+                    charDiv.appendChild(charInfo);
+                    
+                    // 添加点击事件显示拼音英文
+                    charDiv.addEventListener('mouseenter', () => {
+                        charInfo.style.display = 'block';
+                    });
+                    
+                    charDiv.addEventListener('mouseleave', () => {
+                        charInfo.style.display = 'none';
+                    });
+                    
+                    // 移动到下一个字符
+                    currentPracticeCharIndex++;
+                    isWaitingForUserSelection = false;
+                    
+                    // 检查是否完成句子
+                    if (currentPracticeCharIndex >= chars.length) {
+                        // 句子完成，给予表扬
+                        setTimeout(() => {
+                            readSentence("太棒了！句子完成！");
+                            feedback.textContent = '句子完成！太棒了！';
+                        }, 1000);
+                    } else {
+                        // 继续朗读下一个字符
+                        setTimeout(() => {
+                            readPracticeCharacter(chars[currentPracticeCharIndex]);
+                        }, 1000);
+                    }
+                }, 500);
+            } else {
+                // 选择错误
+                feedback.textContent = '选择错误，请再试一次';
+                card.classList.add('highlight');
+                readSentence("错误");
+                
+                setTimeout(() => {
+                    card.classList.remove('highlight');
+                    feedback.textContent = `请选择: ${chars[currentPracticeCharIndex]}`;
+                }, 1000);
+            }
+        }
+
+        // 检查句子是否完成
+        function isSentenceComplete(sentenceElement) {
+            for (let i = 0; i < sentenceElement.children.length; i++) {
+                if (!sentenceElement.children[i].textContent) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // 朗读字符
+        function readCharacter(char) {
+            if (speechSynthesis && speechSynthesis.speak) {
+                // 停止当前语音
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(char);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.7;
+                utterance.volume = 1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 朗读句子
+        function readSentence(sentence) {
+            if (speechSynthesis && speechSynthesis.speak) {
+                // 停止当前语音
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(sentence);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                utterance.volume = 1;
+                speechSynthesis.speak(utterance);
+                
+                feedback.textContent = `正在朗读: ${sentence}`;
+                
+                setTimeout(() => {
+                    feedback.textContent = '';
+                }, 2000);
+            } else {
+                feedback.textContent = '您的浏览器不支持语音合成功能';
+            }
+        }
+
+        // 朗读当前句子
+        function readCurrentSentence() {
+            if (sentences.length > 0 && currentSentenceIndex < sentences.length) {
+                readSentence(sentences[currentSentenceIndex]);
+            }
+        }
+
+        // 朗读所有句子
+        function readAllSentences() {
+            if (sentences.length > 0) {
+                const fullText = sentences.join('，');
+                readSentence(fullText);
+            }
+        }
+
+        // 开始学习
+        function startLearning() {
+            if (sentences.length === 0) {
+                feedback.textContent = '请先选择作品';
+                return;
+            }
+            
+            isPlaying = true;
+            renderCurrentSentence();
+        }
+
+        // 转到上一句
+        function goToPrevSentence() {
+            if (currentSentenceIndex > 0) {
+                currentSentenceIndex--;
+                isPlaying = true;
+                renderCurrentSentence();
+            }
+        }
+
+        // 转到下一句
+        function goToNextSentence() {
+            if (currentSentenceIndex < sentences.length - 1) {
+                currentSentenceIndex++;
+                isPlaying = true;
+                renderCurrentSentence();
+            }
+        }
+
+        // 初始化应用
+        function initApp() {
+            initEventListeners();
+            initGenreButtons();
+            updateMenuTexts();
+            feedback.textContent = '请选择文体和作品开始学习';
+        }
+
+        // 启动应用
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字卡与文本辅助阅读游戏</title>
+    <style>
+        /* 样式保持不变，只修改菜单部分 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            padding: 15px 0;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .mode-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 5px;
+        }
+        
+        .mode-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 30px;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .mode-btn.active {
+            background: white;
+            color: #6a11cb;
+            font-weight: bold;
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .left-panel, .right-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            flex: 1;
+        }
+        
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #444;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+        }
+        
+        .character-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            min-height: 300px;
+            align-content: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .character-card {
+            width: 70px;
+            height: 70px;
+            background: #f0f4ff;
+            border: 2px solid #d0d8ff;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 36px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        
+        .character-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-color: #6a11cb;
+        }
+        
+        .character-card.highlight {
+            background: #ffeb3b;
+            border-color: #ffc107;
+            animation: flash 1s ease;
+        }
+        
+        @keyframes flash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .character-card.flying {
+            position: fixed;
+            z-index: 1000;
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .character-card.used {
+            visibility: hidden;
+        }
+        
+        .sentence-container {
+            margin-bottom: 20px;
+        }
+        
+        .sentence {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            min-height: 60px;
+            padding: 10px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #6a11cb;
+        }
+        
+        .sentence-character {
+            width: 50px;
+            height: 50px;
+            background: #e8f4ff;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            transition: all 0.5s ease;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .sentence-character.highlight {
+            background: #c8e6ff;
+            transform: scale(1.1);
+        }
+        
+        .sentence-character-info {
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 8px 12px;
+            z-index: 10;
+            min-width: 120px;
+            text-align: center;
+            display: none;
+        }
+        
+        .sentence-character-info .pinyin {
+            font-size: 14px;
+            color: #6a11cb;
+            margin-bottom: 2px;
+        }
+        
+        .sentence-character-info .translation {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .sentence-character:hover .sentence-character-info {
+            display: block;
+        }
+        
+        .sentence-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .control-btn {
+            padding: 6px 12px;
+            background: #6a11cb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: #5a0db3;
+        }
+        
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #6a11cb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+        }
+        
+        .icon-btn:hover {
+            background: #5a0db3;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .left-navigation {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .nav-btn {
+            padding: 10px 20px;
+            background: #6a11cb;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            background: #5a0db3;
+            transform: translateY(-2px);
+        }
+        
+        .start-btn {
+            background: #4CAF50;
+        }
+        
+        .start-btn:hover {
+            background: #45a049;
+        }
+        
+        .menu-bar {
+            display: flex;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .genre-selector {
+            margin-right: 30px;
+        }
+        
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .dropbtn {
+            background: #f0f4ff;
+            color: #333;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        
+        .dropbtn:hover {
+            background: #e0e8ff;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background: white;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            z-index: 1;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .dropdown-content a:hover {
+            background: #f5f7fa;
+        }
+        
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        
+        .works-menu {
+            display: none;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .works-tabs {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .work-tab {
+            padding: 8px 16px;
+            background: #f0f4ff;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .work-tab:hover {
+            background: #e0e8ff;
+        }
+        
+        .work-tab.active {
+            background: #6a11cb;
+            color: white;
+        }
+        
+        .character-info {
+            position: fixed;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            max-width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .character-info .char {
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .character-info .pinyin {
+            font-size: 18px;
+            color: #6a11cb;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        
+        .character-info .translation {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .page-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .page-btn.active {
+            background: #6a11cb;
+            color: white;
+            border-color: #6a11cb;
+        }
+        
+        .feedback {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #6a11cb;
+            min-height: 24px;
+        }
+        
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .audio-btn {
+            padding: 8px 15px;
+            background: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .audio-btn:hover {
+            background: #0b7dda;
+        }
+        
+        .current-sentence {
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f8ff;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .current-sentence-text {
+            font-size: 18px;
+            color: #333;
+        }
+        
+        .right-audio-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: flex-end;
+        }
+        
+        .sentence-placeholder {
+            width: 50px;
+            height: 50px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #ccc;
+        }
+        
+        /* 新增样式 - 瞬间移动效果 */
+        .character-card.instant-move {
+            animation: instantMove 0.5s ease-out forwards;
+        }
+        
+        @keyframes instantMove {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* 修改菜单样式 */
+        .genre-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .genre-btn {
+            padding: 10px 15px;
+            background: #f0f4ff;
+            color: #333;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .genre-btn:hover {
+            background: #e0e8ff;
+        }
+        
+        .genre-btn.active {
+            background: #6a11cb;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo">字卡阅读助手</div>
+                <div class="mode-toggle">
+                    <button class="mode-btn active" id="study-mode">学习模式</button>
+                    <button class="mode-btn" id="practice-mode">练习模式</button>
+                </div>
+            </div>
+        </header>
+        
+        <div class="menu-bar">
+            <div class="genre-buttons" id="genre-buttons">
+                <!-- 文体按钮将动态生成 -->
+            </div>
+            
+            <div class="works-menu" id="works-menu">
+                <div class="works-tabs" id="works-tabs">
+                    <!-- 作品标签将动态生成 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="panel-title">字卡区</div>
+                <div class="character-cards" id="character-cards">
+                    <!-- 字卡将动态生成 -->
+                </div>
+                <div class="pagination" id="pagination">
+                    <!-- 分页按钮将动态生成 -->
+                </div>
+                
+                <div class="navigation">
+                    <div class="left-navigation">
+                        <button class="nav-btn" id="prev-sentence">
+                            <span>上一句</span>
+                        </button>
+                        <button class="nav-btn" id="next-sentence">
+                            <span>下一句</span>
+                        </button>
+                    </div>
+                    <button class="nav-btn start-btn" id="start-btn">
+                        <span>开始学习</span>
+                    </button>
+                </div>
+                
+                <div class="audio-controls">
+                    <button class="icon-btn" id="read-current-btn" title="朗读当前句">
+                        🔊
+                    </button>
+                </div>
+                
+                <div class="current-sentence">
+                    <div class="current-sentence-text" id="current-sentence-text">
+                        <!-- 当前句子将显示在这里 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="panel-title">文本区</div>
+                <div class="text-container" id="text-container">
+                    <!-- 文本句子将动态生成 -->
+                </div>
+                
+                <div class="right-audio-controls">
+                    <button class="audio-btn" id="read-all-btn">
+                        <span>朗读整篇</span>
+                    </button>
+                </div>
+                
+                <div class="feedback" id="feedback"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="character-info" id="character-info">
+        <div class="char" id="info-char"></div>
+        <div class="pinyin" id="info-pinyin"></div>
+        <div class="translation" id="info-translation"></div>
+    </div>
+
+    <script>
+        // 按文体分类的示例数据
+        const sampleTexts = {
+            dialogue: {
+                title: "日常情景对话",
+                works: {
+                   "餐厅点餐": "你好，我想点一份牛排。请问要几分熟？七分熟。需要配什么饮料？一杯橙汁。好的，请稍等。",
+                    "问路": "请问，去火车站怎么走？往前走两个路口，然后右转。谢谢！不客气。",
+                    "购物": "这件衣服多少钱？三百五十元。可以试穿吗？当然可以，试衣间在那边。",
+                    "医院就诊": "医生，我头疼发烧。请坐，量一下体温。三十八度五，感冒了。开些药，多喝水休息。谢谢医生。",
+                    "酒店入住": "您好，我预订了房间。请出示身份证。这是您的房卡，在五楼。早餐在二楼餐厅。谢谢。"
+                }
+            },
+            poetry: {
+                title: "诗词歌赋", 
+                works: {
+                      "静夜思": "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+                    "春晓": "春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。",
+                    "登鹳雀楼": "白日依山尽，黄河入海流。欲穷千里目，更上一层楼。",
+                    "悯农": "锄禾日当午，汗滴禾下土。谁知盘中餐，粒粒皆辛苦。",
+                    "相思": "红豆生南国，春来发几枝。愿君多采撷，此物最相思。",
+                    "江雪": "千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。"
+                }
+            },
+             story: {
+                title: "故事",
+                works: {
+                    "龟兔赛跑": "从前，有一只兔子和一只乌龟。兔子跑得很快，乌龟爬得很慢。有一天，它们决定比赛。兔子一开始跑得很快，但它很骄傲，在半路上睡觉。乌龟虽然慢，但它一直坚持爬。最后，乌龟赢了比赛。",
+                    "狼来了": "从前，有个放羊的孩子。他觉得很无聊，就大声喊：狼来了！狼来了！村民们听到后，赶紧跑来帮忙。但是，他们发现没有狼。孩子哈哈大笑。第二天，孩子又喊：狼来了！狼来了！村民们又跑来，但还是没有狼。后来，真的狼来了。孩子大声呼救，但没有人相信他。最后，狼吃掉了所有的羊。",
+                    "乌鸦喝水": "一只乌鸦口渴了，它看到一瓶水。但是瓶口很小，乌鸦喝不到水。它想到一个办法，把石子扔进瓶子里。水位上升了，乌鸦终于喝到了水。",
+                    "三只小猪": "有三只小猪要盖房子。老大用稻草盖，老二用木头盖，老三用砖头盖。大灰狼来了，吹倒了稻草房和木头房。但是砖头房很坚固，大灰狼进不去。最后，三只小猪安全地住在砖头房里。",
+                    "小红帽": "小红帽去看望奶奶。路上遇到大灰狼，大灰狼先到奶奶家，把奶奶吃掉了。然后假装成奶奶等小红帽。猎人听到声音，救出了奶奶和小红帽。"
+                }
+            },
+            novel: {
+                title: "小说",
+                works: {
+                    "红楼梦片段": "贾母因问黛玉念何书。黛玉道：只刚念了《四书》。黛玉又问姊妹们读何书。贾母道：读的是什么书，不过是认得两个字，不是睁眼的瞎子罢了！",
+                    "西游记片段": "孙悟空从石头里蹦出来，他拜师学艺，学会了七十二变。后来，他大闹天宫，被如来佛祖压在五行山下。五百年后，唐僧救了他，他们一起去西天取经。",
+                    "水浒传片段": "武松来到景阳冈，他看到山上有只老虎。武松喝了酒，壮着胆子上山。果然遇到老虎，他与老虎搏斗，最后打死了老虎。",
+                    "三国演义片段": "刘备三顾茅庐请诸葛亮。第一次没见到，第二次也没见到，第三次终于见到了。诸葛亮为刘备分析了天下形势，这就是著名的《隆中对》。",
+                    "儒林外史片段": "范进中举后高兴得疯了。他的岳父胡屠户打了他一巴掌，他才清醒过来。从此，范进的生活发生了巨大变化。"
+                }
+            }
+        };
+
+        // 拼音和翻译数据（简化示例）
+        const characterData = {
+           "你": { pinyin: "nǐ", translation: "you" },
+            "好": { pinyin: "hǎo", translation: "good" },
+            "我": { pinyin: "wǒ", translation: "I/me" },
+            "想": { pinyin: "xiǎng", translation: "want" },
+            "点": { pinyin: "diǎn", translation: "order" },
+            "一": { pinyin: "yī", translation: "one" },
+            "份": { pinyin: "fèn", translation: "portion" },
+            "牛": { pinyin: "niú", translation: "cow" },
+            "排": { pinyin: "pái", translation: "steak" },
+            "请": { pinyin: "qǐng", translation: "please" },
+            "问": { pinyin: "wèn", translation: "ask" },
+            "要": { pinyin: "yào", translation: "want" },
+            "几": { pinyin: "jǐ", translation: "how many" },
+            "分": { pinyin: "fēn", translation: "minutes/degree" },
+            "熟": { pinyin: "shú", translation: "cooked" },
+            "七": { pinyin: "qī", translation: "seven" },
+            "需": { pinyin: "xū", translation: "need" },
+            "配": { pinyin: "pèi", translation: "with" },
+            "什": { pinyin: "shén", translation: "what" },
+            "么": { pinyin: "me", translation: "(question particle)" },
+            "饮": { pinyin: "yǐn", translation: "drink" },
+            "料": { pinyin: "liào", translation: "material" },
+            "杯": { pinyin: "bēi", translation: "cup" },
+            "橙": { pinyin: "chéng", translation: "orange" },
+            "汁": { pinyin: "zhī", translation: "juice" },
+            "的": { pinyin: "de", translation: "(possessive particle)" },
+            "稍": { pinyin: "shāo", translation: "a little" },
+            "等": { pinyin: "děng", translation: "wait" },
+            "床": { pinyin: "chuáng", translation: "bed" },
+            "前": { pinyin: "qián", translation: "front" },
+            "明": { pinyin: "míng", translation: "bright" },
+            "月": { pinyin: "yuè", translation: "moon" },
+            "光": { pinyin: "guāng", translation: "light" },
+            "疑": { pinyin: "yí", translation: "doubt" },
+            "是": { pinyin: "shì", translation: "is" },
+            "地": { pinyin: "dì", translation: "ground" },
+            "上": { pinyin: "shàng", translation: "on" },
+            "霜": { pinyin: "shuāng", translation: "frost" },
+            "举": { pinyin: "jǔ", translation: "lift" },
+            "头": { pinyin: "tóu", translation: "head" },
+            "望": { pinyin: "wàng", translation: "gaze" },
+            "低": { pinyin: "dī", translation: "lower" },
+            "思": { pinyin: "sī", translation: "think" },
+            "故": { pinyin: "gù", translation: "hometown" },
+            "乡": { pinyin: "xiāng", translation: "village" },
+            "从": { pinyin: "cóng", translation: "from" },
+            "有": { pinyin: "yǒu", translation: "have" },
+            "只": { pinyin: "zhī", translation: "measure word" },
+            "兔": { pinyin: "tù", translation: "rabbit" },
+            "子": { pinyin: "zǐ", translation: "child" },
+            "和": { pinyin: "hé", translation: "and" },
+            "乌": { pinyin: "wū", translation: "crow" },
+            "龟": { pinyin: "guī", translation: "turtle" },
+            "跑": { pinyin: "pǎo", translation: "run" },
+            "得": { pinyin: "de", translation: "particle" },
+            "很": { pinyin: "hěn", translation: "very" },
+            "快": { pinyin: "kuài", translation: "fast" },
+            "爬": { pinyin: "pá", translation: "crawl" },
+            "慢": { pinyin: "màn", translation: "slow" },
+            "天": { pinyin: "tiān", translation: "day" },
+            "它": { pinyin: "tā", translation: "it" },
+            "们": { pinyin: "men", translation: "plural" },
+            "决": { pinyin: "jué", translation: "decide" },
+            "定": { pinyin: "dìng", translation: "fix" },
+            "比": { pinyin: "bǐ", translation: "compare" },
+            "赛": { pinyin: "sài", translation: "contest" },
+            "但": { pinyin: "dàn", translation: "but" },
+            "骄": { pinyin: "jiāo", translation: "proud" },
+            "傲": { pinyin: "ào", translation: "arrogant" },
+            "在": { pinyin: "zài", translation: "at" },
+            "半": { pinyin: "bàn", translation: "half" },
+            "路": { pinyin: "lù", translation: "road" },
+            "睡": { pinyin: "shuì", translation: "sleep" },
+            "觉": { pinyin: "jiào", translation: "sleep" },
+            "虽": { pinyin: "suī", translation: "although" },
+            "然": { pinyin: "rán", translation: "however" },
+            "坚": { pinyin: "jiān", translation: "firm" },
+            "持": { pinyin: "chí", translation: "persist" },
+            "最": { pinyin: "zuì", translation: "most" },
+            "后": { pinyin: "hòu", translation: "after" },
+            "赢": { pinyin: "yíng", translation: "win" },
+            "了": { pinyin: "le", translation: "particle" },
+            "贾": { pinyin: "jiǎ", translation: "surname" },
+            "母": { pinyin: "mǔ", translation: "mother" },
+            "因": { pinyin: "yīn", translation: "because" },
+            "林": { pinyin: "lín", translation: "forest" },
+            "黛": { pinyin: "dài", translation: "eyebrow" },
+            "玉": { pinyin: "yù", translation: "jade" },
+            "念": { pinyin: "niàn", translation: "read" },
+            "何": { pinyin: "hé", translation: "what" },
+            "书": { pinyin: "shū", translation: "book" },
+            "道": { pinyin: "dào", translation: "say" },
+            "只": { pinyin: "zhǐ", translation: "only" },
+            "刚": { pinyin: "gāng", translation: "just" },
+            "四": { pinyin: "sì", translation: "four" },
+            "姊": { pinyin: "zǐ", translation: "elder sister" },
+            "妹": { pinyin: "mèi", translation: "younger sister" },
+            "读": { pinyin: "dú", translation: "read" },
+            "认": { pinyin: "rèn", translation: "recognize" },
+            "两": { pinyin: "liǎng", translation: "two" },
+            "个": { pinyin: "gè", translation: "measure word" },
+            "字": { pinyin: "zì", translation: "character" },
+            "睁": { pinyin: "zhēng", translation: "open eyes" },
+            "眼": { pinyin: "yǎn", translation: "eye" },
+            "瞎": { pinyin: "xiā", translation: "blind" },
+            "春": { pinyin: "chūn", translation: "spring" },
+            "眠": { pinyin: "mián", translation: "sleep" },
+            "不": { pinyin: "bù", translation: "not" },
+            "觉": { pinyin: "jué", translation: "feel" },
+            "晓": { pinyin: "xiǎo", translation: "dawn" },
+            "处": { pinyin: "chù", translation: "place" },
+            "闻": { pinyin: "wén", translation: "hear" },
+            "啼": { pinyin: "tí", translation: "cry" },
+            "鸟": { pinyin: "niǎo", translation: "bird" },
+            "夜": { pinyin: "yè", translation: "night" },
+            "来": { pinyin: "lái", translation: "come" },
+            "风": { pinyin: "fēng", translation: "wind" },
+            "雨": { pinyin: "yǔ", translation: "rain" },
+            "声": { pinyin: "shēng", translation: "sound" },
+            "花": { pinyin: "huā", translation: "flower" },
+            "落": { pinyin: "luò", translation: "fall" },
+            "知": { pinyin: "zhī", translation: "know" },
+            "多": { pinyin: "duō", translation: "many" },
+            "少": { pinyin: "shǎo", translation: "few" },
+            "白": { pinyin: "bái", translation: "white" },
+            "日": { pinyin: "rì", translation: "sun" },
+            "依": { pinyin: "yī", translation: "rely" },
+            "山": { pinyin: "shān", translation: "mountain" },
+            "尽": { pinyin: "jìn", translation: "end" },
+            "黄": { pinyin: "huáng", translation: "yellow" },
+            "河": { pinyin: "hé", translation: "river" },
+            "入": { pinyin: "rù", translation: "enter" },
+            "海": { pinyin: "hǎi", translation: "sea" },
+            "流": { pinyin: "liú", translation: "flow" },
+            "欲": { pinyin: "yù", translation: "want" },
+            "穷": { pinyin: "qióng", translation: "poor" },
+            "千": { pinyin: "qiān", translation: "thousand" },
+            "里": { pinyin: "lǐ", translation: "mile" },
+            "目": { pinyin: "mù", translation: "eye" },
+            "更": { pinyin: "gèng", translation: "more" },
+            "层": { pinyin: "céng", translation: "layer" },
+            "楼": { pinyin: "lóu", translation: "building" },
+            "这": { pinyin: "zhè", translation: "this" },
+            "件": { pinyin: "jiàn", translation: "piece" },
+            "衣": { pinyin: "yī", translation: "clothes" },
+            "服": { pinyin: "fú", translation: "clothing" },
+            "多": { pinyin: "duō", translation: "how much" },
+            "钱": { pinyin: "qián", translation: "money" },
+            "三": { pinyin: "sān", translation: "three" },
+            "百": { pinyin: "bǎi", translation: "hundred" },
+            "五": { pinyin: "wǔ", translation: "five" },
+            "十": { pinyin: "shí", translation: "ten" },
+            "元": { pinyin: "yuán", translation: "yuan" },
+            "可": { pinyin: "kě", translation: "can" },
+            "以": { pinyin: "yǐ", translation: "may" },
+            "试": { pinyin: "shì", translation: "try" },
+            "穿": { pinyin: "chuān", translation: "wear" },
+            "吗": { pinyin: "ma", translation: "(question particle)" },
+            "当": { pinyin: "dāng", translation: "of course" },
+            "然": { pinyin: "rán", translation: "certainly" },
+            "试": { pinyin: "shì", translation: "fitting" },
+            "衣": { pinyin: "yī", translation: "fitting" },
+            "间": { pinyin: "jiān", translation: "room" },
+            "在": { pinyin: "zài", translation: "at" },
+            "那": { pinyin: "nà", translation: "that" },
+            "边": { pinyin: "biān", translation: "side" },
+            "医": { pinyin: "yī", translation: "doctor" },
+            "生": { pinyin: "shēng", translation: "life" },
+            "疼": { pinyin: "téng", translation: "pain" },
+            "发": { pinyin: "fā", translation: "have" },
+            "烧": { pinyin: "shāo", translation: "fever" },
+            "坐": { pinyin: "zuò", translation: "sit" },
+            "量": { pinyin: "liáng", translation: "measure" },
+            "体": { pinyin: "tǐ", translation: "body" },
+            "温": { pinyin: "wēn", translation: "temperature" },
+            "感": { pinyin: "gǎn", translation: "catch" },
+            "冒": { pinyin: "mào", translation: "cold" },
+            "开": { pinyin: "kāi", translation: "prescribe" },
+            "些": { pinyin: "xiē", translation: "some" },
+            "药": { pinyin: "yào", translation: "medicine" },
+            "喝": { pinyin: "hē", translation: "drink" },
+            "休": { pinyin: "xiū", translation: "rest" },
+            "息": { pinyin: "xī", translation: "rest" },
+            "酒": { pinyin: "jiǔ", translation: "hotel" },
+            "店": { pinyin: "diàn", translation: "shop" },
+            "入": { pinyin: "rù", translation: "enter" },
+            "预": { pinyin: "yù", translation: "reserve" },
+            "订": { pinyin: "dìng", translation: "book" },
+            "房": { pinyin: "fáng", translation: "room" },
+            "出": { pinyin: "chū", translation: "show" },
+            "示": { pinyin: "shì", translation: "show" },
+            "身": { pinyin: "shēn", translation: "body" },
+            "份": { pinyin: "fèn", translation: "identity" },
+            "证": { pinyin: "zhèng", translation: "card" },
+            "卡": { pinyin: "kǎ", translation: "card" },
+            "早": { pinyin: "zǎo", translation: "morning" },
+            "餐": { pinyin: "cān", translation: "meal" },
+            "厅": { pinyin: "tīng", translation: "hall" },
+            "锄": { pinyin: "chú", translation: "hoe" },
+            "禾": { pinyin: "hé", translation: "grain" },
+            "当": { pinyin: "dāng", translation: "at" },
+            "午": { pinyin: "wǔ", translation: "noon" },
+            "汗": { pinyin: "hàn", translation: "sweat" },
+            "滴": { pinyin: "dī", translation: "drop" },
+            "土": { pinyin: "tǔ", translation: "soil" },
+            "谁": { pinyin: "shuí", translation: "who" },
+            "盘": { pinyin: "pán", translation: "plate" },
+            "中": { pinyin: "zhōng", translation: "middle" },
+            "餐": { pinyin: "cān", translation: "meal" },
+            "粒": { pinyin: "lì", translation: "grain" },
+            "皆": { pinyin: "jiē", translation: "all" },
+            "辛": { pinyin: "xīn", translation: "hard" },
+            "苦": { pinyin: "kǔ", translation: "bitter" },
+            "红": { pinyin: "hóng", translation: "red" },
+            "豆": { pinyin: "dòu", translation: "bean" },
+            "生": { pinyin: "shēng", translation: "grow" },
+            "南": { pinyin: "nán", translation: "south" },
+            "国": { pinyin: "guó", translation: "country" },
+            "发": { pinyin: "fā", translation: "sprout" },
+            "枝": { pinyin: "zhī", translation: "branch" },
+            "愿": { pinyin: "yuàn", translation: "wish" },
+            "君": { pinyin: "jūn", translation: "you" },
+            "采": { pinyin: "cǎi", translation: "pick" },
+            "撷": { pinyin: "xié", translation: "pick" },
+            "此": { pinyin: "cǐ", translation: "this" },
+            "物": { pinyin: "wù", translation: "thing" },
+            "相": { pinyin: "xiāng", translation: "mutual" },
+            "思": { pinyin: "sī", translation: "longing" },
+            "千": { pinyin: "qiān", translation: "thousand" },
+            "飞": { pinyin: "fēi", translation: "fly" },
+            "绝": { pinyin: "jué", translation: "disappear" },
+            "万": { pinyin: "wàn", translation: "ten thousand" },
+            "径": { pinyin: "jìng", translation: "path" },
+            "踪": { pinyin: "zōng", translation: "trace" },
+            "灭": { pinyin: "miè", translation: "extinct" },
+            "孤": { pinyin: "gū", translation: "lonely" },
+            "舟": { pinyin: "zhōu", translation: "boat" },
+            "蓑": { pinyin: "suō", translation: "straw raincoat" },
+            "笠": { pinyin: "lì", translation: "bamboo hat" },
+            "翁": { pinyin: "wēng", translation: "old man" },
+            "独": { pinyin: "dú", translation: "alone" },
+            "钓": { pinyin: "diào", translation: "fish" },
+            "寒": { pinyin: "hán", translation: "cold" },
+            "江": { pinyin: "jiāng", translation: "river" },
+            "雪": { pinyin: "xuě", translation: "snow" },
+           "从": { pinyin: "cóng", translation: "from" },
+"前": { pinyin: "qián", translation: "before" },
+"有": { pinyin: "yǒu", translation: "have" },
+"只": { pinyin: "zhī", translation: "measure word" },
+"兔": { pinyin: "tù", translation: "rabbit" },
+"子": { pinyin: "zǐ", translation: "child" },
+"和": { pinyin: "hé", translation: "and" },
+"乌": { pinyin: "wū", translation: "crow" },
+"龟": { pinyin: "guī", translation: "turtle" },
+"跑": { pinyin: "pǎo", translation: "run" },
+"得": { pinyin: "de", translation: "particle" },
+"很": { pinyin: "hěn", translation: "very" },
+"快": { pinyin: "kuài", translation: "fast" },
+"爬": { pinyin: "pá", translation: "crawl" },
+"慢": { pinyin: "màn", translation: "slow" },
+"天": { pinyin: "tiān", translation: "day" },
+"它": { pinyin: "tā", translation: "it" },
+"们": { pinyin: "men", translation: "plural" },
+"决": { pinyin: "jué", translation: "decide" },
+"定": { pinyin: "dìng", translation: "fix" },
+"比": { pinyin: "bǐ", translation: "compare" },
+"赛": { pinyin: "sài", translation: "contest" },
+"但": { pinyin: "dàn", translation: "but" },
+"骄": { pinyin: "jiāo", translation: "proud" },
+"傲": { pinyin: "ào", translation: "arrogant" },
+"在": { pinyin: "zài", translation: "at" },
+"半": { pinyin: "bàn", translation: "half" },
+"路": { pinyin: "lù", translation: "road" },
+"睡": { pinyin: "shuì", translation: "sleep" },
+"觉": { pinyin: "jiào", translation: "sleep" },
+"虽": { pinyin: "suī", translation: "although" },
+"然": { pinyin: "rán", translation: "however" },
+"坚": { pinyin: "jiān", translation: "firm" },
+"持": { pinyin: "chí", translation: "persist" },
+"最": { pinyin: "zuì", translation: "most" },
+"后": { pinyin: "hòu", translation: "after" },
+"赢": { pinyin: "yíng", translation: "win" },
+"了": { pinyin: "le", translation: "particle" },
+"放": { pinyin: "fàng", translation: "herd" },
+"羊": { pinyin: "yáng", translation: "sheep" },
+"孩": { pinyin: "hái", translation: "child" },
+"觉": { pinyin: "jué", translation: "feel" },
+"无": { pinyin: "wú", translation: "without" },
+"聊": { pinyin: "liáo", translation: "bored" },
+"就": { pinyin: "jiù", translation: "then" },
+"大": { pinyin: "dà", translation: "big" },
+"声": { pinyin: "shēng", translation: "voice" },
+"喊": { pinyin: "hǎn", translation: "shout" },
+"狼": { pinyin: "láng", translation: "wolf" },
+"来": { pinyin: "lái", translation: "come" },
+"村": { pinyin: "cūn", translation: "village" },
+"民": { pinyin: "mín", translation: "people" },
+"听": { pinyin: "tīng", translation: "hear" },
+"到": { pinyin: "dào", translation: "arrive" },
+"赶": { pinyin: "gǎn", translation: "hurry" },
+"紧": { pinyin: "jǐn", translation: "quickly" },
+"帮": { pinyin: "bāng", translation: "help" },
+"忙": { pinyin: "máng", translation: "busy" },
+"发": { pinyin: "fā", translation: "discover" },
+"现": { pinyin: "xiàn", translation: "find" },
+"没": { pinyin: "méi", translation: "not" },
+"哈": { pinyin: "hā", translation: "ha" },
+"第": { pinyin: "dì", translation: "ordinal" },
+"二": { pinyin: "èr", translation: "two" },
+"还": { pinyin: "hái", translation: "still" },
+"真": { pinyin: "zhēn", translation: "real" },
+"呼": { pinyin: "hū", translation: "call" },
+"救": { pinyin: "jiù", translation: "save" },
+"没": { pinyin: "méi", translation: "no" },
+"人": { pinyin: "rén", translation: "person" },
+"相": { pinyin: "xiāng", translation: "believe" },
+"信": { pinyin: "xìn", translation: "trust" },
+"吃": { pinyin: "chī", translation: "eat" },
+"掉": { pinyin: "diào", translation: "finish" },
+"所": { pinyin: "suǒ", translation: "all" },
+"有": { pinyin: "yǒu", translation: "have" },
+"口": { pinyin: "kǒu", translation: "thirsty" },
+"渴": { pinyin: "kě", translation: "thirst" },
+"看": { pinyin: "kàn", translation: "see" },
+"瓶": { pinyin: "píng", translation: "bottle" },
+"水": { pinyin: "shuǐ", translation: "water" },
+"但": { pinyin: "dàn", translation: "but" },
+"小": { pinyin: "xiǎo", translation: "small" },
+"喝": { pinyin: "hē", translation: "drink" },
+"到": { pinyin: "dào", translation: "reach" },
+"想": { pinyin: "xiǎng", translation: "think" },
+"办": { pinyin: "bàn", translation: "method" },
+"法": { pinyin: "fǎ", translation: "way" },
+"把": { pinyin: "bǎ", translation: "take" },
+"石": { pinyin: "shí", translation: "stone" },
+"扔": { pinyin: "rēng", translation: "throw" },
+"进": { pinyin: "jìn", translation: "into" },
+"位": { pinyin: "wèi", translation: "level" },
+"上": { pinyin: "shàng", translation: "up" },
+"升": { pinyin: "shēng", translation: "rise" },
+"终": { pinyin: "zhōng", translation: "finally" },
+"于": { pinyin: "yú", translation: "at last" },
+"三": { pinyin: "sān", translation: "three" },
+"猪": { pinyin: "zhū", translation: "pig" },
+"要": { pinyin: "yào", translation: "want" },
+"盖": { pinyin: "gài", translation: "build" },
+"房": { pinyin: "fáng", translation: "house" },
+"老": { pinyin: "lǎo", translation: "old" },
+"大": { pinyin: "dà", translation: "big" },
+"用": { pinyin: "yòng", translation: "use" },
+"稻": { pinyin: "dào", translation: "rice" },
+"草": { pinyin: "cǎo", translation: "straw" },
+"老": { pinyin: "lǎo", translation: "second" },
+"木": { pinyin: "mù", translation: "wood" },
+"头": { pinyin: "tóu", translation: "material" },
+"老": { pinyin: "lǎo", translation: "third" },
+"砖": { pinyin: "zhuān", translation: "brick" },
+"灰": { pinyin: "huī", translation: "grey" },
+"吹": { pinyin: "chuī", translation: "blow" },
+"倒": { pinyin: "dǎo", translation: "down" },
+"坚": { pinyin: "jiān", translation: "strong" },
+"固": { pinyin: "gù", translation: "solid" },
+"进": { pinyin: "jìn", translation: "enter" },
+"去": { pinyin: "qù", translation: "go" },
+"安": { pinyin: "ān", translation: "safe" },
+"全": { pinyin: "quán", translation: "secure" },
+"地": { pinyin: "de", translation: "adverb" },
+"住": { pinyin: "zhù", translation: "live" },
+"红": { pinyin: "hóng", translation: "red" },
+"帽": { pinyin: "mào", translation: "hat" },
+"去": { pinyin: "qù", translation: "go" },
+"看": { pinyin: "kàn", translation: "visit" },
+"望": { pinyin: "wàng", translation: "see" },
+"奶": { pinyin: "nǎi", translation: "grandma" },
+"遇": { pinyin: "yù", translation: "meet" },
+"先": { pinyin: "xiān", translation: "first" },
+"假": { pinyin: "jiǎ", translation: "pretend" },
+"装": { pinyin: "zhuāng", translation: "disguise" },
+"成": { pinyin: "chéng", translation: "become" },
+"猎": { pinyin: "liè", translation: "hunter" },
+"出": { pinyin: "chū", translation: "rescue" },
+"贾": { pinyin: "jiǎ", translation: "Jia" },
+"母": { pinyin: "mǔ", translation: "mother" },
+"因": { pinyin: "yīn", translation: "because" },
+"问": { pinyin: "wèn", translation: "ask" },
+"林": { pinyin: "lín", translation: "Lin" },
+"黛": { pinyin: "dài", translation: "Dai" },
+"玉": { pinyin: "yù", translation: "Yu" },
+"念": { pinyin: "niàn", translation: "read" },
+"何": { pinyin: "hé", translation: "what" },
+"书": { pinyin: "shū", translation: "book" },
+"道": { pinyin: "dào", translation: "say" },
+"只": { pinyin: "zhǐ", translation: "only" },
+"刚": { pinyin: "gāng", translation: "just" },
+"四": { pinyin: "sì", translation: "four" },
+"姊": { pinyin: "zǐ", translation: "sister" },
+"妹": { pinyin: "mèi", translation: "sister" },
+"读": { pinyin: "dú", translation: "read" },
+"认": { pinyin: "rèn", translation: "recognize" },
+"两": { pinyin: "liǎng", translation: "two" },
+"个": { pinyin: "gè", translation: "measure word" },
+"字": { pinyin: "zì", translation: "character" },
+"睁": { pinyin: "zhēng", translation: "open" },
+"眼": { pinyin: "yǎn", translation: "eye" },
+"瞎": { pinyin: "xiā", translation: "blind" },
+"罢": { pinyin: "bà", translation: "stop" },
+"孙": { pinyin: "sūn", translation: "Sun" },
+"悟": { pinyin: "wù", translation: "Wu" },
+"空": { pinyin: "kōng", translation: "Kong" },
+"石": { pinyin: "shí", translation: "stone" },
+"头": { pinyin: "tóu", translation: "head" },
+"蹦": { pinyin: "bèng", translation: "jump" },
+"出": { pinyin: "chū", translation: "out" },
+"拜": { pinyin: "bài", translation: "worship" },
+"师": { pinyin: "shī", translation: "master" },
+"学": { pinyin: "xué", translation: "learn" },
+"艺": { pinyin: "yì", translation: "art" },
+"会": { pinyin: "huì", translation: "can" },
+"七": { pinyin: "qī", translation: "seven" },
+"十": { pinyin: "shí", translation: "ten" },
+"变": { pinyin: "biàn", translation: "change" },
+"闹": { pinyin: "nào", translation: "make trouble" },
+"天": { pinyin: "tiān", translation: "heaven" },
+"宫": { pinyin: "gōng", translation: "palace" },
+"如": { pinyin: "rú", translation: "Buddha" },
+"佛": { pinyin: "fó", translation: "Buddha" },
+"祖": { pinyin: "zǔ", translation: "ancestor" },
+"压": { pinyin: "yā", translation: "press" },
+"五": { pinyin: "wǔ", translation: "five" },
+"行": { pinyin: "xíng", translation: "element" },
+"山": { pinyin: "shān", translation: "mountain" },
+"唐": { pinyin: "táng", translation: "Tang" },
+"僧": { pinyin: "sēng", translation: "monk" },
+"救": { pinyin: "jiù", translation: "save" },
+"他": { pinyin: "tā", translation: "him" },
+"一": { pinyin: "yī", translation: "together" },
+"起": { pinyin: "qǐ", translation: "together" },
+"西": { pinyin: "xī", translation: "west" },
+"取": { pinyin: "qǔ", translation: "fetch" },
+"经": { pinyin: "jīng", translation: "scripture" },
+"武": { pinyin: "wǔ", translation: "Wu" },
+"松": { pinyin: "sōng", translation: "Song" },
+"景": { pinyin: "jǐng", translation: "Jing" },
+"阳": { pinyin: "yáng", translation: "Yang" },
+"冈": { pinyin: "gāng", translation: "ridge" },
+"看": { pinyin: "kàn", translation: "see" },
+"老": { pinyin: "lǎo", translation: "tiger" },
+"虎": { pinyin: "hǔ", translation: "tiger" },
+"喝": { pinyin: "hē", translation: "drink" },
+"酒": { pinyin: "jiǔ", translation: "alcohol" },
+"壮": { pinyin: "zhuàng", translation: "strengthen" },
+"胆": { pinyin: "dǎn", translation: "courage" },
+"果": { pinyin: "guǒ", translation: "indeed" },
+"搏": { pinyin: "bó", translation: "fight" },
+"斗": { pinyin: "dòu", translation: "struggle" },
+"死": { pinyin: "sǐ", translation: "die" },
+"刘": { pinyin: "liú", translation: "Liu" },
+"备": { pinyin: "bèi", translation: "Bei" },
+"顾": { pinyin: "gù", translation: "visit" },
+"茅": { pinyin: "máo", translation: "thatched" },
+"庐": { pinyin: "lú", translation: "cottage" },
+"诸": { pinyin: "zhū", translation: "Zhu" },
+"葛": { pinyin: "gě", translation: "Ge" },
+"亮": { pinyin: "liàng", translation: "Liang" },
+"第": { pinyin: "dì", translation: "time" },
+"次": { pinyin: "cì", translation: "time" },
+"见": { pinyin: "jiàn", translation: "see" },
+"终": { pinyin: "zhōng", translation: "finally" },
+"于": { pinyin: "yú", translation: "at last" },
+"分": { pinyin: "fēn", translation: "analyze" },
+"析": { pinyin: "xī", translation: "analyze" },
+"天": { pinyin: "tiān", translation: "world" },
+"下": { pinyin: "xià", translation: "under" },
+"形": { pinyin: "xíng", translation: "situation" },
+"势": { pinyin: "shì", translation: "situation" },
+"著": { pinyin: "zhù", translation: "famous" },
+"名": { pinyin: "míng", translation: "famous" },
+"隆": { pinyin: "lóng", translation: "Long" },
+"对": { pinyin: "duì", translation: "reply" },
+"范": { pinyin: "fàn", translation: "Fan" },
+"进": { pinyin: "jìn", translation: "Jin" },
+"中": { pinyin: "zhòng", translation: "pass" },
+"举": { pinyin: "jǔ", translation: "examination" },
+"高": { pinyin: "gāo", translation: "high" },
+"兴": { pinyin: "xìng", translation: "excited" },
+"疯": { pinyin: "fēng", translation: "crazy" },
+"岳": { pinyin: "yuè", translation: "father-in-law" },
+"父": { pinyin: "fù", translation: "father" },
+"胡": { pinyin: "hú", translation: "Hu" },
+"屠": { pinyin: "tú", translation: "butcher" },
+"户": { pinyin: "hù", translation: "household" },
+"打": { pinyin: "dǎ", translation: "hit" },
+"巴": { pinyin: "bā", translation: "slap" },
+"掌": { pinyin: "zhǎng", translation: "palm" },
+"清": { pinyin: "qīng", translation: "clear" },
+"醒": { pinyin: "xǐng", translation: "awake" },
+"此": { pinyin: "cǐ", translation: "from then" },
+"生": { pinyin: "shēng", translation: "life" },
+"活": { pinyin: "huó", translation: "life" },
+"发": { pinyin: "fā", translation: "occur" },
+"巨": { pinyin: "jù", translation: "huge" },
+"变": { pinyin: "biàn", translation: "change" },
+"化": { pinyin: "huà", translation: "change" }
+        };
+
+        // 多语言菜单文本
+        const menuTexts = {
+            zh: {
+                genre: "选择文体",
+                works: "选择作品",
+                language: "中文",
+                studyMode: "学习模式",
+                practiceMode: "练习模式",
+                prevSentence: "上一句",
+                nextSentence: "下一句",
+                start: "开始学习",
+                readCurrent: "朗读当前句",
+                readAll: "朗读整篇",
+                characterArea: "字卡区",
+                textArea: "文本区"
+            }
+        };
+
+        // 应用状态
+        let currentMode = 'study';
+        let currentGenre = '';
+        let currentText = '';
+        let sentences = [];
+        let currentSentenceIndex = 0;
+        let currentPage = 1;
+        let charactersPerPage = 30;
+        let totalPages = 1;
+        let allCharacters = [];
+        let currentLanguage = 'zh';
+        let isPlaying = false;
+        let speechSynthesis = window.speechSynthesis;
+        let practiceInterval = null;
+        let currentPracticeCharIndex = 0;
+        let isWaitingForUserSelection = false;
+        let audioContext = null;
+
+        // DOM元素
+        const studyModeBtn = document.getElementById('study-mode');
+        const practiceModeBtn = document.getElementById('practice-mode');
+        const characterCards = document.getElementById('character-cards');
+        const textContainer = document.getElementById('text-container');
+        const prevSentenceBtn = document.getElementById('prev-sentence');
+        const nextSentenceBtn = document.getElementById('next-sentence');
+        const worksMenu = document.getElementById('works-menu');
+        const worksTabs = document.getElementById('works-tabs');
+        const pagination = document.getElementById('pagination');
+        const feedback = document.getElementById('feedback');
+        const characterInfo = document.getElementById('character-info');
+        const infoChar = document.getElementById('info-char');
+        const infoPinyin = document.getElementById('info-pinyin');
+        const infoTranslation = document.getElementById('info-translation');
+        const startBtn = document.getElementById('start-btn');
+        const readCurrentBtn = document.getElementById('read-current-btn');
+        const readAllBtn = document.getElementById('read-all-btn');
+        const genreButtons = document.getElementById('genre-buttons');
+        const currentSentenceText = document.getElementById('current-sentence-text');
+
+        // 初始化事件监听
+        function initEventListeners() {
+            // 模式切换
+            studyModeBtn.addEventListener('click', () => switchMode('study'));
+            practiceModeBtn.addEventListener('click', () => switchMode('practice'));
+            
+            // 句子导航
+            prevSentenceBtn.addEventListener('click', goToPrevSentence);
+            nextSentenceBtn.addEventListener('click', goToNextSentence);
+            
+            // 开始按钮
+            startBtn.addEventListener('click', startLearning);
+            
+            // 朗读按钮
+            readCurrentBtn.addEventListener('click', readCurrentSentence);
+            readAllBtn.addEventListener('click', readAllSentences);
+        }
+
+        // 初始化文体按钮
+        function initGenreButtons() {
+            genreButtons.innerHTML = '';
+            
+            Object.keys(sampleTexts).forEach(genre => {
+                const button = document.createElement('button');
+                button.className = 'genre-btn';
+                button.textContent = sampleTexts[genre].title;
+                button.setAttribute('data-genre', genre);
+                button.addEventListener('click', () => selectGenre(genre));
+                genreButtons.appendChild(button);
+            });
+        }
+
+        // 切换语言
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            updateMenuTexts();
+        }
+
+        // 更新菜单文本
+        function updateMenuTexts() {
+            const texts = menuTexts[currentLanguage];
+            
+            // 更新按钮文本
+            studyModeBtn.textContent = texts.studyMode;
+            practiceModeBtn.textContent = texts.practiceMode;
+            prevSentenceBtn.innerHTML = `<span>${texts.prevSentence}</span>`;
+            nextSentenceBtn.innerHTML = `<span>${texts.nextSentence}</span>`;
+            startBtn.innerHTML = `<span>${texts.start}</span>`;
+            readAllBtn.innerHTML = `<span>${texts.readAll}</span>`;
+            
+            // 更新面板标题
+            document.querySelectorAll('.panel-title')[0].textContent = texts.characterArea;
+            document.querySelectorAll('.panel-title')[1].textContent = texts.textArea;
+        }
+
+        // 切换模式
+        function switchMode(mode) {
+            // 清空界面
+            clearInterface();
+            
+            currentMode = mode;
+            
+            if (mode === 'study') {
+                studyModeBtn.classList.add('active');
+                practiceModeBtn.classList.remove('active');
+                // 停止练习模式的朗读
+                if (practiceInterval) {
+                    clearInterval(practiceInterval);
+                    practiceInterval = null;
+                }
+            } else {
+                studyModeBtn.classList.remove('active');
+                practiceModeBtn.classList.add('active');
+            }
+            
+            // 重新渲染当前句子
+            if (sentences.length > 0) {
+                renderCurrentSentence();
+            }
+        }
+
+        // 清空界面
+        function clearInterface() {
+            characterCards.innerHTML = '';
+            textContainer.innerHTML = '';
+            pagination.innerHTML = '';
+            currentSentenceText.textContent = '';
+            feedback.textContent = '';
+            currentSentenceIndex = 0;
+            isPlaying = false;
+            currentPracticeCharIndex = 0;
+            isWaitingForUserSelection = false;
+        }
+
+        // 选择文体
+        function selectGenre(genre) {
+            currentGenre = genre;
+            
+            // 更新文体按钮状态
+            document.querySelectorAll('.genre-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.genre-btn[data-genre="${genre}"]`).classList.add('active');
+            
+            // 显示作品菜单
+            worksMenu.style.display = 'block';
+            
+            // 清空作品标签
+            worksTabs.innerHTML = '';
+            
+            // 添加作品标签
+            const works = Object.keys(sampleTexts[genre].works);
+            works.forEach(work => {
+                const tab = document.createElement('div');
+                tab.className = 'work-tab';
+                tab.textContent = work;
+                tab.setAttribute('data-work', work);
+                tab.addEventListener('click', (e) => {
+                    // 移除其他标签的active类
+                    document.querySelectorAll('.work-tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    // 添加当前标签的active类
+                    tab.classList.add('active');
+                    selectWork(genre, work);
+                });
+                worksTabs.appendChild(tab);
+            });
+        }
+
+        // 选择作品
+        function selectWork(genre, work) {
+            currentText = sampleTexts[genre].works[work];
+            
+            // 分割文本为句子
+            sentences = splitIntoSentences(currentText);
+            currentSentenceIndex = 0;
+            
+            // 渲染界面
+            renderCurrentSentenceCharacters();
+            renderText();
+            renderCurrentSentence();
+            renderPagination();
+            
+            feedback.textContent = `已加载: ${work}`;
+        }
+
+        // 渲染当前句子的字卡
+        function renderCurrentSentenceCharacters() {
+            if (sentences.length === 0 || currentSentenceIndex >= sentences.length) return;
+            
+            // 获取当前句子的所有汉字（包括重复的）
+            const currentSentenceChars = getCurrentSentenceCharsWithDuplicates();
+            
+            // 随机打乱
+            shuffleArray(currentSentenceChars);
+            
+            allCharacters = currentSentenceChars;
+            
+            // 计算分页
+            totalPages = Math.ceil(allCharacters.length / charactersPerPage);
+            currentPage = 1;
+            
+            // 渲染字卡
+            renderCharacterCards();
+        }
+
+        // 获取当前句子的所有汉字（包括重复的）
+        function getCurrentSentenceCharsWithDuplicates() {
+            const sentenceText = sentences[currentSentenceIndex];
+            return sentenceText.split('').filter(c => 
+                c.trim() && !['，', '。', '！', '？', '：', '；', '、', '《', '》', '“', '”', '‘', '’', '（', '）', '【', '】', '—', '…', '·'].includes(c)
+            );
+        }
+
+        // 将文本分割为句子（以逗号、句号、问号、叹号为单位）
+        function splitIntoSentences(text) {
+            // 使用正则表达式分割文本，保留分割符号
+            const segments = text.split(/([，。！？])/);
+            const result = [];
+            let currentSentence = '';
+            
+            for (let i = 0; i < segments.length; i++) {
+                const segment = segments[i];
+                if (segment === '，' || segment === '。' || segment === '！' || segment === '？') {
+                    // 遇到标点符号，将当前句子加入结果
+                    if (currentSentence.trim()) {
+                        result.push(currentSentence.trim());
+                    }
+                    currentSentence = '';
+                } else {
+                    currentSentence += segment;
+                }
+            }
+            
+            // 添加最后一个句子（如果没有以标点符号结尾）
+            if (currentSentence.trim()) {
+                result.push(currentSentence.trim());
+            }
+            
+            return result;
+        }
+
+        // 随机打乱数组
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // 渲染字卡
+        function renderCharacterCards() {
+            characterCards.innerHTML = '';
+            
+            const startIndex = (currentPage - 1) * charactersPerPage;
+            const endIndex = Math.min(startIndex + charactersPerPage, allCharacters.length);
+            const pageCharacters = allCharacters.slice(startIndex, endIndex);
+            
+            pageCharacters.forEach((char, index) => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                card.textContent = char;
+                card.setAttribute('data-char', char);
+                card.setAttribute('data-index', startIndex + index);
+                
+                // 为所有模式添加点击事件
+                card.addEventListener('click', () => handleCharacterClick(char, card));
+                
+                characterCards.appendChild(card);
+            });
+        }
+
+        // 处理字卡点击事件
+        function handleCharacterClick(char, card) {
+            if (currentMode === 'study') {
+                // 学习模式下显示字符信息
+                showCharacterInfo(char, card);
+                
+                // 播放清脆音效
+                playCardSound();
+                
+                // 添加瞬间移动动画
+                card.classList.add('instant-move');
+                
+                // 找到对应的句子位置并填充
+                setTimeout(() => {
+                    fillCharacterInSentence(char);
+                    card.classList.add('used');
+                }, 500);
+            } else {
+                // 练习模式下进行选择
+                handleCharacterSelection(char, card);
+            }
+        }
+
+        // 播放清脆音效
+        function playCardSound() {
+            try {
+                // 创建音频上下文
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                // 创建清脆的"发牌"音效
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5音
+                oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.2); // 降到A4音
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                console.log("无法播放音效:", e);
+            }
+        }
+
+        // 在句子中填充字符
+        function fillCharacterInSentence(char) {
+            const currentSentence = document.getElementById(`sentence-${currentSentenceIndex}`);
+            if (!currentSentence) return;
+            
+            // 找到第一个空位置
+            const emptySlots = Array.from(currentSentence.children).filter(
+                child => child.textContent === '' && child.classList.contains('sentence-placeholder')
+            );
+            
+            if (emptySlots.length > 0) {
+                const slot = emptySlots[0];
+                
+                // 填充字符
+                slot.textContent = char;
+                slot.className = 'sentence-character';
+                slot.classList.add('highlight');
+                
+                // 添加拼音和英文信息
+                const charInfo = document.createElement('div');
+                charInfo.className = 'sentence-character-info';
+                
+                const pinyin = document.createElement('div');
+                pinyin.className = 'pinyin';
+                pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
+                
+                const translation = document.createElement('div');
+                translation.className = 'translation';
+                translation.textContent = characterData[char] ? characterData[char].translation : '--';
+                
+                charInfo.appendChild(pinyin);
+                charInfo.appendChild(translation);
+                slot.appendChild(charInfo);
+                
+                // 添加鼠标事件显示拼音英文
+                slot.addEventListener('mouseenter', () => {
+                    charInfo.style.display = 'block';
+                });
+                
+                slot.addEventListener('mouseleave', () => {
+                    charInfo.style.display = 'none';
+                });
+                
+                // 检查句子是否完成
+                if (isSentenceComplete(currentSentence)) {
+                    feedback.textContent = '句子完成！';
+                }
+            }
+        }
+
+        // 渲染文本区域
+        function renderText() {
+            textContainer.innerHTML = '';
+            
+            sentences.forEach((sentence, index) => {
+                const sentenceContainer = document.createElement('div');
+                sentenceContainer.className = 'sentence-container';
+                
+                const sentenceDiv = document.createElement('div');
+                sentenceDiv.className = 'sentence';
+                sentenceDiv.id = `sentence-${index}`;
+                
+                // 为每个字符创建占位符（只显示汉字，不显示标点符号）
+                for (let char of sentence) {
+                    // 只显示汉字，过滤掉标点符号
+                    if (char.trim() && 
+                        !['，', '。', '！', '？', '：', '；', '、', '《', '》', '“', '”', '‘', '’', '（', '）', '【', '】', '—', '…', '·'].includes(char)) {
+                        const charDiv = document.createElement('div');
+                        charDiv.className = 'sentence-placeholder';
+                        charDiv.textContent = ''; // 初始为空占位符
+                        charDiv.setAttribute('data-expected-char', char);
+                        
+                        sentenceDiv.appendChild(charDiv);
+                    }
+                }
+                
+                const controls = document.createElement('div');
+                controls.className = 'sentence-controls';
+                
+                const readBtn = document.createElement('button');
+                readBtn.className = 'icon-btn';
+                readBtn.innerHTML = '🔊';
+                readBtn.title = '朗读此句';
+                readBtn.addEventListener('click', () => readSentence(sentence));
+                
+                controls.appendChild(readBtn);
+                
+                sentenceContainer.appendChild(sentenceDiv);
+                sentenceContainer.appendChild(controls);
+                
+                textContainer.appendChild(sentenceContainer);
+            });
+        }
+
+        // 渲染当前句子
+        function renderCurrentSentence() {
+            // 更新当前句子显示
+            if (sentences.length > 0 && currentSentenceIndex < sentences.length) {
+                currentSentenceText.textContent = sentences[currentSentenceIndex];
+            }
+            
+            // 重置当前句子的字符显示
+            const currentSentence = document.getElementById(`sentence-${currentSentenceIndex}`);
+            if (currentSentence) {
+                currentSentence.querySelectorAll('.sentence-placeholder').forEach(charDiv => {
+                    charDiv.textContent = '';
+                    charDiv.className = 'sentence-placeholder';
+                });
+            }
+            
+            // 重置所有字卡
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('used', 'instant-move');
+                card.style.visibility = 'visible';
+            });
+            
+            // 重置练习状态
+            currentPracticeCharIndex = 0;
+            isWaitingForUserSelection = false;
+            
+            // 重新渲染当前句子的字卡
+            renderCurrentSentenceCharacters();
+            
+            // 在学习模式下，自动填充字符
+            if (currentMode === 'study' && isPlaying) {
+                let index = 0;
+                // 过滤掉标点符号，只保留汉字
+                const chars = getCurrentSentenceChars();
+                
+                const fillNextChar = () => {
+                    if (index < chars.length) {
+                        const char = chars[index];
+                        const charDiv = currentSentence.children[index];
+                        
+                        // 找到对应的字卡
+                        const card = document.querySelector(`.character-card[data-char="${char}"]:not(.used)`);
+                        if (card) {
+                            // 高亮字卡并朗读
+                            card.classList.add('highlight');
+                            readCharacter(char);
+                            
+                            setTimeout(() => {
+                                // 播放清脆音效
+                                playCardSound();
+                                
+                                // 添加瞬间移动动画
+                                card.classList.add('instant-move');
+                                
+                                setTimeout(() => {
+                                    // 移除高亮并填充到句子中
+                                    card.classList.remove('highlight');
+                                    // 标记字卡为已使用（隐藏）
+                                    card.classList.add('used');
+                                    charDiv.textContent = char;
+                                    charDiv.className = 'sentence-character';
+                                    charDiv.classList.add('highlight');
+                                    
+                                    // 添加拼音和英文信息
+                                    const charInfo = document.createElement('div');
+                                    charInfo.className = 'sentence-character-info';
+                                    
+                                    const pinyin = document.createElement('div');
+                                    pinyin.className = 'pinyin';
+                                    pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
+                                    
+                                    const translation = document.createElement('div');
+                                    translation.className = 'translation';
+                                    translation.textContent = characterData[char] ? characterData[char].translation : '--';
+                                    
+                                    charInfo.appendChild(pinyin);
+                                    charInfo.appendChild(translation);
+                                    charDiv.appendChild(charInfo);
+                                    
+                                    // 添加点击事件显示拼音英文
+                                    charDiv.addEventListener('mouseenter', () => {
+                                        charInfo.style.display = 'block';
+                                    });
+                                    
+                                    charDiv.addEventListener('mouseleave', () => {
+                                        charInfo.style.display = 'none';
+                                    });
+                                    
+                                    index++;
+                                    setTimeout(fillNextChar, 500); // 减慢速度
+                                }, 500);
+                            }, 500);
+                        }
+                    } else {
+                        // 所有字符填充完成
+                        feedback.textContent = '句子学习完成！';
+                        isPlaying = false;
+                    }
+                };
+                
+                fillNextChar();
+            } else if (currentMode === 'practice' && isPlaying) {
+                // 练习模式下开始逐字朗读
+                startPracticeReading();
+            }
+        }
+
+        // 获取当前句子的汉字（过滤标点符号）
+        function getCurrentSentenceChars() {
+            const sentenceText = sentences[currentSentenceIndex];
+            return sentenceText.split('').filter(c => 
+                c.trim() && !['，', '。', '！', '？', '：', '；', '、', '《', '》', '“', '”', '‘', '’', '（', '）', '【', '】', '—', '…', '·'].includes(c)
+            );
+        }
+
+        // 练习模式下的逐字朗读
+        function startPracticeReading() {
+            // 清除之前的朗读间隔
+            if (practiceInterval) {
+                clearInterval(practiceInterval);
+                practiceInterval = null;
+            }
+            
+            const chars = getCurrentSentenceChars();
+            currentPracticeCharIndex = 0;
+            isWaitingForUserSelection = false;
+            
+            // 开始朗读第一个字
+            if (chars.length > 0) {
+                readPracticeCharacter(chars[currentPracticeCharIndex]);
+            }
+        }
+
+        // 朗读练习模式下的字符
+        function readPracticeCharacter(char) {
+            if (speechSynthesis && speechSynthesis.speak) {
+                // 停止当前语音
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(char);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.7;
+                utterance.volume = 1;
+                utterance.onend = () => {
+                    // 朗读完成后等待用户选择
+                    isWaitingForUserSelection = true;
+                    feedback.textContent = `请选择: ${char}`;
+                };
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 渲染分页
+        function renderPagination() {
+            pagination.innerHTML = '';
+            
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('div');
+                pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.addEventListener('click', () => {
+                    currentPage = i;
+                    renderCharacterCards();
+                    renderPagination();
+                });
+                pagination.appendChild(pageBtn);
+            }
+        }
+
+        // 显示字符信息
+        function showCharacterInfo(char, element) {
+            const rect = element.getBoundingClientRect();
+            characterInfo.style.left = `${rect.left + window.scrollX}px`;
+            characterInfo.style.top = `${rect.bottom + window.scrollY + 10}px`;
+            
+            infoChar.textContent = char;
+            
+            if (characterData[char]) {
+                infoPinyin.textContent = characterData[char].pinyin;
+                infoTranslation.textContent = characterData[char].translation;
+            } else {
+                infoPinyin.textContent = '--';
+                infoTranslation.textContent = '--';
+            }
+            
+            characterInfo.style.display = 'block';
+            
+            // 点击其他地方隐藏信息
+            setTimeout(() => {
+                document.addEventListener('click', hideCharacterInfo);
+            }, 100);
+        }
+
+        // 隐藏字符信息
+        function hideCharacterInfo() {
+            characterInfo.style.display = 'none';
+            document.removeEventListener('click', hideCharacterInfo);
+        }
+
+        // 处理字符选择（练习模式）
+        function handleCharacterSelection(char, card) {
+            if (currentMode !== 'practice' || !isWaitingForUserSelection) {
+                return;
+            }
+            
+            const currentSentence = document.getElementById(`sentence-${currentSentenceIndex}`);
+            const chars = getCurrentSentenceChars();
+            const expectedChar = chars[currentPracticeCharIndex];
+            
+            if (char === expectedChar) {
+                // 选择正确
+                feedback.textContent = '正确！';
+                
+                // 播放清脆音效
+                playCardSound();
+                
+                // 添加瞬间移动动画
+                card.classList.add('instant-move');
+                
+                setTimeout(() => {
+                    card.classList.add('used');
+                    
+                    const charDiv = currentSentence.children[currentPracticeCharIndex];
+                    
+                    // 填充到句子中
+                    charDiv.textContent = char;
+                    charDiv.className = 'sentence-character';
+                    charDiv.classList.add('highlight');
+                    
+                    // 添加拼音和英文信息
+                    const charInfo = document.createElement('div');
+                    charInfo.className = 'sentence-character-info';
+                    
+                    const pinyin = document.createElement('div');
+                    pinyin.className = 'pinyin';
+                    pinyin.textContent = characterData[char] ? characterData[char].pinyin : '--';
+                    
+                    const translation = document.createElement('div');
+                    translation.className = 'translation';
+                    translation.textContent = characterData[char] ? characterData[char].translation : '--';
+                    
+                    charInfo.appendChild(pinyin);
+                    charInfo.appendChild(translation);
+                    charDiv.appendChild(charInfo);
+                    
+                    // 添加点击事件显示拼音英文
+                    charDiv.addEventListener('mouseenter', () => {
+                        charInfo.style.display = 'block';
+                    });
+                    
+                    charDiv.addEventListener('mouseleave', () => {
+                        charInfo.style.display = 'none';
+                    });
+                    
+                    // 移动到下一个字符
+                    currentPracticeCharIndex++;
+                    isWaitingForUserSelection = false;
+                    
+                    // 检查是否完成句子
+                    if (currentPracticeCharIndex >= chars.length) {
+                        // 句子完成，给予表扬
+                        setTimeout(() => {
+                            readSentence("太棒了！句子完成！");
+                            feedback.textContent = '句子完成！太棒了！';
+                        }, 1000);
+                    } else {
+                        // 继续朗读下一个字符
+                        setTimeout(() => {
+                            readPracticeCharacter(chars[currentPracticeCharIndex]);
+                        }, 1000);
+                    }
+                }, 500);
+            } else {
+                // 选择错误
+                feedback.textContent = '选择错误，请再试一次';
+                card.classList.add('highlight');
+                readSentence("错误");
+                
+                setTimeout(() => {
+                    card.classList.remove('highlight');
+                    feedback.textContent = `请选择: ${chars[currentPracticeCharIndex]}`;
+                }, 1000);
+            }
+        }
+
+        // 检查句子是否完成
+        function isSentenceComplete(sentenceElement) {
+            for (let i = 0; i < sentenceElement.children.length; i++) {
+                if (!sentenceElement.children[i].textContent) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // 朗读字符
+        function readCharacter(char) {
+            if (speechSynthesis && speechSynthesis.speak) {
+                // 停止当前语音
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(char);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.7;
+                utterance.volume = 1;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 朗读句子
+        function readSentence(sentence) {
+            if (speechSynthesis && speechSynthesis.speak) {
+                // 停止当前语音
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(sentence);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                utterance.volume = 1;
+                speechSynthesis.speak(utterance);
+                
+                feedback.textContent = `正在朗读: ${sentence}`;
+                
+                setTimeout(() => {
+                    feedback.textContent = '';
+                }, 2000);
+            } else {
+                feedback.textContent = '您的浏览器不支持语音合成功能';
+            }
+        }
+
+        // 朗读当前句子
+        function readCurrentSentence() {
+            if (sentences.length > 0 && currentSentenceIndex < sentences.length) {
+                readSentence(sentences[currentSentenceIndex]);
+            }
+        }
+
+        // 朗读所有句子
+        function readAllSentences() {
+            if (sentences.length > 0) {
+                const fullText = sentences.join('，');
+                readSentence(fullText);
+            }
+        }
+
+        // 开始学习
+        function startLearning() {
+            if (sentences.length === 0) {
+                feedback.textContent = '请先选择作品';
+                return;
+            }
+            
+            isPlaying = true;
+            renderCurrentSentence();
+        }
+
+        // 转到上一句
+        function goToPrevSentence() {
+            if (currentSentenceIndex > 0) {
+                currentSentenceIndex--;
+                isPlaying = true;
+                renderCurrentSentence();
+            }
+        }
+
+        // 转到下一句
+        function goToNextSentence() {
+            if (currentSentenceIndex < sentences.length - 1) {
+                currentSentenceIndex++;
+                isPlaying = true;
+                renderCurrentSentence();
+            }
+        }
+
+        // 初始化应用
+        function initApp() {
+            initEventListeners();
+            initGenreButtons();
+            updateMenuTexts();
+            feedback.textContent = '请选择文体和作品开始学习';
+        }
+
+        // 启动应用
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html> ← </span>
+                        </button>
+                        <button class="nav-btn" id="next-sentence">
+                            <span>→</span>
+                        </button>
+                    </div>
+                    <button class="nav-btn start-btn" id="start-btn">
+                        <span>begin</span>
                     </button>
                 </div>
                 
