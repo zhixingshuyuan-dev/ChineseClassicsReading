@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字声符快速归类游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", "SimSun", serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #4CAF50, #2196F3, #FFC107, #E91E63, #9C27B0);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .game-area {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 25px;
+            height: 500px;
+        }
+        
+        .character-display {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+        
+        .current-character {
+            font-size: 180px;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .character-info {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            line-height: 1.6;
+            min-height: 30px;
+        }
+        
+        .radicals-panel {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .radical {
+            font-size: 36px;
+            padding: 25px 15px;
+            background: linear-gradient(135deg, #fff9e6 0%, #ffecb3 100%);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid #ffe699;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 120px;
+        }
+        
+        .radical:hover {
+            background: linear-gradient(135deg, #ffecb3 0%, #ffe082 100%);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+        }
+        
+        .radical.selected {
+            background: linear-gradient(135deg, #ffcc00 0%, #ffb300 100%);
+            border-color: #e6b800;
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(255, 193, 7, 0.5);
+        }
+        
+        .radical.correct {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            border-color: #4CAF50;
+        }
+        
+        .radical.wrong {
+            background: linear-gradient(135deg, #f44336 0%, #da190b 100%);
+            border-color: #f44336;
+        }
+        
+        .radical-info {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.3;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .progress-container {
+            flex: 1;
+            margin: 0 25px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .progress {
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 6px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(33, 150, 243, 0.3);
+            font-weight: bold;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        button:disabled {
+            background: linear-gradient(135deg, #cccccc 0%, #aaaaaa 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .group-info {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .score-display {
+            font-size: 20px;
+            font-weight: bold;
+            color: #E91E63;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .timer {
+            font-size: 20px;
+            font-weight: bold;
+            color: #FF9800;
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        /* 动画效果 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .current-character.pulse {
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+            20%, 40%, 60%, 80% { transform: translateX(8px); }
+        }
+        
+        .character-display.shaking {
+            animation: shake 0.5s;
+        }
+        
+        @keyframes flash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(76, 175, 80, 0.3); }
+        }
+        
+        .character-display.flash {
+            animation: flash 0.5s;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .current-character {
+                font-size: 120px;
+            }
+            
+            .radicals-panel {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .radical {
+                font-size: 28px;
+                padding: 20px 10px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .progress-container {
+                width: 100%;
+                margin: 0;
+            }
+        }
+        
+        /* 声音控制 */
+        .sound-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .sound-control:hover {
+            transform: scale(1.1);
+        }
+        
+        /* 完成动画 */
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            z-index: 1000;
+        }
+        
+        .game-instructions {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .instructions-title {
+            font-weight: bold;
+            color: #1976D2;
+            margin-bottom: 8px;
+        }
+        
+        .instructions-content {
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .group-complete {
+            text-align: center;
+            font-size: 18px;
+            color: #4CAF50;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sound-control" id="soundControl" title="切换声音">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9V15H7L12 20V4L7 9H3Z" fill="#4CAF50"/>
+                <path d="M16.5 12C16.5 10.23 15.48 8.71 14 7.97V16.02C15.48 15.29 16.5 13.77 16.5 12Z" fill="#4CAF50"/>
+                <path d="M14 3.23V5.29C16.89 6.15 19 8.83 19 12C19 15.17 16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12C21 7.72 18.01 4.14 14 3.23Z" fill="#4CAF50"/>
+            </svg>
+        </div>
+        
+        <div class="header">
+            <h1>汉字声符快速归类游戏</h1>
+            <p class="subtitle">快速点击正确的声符来归类显示的汉字！</p>
+        </div>
+        
+        <div class="game-instructions">
+            <div class="instructions-title">游戏说明：</div>
+            <div class="instructions-content">
+                中央会显示一个大大的汉字，请快速点击右侧正确的声符进行归类。<br>
+                选择正确得分，选择错误扣分，速度越快得分越高！<br>
+                点击声符时会朗读该声符及其例词和英文释义。
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="score">0</div>
+                <div class="stat-label">得分</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="correctCount">0</div>
+                <div class="stat-label">正确</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">总数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="accuracy">0%</div>
+                <div class="stat-label">准确率</div>
+            </div>
+        </div>
+        
+        <div class="game-area">
+            <div class="character-display" id="characterDisplay">
+                <div class="current-character" id="currentCharacter">?</div>
+                <div class="character-info" id="characterInfo">准备开始游戏...</div>
+                <div class="timer" id="timer">时间: 0s</div>
+                <div class="score-display" id="scoreDisplay">得分: 0</div>
+                <div class="group-complete" id="groupComplete" style="display: none;"></div>
+            </div>
+            <div class="radicals-panel" id="radicalsPanel">
+                <!-- 声符将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="startBtn">开始游戏</button>
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>进度</span>
+                    <span id="progressText">0%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+            <div class="group-info" id="groupInfo">第1组/共8组</div>
+            <button id="nextGroupBtn" disabled>下一组</button>
+        </div>
+    </div>
+
+    <script>
+        // 声符数据（211-250组）
+        const radicalsData = [
+            { id: 211, radical: "巨", characters: ["巨", "𢀑", "𥄷", "詎", "拒", "歫", "距", "𧺹", "䶙", "駏", "𧣒", "蚷", "螶", "苣", "柜", "秬", "粔", "炬", "昛", "岠", "䢹", "䣰", "鉅", "𥂇", "𦊐", "弡", "壾", "矩", "渠", "𪆫", "𪆂", "䝣", "蟝", "蕖", "磲", "璖", "𦄽", "㣄", "矩", "榘", "𩰤"] },
+            { id: 212, radical: "主", characters: ["主", "𪐴", "𠰍", "註", "拄", "迬", "跓", "住", "妵", "𥩣", "疰", "𩿢", "駐", "㹥", "麈", "蛀", "𪌘", "𪌜", "炷", "砫", "𨳳", "宔", "𢨸", "軴", "紸", "䪒", "飳", "鉒", "罜", "𦉷", "𠴦", "䝬", "注", "柱", "黈", "注", "霔", "𥦠", "柱", "嵀", "𥯸", "黈", "蘣"] },
+            { id: 213, radical: "𦰋", characters: ["夢", "𦫰", "懜", "儚", "𧲎", "𧲍", "𦿏", "𩴲", "㙹", "㝱", "鄸", "𨞯", "𨮒", "𦰋", "𦰋", "𧀧", "䠢", "𦒃", "𥕗", "蘉", "薨", "甍", "瞢", "夢", "瞢", "矒", "䒐", "懵", "𥌱", "𪈆", "䲛", "𡬌", "𢅴", "薨", "𣩾", "𩖎", "𩖉", "𠐿", "𤃫", "𩙛", "甍", "𥌯", "𧂛", "𣞑", "䉚"] },
+            { id: 214, radical: "睪", characters: ["睪", "睪", "䁺", "㘁", "譯", "懌", "𦌩", "斁", "䐾", "殬", "鸅", "蠌", "䕉", "檡", "𥼶", "𥜃", "𩴮", "𤑹", "燡", "𠓋", "墿", "嶧", "𢋇", "圛", "繹", "𩍜", "𩏪", "襗", "䭞", "醳", "凙", "鐸", "釋", "𦔥", "驛", "擇", "澤", "擇", "蘀", "籜", "驛", "㶠", "澤", "䕪"] },
+            { id: 215, radical: "复", characters: ["复", "复", "㚆", "𡕨", "馥", "愎", "𣦇", "腹", "𠋩", "𥪚", "𤸑", "𪃃", "䮡", "蝮", "鰒", "𩺽", "椱", "稪", "㙏", "䧗", "輹", "𦩟", "緮", "𩋟", "𠣸", "鍑", "復", "𢕒", "𢕛", "複", "復", "蕧", "澓", "㠅", "𥨍", "𠣾", "𠤇", "𥳇", "覆", "覆", "𧕡", "𥷱", "複", "𥵩"] },
+            { id: 216, radical: "玄", characters: ["玄", "玄", "𤣥", "𢆯", "眩", "詃", "怰", "衒", "𩑹", "胘", "伭", "𠆺", "妶", "痃", "䮄", "蚿", "泫", "炫", "玹", "舷", "絃", "䩙", "𠣖", "袨", "𢂄", "鉉", "𠛑", "䍗", "䝮", "弦", "幻", "𠄔", "弦", "誸", "𢛆", "𢮂", "𧼏", "婱", "𦱁", "㡉", "幻", "䒛"] },
+            { id: 217, radical: "豈", characters: ["豈", "𧰙", "豈", "䁗", "覬", "皚", "𠹛", "𧪚", "愷", "㨟", "敳", "敱", "𧽊", "顗", "䶣", "𤘑", "䐩", "㱯", "䠽", "𩥉", "獃", "螘", "䱺", "䔇", "榿", "溰", "暟", "颽", "𩘥", "塏", "隑", "𨻭", "嵦", "磑", "闓", "𦩴", "䭓", "凒", "鎧", "剴"] },
+            { id: 218, radical: "芻", characters: ["芻", "芻", "㗙", "謅", "㱀", "㥮", "搊", "𢬆", "𨃘", "趨", "齺", "䐢", "㑳", "", "媰", "𥪥", "鶵", "雛", "騶", "犓", "𧳹", "𧎷", "蒭", "𪎪", "㮲", "䅳", "𥻤", "煼", "𤌉", "鄒", "𨛄", "䑼", "縐", "𥿲", "𩌄", "皺", "𤿥", "𩱈", "𩱦", "篘"] },
+            { id: 219, radical: "甘", characters: ["甘", "甘", "𠙿", "黚", "𦕐", "咁", "𩬚", "佄", "姏", "疳", "𧣑", "甝", "蚶", "䗣", "魽", "苷", "𤯌", "𤯎", "柑", "泔", "𧮳", "雸", "𤊼", "𩖺", "坩", "𡶑", "玵", "𨳼", "紺", "酣", "鉗", "䇞", "𧵊", "邯", "𣢟", "拑", "拑", "㟛", "箝", "邯", "𣵷", "𣢟", "嵌"] },
+            { id: 220, radical: "介", characters: ["介", "介", "䚸", "㰡", "忦", "𢗊", "扴", "𢪅", "尬", "䯰", "齘", "骱", "价", "妎", "𡗦", "疥", "䲸", "𩾴", "𩡺", "𤘦", "𧱘", "蚧", "魪", "芥", "炌", "圿", "界", "畍", "𡵚", "砎", "玠", "𠨴", "庎", "䦏", "㝏", "紒", "𣬫", "衸", "㠹"] },
+            { id: 221, radical: "𦭝", characters: ["蔑", "䁾", "𧂝", "𥋚", "懱", "㩢", "䩏", "衊", "䯦", "㒝", "𪇴", "蠛", "鱴", "櫗", "𥣫", "𧀅", "瀎", "礣", "䌩", "韈", "韤", "襪", "幭", "𢅓", "𨣱", "鑖", "𥽘", "篾", "𦭝", "蔑", "𦸑", "𦭝", "𤋂", "𤊾", "𦱛", "篾", "𥗥", "𢅵", "簚", "𥽘", "𩱷", "𤋂", "𤏿"] },
+            { id: 222, radical: "屈", characters: ["屈", "屈", "𡲬", "啒", "詘", "誳", "掘", "䠇", "趉", "䞷", "𩭪", "胐", "𦜇", "𣨢", "镼", "倔", "㽾", "鶌", "𩣹", "𡲗", "𧌑", "䓛", "淈", "𩖷", "堀", "崛", "崫", "𡶏", "𠘼", "𦁐", "𩋎", "䘿", "𨧱", "𥮝", "𠜾", "窟", "窟", "㵠", "𡑣", "𡼿"] },
+            { id: 223, radical: "奚", characters: ["奚", "奚", "𥉐", "𦫬", "謑", "㰿", "慀", "㨙", "徯", "蹊", "𡰄", "膎", "傒", "㜎", "𥪦", "雞", "騱", "𤠓", "豯", "貕", "鼷", "螇", "𪓷", "蒵", "榽", "溪", "谿", "豀", "𤲺", "嵠", "磎", "𦩶", "鞵", "䙎", "𥰥", "𤳤", "𤳃", "鷄", "鷄", "鸂"] },
+            { id: 224, radical: "虍", characters: ["虛", "噓", "嘘", "歔", "憈", "𢴮", "驉", "𥛳", "魖", "墟", "𨼋", "㠊", "𧝔", "𤮆", "虖", "嘑", "謼", "歑", "嫭", "㯉", "滹", "㙤", "𨻲", "㻯", "𨝘", "罅", "𢧶", "虍", "處", "䖏", "虖", "虍", "雐", "𧇽", "虡", "𧆾", "𧇆", "虛", "虚", "𧇽", "𧃢", "簴"] },
+            { id: 225, radical: "叚", characters: ["叚", "叚", "𠭊", "睱", "赮", "𢝅", "𢱈", "徦", "䠍", "䫗", "腵", "𩩱", "婽", "瘕", "騢", "猳", "犌", "豭", "貑", "麚", "蝦", "鰕", "葭", "椵", "霞", "煆", "暇", "碬", "瑕", "縀", "𩋥", "𣮫", "䪗", "鍜", "嘏", "假", "遐", "假", "𣘟", "遐", "蕸"] },
+            { id: 226, radical: "烏", characters: ["烏", "烏", "𤚶", "嗚", "歍", "𧽋", "𤸼", "䖚", "螐", "鰞", "𦶀", "㮧", "溩", "塢", "隖", "䃖", "瑦", "𨶇", "鄔", "䡧", "𢄓", "鎢", "於", "扵", "𤕘", "𣱏", "於", "唹", "𢮁", "𣨝", "𩩘", "瘀", "菸", "棜", "淤", "𤥽", "𩜏", "箊", "閼", "閼", "𤂷"] },
+            { id: 227, radical: "才", characters: ["才", "才", "䞗", "𠠸", "犲", "𦬁", "材", "䴭", "𤆎", "䊷", "𩛥", "鼒", "財", "豺", "在", "𢦏", "𢦒", "𢦔", "", "𢦏", "𥅰", "䵧", "胾", "蛓", "烖", "𨚵", "載", "裁", "酨", "𨠾", "哉", "栽", "哉", "睵", "𦳦", "渽", "賳", "在", "茬", "茌", "豺", "𡺵", "栽", "溨"] },
+            { id: 228, radical: "付", characters: ["付", "付", "咐", "怤", "㤔", "拊", "跗", "𩬙", "胕", "䠵", "姇", "㾈", "𩿧", "駙", "蚹", "鮒", "苻", "柎", "𥹃", "祔", "泭", "坿", "附", "䂤", "紨", "袝", "𩚭", "鉜", "弣", "䵾", "符", "府", "府", "捬", "腐", "腑", "俯", "符", "𣘧", "𣻜", "䒀"] },
+            { id: 229, radical: "需", characters: ["需", "需", "䞕", "嚅", "譳", "懦", "擩", "顬", "臑", "儒", "嬬", "孺", "𡦗", "䇕", "獳", "㹘", "𪋯", "䨲", "蠕", "鱬", "薷", "檽", "䰰", "濡", "燸", "曘", "壖", "㽭", "礝", "瓀", "繻", "𩍥", "襦", "𧝄", "醹", "鑐", "𠟺", "羺", "羺", "𧅘"] },
+            { id: 230, radical: "京", characters: ["京", "京", "䁁", "黥", "諒", "𣄴", "𣄵", "掠", "勍", "亮", "倞", "𡮎", "鶁", "猄", "㹁", "麖", "𪋔", "鯨", "椋", "涼", "晾", "𩗬", "𩘁", "輬", "綡", "䣼", "凉", "剠", "弶", "䝶", "景", "景", "憬", "撔", "澋", "暻", "璟", "影", "幜", "䭘"] },
+            { id: 231, radical: "蒦", characters: ["蒦", "蒦", "矆", "䨼", "雘", "頀", "嚄", "護", "𣤨", "㦜", "擭", "彠", "𧾛", "臒", "𩪭", "嬳", "𤻙", "鸌", "獲", "蠖", "鱯", "檴", "穫", "濩", "䨥", "𤐰", "㠛", "𥖪", "瓁", "𢋒", "艧", "韄", "䪝", "𩟓", "鑊", "籆", "劐", "矱", "耯"] },
+            { id: 232, radical: "菐", characters: ["菐", "菐", "瞨", "䑑", "𪒢", "撲", "蹼", "𩯏", "𩪛", "𡡐", "䴆", "獛", "㹒", "𪖈", "䗱", "樸", "穙", "墣", "䧤", "璞", "轐", "𦄾", "䪁", "㲫", "襆", "幞", "醭", "鏷", "𥐁", "僕", "僕", "𢷏", "𦿍", "㯷", "𥣜", "濮", "㙸", "𨽂", "纀", "襥"] },
+            { id: 233, radical: "夂", characters: ["冬", "𧹝", "㤏", "𦙭", "𣧩", "佟", "疼", "鴤", "䳉", "䧷", "𧲴", "鼨", "𧆼", "螽", "䶱", "苳", "柊", "泈", "𩂓", "炵", "㫡", "䂢", "𠩁", "㠽", "鉖", "笗", "鼕", "㲇", "終", "夂", "夂", "𠂂", "𪔻", "𣅈", "𠔙", "𣆼", "冬", "𤽬", "終", "蔠", "䈺"] },
+            { id: 234, radical: "𠬶", characters: ["𠬶", "𠬶", "唚", "𢬶", "𢔀", "䯹", "㾛", "駸", "鮼", "𦯈", "梫", "𣘕", "䜷", "祲", "濅", "𣆲", "埐", "寢", "𡬓", "㝲", "𡩠", "綅", "𦃌", "鋟", "𠜘", "𥍯", "浸", "侵", "浸", "蓡", "薓", "寖", "𡩻", "𡫏", "𥧲", "侵", "葠", "𦺭", "寑", "𡪢", "䈜"] },
+            { id: 235, radical: "及", characters: ["及", "及", "𢎜", "吸", "扱", "彶", "趿", "伋", "㚫", "㽺", "䲯", "𩾶", "𦐅", "馺", "𤜯", "魥", "芨", "极", "𥘜", "汲", "雭", "昅", "圾", "岌", "砐", "㧀", "䑥", "級", "靸", "𣬬", "𩎕", "衱", "㠷", "鈒", "笈", "急", "㤂", "急", "𪂺", "𦳌"] },
+            { id: 236, radical: "䍃", characters: ["䍃", "䍃", "䁘", "𧡷", "嗂", "謠", "謡", "𣣳", "愮", "搖", "摇", "徭", "遙", "遥", "䠛", "𧽎", "傜", "媱", "鷂", "猺", "鰩", "䔄", "榣", "暚", "颻", "瑤", "瑶", "窰", "鎐", "繇", "繇", "𢖟", "𨙂", "蘨", "櫾", "𣞿", "𤬖", "𨷱", "㘥", "𢑄"] },
+            { id: 237, radical: "萬", characters: ["厲", "𧢝", "𡂖", "𢤆", "𨇆", "勵", "𩧃", "𤢵", "犡", "蠣", "櫔", "𥣭", "糲", "禲", "濿", "曞", "巁", "礪", "𠠏", "𧸱", "萬", "萬", "㸘", "𠇰", "噧", "䜕", "邁", "勱", "癘", "𤛶", "蠇", "䘍", "贎", "厲", "蠆", "蠆", "𧮚", "𨙚", "爡", "𧓽"] },
+            { id: 238, radical: "賁", characters: ["賁", "賁", "馩", "噴", "歕", "憤", "膹", "㱵", "僨", "㿎", "䴅", "翸", "𩦥", "獖", "豶", "羵", "蟦", "鱝", "蕡", "黂", "𪎰", "橨", "𥢊", "濆", "燌", "墳", "轒", "䒈", "䩿", "𣯻", "𥀢", "幩", "饙", "鐼", "𤗸", "𤖘", "鼖", "𪔵"] },
+            { id: 239, radical: "折", characters: ["折", "折", "𣂲", "㪿", "䀸", "䀿", "哲", "哳", "誓", "悊", "𢼺", "𣂯", "逝", "䟷", "踅", "𧻸", "䏳", "㑜", "娎", "㝂", "𪁊", "狾", "𧣯", "蜇", "𧋍", "浙", "焎", "晢", "晣", "硩", "䩢", "㿱", "𢂼", "䭁", "銴", "䇽", "𥍭", "𧶇"] },
+            { id: 240, radical: "疋", characters: ["胥", "諝", "㥠", "揟", "婿", "壻", "𤟠", "蝑", "䱬", "楈", "稰", "糈", "𥚩", "湑", "醑", "䈝", "𧶳", "疋", "疋", "𤕟", "𤴙", "𥿇", "疎", "踈", "䝪", "㽰", "疏", "䟽", "胥", "楚", "楚", "𠿝", "憷", "齼", "儊", "濋", "𨼪", "礎", "疏", "蔬", "梳"] },
+            { id: 241, radical: "朱", characters: ["朱", "朱", "䎷", "咮", "𠱒", "誅", "㧣", "跦", "趎", "殊", "侏", "姝", "鴸", "𦐣", "𦐨", "𩢻", "駯", "𤝹", "蛛", "鮢", "鼄", "茱", "株", "秼", "𪏿", "祩", "洙", "陎", "硃", "珠", "邾", "絑", "袾", "銖", "㼡", "䇬", "㸡", "㦵"] },
+            { id: 242, radical: "取", characters: ["取", "取", "㖩", "諏", "掫", "𨓭", "趣", "齱", "𠉧", "娶", "娵", "𧱛", "𧌗", "鯫", "菆", "黀", "棷", "棸", "㷅", "埾", "陬", "𡸨", "𡸘", "㻓", "𢈾", "緅", "𩋄", "箃", "郰", "聚", "聚", "䠫", "驟", "䝒", "𩼦", "𥣙", "鄹", "㔌", "郰", "𡪅"] },
+            { id: 243, radical: "農", characters: ["農", "農", "䢉", "䁸", "𪒬", "𦗳", "齈", "噥", "𦦥", "譨", "憹", "擃", "鬞", "膿", "𧗕", "𨲳", "儂", "癑", "𪆯", "㺜", "𤣜", "𩼅", "蕽", "檂", "穠", "䵜", "禯", "𨑊", "濃", "𩅽", "嶩", "䃩", "𥗸", "𥗰", "𣰊", "襛", "𩟊", "醲"] },
+            { id: 244, radical: "覃", characters: ["覃", "覃", "𪉞", "𪉲", "瞫", "䚓", "𦗡", "𩡝", "嘾", "㽑", "譚", "憛", "𧽼", "䐺", "㜤", "鷣", "驔", "蟫", "鱏", "蕈", "橝", "䊤", "禫", "燂", "墰", "𡼬", "磹", "𨝸", "醰", "鐔", "贉", "簟", "潭", "撢", "潭", "藫", "䨵", "簟", "㶘", "撢", "𤁡"] },
+            { id: 245, radical: "尗", characters: ["叔", "𠴫", "惄", "掓", "𣥹", "踧", "俶", "婌", "𧇝", "菽", "𤬂", "𣈉", "埱", "𥓍", "琡", "裻", "錖", "淑", "督", "尗", "尗", "𧠪", "𠱙", "𧧌", "𣢰", "敊", "䦊", "𨲂", "𪀖", "鮛", "茮", "𣐹", "𡧯", "𡧘", "叔", "𣐹", "椒", "𡧯", "寂", "淑", "蔋", "督", "𧝴"] },
+            { id: 246, radical: "勺", characters: ["勺", "勺", "訋", "㣿", "扚", "彴", "趵", "尥", "仢", "妁", "馰", "犳", "䶂", "虳", "魡", "芍", "杓", "䄪", "礿", "汋", "旳", "𥐝", "玓", "靮", "䋤", "𧘑", "𢁕", "酌", "𦉹", "㢩", "灼", "的", "肑", "釣", "灼", "𥭓", "的", "菂", "肑", "𥭖", "釣", "瘹"] },
+            { id: 247, radical: "弁", characters: ["弁", "弁", "𢍍", "𡭪", "覍", "拚", "𢬵", "䪻", "𡗹", "鴘", "𤝏", "𧉤", "䒪", "㭓", "𥹇", "昪", "𡊅", "𡊄", "㺹", "閞", "𨚕", "𥿋", "𣄏", "𩚳", "𨠒", "匥", "笲", "畚", "𠫻", "𤲙", "𡙂", "軬", "畚", "㨧", "㮥", "輽", "笲", "𥮓", "軬", "䉊"] },
+            { id: 248, radical: "堇", characters: ["堇", "艱", "𦫒", "堇", "𡎸", "𡏳", "𦻍", "䒺", "覲", "𠻨", "謹", "歏", "慬", "囏", "𡆒", "㨷", "殣", "僅", "嫤", "瘽", "㹏", "螼", "蓳", "槿", "漌", "墐", "瑾", "廑", "鄞", "饉", "𠞱", "𥎊", "㝻", "勤", "勤", "懃", "懄", "㢙"] },
+            { id: 249, radical: "危", characters: ["危", "危", "𪖡", "詭", "𣢪", "𣄲", "恑", "㧪", "𢼨", "跪", "𧻜", "尯", "頠", "𩨾", "佹", "姽", "𪀗", "觤", "蛫", "鮠", "桅", "㩻", "祪", "洈", "𩗜", "垝", "陒", "峞", "峗", "硊", "𢈌", "𡧭", "𥥠", "䣀", "𩊛", "䤥", "𧵥"] },
+            { id: 250, radical: "垂", characters: ["垂", "垂", "𡍮", "埀", "睡", "唾", "諈", "捶", "𩭦", "腄", "倕", "𠍮", "娷", "𨿠", "䮔", "𩦛", "𩥗", "菙", "棰", "㩾", "䅜", "涶", "𩃒", "𣇦", "埵", "陲", "崜", "硾", "厜", "綞", "錘", "甀", "𦈼", "䍋", "𦉖", "𦥻", "箠"] }
+        ];
+
+        // 常用汉字数据（汉字、例词、英文释义）
+        const commonCharacters = {
+            "巨": { word: "巨大", meaning: "huge" },
+            "主": { word: "主要", meaning: "main" },
+            "夢": { word: "梦想", meaning: "dream" },
+            "睪": { word: "睪丸", meaning: "testicle" },
+            "复": { word: "复习", meaning: "review" },
+            "玄": { word: "玄学", meaning: "metaphysics" },
+            "豈": { word: "岂敢", meaning: "how dare" },
+            "芻": { word: "芻议", meaning: "humble opinion" },
+            "甘": { word: "甘心", meaning: "willing" },
+            "介": { word: "介绍", meaning: "introduce" },
+            "蔑": { word: "蔑视", meaning: "despise" },
+            "屈": { word: "委屈", meaning: "grievance" },
+            "奚": { word: "奚落", meaning: "sarcasm" },
+            "虛": { word: "虚伪", meaning: "hypocrisy" },
+            "叚": { word: "叚借", meaning: "borrow" },
+            "烏": { word: "乌鸦", meaning: "crow" },
+            "才": { word: "才能", meaning: "talent" },
+            "付": { word: "付款", meaning: "payment" },
+            "需": { word: "需要", meaning: "need" },
+            "京": { word: "北京", meaning: "Beijing" },
+            "蒦": { word: "蒦度", meaning: "measure" },
+            "菐": { word: "菐通", meaning: "ordinary" },
+            "冬": { word: "冬天", meaning: "winter" },
+            "𠬶": { word: "𠬶渐", meaning: "gradual" },
+            "及": { word: "及时", meaning: "timely" },
+            "䍃": { word: "䍃器", meaning: "pottery" },
+            "萬": { word: "万一", meaning: "just in case" },
+            "賁": { word: "賁门", meaning: "cardia" },
+            "折": { word: "折扣", meaning: "discount" },
+            "疋": { word: "疋配", meaning: "match" },
+            "朱": { word: "朱红", meaning: "vermilion" },
+            "取": { word: "取得", meaning: "obtain" },
+            "農": { word: "农业", meaning: "agriculture" },
+            "覃": { word: "覃思", meaning: "deep thought" },
+            "叔": { word: "叔叔", meaning: "uncle" },
+            "勺": { word: "勺子", meaning: "spoon" },
+            "弁": { word: "弁言", meaning: "preface" },
+            "堇": { word: "堇色", meaning: "violet color" },
+            "危": { word: "危险", meaning: "danger" },
+            "垂": { word: "垂直", meaning: "vertical" }
+        };
+
+        // 声符释义数据（使用中文释义）
+        const radicalMeanings = {
+            "巨": { pinyin: "jù", meaning: "巨大；非常", english: "huge; very" },
+            "主": { pinyin: "zhǔ", meaning: "主人；主要", english: "host; main" },
+            "𦰋": { pinyin: "mèng", meaning: "做梦；梦想", english: "to dream; dream" },
+            "睪": { pinyin: "yì", meaning: "伺视；察看", english: "to spy; to observe" },
+            "复": { pinyin: "fù", meaning: "返回；重复", english: "to return; to repeat" },
+            "玄": { pinyin: "xuán", meaning: "深奥；黑色", english: "profound; black" },
+            "豈": { pinyin: "qǐ", meaning: "难道；哪里", english: "how; where" },
+            "芻": { pinyin: "chú", meaning: "割草；牲口吃的草", english: "to mow grass; fodder" },
+            "甘": { pinyin: "gān", meaning: "甜味；甘心", english: "sweet; willing" },
+            "介": { pinyin: "jiè", meaning: "介于；介绍", english: "between; to introduce" },
+            "𦭝": { pinyin: "miè", meaning: "轻视；微小", english: "to despise; tiny" },
+            "屈": { pinyin: "qū", meaning: "弯曲；委屈", english: "bent; grievance" },
+            "奚": { pinyin: "xī", meaning: "何；什么", english: "what; why" },
+            "虍": { pinyin: "hū", meaning: "虎皮上的斑纹", english: "stripes on tiger skin" },
+            "叚": { pinyin: "jiǎ", meaning: "借；不真实", english: "to borrow; false" },
+            "烏": { pinyin: "wū", meaning: "乌鸦；黑色", english: "crow; black" },
+            "才": { pinyin: "cái", meaning: "才能；刚刚", english: "talent; just" },
+            "付": { pinyin: "fù", meaning: "交给；支付", english: "to hand over; to pay" },
+            "需": { pinyin: "xū", meaning: "需要；需求", english: "to need; demand" },
+            "京": { pinyin: "jīng", meaning: "首都；大", english: "capital; big" },
+            "蒦": { pinyin: "huò", meaning: "度量；标准", english: "to measure; standard" },
+            "菐": { pinyin: "pú", meaning: "烦琐；普通", english: "tedious; ordinary" },
+            "夂": { pinyin: "zhǐ", meaning: "从后至", english: "to arrive from behind" },
+            "𠬶": { pinyin: "qīn", meaning: "渐进", english: "gradual" },
+            "及": { pinyin: "jí", meaning: "达到；赶上", english: "to reach; to catch up" },
+            "䍃": { pinyin: "yáo", meaning: "瓦器", english: "earthenware" },
+            "萬": { pinyin: "wàn", meaning: "一万；很多", english: "ten thousand; many" },
+            "賁": { pinyin: "bēn", meaning: "装饰；奔走", english: "to decorate; to run" },
+            "折": { pinyin: "zhé", meaning: "折断；折扣", english: "to break; discount" },
+            "疋": { pinyin: "pǐ", meaning: "匹配；相当", english: "to match; equal" },
+            "朱": { pinyin: "zhū", meaning: "朱红色", english: "vermilion" },
+            "取": { pinyin: "qǔ", meaning: "取得；选取", english: "to obtain; to select" },
+            "農": { pinyin: "nóng", meaning: "农业；农民", english: "agriculture; farmer" },
+            "覃": { pinyin: "tán", meaning: "深；长", english: "deep; long" },
+            "尗": { pinyin: "shū", meaning: "豆类的总称", english: "beans collectively" },
+            "勺": { pinyin: "sháo", meaning: "勺子；舀取", english: "spoon; to ladle" },
+            "弁": { pinyin: "biàn", meaning: "古代的一种帽子", english: "ancient cap" },
+            "堇": { pinyin: "jǐn", meaning: "黏土；少", english: "clay; few" },
+            "危": { pinyin: "wēi", meaning: "危险；高", english: "danger; high" },
+            "垂": { pinyin: "chuí", meaning: "下垂；流传", english: "to hang down; to pass down" }
+        };
+
+        // 游戏状态
+        let currentGroup = 0;
+        let currentRadicals = [];
+        let currentCharacters = [];
+        let selectedRadical = null;
+        let correctCount = 0;
+        let totalCount = 0;
+        let score = 0;
+        let soundEnabled = true;
+        let gameStarted = false;
+        let gameTimer = null;
+        let timeElapsed = 0;
+        const totalGroups = Math.ceil(radicalsData.length / 5);
+
+        // 初始化游戏
+        function initGame() {
+            // 初始化第一组
+            loadGroup(0);
+            
+            // 添加事件监听
+            document.getElementById('startBtn').addEventListener('click', startGame);
+            document.getElementById('nextGroupBtn').addEventListener('click', nextGroup);
+            document.getElementById('soundControl').addEventListener('click', toggleSound);
+            
+            // 更新统计信息
+            updateStats();
+        }
+
+        // 开始游戏
+        function startGame() {
+            gameStarted = true;
+            score = 0;
+            correctCount = 0;
+            totalCount = 0;
+            timeElapsed = 0;
+            
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('nextGroupBtn').disabled = false;
+            
+            // 开始计时器
+            gameTimer = setInterval(() => {
+                timeElapsed++;
+                document.getElementById('timer').textContent = `时间: ${timeElapsed}s`;
+            }, 1000);
+            
+            // 显示第一个汉字
+            showNextCharacter();
+            
+            updateStats();
+        }
+
+        // 加载指定组
+        function loadGroup(groupIndex) {
+            currentGroup = groupIndex;
+            
+            // 更新组信息
+            document.getElementById('groupInfo').textContent = `第${groupIndex + 1}组/共${totalGroups}组`;
+            
+            // 更新进度条
+            const progressPercent = (groupIndex / totalGroups) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+            document.getElementById('progressText').textContent = `${Math.round(progressPercent)}%`;
+            
+            // 获取当前组的5个声符
+            const startIndex = groupIndex * 5;
+            currentRadicals = radicalsData.slice(startIndex, startIndex + 5);
+            
+            // 准备汉字
+            prepareCharacters();
+            
+            // 渲染界面
+            renderGame();
+        }
+
+        // 准备汉字
+        function prepareCharacters() {
+            currentCharacters = [];
+            
+            // 从每个声符中随机选择最多10个汉字
+            currentRadicals.forEach(radical => {
+                const shuffled = [...radical.characters].sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, 10);
+                currentCharacters.push(...selected);
+            });
+            
+            // 随机排序所有汉字
+            currentCharacters.sort(() => 0.5 - Math.random());
+            
+            // 限制汉字数量不超过50个
+            if (currentCharacters.length > 50) {
+                currentCharacters = currentCharacters.slice(0, 50);
+            }
+        }
+
+        // 渲染游戏界面
+        function renderGame() {
+            // 渲染声符
+            const radicalsPanel = document.getElementById('radicalsPanel');
+            radicalsPanel.innerHTML = '';
+            
+            currentRadicals.forEach(radical => {
+                const radicalElement = document.createElement('div');
+                radicalElement.className = 'radical';
+                radicalElement.textContent = radical.radical;
+                radicalElement.dataset.radical = radical.radical;
+                
+                // 添加声符信息
+                const infoElement = document.createElement('div');
+                infoElement.className = 'radical-info';
+                
+                const meaning = radicalMeanings[radical.radical];
+                if (meaning) {
+                    infoElement.innerHTML = `
+                        <div>${meaning.pinyin}</div>
+                        <div>${meaning.meaning}</div>
+                    `;
+                }
+                
+                radicalElement.addEventListener('click', function() {
+                    if (!gameStarted) return;
+                    
+                    handleRadicalClick(radical.radical);
+                });
+                
+                radicalElement.appendChild(infoElement);
+                radicalsPanel.appendChild(radicalElement);
+            });
+        }
+
+        //处理声符点击
+function handleRadicalClick(radical) {
+    if (!gameStarted) return;
+    
+    // 只朗读声符本身
+    if (soundEnabled) {
+        speakCharacter(radical);
+    }
+    
+    // 检查是否匹配
+    const currentChar = document.getElementById('currentCharacter').textContent;
+    const radicalData = currentRadicals.find(r => r.radical === radical);
+    
+    if (radicalData && radicalData.characters.includes(currentChar)) {
+        // 匹配成功
+        handleCorrectAnswer(radical);
+    } else {
+        // 匹配失败
+        handleWrongAnswer(radical);
+    }
+}
+
+        // 处理正确答案
+        function handleCorrectAnswer(radical) {
+            correctCount++;
+            totalCount++;
+            
+            // 计算得分（速度越快得分越高）
+            const timeBonus = Math.max(10 - Math.floor(timeElapsed / 10), 1);
+            score += 10 * timeBonus;
+            
+            // 显示正确反馈
+            document.getElementById('characterDisplay').classList.add('flash');
+            document.querySelector(`.radical[data-radical="${radical}"]`).classList.add('correct');
+            
+            // 播放正确声音
+            if (soundEnabled) {
+                playCorrectSound();
+            }
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 显示下一个汉字
+            setTimeout(() => {
+                document.getElementById('characterDisplay').classList.remove('flash');
+                document.querySelector(`.radical[data-radical="${radical}"]`).classList.remove('correct');
+                showNextCharacter();
+            }, 1000);
+        }
+
+        // 处理错误答案
+        function handleWrongAnswer(radical) {
+            totalCount++;
+            score = Math.max(score - 5, 0);
+            
+            // 显示错误反馈
+            document.getElementById('characterDisplay').classList.add('shaking');
+            document.querySelector(`.radical[data-radical="${radical}"]`).classList.add('wrong');
+            
+            // 播放错误声音
+            if (soundEnabled) {
+                playWrongSound();
+            }
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 恢复状态
+            setTimeout(() => {
+                document.getElementById('characterDisplay').classList.remove('shaking');
+                document.querySelector(`.radical[data-radical="${radical}"]`).classList.remove('wrong');
+            }, 1000);
+        }
+
+        // 显示下一个汉字
+        function showNextCharacter() {
+            if (currentCharacters.length === 0) {
+                // 本组完成，自动进入下一组
+                completeGroup();
+                return;
+            }
+            
+            const nextChar = currentCharacters.shift();
+            document.getElementById('currentCharacter').textContent = nextChar;
+            document.getElementById('currentCharacter').classList.add('pulse');
+            
+            // 清空汉字信息区域
+            document.getElementById('characterInfo').textContent = "";
+            
+            setTimeout(() => {
+                document.getElementById('currentCharacter').classList.remove('pulse');
+            }, 500);
+        }
+
+        // 完成当前组
+        function completeGroup() {
+            // 显示完成信息
+            document.getElementById('groupComplete').textContent = `本组完成！得分: ${score}`;
+            document.getElementById('groupComplete').style.display = 'block';
+            
+            // 2秒后自动进入下一组
+            setTimeout(() => {
+                document.getElementById('groupComplete').style.display = 'none';
+                if (currentGroup < totalGroups - 1) {
+                    nextGroup();
+                } else {
+                    endGame();
+                }
+            }, 2000);
+        }
+
+        // 结束游戏
+        function endGame() {
+            gameStarted = false;
+            clearInterval(gameTimer);
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('nextGroupBtn').disabled = true;
+            
+            createConfetti();
+            document.getElementById('characterInfo').textContent = `游戏结束！最终得分: ${score}  准确率: ${((correctCount / totalCount) * 100).toFixed(1)}%`;
+        }
+
+        // 朗读汉字
+        function speakCharacter(character) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(character);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 朗读文本
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = text.match(/[a-zA-Z]/) ? 'en-US' : 'zh-CN';
+                utterance.rate = 0.7;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 播放正确声音
+        function playCorrectSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        // 播放错误声音
+        function playWrongSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(196, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(174.61, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        // 切换声音
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const soundControl = document.getElementById('soundControl');
+            if (soundEnabled) {
+                soundControl.style.backgroundColor = '#4CAF50';
+            } else {
+                soundControl.style.backgroundColor = '#ccc';
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('correctCount').textContent = correctCount;
+            document.getElementById('totalCount').textContent = totalCount;
+            document.getElementById('scoreDisplay').textContent = `得分: ${score}`;
+            
+            const accuracy = totalCount > 0 ? (correctCount / totalCount * 100).toFixed(1) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+        }
+
+        // 创建彩色纸屑效果
+        function createConfetti() {
+            const colors = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#90be6d', '#43aa8b', '#577590'];
+            const container = document.querySelector('.container');
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animation = `confetti ${1 + Math.random() * 2}s forwards`;
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                container.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+        }
+
+        // 下一组
+        function nextGroup() {
+            if (currentGroup < totalGroups - 1) {
+                loadGroup(currentGroup + 1);
+                showNextCharacter();
+            } else {
+                endGame();
+            }
+        }
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>

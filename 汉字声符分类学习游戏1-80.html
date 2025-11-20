@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字声符学习游戏 - 完整版</title>
+    <style>
+        body {
+            font-family: SimSun, serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .display-area {
+            min-height: 400px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .character-display {
+            font-size: 120px;
+            margin-bottom: 20px;
+        }
+        .pinyin-display {
+            font-size: 36px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .progress {
+            width: 100%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #4CAF50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .counter {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #666;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 15px;
+        }
+        .page-info {
+            font-size: 16px;
+            color: #666;
+        }
+        .radical-info {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #444;
+        }
+        .start-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #2196F3;
+            margin-top: 20px;
+        }
+        .start-button:hover {
+            background-color: #0b7dda;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>汉字声符学习游戏 - 完整版</h1>
+        <p>点击"开始学习"按钮开始学习，每个汉字显示3秒并自动朗读</p>
+    </div>
+    
+    <div class="display-area" id="displayArea">
+        <div id="initialMessage">
+            <h2>欢迎学习汉字声符</h2>
+            <p>点击下方按钮开始学习所有声符和汉字</p>
+            <button class="start-button" id="startButton">开始学习</button>
+        </div>
+        <div class="radical-info" id="radicalInfo" style="display: none;"></div>
+        <div id="characterDisplay" class="character-display" style="display: none;"></div>
+        <div id="pinyinDisplay" class="pinyin-display" style="display: none;"></div>
+        <div class="counter" id="counter" style="display: none;"></div>
+        <div class="progress" id="progressBar" style="display: none;">
+            <div class="progress-bar" id="progressFill"></div>
+        </div>
+        <div class="controls" id="controls" style="display: none;">
+            <button id="prevRadicalBtn">上一个声符</button>
+            <button id="prevBtn">上一页</button>
+            <button id="pauseBtn">暂停</button>
+            <button id="restartBtn">重新开始</button>
+            <button id="nextBtn">下一页</button>
+            <button id="nextRadicalBtn">下一个声符</button>
+            <button id="speakBtn">朗读当前汉字</button>
+        </div>
+        <div class="pagination" id="pagination" style="display: none;">
+            <span class="page-info" id="pageInfo">声符 <span id="currentRadicalIndex">1</span>/<span id="totalRadicals">1</span> | 汉字 <span id="currentPage">1</span>/<span id="totalPages">1</span></span>
+        </div>
+    </div>
+
+    <script>
+        // 完整的80个声符数据
+        const radicalsData = [
+            // 第一等级 (1-40)
+            [
+                { id: 1, radical: "今", characters: ["今", "黔", "黅", "耹", "訡", "忴", "扲", "趻", "赺", "肣", "仱", "妗", "鳹", "雂", "芩", "枔", "棽", "昑", "坅", "玪", "庈", "紟", "靲", "衿", "鹶", "鈐", "笒", "矜", "吟", "含", "岑", "汵", "衾", "琴", "禽", "貪", "酓", "欦", "侌", "念"] },
+                { id: 2, radical: "工", characters: ["工", "䪦", "叿", "訌", "扛", "攻", "肛", "功", "仜", "疘", "羾", "魟", "杠", "豇", "灴", "屸", "矼", "玒", "舡", "釭", "瓨", "缸", "巩", "江", "汞", "貢", "虹", "紅", "空", "邛", "項"] },
+                { id: 3, radical: "甫", characters: ["甫", "哺", "誧", "悑", "逋", "俌", "痡", "鵏", "豧", "蜅", "鯆", "莆", "秿", "烳", "晡", "陠", "峬", "庯", "圃", "郙", "輔", "補", "黼", "餔", "酺", "鋪", "鬴", "簠", "捕", "匍", "脯", "浦", "尃"] },
+                { id: 4, radical: "可", characters: ["可", "呵", "訶", "抲", "跒", "䯊", "妸", "疴", "鴚", "蚵", "魺", "苛", "柯", "炣", "坷", "砢", "珂", "軻", "舸", "袔", "酠", "鈳", "笴", "牁", "哥", "阿", "何", "河", "岢", "閜", "奇", "哿"] },
+                { id: 5, radical: "古", characters: ["古", "咕", "詁", "怙", "故", "跍", "骷", "估", "鴣", "牯", "蛄", "枯", "秙", "祜", "沽", "岵", "鈷", "瓳", "盬", "罟", "固", "姑", "辜", "酤", "胡", "居", "苦", "嘏"] },
+                { id: 6, radical: "且", characters: ["且", "咀", "詛", "怚", "抯", "跙", "趄", "齟", "殂", "伹", "姐", "疽", "鴡", "雎", "駔", "狙", "豠", "麆", "蛆", "粗", "岨", "砠", "珇", "靻", "袓", "笡", "刞", "助", "租", "鉏", "阻", "俎", "祖", "組", "苴", "罝", "沮", "坥", "徂", "柤", "查", "虘"] },
+                { id: 7, radical: "云", characters: ["云", "耺", "忶", "抎", "妘", "夽", "沄", "囩", "紜", "耘", "芸", "雲", "魂", "勻", "匀", "旬", "訇"] },
+                { id: 8, radical: "于", characters: ["于", "訏", "扜", "迂", "虶", "芋", "杅", "杇", "旴", "圩", "圬", "玗", "邘", "釪", "竽", "盂", "汙", "吁", "盱", "紆", "宇", "雩", "虧", "夸"] },
+                { id: 9, radical: "尚", characters: ["尚", "惝", "徜", "趟", "躺", "倘", "淌", "裳", "鋿", "常", "甞", "嘗", "敞", "牚", "當", "黨", "賞", "堂", "棠", "掌"] },
+                { id: 10, radical: "干", characters: ["干", "鼾", "訐", "忓", "扞", "赶", "衎", "頇", "肝", "骭", "奸", "姧", "杆", "秆", "矸", "玕", "邗", "靬", "皯", "衦", "飦", "酐", "釬", "竿", "刊", "盰", "罕", "汗", "岸", "旰", "旱", "軒"] },
+                { id: 11, radical: "圭", characters: ["圭", "眭", "哇", "詿", "挂", "跬", "街", "胿", "蛙", "鮭", "茥", "畦", "硅", "珪", "閨", "邽", "絓", "鞋", "筀", "刲", "罣", "卦", "窐", "桂", "黊", "恚", "佳", "奎", "洼", "娃", "烓", "厓", "崖"] },
+                { id: 12, radical: "匕", characters: ["匕", "比", "毖", "吡", "批", "仳", "妣", "屁", "豼", "蚍", "芘", "枇", "秕", "粃", "沘", "阰", "砒", "玭", "庇", "紕", "鈚", "笓", "坒", "肶", "毗", "琵"] },
+                { id: 13, radical: "者", characters: ["者", "睹", "覩", "赭", "猪", "觰", "渚", "暏", "堵", "陼", "琽", "闍", "緒", "褚", "帾", "醏", "鍺", "賭", "豬", "諸", "煑", "煮", "著", "箸", "都", "奢", "書", "暑", "署", "屠"] },
+                { id: 14, radical: "各", characters: ["各", "詻", "挌", "骼", "佫", "駱", "狢", "觡", "貉", "鮥", "茖", "烙", "垎", "硌", "珞", "絡", "袼", "酪", "鉻", "賂", "格", "閣", "恪", "客", "輅", "洛", "笿", "雒", "略", "路"] },
+                { id: 15, radical: "亡", characters: ["亡", "忙", "肓", "衁", "妄", "汒", "邙", "笀", "芒", "杗", "盲", "蝱", "忘", "喪", "巟", "罔"] },
+                { id: 16, radical: "丰", characters: ["丰", "邦", "蚌", "仹", "妦", "玤", "邦", "封", "夆", "奉", "豐"] },
+                { id: 17, radical: "匃", characters: ["匃", "丐", "鈣", "曷", "喝", "愒", "遏", "朅", "偈", "鶡", "猲", "羯", "蝎", "暍", "堨", "碣", "餲", "葛", "褐", "揭", "楬", "竭", "渴", "歇", "謁"] },
+                { id: 18, radical: "生", characters: ["生", "眚", "性", "胜", "殅", "姓", "甥", "狌", "牲", "鼪", "泩", "珄", "旌", "笙", "星", "青"] },
+                { id: 19, radical: "余", characters: ["余", "唋", "悇", "徐", "俆", "鵌", "狳", "蜍", "梌", "稌", "畬", "峹", "餘", "酴", "賒", "舍", "除", "荼", "茶", "途", "涂", "斜", "敘"] },
+                { id: 20, radical: "丁", characters: ["丁", "盯", "耵", "叮", "訂", "打", "仃", "疔", "虰", "艼", "朾", "汀", "灯", "町", "矴", "玎", "邒", "靪", "酊", "釘", "頂", "亭", "成"] },
+                { id: 21, radical: "畾", characters: ["畾", "讄", "儡", "鸓", "藟", "櫑", "礧", "瓃", "罍", "櫐", "壘", "雷", "累"] },
+                { id: 22, radical: "世", characters: ["世", "呭", "詍", "抴", "迣", "跇", "髰", "伳", "枻", "泄", "紲", "袣", "屜", "貰", "枼"] },
+                { id: 23, radical: "矛", characters: ["矛", "髳", "蟊", "雺", "罞", "袤", "茅", "楙", "柔", "敄"] },
+                { id: 24, radical: "方", characters: ["方", "眆", "訪", "彷", "趽", "髣", "肪", "仿", "妨", "鴋", "牥", "蚄", "魴", "枋", "祊", "汸", "雱", "昉", "坊", "房", "邡", "舫", "鈁", "芳", "防", "紡", "放", "旁"] },
+                { id: 25, radical: "卯", characters: ["卯", "奅", "駠", "茆", "柳", "泖", "昴", "珋", "窌", "貿", "聊", "劉", "留"] },
+                { id: 26, radical: "此", characters: ["此", "眥", "眦", "呰", "啙", "跐", "髭", "頿", "齜", "胔", "骴", "佌", "姕", "鴜", "雌", "鮆", "祡", "泚", "砦", "玼", "庛", "貲", "紫", "訾", "疵", "茈", "柴", "些", "觜"] },
+                { id: 27, radical: "句", characters: ["句", "勾", "齁", "訽", "欨", "怐", "拘", "跔", "佝", "耇", "痀", "鴝", "翑", "雊", "駒", "狗", "豞", "鼩", "蚼", "鮈", "枸", "夠", "泃", "岣", "玽", "軥", "絇", "袧", "笱", "斪", "竘", "劬", "胊", "姁", "呴", "昫", "鉤", "苟", "眗"] },
+                { id: 28, radical: "合", characters: ["合", "哈", "詥", "欱", "恰", "跲", "頜", "佮", "鴿", "蛤", "鮯", "秴", "祫", "洽", "烚", "峇", "珨", "閤", "郃", "給", "鞈", "袷", "帢", "餄", "鉿", "盒", "匼", "耠", "拾", "翕"] },
+                { id: 29, radical: "允", characters: ["允", "吮", "抁", "狁", "沇", "阭", "鈗", "夋", "兗"] },
+                { id: 30, radical: "昜", characters: ["昜", "啺", "諹", "愓", "揚", "敭", "踼", "腸", "瘍", "鰑", "煬", "颺", "場", "瑒", "傷", "觴", "殤", "餳", "暢", "碭", "湯", "陽", "楊", "暘"] },
+                { id: 31, radical: "東", characters: ["東", "㖦", "倲", "鶇", "蝀", "菄", "棟", "凍", "涷", "重", "董", "動", "鍾"] },
+                { id: 32, radical: "刀", characters: ["刀", "叨", "忉", "鳭", "虭", "魛", "芀", "朷", "旫", "舠", "釗", "到", "召"] },
+                { id: 33, radical: "朿", characters: ["朿", "㭰", "朿", "茦", "栜", "洓", "刺", "敇", "策", "責"] },
+                { id: 34, radical: "小", characters: ["小", "肖", "哨", "誚", "悄", "逍", "踃", "趙", "髾", "俏", "娋", "痟", "蛸", "鮹", "魈", "消", "霄", "焇", "颵", "硝", "宵", "輎", "艄", "綃", "鞘", "旓", "銷", "弰", "矟", "陗", "峭", "捎", "莦", "梢", "稍", "筲", "削"] },
+                { id: 35, radical: "非", characters: ["非", "馡", "啡", "誹", "悱", "徘", "腓", "俳", "婓", "奜", "痱", "翡", "騑", "猆", "蜚", "鯡", "棐", "棑", "㫵", "陫", "琲", "厞", "扉", "輩", "緋", "靟", "裴", "裶", "屝", "餥", "剕", "悲", "菲", "霏", "匪", "斐", "排"] },
+                { id: 36, radical: "婁", characters: ["婁", "瞜", "嘍", "謱", "慺", "摟", "遱", "膢", "髏", "僂", "瘻", "鷜", "螻", "蔞", "樓", "漊", "熡", "塿", "嶁", "廔", "寠", "艛", "鞻", "褸", "屨", "鏤", "甊", "簍", "耬", "窶", "屢", "縷", "數"] },
+                { id: 37, radical: "叟", characters: ["叟", "瞍", "嗖", "謏", "㥰", "搜", "㪢", "遚", "傁", "瘦", "騪", "獀", "螋", "䱸", "颼", "廋", "鄋", "艘", "䩳", "餿", "醙", "鎪", "溲", "嫂"] },
+                { id: 38, radical: "旦", characters: ["旦", "䵣", "呾", "怛", "担", "胆", "但", "妲", "疸", "鴠", "狚", "觛", "䖧", "䱇", "炟", "坦", "靼", "袒", "笪", "亶"] },
+                { id: 39, radical: "至", characters: ["至", "眰", "咥", "恎", "挃", "跮", "胵", "侄", "姪", "耋", "痓", "駤", "蛭", "荎", "桎", "秷", "洷", "晊", "垤", "厔", "庢", "郅", "輊", "絰", "銍", "臷", "臸", "室", "致", "窒"] },
+                { id: 40, radical: "卑", characters: ["卑", "睥", "諀", "捭", "䠋", "朇", "䫌", "脾", "㗗", "髀", "俾", "婢", "痺", "鵯", "猈", "蜱", "䱝", "萆", "椑", "稗", "粺", "豍", "焷", "埤", "陴", "崥", "碑", "琕", "郫", "綼", "鞞", "裨", "錍", "牌", "鼙", "庳", "箄", "渒"] }
+            ],
+            // 第二等级 (41-80)
+            [
+                { id: 41, radical: "占", characters: ["占", "䀡", "覘", "點", "黇", "呫", "詀", "怗", "敁", "迠", "跕", "頕", "䩇", "胋", "佔", "站", "痁", "蛅", "鮎", "枮", "秥", "粘", "黏", "炶", "颭", "阽", "砧", "玷", "䦓", "扂", "䩞", "袩", "䬯", "酟", "鉆", "䍄", "笘", "㓠", "䵿", "貼", "坫", "店", "拈", "苫", "煔", "帖", "沾"] },
+                { id: 42, radical: "它", characters: ["它", "䙾", "詑", "拕", "跎", "佗", "鴕", "駝", "㸰", "䍫", "鼧", "鮀", "柁", "沱", "䬁", "坨", "砣", "䡐", "舵", "紽", "袉", "酡", "鉈", "㼠", "陀", "迱", "蛇", "施"] },
+                { id: 43, radical: "多", characters: ["多", "眵", "黟", "哆", "誃", "恀", "拸", "迻", "跢", "趍", "䫂", "䏧", "姼", "爹", "卶", "痑", "翗", "蛥", "栘", "㶴", "垑", "陊", "㢁", "㗬", "䡔", "鉹", "侈", "袲", "茤", "扅", "移", "奓"] },
+                { id: 44, radical: "令", characters: ["令", "命", "呤", "詅", "怜", "拎", "彾", "跉", "衑", "齡", "䯍", "伶", "姈", "竛", "㾉", "鴒", "翎", "駖", "狑", "㸳", "羚", "蛉", "魿", "苓", "柃", "秢", "泠", "昤", "朎", "阾", "岭", "砱", "玲", "㡵", "閝", "囹", "軨", "舲", "紷", "袊", "鹷", "冷", "鈴", "瓴", "笭", "刢", "聆", "零", "領"] },
+                { id: 45, radical: "屯", characters: ["屯", "盹", "黗", "吨", "訰", "忳", "扽", "伅", "㹠", "豘", "魨", "杶", "沌", "炖", "旽", "坉", "庉", "窀", "囤", "邨", "軘", "飩", "䣩", "鈍", "純", "頓", "迍", "肫", "芚"] },
+                { id: 46, radical: "𧆨", characters: ["盧", "矑", "黸", "嚧", "攎", "㪭", "䰕", "顱", "臚", "髗", "㔧", "㿖", "鸕", "驢", "獹", "蠦", "鱸", "蘆", "櫨", "瀘", "爐", "曥", "壚", "㠠", "瓐", "廬", "轤", "艫", "纑", "鑪", "罏", "籚", "慮", "攄", "勴", "儢", "濾", "爈", "鑢"] },
+                { id: 47, radical: "爿", characters: ["爿", "妝", "狀", "牂", "牀", "斨", "牄", "將", "牆", "戕", "壯"] },
+                { id: 48, radical: "俞", characters: ["俞", "睮", "覦", "喻", "諭", "愉", "揄", "逾", "踰", "腧", "䠼", "偷", "媮", "瘉", "騟", "貐", "羭", "蝓", "萮", "堬", "隃", "崳", "䃋", "瑜", "㢏", "鄃", "輸", "緰", "䩱", "毹", "褕", "㡏", "鍮", "㼶", "牏", "匬", "㓱", "渝", "窬", "榆", "歈", "愈"] },
+                { id: 49, radical: "石", characters: ["石", "拓", "跖", "碩", "妬", "柘", "祏", "沰", "磔", "袥", "鉐", "席", "度", "庶", "斫", "橐"] },
+                { id: 50, radical: "必", characters: ["必", "䀣", "覕", "馝", "咇", "怭", "㧙", "䏟", "佖", "妼", "鴓", "駜", "虙", "鮅", "苾", "柲", "秘", "祕", "泌", "䫾", "珌", "閟", "㘠", "邲", "䩛", "䪐", "飶", "鉍", "毖", "宓", "瑟", "密", "謐", "蜜"] },
+                { id: 51, radical: "以", characters: ["以", "似", "姒", "苡", "㭒", "泤", "䬮", "笖", "耜", "台"] },
+                { id: 52, radical: "悤", characters: ["悤", "怱", "聰", "謥", "憁", "傯", "驄", "蟌", "樬", "熜", "璁", "䡯", "總", "幒", "鏓", "牕", "蔥", "摠"] },
+                { id: 53, radical: "或", characters: ["或", "聝", "㖪", "㰲", "惐", "掝", "戫", "㚜", "蜮", "棫", "稢", "魊", "淢", "䬎", "域", "䧕", "㽣", "䂸", "琙", "閾", "緎", "罭", "惑", "彧", "馘", "國"] },
+                { id: 54, radical: "夾", characters: ["夾", "䀹", "唊", "䛟", "㰰", "㤲", "悏", "挾", "頰", "脥", "殎", "俠", "㛍", "鵊", "狹", "蛺", "莢", "梜", "浹", "䬊", "峽", "硤", "郟", "綊", "䩡", "裌", "鋏", "㼪", "筴", "匧", "㾜", "翜", "陜"] },
+                { id: 55, radical: "分", characters: ["分", "盼", "馚", "吩", "訜", "弅", "攽", "頒", "肦", "份", "妢", "鳻", "翂", "羒", "鼢", "蚡", "魵", "枌", "棼", "秎", "粉", "汾", "雰", "炃", "昐", "氛", "砏", "玢", "邠", "紛", "衯", "黺", "貧", "芬", "忿", "扮", "坌", "盆"] },
+                { id: 56, radical: "丌", characters: ["丌", "其", "亓", "䢋", "基", "綦", "欺", "䫏"] },
+                { id: 57, radical: "不", characters: ["不", "丕", "吥", "抔", "肧", "衃", "妚", "鴀", "芣", "杯", "坏", "阫", "紑", "盃", "罘", "否"] },
+                { id: 58, radical: "兼", characters: ["兼", "馦", "嗛", "㽐", "謙", "歉", "慊", "搛", "㪠", "尲", "鬑", "䫡", "膁", "傔", "嫌", "㾾", "鶼", "㺌", "鼸", "螊", "鰜", "蒹", "槏", "稴", "豏", "熑", "隒", "嵰", "磏", "縑", "㡘", "䭑", "鹻", "鎌", "甉", "䈴", "賺", "溓", "廉"] },
+                { id: 59, radical: "央", characters: ["央", "眏", "䒋", "咉", "詇", "怏", "抰", "胦", "佒", "姎", "鴦", "駚", "柍", "秧", "泱", "雵", "炴", "映", "坱", "岟", "軮", "紻", "鞅", "鉠", "殃", "盎", "英"] },
+                { id: 60, radical: "良", characters: ["良", "哴", "誏", "欴", "悢", "踉", "朖", "䯖", "躴", "勆", "俍", "娘", "駺", "蜋", "桹", "稂", "粮", "浪", "烺", "㫰", "朗", "埌", "㟍", "崀", "硠", "琅", "㢃", "㝗", "䆡", "䡙", "艆", "鋃", "筤", "剆", "莨", "郎", "狼", "閬"] },
+                { id: 61, radical: "翏", characters: ["翏", "嘐", "謬", "憀", "摎", "蹘", "顟", "髎", "僇", "嫪", "瘳", "鷚", "雡", "蟉", "穋", "豂", "熮", "飂", "疁", "嵺", "磟", "璆", "寥", "鄝", "轇", "繆", "醪", "鏐", "剹", "戮", "膠", "樛", "漻", "蓼", "廖", "勠", "㺒"] },
+                { id: 62, radical: "龹", characters: ["龹", "卷", "拳", "齤", "劵", "牶", "觠", "䖭", "桊", "䄅", "韏", "帣", "餋", "券", "弮", "豢", "眷", "絭"] },
+                { id: 63, radical: "并", characters: ["并", "幷", "皏", "艵", "聠", "恲", "拼", "迸", "跰", "頩", "胼", "骿", "㔙", "併", "姘", "鵧", "駢", "蛢", "鮩", "荓", "栟", "硑", "㻂", "庰", "郱", "軿", "絣", "帡", "餅", "鉼", "瓶", "缾", "䈂", "賆", "洴", "屏"] },
+                { id: 64, radical: "帝", characters: ["帝", "啇", "啼", "諦", "揥", "蹄", "腣", "偙", "㛳", "鶙", "蒂", "楴", "禘", "渧", "崹", "締", "鍗", "啻"] },
+                { id: 65, radical: "高", characters: ["高", "嗃", "謞", "搞", "膏", "髇", "犒", "稾", "熇", "暠", "䬘", "塙", "碻", "鄗", "縞", "毫", "鎬", "毃", "篙", "槀", "蒿", "滈", "翯", "敲", "歊", "豪"] },
+                { id: 66, radical: "壽", characters: ["壽", "㿧", "嚋", "譸", "懤", "擣", "躊", "儔", "㿒", "翿", "䮻", "㹗", "䲖", "薵", "檮", "䊭", "禱", "魗", "濤", "燽", "䬞", "壔", "隯", "疇", "璹", "幬", "醻", "鑄", "籌", "燾"] },
+                { id: 67, radical: "元", characters: ["元", "盶", "忨", "抏", "頑", "䯈", "妧", "翫", "蚖", "魭", "黿", "芫", "杬", "沅", "朊", "坃", "阮", "岏", "玩", "邧", "刓", "貦", "完", "冠"] },
+                { id: 68, radical: "冎", characters: ["冎", "咼", "喎", "諣", "歄", "腡", "媧", "瘑", "騧", "猧", "蝸", "萵", "楇", "渦", "堝", "碢", "窩", "緺", "鍋", "䈑", "剮", "過", "禍"] },
+                { id: 69, radical: "支", characters: ["支", "吱", "䚳", "忮", "技", "歧", "跂", "肢", "伎", "妓", "鳷", "翄", "翅", "蚑", "秓", "汥", "岐", "䡋", "衼", "鈘", "枝", "豉", "屐", "芰"] },
+                { id: 70, radical: "女", characters: ["女", "奴", "如", "㣽", "肗", "籹", "汝"] },
+                { id: 71, radical: "弋", characters: ["弋", "黓", "甙", "骮", "隿", "芅", "杙", "䄩", "䴬", "釴", "忒", "貣", "式", "代"] },
+                { id: 72, radical: "灷", characters: ["灷", "朕", "膡", "黱", "謄", "螣", "鰧", "榺", "塍", "縢", "賸", "勝", "幐", "滕", "騰", "媵"] },
+                { id: 73, radical: "票", characters: ["票", "瞟", "嘌", "慓", "摽", "顠", "膘", "勡", "僄", "嫖", "瘭", "翲", "驃", "螵", "鰾", "蔈", "標", "魒", "熛", "㬓", "飄", "縹", "彯", "褾", "幖", "醥", "鏢", "篻", "剽", "漂", "瓢"] },
+                { id: 74, radical: "𠂇", characters: ["𠂇", "差", "左", "嗟", "搓", "蹉", "䟀", "䰈", "齹", "傞", "瘥", "槎", "溠", "嵯", "瑳", "艖", "縒", "鹺", "鎈", "磋"] },
+                { id: 75, radical: "黃", characters: ["黃", "撗", "黌", "趪", "䐵", "僙", "癀", "獚", "觵", "蟥", "穔", "潢", "熿", "䬝", "磺", "璜", "鐄", "簧", "彉", "橫", "廣"] },
+                { id: 76, radical: "王", characters: ["王", "㞷", "旺", "往", "匡", "汪", "枉", "狂"] },
+                { id: 77, radical: "公", characters: ["公", "㕬", "訟", "忪", "彸", "頌", "伀", "妐", "蚣", "炂", "鈆", "松", "翁", "瓮"] },
+                { id: 78, radical: "僉", characters: ["僉", "瞼", "噞", "譣", "憸", "撿", "顩", "臉", "殮", "儉", "驗", "獫", "羷", "檢", "險", "嶮", "㢛", "襝", "醶", "鹼", "鐱", "劍", "簽", "嬐", "劒", "厱", "匳", "斂", "歛", "澰"] },
+                { id: 79, radical: "𢇁", characters: ["𢇁", "䜌", "變", "孌", "孿", "鸞", "巒", "鑾", "羉", "戀", "欒", "攣", "臠", "矕", "蠻", "彎"] },
+                { id: 80, radical: "弗", characters: ["弗", "艴", "咈", "怫", "拂", "彿", "髴", "佛", "疿", "狒", "鮄", "柫", "炥", "昲", "坲", "紼", "刜", "茀", "沸", "費"] }
+            ]
+        ];
+
+        // 完整的拼音数据
+        const pinyinData = {
+            // 第一等级拼音
+            "今": "jīn", "工": "gōng", "甫": "fǔ", "可": "kě", "古": "gǔ",
+            "且": "qiě", "云": "yún", "于": "yú", "尚": "shàng", "干": "gān",
+            "圭": "guī", "匕": "bǐ", "者": "zhě", "各": "gè", "亡": "wáng",
+            "丰": "fēng", "匃": "gài", "生": "shēng", "余": "yú", "丁": "dīng",
+            "畾": "léi", "世": "shì", "矛": "máo", "方": "fāng", "卯": "mǎo",
+            "此": "cǐ", "句": "jù", "合": "hé", "允": "yǔn", "昜": "yáng",
+            "東": "dōng", "刀": "dāo", "朿": "cì", "小": "xiǎo", "非": "fēi",
+            "婁": "lóu", "叟": "sǒu", "旦": "dàn", "至": "zhì", "卑": "bēi",
+            
+            // 第二等级拼音
+            "占": "zhān", "它": "tā", "多": "duō", "令": "lìng", "屯": "tún",
+            "𧆨": "lú", "爿": "pán", "俞": "yú", "石": "shí", "必": "bì",
+            "以": "yǐ", "悤": "cōng", "或": "huò", "夾": "jiā", "分": "fēn",
+            "丌": "jī", "不": "bù", "兼": "jiān", "央": "yāng", "良": "liáng",
+            "翏": "liù", "龹": "juàn", "并": "bìng", "帝": "dì", "高": "gāo",
+            "壽": "shòu", "元": "yuán", "冎": "guǎ", "支": "zhī", "女": "nǚ",
+            "弋": "yì", "灷": "zhuàn", "票": "piào", "𠂇": "zuǒ", "黃": "huáng",
+            "王": "wáng", "公": "gōng", "僉": "qiān", "𢇁": "luán", "弗": "fú",
+            
+            // 补充其他汉字的拼音
+            "黔": "qián", "黅": "jīn", "耹": "qín", "訡": "yín", "忴": "qián",
+            "扲": "qián", "趻": "chěn", "赺": "yǐn", "肣": "qín", "仱": "qián",
+            "妗": "jìn", "鳹": "qín", "雂": "qín", "芩": "qín", "枔": "xín",
+            "棽": "chēn", "昑": "qǐn", "坅": "qǐn", "玪": "jiān", "庈": "qín",
+            "紟": "jīn", "靲": "qín", "衿": "jīn", "鹶": "jīn", "鈐": "qián",
+            "笒": "cén", "矜": "jīn", "吟": "yín", "含": "hán", "岑": "cén",
+            "汵": "gàn", "衾": "qīn", "琴": "qín", "禽": "qín", "貪": "tān",
+            "酓": "yǎn", "欦": "qiān", "侌": "yīn", "念": "niàn",
+            
+            "䪦": "hóng", "叿": "hōng", "訌": "hòng", "扛": "káng", "攻": "gōng",
+            "肛": "gāng", "功": "gōng", "仜": "hóng", "疘": "gāng", "羾": "hóng",
+            "魟": "hóng", "杠": "gàng", "豇": "jiāng", "灴": "hóng", "屸": "hóng",
+            "矼": "gāng", "玒": "hóng", "舡": "chuán", "釭": "gāng", "瓨": "xiáng",
+            "缸": "gāng", "巩": "gǒng", "江": "jiāng", "汞": "gǒng", "貢": "gòng",
+            "虹": "hóng", "紅": "hóng", "空": "kōng", "邛": "qióng", "項": "xiàng",
+            
+            "哺": "bǔ", "誧": "bū", "悑": "bù", "逋": "bū", "俌": "fǔ",
+            "痡": "pū", "鵏": "bū", "豧": "fú", "蜅": "fǔ", "鯆": "pū",
+            "莆": "pú", "秿": "fù", "烳": "pǔ", "晡": "bū", "陠": "bū",
+            "峬": "bū", "庯": "bū", "圃": "pǔ", "郙": "fǔ", "輔": "fǔ",
+            "補": "bǔ", "黼": "fǔ", "餔": "bū", "酺": "pú", "鋪": "pū",
+            "鬴": "fǔ", "簠": "fǔ", "捕": "bǔ", "匍": "pú", "脯": "pú",
+            "浦": "pǔ", "尃": "fū",
+            
+            "呵": "hē", "訶": "hē", "抲": "hē", "跒": "qiǎ", "䯊": "qià",
+            "妸": "ē", "疴": "kē", "鴚": "gē", "蚵": "kē", "魺": "hé",
+            "苛": "kē", "柯": "kē", "炣": "kě", "坷": "kě", "砢": "luǒ",
+            "珂": "kē", "軻": "kē", "舸": "gě", "袔": "hè", "酠": "qiǎ",
+            "鈳": "kē", "笴": "gǎn", "牁": "kē", "哥": "gē", "阿": "ā",
+            "何": "hé", "河": "hé", "岢": "kě", "閜": "xiǎ", "奇": "qí",
+            "哿": "gě",
+            
+            // 为节省空间，这里只显示部分拼音，实际使用时需要补充完整
+            "咕": "gū", "詁": "gǔ", "怙": "hù", "故": "gù", "跍": "kū",
+            "骷": "kū", "估": "gū", "鴣": "gū", "牯": "gǔ", "蛄": "gū",
+            "枯": "kū", "秙": "kù", "祜": "hù", "沽": "gū", "岵": "hù",
+            "鈷": "gǔ", "瓳": "hú", "盬": "gǔ", "罟": "gǔ", "固": "gù",
+            "姑": "gū", "辜": "gū", "酤": "gū", "胡": "hú", "居": "jū",
+            "苦": "kǔ", "嘏": "gǔ"
+        };
+
+        // 全局变量
+        let currentRadicalIndex = 0;
+        let currentRadical = null;
+        let currentCharacters = [];
+        let currentIndex = 0;
+        let currentPage = 1;
+        let timer = null;
+        let isPaused = false;
+        let charactersPerPage = 10; // 每页显示的汉字数量
+
+        // 将所有声符合并到一个数组中
+        const allRadicals = radicalsData.flat();
+
+        // 开始学习
+        function startLearning() {
+            currentRadicalIndex = 0;
+            currentRadical = allRadicals[currentRadicalIndex];
+            currentCharacters = currentRadical.characters;
+            currentIndex = 0;
+            currentPage = 1;
+            
+            // 显示学习区域
+            document.getElementById('initialMessage').style.display = 'none';
+            document.getElementById('radicalInfo').style.display = 'block';
+            document.getElementById('characterDisplay').style.display = 'block';
+            document.getElementById('pinyinDisplay').style.display = 'block';
+            document.getElementById('counter').style.display = 'block';
+            document.getElementById('progressBar').style.display = 'block';
+            document.getElementById('controls').style.display = 'flex';
+            document.getElementById('pagination').style.display = 'flex';
+            
+            // 开始显示汉字
+            startDisplay();
+        }
+
+        // 开始显示汉字
+        function startDisplay() {
+            clearInterval(timer);
+            isPaused = false;
+            document.getElementById('pauseBtn').textContent = '暂停';
+            
+            // 更新声符信息
+            document.getElementById('radicalInfo').textContent = `当前声符: ${currentRadical.radical} (${currentRadicalIndex + 1}/${allRadicals.length})`;
+            
+            // 计算当前页的起始和结束索引
+            const startIndex = (currentPage - 1) * charactersPerPage;
+            const endIndex = Math.min(startIndex + charactersPerPage, currentCharacters.length);
+            const pageCharacters = currentCharacters.slice(startIndex, endIndex);
+            
+            // 更新分页信息
+            updatePaginationInfo();
+            
+            // 重置进度
+            currentIndex = 0;
+            updateProgress();
+            
+            // 开始显示当前页的汉字
+            displayNextCharacter(pageCharacters);
+        }
+
+        // 显示下一个汉字
+        function displayNextCharacter(characters) {
+            if (currentIndex >= characters.length) {
+                // 当前页显示完毕，自动翻到下一页或下一个声符
+                autoAdvance();
+                return;
+            }
+            
+            const character = characters[currentIndex];
+            const pinyin = pinyinData[character] || "未知";
+            
+            document.getElementById('characterDisplay').textContent = character;
+            document.getElementById('pinyinDisplay').textContent = pinyin;
+            document.getElementById('counter').textContent = `当前: ${currentIndex + 1}/${characters.length}`;
+            
+            // 朗读当前汉字
+            speakCharacter(character);
+            
+            currentIndex++;
+            updateProgress(characters.length);
+            
+            // 设置定时器显示下一个汉字
+            if (!isPaused) {
+                timer = setTimeout(() => {
+                    displayNextCharacter(characters);
+                }, 3000);
+            }
+        }
+
+        // 自动翻页或翻到下一个声符
+        function autoAdvance() {
+            const totalPages = Math.ceil(currentCharacters.length / charactersPerPage);
+            
+            if (currentPage < totalPages) {
+                // 还有下一页，翻到下一页
+                currentPage++;
+                startDisplay();
+            } else if (currentRadicalIndex < allRadicals.length - 1) {
+                // 当前声符已学完，翻到下一个声符
+                currentRadicalIndex++;
+                currentRadical = allRadicals[currentRadicalIndex];
+                currentCharacters = currentRadical.characters;
+                currentPage = 1;
+                startDisplay();
+            } else {
+                // 所有声符已学完
+                document.getElementById('characterDisplay').textContent = "完成";
+                document.getElementById('pinyinDisplay').textContent = "恭喜您已完成所有学习内容";
+                document.getElementById('counter').textContent = "学习完成";
+                updateProgress(100);
+            }
+        }
+
+        // 朗读汉字
+        function speakCharacter(character) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(character);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8; // 稍微放慢语速
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 手动朗读当前汉字
+        function speakCurrentCharacter() {
+            const character = document.getElementById('characterDisplay').textContent;
+            if (character && character !== "完成") {
+                speakCharacter(character);
+            }
+        }
+
+        // 更新进度条
+        function updateProgress(total = 0) {
+            const progressFill = document.getElementById('progressFill');
+            if (total > 0) {
+                const progress = (currentIndex / total) * 100;
+                progressFill.style.width = `${progress}%`;
+            } else {
+                progressFill.style.width = '0%';
+            }
+        }
+
+        // 更新分页信息
+        function updatePaginationInfo() {
+            const totalPages = Math.ceil(currentCharacters.length / charactersPerPage);
+            document.getElementById('currentRadicalIndex').textContent = currentRadicalIndex + 1;
+            document.getElementById('totalRadicals').textContent = allRadicals.length;
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+            
+            // 更新按钮状态
+            document.getElementById('prevRadicalBtn').disabled = currentRadicalIndex <= 0;
+            document.getElementById('nextRadicalBtn').disabled = currentRadicalIndex >= allRadicals.length - 1;
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+
+        // 上一个声符
+        function prevRadical() {
+            if (currentRadicalIndex > 0) {
+                currentRadicalIndex--;
+                currentRadical = allRadicals[currentRadicalIndex];
+                currentCharacters = currentRadical.characters;
+                currentPage = 1;
+                startDisplay();
+            }
+        }
+
+        // 下一个声符
+        function nextRadical() {
+            if (currentRadicalIndex < allRadicals.length - 1) {
+                currentRadicalIndex++;
+                currentRadical = allRadicals[currentRadicalIndex];
+                currentCharacters = currentRadical.characters;
+                currentPage = 1;
+                startDisplay();
+            }
+        }
+
+        // 上一页
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                startDisplay();
+            }
+        }
+
+        // 下一页
+        function nextPage() {
+            const totalPages = Math.ceil(currentCharacters.length / charactersPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                startDisplay();
+            }
+        }
+
+        // 暂停/继续
+        function togglePause() {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').textContent = isPaused ? '继续' : '暂停';
+            
+            if (!isPaused) {
+                // 计算当前页的起始和结束索引
+                const startIndex = (currentPage - 1) * charactersPerPage;
+                const endIndex = Math.min(startIndex + charactersPerPage, currentCharacters.length);
+                const pageCharacters = currentCharacters.slice(startIndex, endIndex);
+                
+                // 继续显示当前页的汉字
+                displayNextCharacter(pageCharacters);
+            } else {
+                clearTimeout(timer);
+            }
+        }
+
+        // 重新开始
+        function restart() {
+            currentPage = 1;
+            startDisplay();
+        }
+
+        // 初始化事件监听
+        function initEventListeners() {
+            document.getElementById('startButton').addEventListener('click', startLearning);
+            document.getElementById('prevRadicalBtn').addEventListener('click', prevRadical);
+            document.getElementById('nextRadicalBtn').addEventListener('click', nextRadical);
+            document.getElementById('prevBtn').addEventListener('click', prevPage);
+            document.getElementById('nextBtn').addEventListener('click', nextPage);
+            document.getElementById('pauseBtn').addEventListener('click', togglePause);
+            document.getElementById('restartBtn').addEventListener('click', restart);
+            document.getElementById('speakBtn').addEventListener('click', speakCurrentCharacter);
+        }
+
+        // 初始化应用
+        function initApp() {
+            initEventListeners();
+        }
+
+        // 当页面加载完成后初始化应用
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
