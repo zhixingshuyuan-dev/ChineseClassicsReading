@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字声符学习游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", "SimSun", serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #4CAF50, #2196F3, #FFC107, #E91E63, #9C27B0);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .game-area {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .characters-panel {
+            flex: 3;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            min-height: 450px;
+            align-content: flex-start;
+            justify-content: center;
+            border: 1px solid #e0e0e0;
+            position: relative;
+        }
+        
+        .radicals-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background-color: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .character {
+            font-size: 36px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #e9f5ff 0%, #d1e8ff 100%);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #cce5ff;
+            text-align: center;
+            min-width: 80px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .character:hover {
+            background: linear-gradient(135deg, #d1e8ff 0%, #b3d9ff 100%);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .character:active {
+            transform: translateY(-2px);
+        }
+        
+        .character.zoomed {
+            transform: scale(1.5);
+            z-index: 10;
+            transition: transform 0.5s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .radical {
+            font-size: 32px;
+            padding: 20px;
+            background: linear-gradient(135deg, #fff9e6 0%, #ffecb3 100%);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #ffe699;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        .radical:hover {
+            background: linear-gradient(135deg, #ffecb3 0%, #ffe082 100%);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .radical.selected {
+            background: linear-gradient(135deg, #ffcc00 0%, #ffb300 100%);
+            border-color: #e6b800;
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(255, 193, 7, 0.4);
+        }
+        
+        .radical-info {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 1px solid #e0e0e0;
+        }
+        
+        .progress-container {
+            flex: 1;
+            margin: 0 25px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .progress {
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 6px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(33, 150, 243, 0.3);
+            font-weight: bold;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(33, 150, 243, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(-1px);
+        }
+        
+        button:disabled {
+            background: linear-gradient(135deg, #cccccc 0%, #aaaaaa 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .group-info {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            background: #f8f9fa;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        /* 动画效果 */
+        @keyframes jumpToRadical {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(0.1); opacity: 0; }
+        }
+        
+        .character.jumping {
+            animation: jumpToRadical 0.6s forwards;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+            20%, 40%, 60%, 80% { transform: translateX(8px); }
+        }
+        
+        .character.shaking {
+            animation: shake 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .radical.pulse {
+            animation: pulse 0.5s;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .character {
+                font-size: 32px;
+                padding: 12px 16px;
+                min-width: 70px;
+            }
+            
+            .radical {
+                font-size: 28px;
+                padding: 16px;
+            }
+            
+            .controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .progress-container {
+                width: 100%;
+                margin: 0;
+            }
+        }
+        
+        /* 声音控制 */
+        .sound-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .sound-control:hover {
+            transform: scale(1.1);
+        }
+        
+        /* 完成动画 */
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            z-index: 1000;
+        }
+        
+        /* 提示信息 */
+        .hint {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #666;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sound-control" id="soundControl" title="切换声音">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9V15H7L12 20V4L7 9H3Z" fill="#4CAF50"/>
+                <path d="M16.5 12C16.5 10.23 15.48 8.71 14 7.97V16.02C15.48 15.29 16.5 13.77 16.5 12Z" fill="#4CAF50"/>
+                <path d="M14 3.23V5.29C16.89 6.15 19 8.83 19 12C19 15.17 16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12C21 7.72 18.01 4.14 14 3.23Z" fill="#4CAF50"/>
+            </svg>
+        </div>
+        
+        <div class="header">
+            <h1>汉字声符学习游戏</h1>
+            <p class="subtitle">点击右侧声符，然后选择左侧相关的汉字</p>
+        </div>
+        
+        <div class="game-area">
+            <div class="characters-panel" id="charactersPanel">
+                <div class="hint" id="characterHint">请先选择右侧声符</div>
+                <!-- 汉字将通过JavaScript动态生成 -->
+            </div>
+            <div class="radicals-panel" id="radicalsPanel">
+                <!-- 声符将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="correctCount">0</div>
+                <div class="stat-label">正确</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">总数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="accuracy">0%</div>
+                <div class="stat-label">准确率</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="prevGroupBtn">上一组</button>
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>进度</span>
+                    <span id="progressText">0%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+            <div class="group-info" id="groupInfo">第1组/共10组</div>
+            <button id="nextGroupBtn">下一组</button>
+            <button id="skipGroupBtn">跳过本组</button>
+        </div>
+    </div>
+
+    <script>
+        // 声符数据（161-210组）
+        const radicalsData = [
+            { id: 161, radical: "焦", characters: ["焦", "瞧", "𦗠", "噍", "譙", "憔", "撨", "𨖵", "趭", "顦", "䩌", "僬", "嫶", "癄", "鷦", "蟭", "𣟼", "穛", "𥛲", "嶕", "嶣", "𨝱", "𦅃", "㲬", "𢄺", "醮", "鐎", "劁", "蕉", "膲", "燋", "潐", "樵", "𥼚", "𥼚", "𣤹", "𧄝", "𩏷", "𩏶", "𩏸", "樵", "藮", "𦿕", "蕉", "䌭", "膲", "𦢺", "燋", "𧂒", "潐", "𤃭"] },
+            { id: 162, radical: "由", characters: ["由", "由", "䛆", "怞", "㣙", "頔", "伷", "妯", "㾄", "𩿬", "駎", "牰", "鼬", "蚰", "鮋", "苖", "柚", "秞", "粙", "䄂", "岫", "宙", "𥥉", "邮", "軸", "舳", "紬", "𩊄", "䩜", "冑", "鈾", "笛", "釉", "胄", "油", "抽", "迪", "袖", "𧙏", "胄", "䶇", "䅢", "迪", "𣔴", "䨤", "油", "𣓐", "抽", "菗", "袖", "褏"] },
+            { id: 163, radical: "亘", characters: ["亘", "亘", "𠄢", "咺", "𧻚", "𡘍", "狟", "䚙", "𧱂", "貆", "𪊥", "荁", "桓", "𥹚", "洹", "晅", "垣", "峘", "𥥣", "𩫧", "絙", "烜", "宣", "𡩦", "宣", "𧡢", "喧", "諠", "愃", "揎", "䳦", "翧", "𧤎", "蝖", "萱", "楦", "渲", "煊", "暄", "𩘒", "瑄", "𩋢", "𩏆", "箮", "𦋠", "烜", "𣉖"] },
+            { id: 164, radical: "扁", characters: ["扁", "扁", "𧡤", "斒", "諞", "惼", "揙", "徧", "遍", "蹁", "䐔", "𩩯", "偏", "媥", "㾫", "翩", "騙", "騗", "猵", "犏", "蝙", "鯿", "𣝜", "楄", "糄", "㼐", "碥", "㻞", "𢉞", "䡢", "艑", "㲢", "褊", "𪉱", "鍽", "甂", "篇", "牑", "㓲", "萹", "編", "匾", "萹", "藊", "編", "𤻶", "匾", "𦄒"] },
+            { id: 165, radical: "旡", characters: ["旡", "旡", "𠑶", "黖", "𣄮", "炁", "既", "旣", "㤅", "㤅", "愛", "𢙴", "暨", "櫭", "既", "嘅", "慨", "𢟪", "摡", "䐴", "𠌰", "䇒", "𡳅", "鱀", "蔇", "概", "槩", "槪", "㮣", "穊", "䊠", "溉", "漑", "塈", "墍", "𡏲", "䀈", "暨", "曁", "愛", "瞹", "皧", "噯", "僾", "薆", "靉", "曖", "璦", "𥴨"] },
+            { id: 166, radical: "果", characters: ["果", "果", "𦖍", "課", "惈", "捰", "敤", "㪙", "踝", "㞅", "顆", "腂", "髁", "躶", "倮", "婐", "𡱼", "㾧", "騍", "猓", "蜾", "𩸄", "菓", "粿", "䴹", "祼", "夥", "㚌", "𣇫", "堁", "䂺", "窠", "輠", "裹", "裸", "餜", "錁", "𠜴", "㷄", "棵", "稞", "㼫", "棵", "䉓", "稞", "䊬", "㼫", "𠿜"] },
+            { id: 167, radical: "旨", characters: ["旨", "旨", "𤮻", "𠮛", "詣", "恉", "指", "𩬺", "䭬", "𪗷", "𦓀", "㚛", "㞓", "鴲", "𪊨", "𧊙", "鮨", "𦮂", "栺", "𩊝", "㞛", "脂", "耆", "稽", "耆", "𥉙", "𧡺", "嗜", "𧪡", "愭", "搘", "鬐", "𦞯", "鰭", "蓍", "榰", "䅲", "𣹡", "𩝙", "𨢍", "𨪌", "𦔌", "稽", "㮷", "𨯀", "𨪴", "脂", "㴯"] },
+            { id: 168, radical: "止", characters: ["止", "止", "訨", "扯", "趾", "𧺠", "齒", "芷", "祉", "沚", "址", "阯", "砋", "𨊺", "䇛", "之", "志", "覟", "誌", "𢙺", "娡", "痣", "𪁓", "𩷓", "䓌", "綕", "𢂴", "𥭡", "蚩", "𥉍", "嗤", "𣣷", "㰩", "𢾫", "媸", "㺈", "滍", "䧝", "之", "𣢑", "妛", "𦐉", "芝", "市", "蚩", "志", "𢗍", "市", "鈰"] },
+            { id: 169, radical: "豆", characters: ["豆", "㪷", "豆", "𣅋", "𥆖", "䛠", "㰯", "㤱", "𢭃", "䜴", "逗", "𨁋", "脰", "侸", "㛒", "痘", "𪁞", "𤞟", "䱏", "荳", "梪", "䄈", "浢", "𨹜", "㢄", "𥥷", "郖", "𩊪", "毭", "裋", "餖", "鋀", "䇺", "剅", "𣪌", "短", "𧯠", "豎", "竪", "頭", "鬪", "闘", "豎", "𠐊", "𧞫", "頭", "䕱"] },
+            { id: 170, radical: "亢", characters: ["亢", "亢", "𪎵", "吭", "㰠", "忼", "抗", "𡕬", "迒", "䟘", "頏", "𪗜", "肮", "骯", "劥", "伉", "妔", "𦐄", "䭺", "犺", "牨", "蚢", "魧", "苀", "秔", "𩲋", "沆", "炕", "坑", "阬", "㽘", "砊", "閌", "邟", "䡉", "航", "䋁", "𣃚", "斻", "𨟼", "䴚", "㼚", "笐", "杭", "杭", "𥮕"] }
+        ];
+
+        // 常用汉字数据（汉字、例词、英文释义）
+        const commonCharacters = {
+            "焦": { word: "焦急", meaning: "anxious" },
+            "瞧": { word: "瞧见", meaning: "to see" },
+            "由": { word: "理由", meaning: "reason" },
+            "油": { word: "石油", meaning: "petroleum" },
+            "抽": { word: "抽烟", meaning: "to smoke" },
+            "亘": { word: "亘古", meaning: "since ancient times" },
+            "宣": { word: "宣传", meaning: "propaganda" },
+            "扁": { word: "扁平", meaning: "flat" },
+            "篇": { word: "篇章", meaning: "chapter" },
+            "既": { word: "既然", meaning: "since" },
+            "爱": { word: "爱情", meaning: "love" },
+            "果": { word: "水果", meaning: "fruit" },
+            "课": { word: "课程", meaning: "course" },
+            "裸": { word: "赤裸", meaning: "naked" },
+            "旨": { word: "宗旨", meaning: "purpose" },
+            "指": { word: "指导", meaning: "to guide" },
+            "止": { word: "停止", meaning: "to stop" },
+            "齿": { word: "牙齿", meaning: "tooth" },
+            "豆": { word: "豆子", meaning: "bean" },
+            "头": { word: "头发", meaning: "hair" },
+            "亢": { word: "亢奋", meaning: "excited" },
+            "航": { word: "航空", meaning: "aviation" }
+        };
+
+        // 声符释义数据（使用中文释义）
+        const radicalMeanings = {
+            "焦": { pinyin: "jiāo", meaning: "烧焦；着急", english: "burnt; anxious" },
+            "由": { pinyin: "yóu", meaning: "原因；来自", english: "reason; from" },
+            "亘": { pinyin: "gèn", meaning: "延续不断", english: "continuous" },
+            "扁": { pinyin: "biǎn", meaning: "平而薄", english: "flat and thin" },
+            "旡": { pinyin: "jì", meaning: "饮食气逆不得息", english: "choking on food or drink" },
+            "果": { pinyin: "guǒ", meaning: "植物的果实；结果", english: "fruit of plants; result" },
+            "旨": { pinyin: "zhǐ", meaning: "意义；目的", english: "meaning; purpose" },
+            "止": { pinyin: "zhǐ", meaning: "停止；脚", english: "to stop; foot" },
+            "豆": { pinyin: "dòu", meaning: "豆类植物；容器", english: "bean plants; container" },
+            "亢": { pinyin: "kàng", meaning: "高；过度", english: "high; excessive" }
+        };
+
+        // 游戏状态
+        let currentGroup = 0;
+        let currentRadicals = [];
+        let currentCharacters = [];
+        let selectedRadical = null;
+        let correctCount = 0;
+        let totalCharacters = 0;
+        let soundEnabled = true;
+        const totalGroups = Math.ceil(radicalsData.length / 5);
+
+        // 初始化游戏
+        function initGame() {
+            // 初始化第一组
+            loadGroup(0);
+            
+            // 添加事件监听
+            document.getElementById('prevGroupBtn').addEventListener('click', prevGroup);
+            document.getElementById('nextGroupBtn').addEventListener('click', nextGroup);
+            document.getElementById('skipGroupBtn').addEventListener('click', skipGroup);
+            document.getElementById('soundControl').addEventListener('click', toggleSound);
+            
+            // 更新统计信息
+            updateStats();
+        }
+
+        // 加载指定组
+        function loadGroup(groupIndex) {
+            currentGroup = groupIndex;
+            
+            // 更新组信息
+            document.getElementById('groupInfo').textContent = `第${groupIndex + 1}组/共${totalGroups}组`;
+            
+            // 更新进度条
+            const progressPercent = (groupIndex / totalGroups) * 100;
+            document.getElementById('progressBar').style.width = `${progressPercent}%`;
+            document.getElementById('progressText').textContent = `${Math.round(progressPercent)}%`;
+            
+            // 获取当前组的5个声符
+            const startIndex = groupIndex * 5;
+            currentRadicals = radicalsData.slice(startIndex, startIndex + 5);
+            
+            // 重置游戏状态
+            selectedRadical = null;
+            correctCount = 0;
+            
+            // 准备汉字
+            prepareCharacters();
+            
+            // 渲染界面
+            renderGame();
+            
+            // 更新统计信息
+            updateStats();
+        }
+
+        // 准备汉字
+        function prepareCharacters() {
+            currentCharacters = [];
+            
+            // 从每个声符中随机选择最多10个汉字
+            currentRadicals.forEach(radical => {
+                const shuffled = [...radical.characters].sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, 10);
+                currentCharacters.push(...selected);
+            });
+            
+            // 随机排序所有汉字
+            currentCharacters.sort(() => 0.5 - Math.random());
+            
+            // 限制汉字数量不超过50个
+            if (currentCharacters.length > 50) {
+                currentCharacters = currentCharacters.slice(0, 50);
+            }
+            
+            totalCharacters = currentCharacters.length;
+        }
+
+        // 渲染游戏界面
+        function renderGame() {
+            // 渲染声符
+            const radicalsPanel = document.getElementById('radicalsPanel');
+            radicalsPanel.innerHTML = '';
+            
+            currentRadicals.forEach(radical => {
+                const radicalElement = document.createElement('div');
+                radicalElement.className = 'radical';
+                radicalElement.textContent = radical.radical;
+                radicalElement.dataset.radical = radical.radical;
+                
+                // 添加声符信息
+                const infoElement = document.createElement('div');
+                infoElement.className = 'radical-info';
+                infoElement.style.display = 'none';
+                infoElement.id = `info-${radical.radical}`;
+                
+                const meaning = radicalMeanings[radical.radical];
+                if (meaning) {
+                    infoElement.innerHTML = `
+                        <div><strong>拼音:</strong> ${meaning.pinyin}</div>
+                        <div><strong>释义:</strong> ${meaning.meaning}</div>
+                        <div><strong>English:</strong> ${meaning.english}</div>
+                    `;
+                }
+                
+                radicalElement.addEventListener('click', function() {
+                    // 取消之前选中的声符
+                    document.querySelectorAll('.radical.selected').forEach(el => {
+                        el.classList.remove('selected');
+                        document.getElementById(`info-${el.dataset.radical}`).style.display = 'none';
+                    });
+                    
+                    // 选中当前声符
+                    this.classList.add('selected');
+                    selectedRadical = this.dataset.radical;
+                    
+                    // 显示声符信息
+                    document.getElementById(`info-${radical.radical}`).style.display = 'block';
+                    
+                    // 朗读声符
+                    if (soundEnabled) {
+                        speakCharacter(radical.radical);
+                    }
+                    
+                    // 更新提示信息
+                    document.getElementById('characterHint').textContent = `已选择声符: ${radical.radical}`;
+                    
+                    // 添加脉冲动画
+                    this.classList.add('pulse');
+                    setTimeout(() => {
+                        this.classList.remove('pulse');
+                    }, 500);
+                });
+                
+                radicalsPanel.appendChild(radicalElement);
+                radicalsPanel.appendChild(infoElement);
+            });
+            
+            // 渲染汉字
+            const charactersPanel = document.getElementById('charactersPanel');
+            charactersPanel.innerHTML = '';
+            
+            if (currentCharacters.length === 0) {
+                charactersPanel.innerHTML = '<div style="text-align:center; width:100%; padding:50px; color:#666;">本组没有可用的汉字数据</div>';
+                return;
+            }
+            
+            currentCharacters.forEach(character => {
+                const characterElement = document.createElement('div');
+                characterElement.className = 'character';
+                characterElement.textContent = character;
+                characterElement.dataset.character = character;
+                
+                characterElement.addEventListener('click', function() {
+                    // 如果没有选择声符，提示用户
+                    if (!selectedRadical) {
+                        alert('请先选择一个声符');
+                        return;
+                    }
+                    
+                    // 放大汉字
+                    this.classList.add('zoomed');
+                    
+                    // 朗读汉字
+                    if (soundEnabled) {
+                        speakCharacter(character);
+                        
+                        // 如果是常用汉字，朗读例词和英文释义
+                        if (commonCharacters[character]) {
+                            setTimeout(() => {
+                                speakText(commonCharacters[character].word);
+                            }, 800);
+                            setTimeout(() => {
+                                speakText(commonCharacters[character].meaning);
+                            }, 1600);
+                        }
+                    }
+                    
+                    // 检查是否匹配
+                    const radical = currentRadicals.find(r => r.radical === selectedRadical);
+                    if (radical && radical.characters.includes(character)) {
+                        // 匹配成功
+                        correctCount++;
+                        if (soundEnabled) {
+                            setTimeout(() => {
+                                playCorrectSound();
+                            }, 2400);
+                        }
+                        
+                        // 添加跳跃动画
+                        setTimeout(() => {
+                            this.classList.remove('zoomed');
+                            this.classList.add('jumping');
+                        }, 3000);
+                        
+                        // 动画结束后移除汉字
+                        setTimeout(() => {
+                            this.remove();
+                            
+                            // 更新统计信息
+                            updateStats();
+                            
+                            // 检查是否完成
+                            if (correctCount === totalCharacters) {
+                                setTimeout(() => {
+                                    createConfetti();
+                                    alert(`恭喜！本组完成！正确率：${((correctCount / totalCharacters) * 100).toFixed(1)}%`);
+                                    nextGroup();
+                                }, 500);
+                            }
+                        }, 3600);
+                    } else {
+                        // 匹配失败
+                        if (soundEnabled) {
+                            playWrongSound();
+                        }
+                        setTimeout(() => {
+                            this.classList.remove('zoomed');
+                            this.classList.add('shaking');
+                            setTimeout(() => {
+                                this.classList.remove('shaking');
+                            }, 500);
+                        }, 3000);
+                    }
+                });
+                
+                charactersPanel.appendChild(characterElement);
+            });
+        }
+
+        // 朗读汉字
+        function speakCharacter(character) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(character);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 朗读文本
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = text.match(/[a-zA-Z]/) ? 'en-US' : 'zh-CN';
+                utterance.rate = 0.7;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 播放正确声音
+        function playCorrectSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        // 播放错误声音
+        function playWrongSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+            oscillator.frequency.setValueAtTime(196, audioContext.currentTime + 0.1);
+            oscillator.frequency.setValueAtTime(174.61, audioContext.currentTime + 0.2);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        // 切换声音
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const soundControl = document.getElementById('soundControl');
+            if (soundEnabled) {
+                soundControl.style.backgroundColor = '#4CAF50';
+                soundControl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9V15H7L12 20V4L7 9H3Z" fill="white"/><path d="M16.5 12C16.5 10.23 15.48 8.71 14 7.97V16.02C15.48 15.29 16.5 13.77 16.5 12Z" fill="white"/><path d="M14 3.23V5.29C16.89 6.15 19 8.83 19 12C19 15.17 16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12C21 7.72 18.01 4.14 14 3.23Z" fill="white"/></svg>';
+            } else {
+                soundControl.style.backgroundColor = '#ccc';
+                soundControl.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 9V15H7L12 20V4L7 9H3Z" fill="white"/><path d="M16.5 12C16.5 10.23 15.48 8.71 14 7.97V16.02C15.48 15.29 16.5 13.77 16.5 12Z" fill="white"/><path d="M14 3.23V5.29C16.89 6.15 19 8.83 19 12C19 15.17 16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12C21 7.72 18.01 4.14 14 3.23Z" fill="white"/></svg>';
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('correctCount').textContent = correctCount;
+            document.getElementById('totalCount').textContent = totalCharacters;
+            const accuracy = totalCharacters > 0 ? (correctCount / totalCharacters * 100).toFixed(1) : 0;
+            document.getElementById('accuracy').textContent = `${accuracy}%`;
+        }
+
+        // 创建彩色纸屑效果
+        function createConfetti() {
+            const colors = ['#f94144', '#f3722c', '#f8961e', '#f9c74f', '#90be6d', '#43aa8b', '#577590'];
+            const container = document.querySelector('.container');
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animation = `confetti ${1 + Math.random() * 2}s forwards`;
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                container.appendChild(confetti);
+                
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+        }
+
+        // 上一组
+        function prevGroup() {
+            if (currentGroup > 0) {
+                loadGroup(currentGroup - 1);
+            }
+        }
+
+        // 下一组
+        function nextGroup() {
+            if (currentGroup < totalGroups - 1) {
+                loadGroup(currentGroup + 1);
+            } else {
+                alert("恭喜！您已完成所有组别的学习！");
+            }
+        }
+
+        // 跳过本组
+        function skipGroup() {
+            nextGroup();
+        }
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
