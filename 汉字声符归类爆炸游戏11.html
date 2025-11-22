@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字声符轰击游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            padding: 20px;
+            overflow: auto;
+        }
+        
+        .left-controls, .right-controls {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+        }
+        
+        .game-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            max-width: 800px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            line-height: 1.5;
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .game-area {
+            position: relative;
+            height: 500px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .character-container {
+            position: absolute;
+            z-index: 5;
+        }
+        
+        .drone {
+            width: 40px;
+            height: 40px;
+            background: #666;
+            border-radius: 50% 50% 0 0;
+            position: relative;
+            margin: 0 auto 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .drone::before, .drone::after {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 8px;
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        .drone::before {
+            top: -4px;
+            left: -5px;
+        }
+        
+        .drone::after {
+            top: -4px;
+            right: -5px;
+        }
+        
+        .drone-light {
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .character {
+            font-size: 36px;
+            font-weight: bold;
+            text-align: center;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.1s;
+        }
+        
+        .radical-selector {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .radical-btn {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .radical-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .radical-btn.active {
+            background: linear-gradient(to bottom, #FF9800, #e68900);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+        
+        .radical-pinyin {
+            font-size: 12px;
+            margin-top: 2px;
+            font-weight: normal;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            background: linear-gradient(to bottom, #4CAF50, #2E7D32);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:disabled {
+            background: linear-gradient(to bottom, #777, #555);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .score-display, .level-info, .lives {
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 100;
+            display: none;
+            width: 80%;
+            max-width: 400px;
+        }
+        
+        .explosion {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #ff9900, #ff3300, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 15;
+        }
+        
+        .radical-info {
+            font-size: 1.1rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .current-character {
+            font-size: 1.2rem;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+        
+        .control-panel {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .control-panel h3 {
+            margin-bottom: 10px;
+            text-align: center;
+            color: #ffcc00;
+        }
+        
+        .voice-message {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 20;
+            display: none;
+        }
+        
+        .level-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .level-btn {
+            padding: 10px;
+            background: linear-gradient(to bottom, #2196F3, #0b7dda);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .level-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .level-btn.active {
+            background: linear-gradient(to bottom, #FF9800, #e68900);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+        }
+        
+        .character-highlight {
+            animation: highlight 0.8s ease-in-out;
+        }
+        
+        @keyframes highlight {
+            0% { transform: scale(1); background-color: rgba(255, 255, 255, 0.95); }
+            50% { transform: scale(1.2); background-color: rgba(255, 255, 0, 0.9); }
+            100% { transform: scale(1); background-color: rgba(255, 255, 255, 0.95); }
+        }
+        
+        .system-speak {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 100, 255, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 20;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-controls">
+        <div class="control-panel">
+            <h3>关卡选择</h3>
+            <div class="level-selector" id="levelSelector">
+                <!-- 关卡按钮将在这里动态生成 -->
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <h3>游戏控制</h3>
+            <div class="controls">
+                <button id="startBtn">开始游戏</button>
+                <button id="pauseBtn" disabled>暂停</button>
+                <button id="restartBtn">重新开始</button>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <h3>游戏信息</h3>
+            <div class="score-display">得分: <span id="score">0</span></div>
+            <div class="level-info">关卡: <span id="level">1</span></div>
+            <div class="lives">生命值: <span id="lives">3</span></div>
+        </div>
+    </div>
+    
+    <div class="game-container">
+        <div class="header">
+            <h1>汉字声符轰击游戏</h1>
+            <p>点击声符击落对应的汉字无人机！</p>
+        </div>
+        
+        <div class="instructions">
+            <p>游戏规则：点击声符击落对应声符的汉字无人机。正确击中+10分，错误击中-5分，汉字逃脱-1生命值。</p>
+        </div>
+        
+        <div class="radical-info" id="radicalInfo"></div>
+        <div class="current-character" id="currentCharacter"></div>
+        
+        <div class="game-area" id="gameArea">
+            <!-- 汉字无人机将在这里动态生成 -->
+            <div class="voice-message" id="voiceMessage">打错人了！</div>
+            <div class="system-speak" id="systemSpeak"></div>
+        </div>
+        
+        <div class="radical-selector" id="radicalSelector">
+            <!-- 声符选择器将在这里动态生成 -->
+        </div>
+    </div>
+    
+    <div class="right-controls">
+        <div class="control-panel">
+            <h3>关卡控制</h3>
+            <div class="controls">
+                <button id="nextLevelBtn" disabled>下一关</button>
+            </div>
+        </div>
+        
+        <div class="control-panel">
+            <h3>游戏说明</h3>
+            <p>汉字无人机会左右移动并缓慢下降，点击对应声符击落汉字！</p>
+        </div>
+        
+        <div class="control-panel">
+            <h3>游戏技巧</h3>
+            <p>• 观察汉字上方的声符提示</p>
+            <p>• 瞄准移动中的无人机</p>
+            <p>• 不要着急，准确比快速更重要</p>
+        </div>
+    </div>
+    
+    <div class="game-over" id="gameOver">
+        <h2>游戏结束</h2>
+        <p>你的最终得分: <span id="finalScore">0</span></p>
+        <button id="playAgainBtn">再玩一次</button>
+    </div>
+
+    <script>
+        // 游戏数据 - 使用您提供的50个声符数据，每个声符15个常用例字
+        const gameData = [
+            // 关卡1
+            { id: 1, radical: "末", pinyin: "mò", characters: ["末", "眜", "抹", "妺", "茉", "枺", "秣", "粖", "沫", "昩", "砞", "靺", "韎", "袜", "帓"] },
+            { id: 2, radical: "朮", pinyin: "shù", characters: ["朮", "术", "訹", "怵", "䟣", "㾁", "沭", "炢", "絉", "鉥", "秫", "述", "術", "蒁", "䢤"] },
+            { id: 3, radical: "𣎆", pinyin: "luǒ", characters: ["𣎆", "鸁", "驘", "蠃", "臝", "羸", "䇔", "𢺑", "㱻", "䯁", "𧄿", "䌴", "𨰠", "𢺆", "𨰊"] },
+            { id: 4, radical: "沙", pinyin: "shā", characters: ["沙", "髿", "魦", "鯊", "莎", "桬", "砂", "硰", "紗", "裟", "䤬", "挱", "挲", "娑", "桫"] },
+            { id: 5, radical: "医", pinyin: "yī", characters: ["殹", "瞖", "黳", "㗨", "嫛", "㿄", "鷖", "毉", "瑿", "繄", "醫", "贀", "翳", "医", "嫕"] },
+            
+            // 关卡2
+            { id: 6, radical: "巳", pinyin: "sì", characters: ["巳", "㰝", "攺", "起", "祀", "汜", "圯", "戺", "釲", "异", "巸", "媐", "熙", "煕", "㜯"] },
+            { id: 7, radical: "力", pinyin: "lì", characters: ["力", "忇", "扐", "肋", "鳨", "艻", "朸", "氻", "屴", "玏", "釛", "竻", "仂", "阞", "勒"] },
+            { id: 8, radical: "𡴆", pinyin: "lù", characters: ["坴", "睦", "踛", "勎", "鵱", "鯥", "稑", "淕", "䡜", "㓐", "陸", "𡴆", "圥", "鼀", "𨽰"] },
+            { id: 9, radical: "執", pinyin: "zhí", characters: ["執", "謺", "慹", "摯", "䠟", "鷙", "騺", "蟄", "䲀", "蓻", "瓡", "墊", "㝪", "縶", "褺"] },
+            { id: 10, radical: "樂", pinyin: "lè", characters: ["樂", "䁻", "皪", "嚛", "擽", "躒", "䟏", "櫟", "濼", "爍", "礫", "瓅", "轢", "纅", "藥"] },
+            
+            // 关卡3
+            { id: 11, radical: "气", pinyin: "qì", characters: ["气", "㰟", "忾", "㧉", "芞", "汽", "刏", "忥", "氣", "愾", "㑶", "犔", "滊", "霼", "熂"] },
+            { id: 12, radical: "妥", pinyin: "tuǒ", characters: ["妥", "哸", "挼", "㞂", "脮", "骽", "娞", "鵎", "鮾", "荽", "桵", "䅑", "㼏", "浽", "綏"] },
+            { id: 13, radical: "戶", pinyin: "hù", characters: ["戶", "頋", "鳸", "芦", "淭", "昈", "帍", "戽", "雇", "扈", "所", "滬", "熩", "簄", "顧"] },
+            { id: 14, radical: "宁", pinyin: "zhù", characters: ["宁", "眝", "詝", "㤖", "佇", "竚", "羜", "苧", "柠", "泞", "坾", "貯", "㿾", "紵", "䋖"] },
+            { id: 15, radical: "豦", pinyin: "jù", characters: ["豦", "噱", "懅", "據", "躆", "䟊", "臄", "勮", "㯫", "澽", "璩", "醵", "鐻", "劇", "遽"] },
+            
+            // 关卡4
+            { id: 16, radical: "赤", pinyin: "chì", characters: ["赤", "赩", "哧", "赥", "捇", "䞰", "浾", "焃", "郝", "䦝", "赦", "赫", "嚇", "爀", "螫"] },
+            { id: 17, radical: "聶", pinyin: "niè", characters: ["聶", "囁", "讘", "懾", "攝", "躡", "顳", "㒤", "䯀", "䝕", "欇", "灄", "㸎", "襵", "鑷"] },
+            { id: 18, radical: "耴", pinyin: "yì", characters: ["耴", "䎲", "㤴", "踂", "䳖", "鮿", "㭯", "輒", "輙", "銸", "𤭗", "𡷝", "𣹵", "𢬴", "𨓊"] },
+            { id: 19, radical: "乏", pinyin: "fá", characters: ["乏", "眨", "姂", "疺", "鴔", "柉", "砭", "窆", "貶", "覂", "䒦", "泛", "㴀", "𥁷", "𠰏"] },
+            { id: 20, radical: "暴", pinyin: "bào", characters: ["暴", "嚗", "謈", "懪", "儤", "犦", "瀑", "爆", "曝", "㿺", "襮", "䤖", "㬥", "曓", "𣉱"] },
+            
+            // 关卡5
+            { id: 21, radical: "毛", pinyin: "máo", characters: ["毛", "眊", "覒", "髦", "耄", "毣", "㲝", "芼", "枆", "秏", "酕", "㲏", "耗", "旄", "𣹪"] },
+            { id: 22, radical: "全", pinyin: "quán", characters: ["全", "詮", "恮", "拴", "跧", "佺", "痊", "駩", "牷", "栓", "洤", "烇", "硂", "絟", "銓"] },
+            { id: 23, radical: "歺", pinyin: "è", characters: ["歺", "歹", "㱚", "粲", "殩", "薒", "澯", "燦", "璨", "㛑", "餐", "䬸", "𣦼", "𢂺", "𥹏"] },
+            { id: 24, radical: "斯", pinyin: "sī", characters: ["斯", "嘶", "撕", "㒋", "蟴", "蟖", "䔮", "澌", "燍", "厮", "廝", "䡳", "凘", "鐁", "㽄"] },
+            { id: 25, radical: "崔", pinyin: "cuī", characters: ["崔", "皠", "嗺", "慛", "摧", "膗", "催", "槯", "漼", "璀", "繀", "凗", "鏙", "𦉎", "𤗯"] },
+            
+            // 关卡6
+            { id: 26, radical: "乎", pinyin: "hū", characters: ["乎", "呼", "苸", "泘", "垀", "軤", "虖", "嘑", "謼", "歑", "嫭", "滹", "㙤", "㻯", "罅"] },
+            { id: 27, radical: "矣", pinyin: "yǐ", characters: ["矣", "唉", "誒", "欸", "挨", "逘", "娭", "竢", "騃", "㸻", "涘", "㶼", "埃", "俟", "𢰇"] },
+            { id: 28, radical: "賏", pinyin: "yīng", characters: ["嬰", "嚶", "攖", "孾", "癭", "鸚", "蘡", "櫻", "瀴", "瓔", "纓", "䙬", "賏", "譻", "鸎"] },
+            { id: 29, radical: "矍", pinyin: "jué", characters: ["矍", "䂄", "戄", "攫", "躩", "玃", "貜", "蠼", "䣤", "钁", "彏", "矡", "籰", "篗", "𥸘"] },
+            { id: 30, radical: "益", pinyin: "yì", characters: ["益", "嗌", "謚", "搤", "齸", "膉", "鷁", "貖", "螠", "榏", "溢", "隘", "艗", "縊", "鎰"] },
+            
+            // 关卡7
+            { id: 31, radical: "直", pinyin: "zhí", characters: ["直", "㨁", "徝", "殖", "值", "犆", "植", "稙", "淔", "埴", "置", "惪", "㥁", "德", "㯰"] },
+            { id: 32, radical: "則", pinyin: "zé", characters: ["則", "惻", "側", "鰂", "萴", "測", "崱", "廁", "厠", "鍘", "賊", "蠈", "鱡", "𦽒", "𣿐"] },
+            { id: 33, radical: "鹿", pinyin: "lù", characters: ["鹿", "摝", "蹗", "騼", "螰", "蔍", "樚", "麓", "漉", "熝", "䃙", "鄜", "轆", "鏕", "簏"] },
+            { id: 34, radical: "豖", pinyin: "chù", characters: ["豖", "啄", "諑", "㧻", "瘃", "椓", "涿", "㙇", "琢", "剢", "𧰵", "𣫔", "𣂡", "𢽚", "𧼙"] },
+            { id: 35, radical: "壬", pinyin: "rén", characters: ["任", "䛘", "恁", "拰", "鵀", "荏", "栠", "絍", "袵", "餁", "賃", "壬", "䏕", "妊", "紝"] },
+            
+            // 关卡8
+            { id: 36, radical: "函", pinyin: "hán", characters: ["函", "圅", "顄", "蜬", "菡", "㮀", "䨡", "䘶", "䤴", "䈄", "涵", "𥲌", "𦥖", "𩔞", "𡣔"] },
+            { id: 37, radical: "冃", pinyin: "mào", characters: ["冒", "勖", "勗", "媢", "蝐", "萺", "瑁", "艒", "帽", "賵", "冃", "㒻", "㺺", "𠕬", "𡈘"] },
+            { id: 38, radical: "妟", pinyin: "yàn", characters: ["匽", "愝", "揠", "躽", "偃", "鶠", "鼴", "蝘", "鰋", "椻", "堰", "郾", "褗", "妟", "宴"] },
+            { id: 39, radical: "建", pinyin: "jiàn", characters: ["建", "睷", "揵", "徤", "踺", "健", "騝", "犍", "楗", "湕", "鞬", "毽", "旔", "腱", "鍵"] },
+            { id: 40, radical: "間", pinyin: "jiān", characters: ["間", "覸", "覵", "蕳", "蕑", "澗", "磵", "襇", "鐧", "簡", "㶕", "𧟉", "𪙨", "㵎", "襉"] },
+            
+            // 关卡9
+            { id: 41, radical: "𢽳", pinyin: "sàn", characters: ["散", "撒", "糤", "霰", "繖", "饊", "鏾", "䉈", "潸", "𢽳", "㪔", "䵇", "𢿱", "𢿨", "𩀼"] },
+            { id: 42, radical: "刃", pinyin: "rèn", characters: ["刃", "訒", "肕", "仞", "牣", "杒", "軔", "紉", "韌", "㠴", "忍", "認", "䏰", "荵", "涊"] },
+            { id: 43, radical: "曳", pinyin: "yè", characters: ["曳", "曵", "䛖", "拽", "齥", "栧", "䄿", "洩", "絏", "䇩", "𢘽", "𡜄", "㹭", "𡲭", "𩊒"] },
+            { id: 44, radical: "日", pinyin: "rì", characters: ["圼", "捏", "揑", "㘿", "陧", "隉", "涅", "湼", "日", "馹", "衵", "圼", "篞", "𨑨", "𢁯"] },
+            { id: 45, radical: "聿", pinyin: "yù", characters: ["聿", "𢘶", "茟", "硉", "銉", "律", "筆", "𠽩", "潷", "㻶", "𪑯", "葎", "嵂", "箻", "䢖"] },
+            
+            // 关卡10
+            { id: 46, radical: "吳", pinyin: "wú", characters: ["吳", "吴", "誤", "悞", "俁", "娛", "麌", "蜈", "茣", "祦", "鋘", "虞", "噳", "鸆", "澞"] },
+            { id: 47, radical: "父", pinyin: "fù", characters: ["父", "爸", "㕮", "䭸", "蚥", "布", "斧", "釜", "怖", "抪", "鈽", "𪂀", "䗄", "滏", "𧦞"] },
+            { id: 48, radical: "馬", pinyin: "mǎ", characters: ["馬", "傌", "媽", "㾺", "鷌", "獁", "螞", "鰢", "榪", "禡", "溤", "碼", "瑪", "罵", "駡"] },
+            { id: 49, radical: "兹", pinyin: "zī", characters: ["兹", "茲", "嗞", "孳", "鶿", "鷀", "螆", "鰦", "稵", "糍", "滋", "㽧", "嵫", "磁", "慈"] },
+            { id: 50, radical: "𡿧", pinyin: "zī", characters: ["甾", "䐉", "鶅", "鯔", "菑", "葘", "椔", "淄", "湽", "輜", "緇", "錙", "鍿", "䎩", "𡿧"] }
+        ];
+
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            level: 1,
+            lives: 3,
+            isPlaying: false,
+            isPaused: false,
+            currentRadicals: [],
+            currentCharacter: null,
+            explosions: [],
+            characterInterval: null,
+            gameLoopId: null
+        };
+
+        // DOM元素
+        const gameArea = document.getElementById('gameArea');
+        const radicalSelector = document.getElementById('radicalSelector');
+        const scoreDisplay = document.getElementById('score');
+        const levelDisplay = document.getElementById('level');
+        const livesDisplay = document.getElementById('lives');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const nextLevelBtn = document.getElementById('nextLevelBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const gameOverScreen = document.getElementById('gameOver');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const radicalInfo = document.getElementById('radicalInfo');
+        const currentCharacterDisplay = document.getElementById('currentCharacter');
+        const voiceMessage = document.getElementById('voiceMessage');
+        const levelSelector = document.getElementById('levelSelector');
+        const systemSpeak = document.getElementById('systemSpeak');
+
+        // 初始化游戏
+        function initGame() {
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.lives = 3;
+            gameState.isPlaying = false;
+            gameState.isPaused = false;
+            gameState.currentRadicals = [];
+            gameState.currentCharacter = null;
+            gameState.explosions = [];
+            
+            if (gameState.characterInterval) {
+                clearInterval(gameState.characterInterval);
+                gameState.characterInterval = null;
+            }
+            
+            if (gameState.gameLoopId) {
+                cancelAnimationFrame(gameState.gameLoopId);
+                gameState.gameLoopId = null;
+            }
+            
+            updateUI();
+            gameOverScreen.style.display = 'none';
+            clearGameArea();
+            radicalInfo.textContent = "点击'开始游戏'按钮开始游戏";
+            currentCharacterDisplay.textContent = "";
+            
+            // 创建关卡选择按钮
+            createLevelButtons();
+        }
+
+        // 创建关卡选择按钮
+        function createLevelButtons() {
+            levelSelector.innerHTML = '';
+            
+            // 总共10个关卡
+            for (let i = 1; i <= 10; i++) {
+                const levelBtn = document.createElement('button');
+                levelBtn.className = 'level-btn';
+                levelBtn.textContent = `关卡 ${i}`;
+                levelBtn.dataset.level = i;
+                
+                if (i === 1) {
+                    levelBtn.classList.add('active');
+                }
+                
+                levelBtn.addEventListener('click', () => {
+                    // 移除所有按钮的active类
+                    document.querySelectorAll('.level-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // 添加active类到当前按钮
+                    levelBtn.classList.add('active');
+                    
+                    // 设置关卡
+                    gameState.level = i;
+                    levelDisplay.textContent = i;
+                    
+                    // 如果不是在游戏中，更新声符
+                    if (!gameState.isPlaying) {
+                        selectRandomRadicals();
+                        createRadicalSelector();
+                    }
+                });
+                
+                levelSelector.appendChild(levelBtn);
+            }
+        }
+
+        // 开始游戏
+        function startGame() {
+            if (gameState.isPlaying) return;
+            
+            gameState.isPlaying = true;
+            gameState.isPaused = false;
+            
+            // 选择随机声符
+            selectRandomRadicals();
+            
+            // 创建声符选择器
+            createRadicalSelector();
+            
+            // 开始生成汉字
+            generateCharacter();
+            
+            updateUI();
+            
+            // 开始游戏循环
+            gameLoop();
+        }
+
+        // 选择随机声符
+        function selectRandomRadicals() {
+            // 每关使用5个声符
+            const radicalCount = 5;
+            
+            // 计算当前关卡应该使用的声符范围
+            const startIndex = (gameState.level - 1) * 5;
+            const endIndex = startIndex + 5;
+            
+            // 获取当前关卡的声符
+            gameState.currentRadicals = gameData.slice(startIndex, endIndex);
+            
+            // 更新声符信息
+            const radicalNames = gameState.currentRadicals.map(r => `${r.radical}(${r.pinyin})`).join('、');
+            radicalInfo.textContent = `当前关卡声符: ${radicalNames}`;
+        }
+
+        // 创建声符选择器
+        function createRadicalSelector() {
+            radicalSelector.innerHTML = '';
+            
+            gameState.currentRadicals.forEach((radicalData, index) => {
+                const radicalBtn = document.createElement('button');
+                radicalBtn.className = 'radical-btn';
+                
+                // 创建声符和拼音的HTML
+                radicalBtn.innerHTML = `
+                    <div>${radicalData.radical}</div>
+                    <div class="radical-pinyin">${radicalData.pinyin}</div>
+                `;
+                
+                radicalBtn.dataset.radical = radicalData.radical;
+                radicalBtn.dataset.index = index;
+                
+                // 添加点击事件
+                radicalBtn.addEventListener('click', () => {
+                    selectRadical(index);
+                });
+                
+                radicalSelector.appendChild(radicalBtn);
+            });
+        }
+
+        // 选择声符
+        function selectRadical(radicalIndex) {
+            if (!gameState.isPlaying || gameState.isPaused || !gameState.currentCharacter) return;
+            
+            const radicalBtn = document.querySelectorAll('.radical-btn')[radicalIndex];
+            const radical = gameState.currentRadicals[radicalIndex].radical;
+            
+            // 检查声符是否匹配
+            if (radical === gameState.currentCharacter.radical) {
+                // 正确击中
+                gameState.score += 10;
+                
+                // 先朗读汉字（玩家点击后立即朗读）
+                speakCharacter(gameState.currentCharacter.character, "player");
+                
+                // 添加高亮效果
+                gameState.currentCharacter.element.classList.add('character-highlight');
+                
+                // 激活声符按钮效果
+                radicalBtn.classList.add('active');
+                
+                // 延迟爆炸效果
+                setTimeout(() => {
+                    // 系统朗读汉字（爆炸前朗读）- 不显示提示
+                    speakCharacter(gameState.currentCharacter.character, "system");
+                    
+                    // 延迟爆炸
+                    setTimeout(() => {
+                        createExplosion(gameState.currentCharacter.x + gameState.currentCharacter.width/2, 
+                                      gameState.currentCharacter.y + gameState.currentCharacter.height/2);
+                        
+                        // 播放爆炸音效
+                        playExplosionSound();
+                        
+                        // 移除字符
+                        gameArea.removeChild(gameState.currentCharacter.container);
+                        gameState.currentCharacter = null;
+                        
+                        // 移除声符按钮激活效果
+                        radicalBtn.classList.remove('active');
+                        
+                        updateUI();
+                        
+                        // 生成新字符
+                        if (gameState.isPlaying && !gameState.isPaused) {
+                            setTimeout(() => {
+                                if (gameState.isPlaying && !gameState.isPaused) {
+                                    generateCharacter();
+                                }
+                            }, 800);
+                        }
+                    }, 800); // 系统朗读后延迟800ms爆炸
+                }, 800); // 玩家朗读后延迟800ms系统朗读
+            } else {
+                // 错误击中，扣分
+                gameState.score = Math.max(0, gameState.score - 5);
+                
+                // 显示"打错人了"消息
+                showVoiceMessage();
+                
+                // 播放错误音效
+                playErrorSound();
+                
+                // 激活声符按钮效果（红色）
+                radicalBtn.style.background = 'linear-gradient(to bottom, #ff3333, #cc0000)';
+                
+                // 立即移除字符
+                gameArea.removeChild(gameState.currentCharacter.container);
+                gameState.currentCharacter = null;
+                
+                // 移除声符按钮激活效果
+                setTimeout(() => {
+                    radicalBtn.style.background = '';
+                }, 500);
+                
+                updateUI();
+                
+                // 生成新字符
+                if (gameState.isPlaying && !gameState.isPaused) {
+                    setTimeout(() => {
+                        if (gameState.isPlaying && !gameState.isPaused) {
+                            generateCharacter();
+                        }
+                    }, 800);
+                }
+            }
+            
+            // 播放选择音效
+            playSelectSound();
+        }
+
+        // 生成单个汉字
+        function generateCharacter() {
+            // 清除之前的字符
+            if (gameState.currentCharacter && gameState.currentCharacter.container) {
+                gameArea.removeChild(gameState.currentCharacter.container);
+            }
+            
+            // 随机选择一个声符
+            const radicalIndex = Math.floor(Math.random() * gameState.currentRadicals.length);
+            const radicalData = gameState.currentRadicals[radicalIndex];
+            
+            // 从该声符的汉字中随机选择一个
+            const characterIndex = Math.floor(Math.random() * radicalData.characters.length);
+            const character = radicalData.characters[characterIndex];
+            
+            // 创建字符容器
+            const charContainer = document.createElement('div');
+            charContainer.className = 'character-container';
+            
+            // 创建无人机图标
+            const drone = document.createElement('div');
+            drone.className = 'drone';
+            const droneLight = document.createElement('div');
+            droneLight.className = 'drone-light';
+            drone.appendChild(droneLight);
+            
+            // 创建字符元素
+            const charElement = document.createElement('div');
+            charElement.className = 'character';
+            charElement.textContent = character;
+            charElement.dataset.radical = radicalData.radical;
+            
+            // 将无人机和字符添加到容器
+            charContainer.appendChild(drone);
+            charContainer.appendChild(charElement);
+            
+            // 随机初始位置
+            const x = Math.random() * (gameArea.offsetWidth - 100) + 50;
+            charContainer.style.left = `${x}px`;
+            charContainer.style.top = '50px';
+            
+            gameArea.appendChild(charContainer);
+            
+            // 随机水平移动方向
+            const horizontalDirection = Math.random() > 0.5 ? 1 : -1;
+            // 根据关卡调整移动速度
+            const horizontalSpeed = 0.3 + (gameState.level * 0.1);
+            
+            // 添加到游戏状态
+            gameState.currentCharacter = {
+                container: charContainer,
+                element: charElement,
+                x: x,
+                y: 50,
+                radical: radicalData.radical,
+                character: character,
+                verticalSpeed: 0.3 + (gameState.level * 0.05),
+                horizontalSpeed: horizontalSpeed,
+                horizontalDirection: horizontalDirection,
+                width: 60,
+                height: 50
+            };
+            
+            // 更新当前汉字显示
+            currentCharacterDisplay.textContent = `当前汉字: ${character}`;
+        }
+
+        // 游戏主循环
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            
+            // 更新字符位置
+            updateCharacter();
+            
+            // 更新爆炸效果
+            updateExplosions();
+            
+            // 检查游戏结束条件
+            checkGameOver();
+            
+            // 继续循环
+            if (gameState.isPlaying && !gameState.isPaused) {
+                gameState.gameLoopId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // 更新字符位置
+        function updateCharacter() {
+            if (!gameState.currentCharacter) return;
+            
+            const char = gameState.currentCharacter;
+            
+            // 垂直移动（下降）
+            char.y += char.verticalSpeed;
+            
+            // 水平移动 - 简单的左右移动
+            char.x += char.horizontalSpeed * char.horizontalDirection;
+            
+            // 检查边界，碰到边界时改变方向
+            if (char.x <= 0 || char.x >= gameArea.offsetWidth - char.width) {
+                char.horizontalDirection *= -1;
+            }
+            
+            char.container.style.left = `${char.x}px`;
+            char.container.style.top = `${char.y}px`;
+            
+            // 如果字符超出底部，移除并扣分
+            if (char.y > gameArea.offsetHeight) {
+                gameArea.removeChild(char.container);
+                gameState.currentCharacter = null;
+                gameState.lives--;
+                updateUI();
+                
+                // 播放错误音效
+                playErrorSound();
+                
+                // 如果还有生命值，生成新字符
+                if (gameState.lives > 0 && gameState.isPlaying) {
+                    setTimeout(() => {
+                        if (gameState.isPlaying && !gameState.isPaused) {
+                            generateCharacter();
+                        }
+                    }, 1000);
+                }
+            }
+        }
+
+        // 朗读汉字
+        function speakCharacter(character, type) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(character);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                utterance.pitch = 1.0;
+                
+                if (type === "system") {
+                    // 系统朗读时显示提示
+                    systemSpeak.textContent = `${character} `;
+                    systemSpeak.style.display = 'block';
+                    
+                    utterance.onend = function() {
+                        setTimeout(() => {
+                            systemSpeak.style.display = 'none';
+                        }, 500);
+                    };
+                }
+                
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 显示"打错人了"消息
+        function showVoiceMessage() {
+            voiceMessage.style.display = 'block';
+            setTimeout(() => {
+                voiceMessage.style.display = 'none';
+            }, 1500);
+            
+            // 播放语音
+            speakMessage("打错人了");
+        }
+
+        // 语音合成
+        function speakMessage(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 创建爆炸效果
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = `${x - 25}px`;
+            explosion.style.top = `${y - 25}px`;
+            explosion.style.opacity = '1';
+            
+            gameArea.appendChild(explosion);
+            gameState.explosions.push({
+                element: explosion,
+                opacity: 1,
+                size: 50
+            });
+        }
+
+        // 更新爆炸效果
+        function updateExplosions() {
+            for (let i = gameState.explosions.length - 1; i >= 0; i--) {
+                const explosion = gameState.explosions[i];
+                explosion.opacity -= 0.05;
+                explosion.size += 5;
+                
+                explosion.element.style.opacity = explosion.opacity;
+                explosion.element.style.width = `${explosion.size}px`;
+                explosion.element.style.height = `${explosion.size}px`;
+                explosion.element.style.left = `${
+                    parseFloat(explosion.element.style.left) - 2.5
+                }px`;
+                explosion.element.style.top = `${
+                    parseFloat(explosion.element.style.top) - 2.5
+                }px`;
+                
+                if (explosion.opacity <= 0) {
+                    gameArea.removeChild(explosion.element);
+                    gameState.explosions.splice(i, 1);
+                }
+            }
+        }
+
+        // 检查游戏结束条件
+        function checkGameOver() {
+            if (gameState.lives <= 0) {
+                endGame();
+            }
+            
+            // 修复：降低下一关条件，使下一关按钮更容易激活
+            if (gameState.score >= gameState.level * 50) {
+                nextLevelBtn.disabled = false;
+            }
+        }
+
+        // 进入下一关
+        function nextLevel() {
+            if (gameState.level >= 10) {
+                // 已经是最后一关
+                return;
+            }
+            
+            gameState.level++;
+            
+            // 更新关卡显示
+            levelDisplay.textContent = gameState.level;
+            
+            // 更新关卡按钮状态
+            document.querySelectorAll('.level-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (parseInt(btn.dataset.level) === gameState.level) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // 清除当前字符
+            clearGameArea();
+            
+            // 选择新的声符
+            selectRandomRadicals();
+            
+            // 更新声符选择器
+            createRadicalSelector();
+            
+            // 生成新字符
+            generateCharacter();
+            
+            updateUI();
+        }
+
+        // 结束游戏
+        function endGame() {
+            gameState.isPlaying = false;
+            
+            finalScoreDisplay.textContent = gameState.score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        // 清除游戏区域
+        function clearGameArea() {
+            // 移除当前字符
+            if (gameState.currentCharacter && gameState.currentCharacter.container) {
+                gameArea.removeChild(gameState.currentCharacter.container);
+                gameState.currentCharacter = null;
+            }
+            
+            // 移除所有爆炸效果
+            gameState.explosions.forEach(explosion => {
+                if (explosion.element.parentNode) {
+                    explosion.element.parentNode.removeChild(explosion.element);
+                }
+            });
+            gameState.explosions = [];
+            
+            currentCharacterDisplay.textContent = "";
+        }
+
+        // 更新UI
+        function updateUI() {
+            scoreDisplay.textContent = gameState.score;
+            levelDisplay.textContent = gameState.level;
+            livesDisplay.textContent = gameState.lives;
+            
+            // 更新按钮状态
+            startBtn.disabled = gameState.isPlaying;
+            pauseBtn.disabled = !gameState.isPlaying;
+            
+            // 修复：降低下一关条件，使下一关按钮更容易激活
+            nextLevelBtn.disabled = !gameState.isPlaying || gameState.score < gameState.level * 50 || gameState.level >= 10;
+            
+            pauseBtn.textContent = gameState.isPaused ? '继续' : '暂停';
+        }
+
+        // 暂停/继续游戏
+        function togglePause() {
+            if (!gameState.isPlaying) return;
+            
+            gameState.isPaused = !gameState.isPaused;
+            updateUI();
+            
+            if (!gameState.isPaused) {
+                gameLoop();
+            }
+        }
+
+        // 音效模拟
+        function playSelectSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 600;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                console.log("选择音效");
+            }
+        }
+        
+        function playExplosionSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // 创建更悦耳的爆炸音效 - 使用多个振荡器
+                const osc1 = audioContext.createOscillator();
+                const osc2 = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                osc1.connect(gainNode);
+                osc2.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // 设置振荡器参数
+                osc1.frequency.value = 200;
+                osc1.type = 'sine';
+                
+                osc2.frequency.value = 400;
+                osc2.type = 'triangle';
+                
+                // 设置音量包络
+                gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                
+                // 启动振荡器
+                osc1.start(audioContext.currentTime);
+                osc2.start(audioContext.currentTime);
+                
+                // 停止振荡器
+                osc1.stop(audioContext.currentTime + 0.8);
+                osc2.stop(audioContext.currentTime + 0.8);
+            } catch (e) {
+                console.log("爆炸音效");
+            }
+        }
+        
+        function playErrorSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 300;
+                oscillator.type = 'square';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.log("错误音效");
+            }
+        }
+
+        // 事件监听
+        startBtn.addEventListener('click', startGame);
+        
+        pauseBtn.addEventListener('click', togglePause);
+        
+        nextLevelBtn.addEventListener('click', nextLevel);
+        
+        restartBtn.addEventListener('click', () => {
+            initGame();
+        });
+        
+        playAgainBtn.addEventListener('click', () => {
+            initGame();
+            startGame();
+        });
+
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>
