@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字骨牌配对游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .game-container {
+            width: 95%;
+            max-width: 1200px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .game-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .game-status {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .tile-container {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f1f2f6;
+            border-radius: 8px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .tile {
+            aspect-ratio: 1/1;
+            background: linear-gradient(145deg, #8B4513, #A0522D);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .tile:hover {
+            transform: scale(1.05);
+        }
+        
+        .tile.revealed {
+            background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 2.4rem;
+        }
+        
+        .tile.selected {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .tile.matched {
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
+        
+        .phonetic-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .current-phonetic {
+            text-align: center;
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 992px) {
+            .tile-container {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .tile {
+                font-size: 2rem;
+            }
+            
+            .tile.revealed {
+                font-size: 2.2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .tile-container {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .tile {
+                font-size: 1.8rem;
+            }
+            
+            .tile.revealed {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .tile-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .game-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 80%;
+            }
+            
+            .tile {
+                font-size: 1.6rem;
+            }
+            
+            .tile.revealed {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>汉字骨牌配对游戏</h1>
+        </div>
+        
+        <div class="game-controls">
+            <button id="start-btn">开始新游戏</button>
+            <button id="reshuffle-btn">重新洗牌</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="matched-count">0</div>
+                <div class="stat-label">已配对</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="remaining-count">40</div>
+                <div class="stat-label">剩余</div>
+            </div>
+        </div>
+        
+        <div class="game-status" id="game-status">
+            点击"开始新游戏"开始
+        </div>
+        
+        <div class="tile-container" id="tile-container">
+            <!-- 骨牌将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="phonetic-section">
+            <div class="current-phonetic" id="current-phonetic">当前声符: 无</div>
+            <div class="instructions">
+                点击骨牌翻面，如果两个汉字同属一个声符，再次点击则配对消除
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            currentTiles: [], // 当前桌面骨牌
+            revealedTiles: [], // 已翻开的骨牌
+            selectedTiles: [], // 已选中的骨牌索引
+            matchedTiles: [], // 已匹配的骨牌索引
+            gameStarted: false, // 游戏是否开始
+            currentGroupIndex: 0 // 当前使用的数据组索引
+        };
+
+        // 汉字数据 - 根据提供的数据整理，每个声符保留10个常用汉字
+        const hanziGroups = [
+            // 第一组：5个声符
+            [
+                {
+                    phonetic: '足',
+                    pinyin: 'zú',
+                    characters: ['足', '促', '捉', '龊', '哫', '趗', '娖', '浞', '鋜', '𨆬'],
+                    examples: ['足够', '足球']
+                },
+                {
+                    phonetic: '戎',
+                    pinyin: 'róng',
+                    characters: ['戎', '娀', '駥', '狨', '茙', '絨', '毧', '㣝', '䯷', '𨱿'],
+                    examples: ['戎装', '兵戎']
+                },
+                {
+                    phonetic: '黽',
+                    pinyin: 'mǐn',
+                    characters: ['黽', '僶', '蠅', '澠', '鄳', '繩', '譝', '憴', '𣎜', '𧕵'],
+                    examples: ['黽勉', '勤黽']
+                },
+                {
+                    phonetic: '業',
+                    pinyin: 'yè',
+                    characters: ['業', '㗼', '鸈', '驜', '澲', '嶪', '礏', '鄴', '䌜', '㸣'],
+                    examples: ['业务', '职业']
+                },
+                {
+                    phonetic: '隺',
+                    pinyin: 'hú',
+                    characters: ['隺', '鶴', '榷', '確', '蒮', '髉', '傕', '篧', '㹊', '㴶'],
+                    examples: ['隺立', '隺望']
+                }
+            ],
+            // 第二组：5个声符
+            [
+                {
+                    phonetic: '丂',
+                    pinyin: 'kǎo',
+                    characters: ['丂', '考', '巧', '朽', '拷', '栲', '烤', '銬', '㼥', '䒓'],
+                    examples: ['考试', '考虑']
+                },
+                {
+                    phonetic: '㒼',
+                    pinyin: 'mán',
+                    characters: ['㒼', '瞞', '慲', '蹣', '顢', '樠', '鏋', '滿', '懣', '璊'],
+                    examples: ['㒼塞', '㒼蔽']
+                },
+                {
+                    phonetic: '善',
+                    pinyin: 'shàn',
+                    characters: ['善', '膳', '僐', '蟮', '橏', '墡', '磰', '鄯', '繕', '饍'],
+                    examples: ['善良', '善于']
+                },
+                {
+                    phonetic: '卂',
+                    pinyin: 'xùn',
+                    characters: ['卂', '訊', '汛', '迅', '阠', '軐', '䭀', '訙', '扟', '虱'],
+                    examples: ['迅速', '迅捷']
+                },
+                {
+                    phonetic: '連',
+                    pinyin: 'lián',
+                    characters: ['連', '嗹', '謰', '摙', '僆', '翴', '鰱', '蓮', '槤', '漣'],
+                    examples: ['连接', '连续']
+                }
+            ],
+            // 第三组：5个声符
+            [
+                {
+                    phonetic: '壹',
+                    pinyin: 'yī',
+                    characters: ['壹', '噎', '懿', '撎', '殪', '嬄', '鷧', '豷', '饐', '曀'],
+                    examples: ['壹元', '专壹']
+                },
+                {
+                    phonetic: '七',
+                    pinyin: 'qī',
+                    characters: ['七', '叱', '切', '砌', '柒', '沏', '㲺', '𦘪', '𡚨', '𩾔'],
+                    examples: ['七天', '七月']
+                },
+                {
+                    phonetic: '叉',
+                    pinyin: 'chā',
+                    characters: ['叉', '汊', '扠', '杈', '釵', '衩', '紁', '訍', '㣾', '䟕'],
+                    examples: ['叉子', '交叉']
+                },
+                {
+                    phonetic: '眉',
+                    pinyin: 'méi',
+                    characters: ['眉', '媚', '楣', '湄', '嵋', '瑂', '郿', '蝞', '鶥', '猸'],
+                    examples: ['眉毛', '眉目']
+                },
+                {
+                    phonetic: '魚',
+                    pinyin: 'yú',
+                    characters: ['魚', '漁', '魯', '䰻', '䁩', '䐳', '𩥭', '𨶢', '𩺰', '𩼪'],
+                    examples: ['鱼类', '钓鱼']
+                }
+            ],
+            // 第四组：5个声符
+            [
+                {
+                    phonetic: '后',
+                    pinyin: 'hòu',
+                    characters: ['后', '逅', '垢', '姤', '詬', '骺', '鮜', '茩', '銗', '缿'],
+                    examples: ['后面', '后来']
+                },
+                {
+                    phonetic: '畺',
+                    pinyin: 'jiāng',
+                    characters: ['畺', '疆', '僵', '殭', '薑', '橿', '礓', '繮', '韁', '彊'],
+                    examples: ['边疆', '疆域']
+                },
+                {
+                    phonetic: '鼎',
+                    pinyin: 'dǐng',
+                    characters: ['鼎', '貞', '偵', '楨', '禎', '湞', '幀', '赬', '遉', '揁'],
+                    examples: ['鼎盛', '问鼎']
+                },
+                {
+                    phonetic: '冋',
+                    pinyin: 'jiōng',
+                    characters: ['冋', '扃', '迥', '炯', '泂', '坰', '駉', '詗', '苘', '絅'],
+                    examples: ['冋然', '冋远']
+                },
+                {
+                    phonetic: '舄',
+                    pinyin: 'xì',
+                    characters: ['舄', '潟', '寫', '瀉', '獡', '蕮', '磶', '㕐', '𩍆', '䉣'],
+                    examples: ['舄卤', '舄湖']
+                }
+            ],
+            // 第五组：5个声符
+            [
+                {
+                    phonetic: '戹',
+                    pinyin: 'è',
+                    characters: ['戹', '厄', '呃', '扼', '阨', '軛', '蚅', '阸', '呝', '㧖'],
+                    examples: ['戹运', '困戹']
+                },
+                {
+                    phonetic: '役',
+                    pinyin: 'yì',
+                    characters: ['役', '疫', '豛', '𧱕', '𧈻', '䓈', '𣒃', '𩂹', '坄', '鈠'],
+                    examples: ['役使', '兵役']
+                },
+                {
+                    phonetic: '𤰇',
+                    pinyin: 'bèi',
+                    characters: ['𤰇', '備', '憊', '犕', '糒', '鞴', '韛', '㸢', '㣁', '𤸶'],
+                    examples: ['准备', '完备']
+                },
+                {
+                    phonetic: '猒',
+                    pinyin: 'yàn',
+                    characters: ['猒', '厭', '饜', '魘', '靨', '厴', '檿', '黶', '懕', '擪'],
+                    examples: ['猒足', '猒恶']
+                },
+                {
+                    phonetic: '𡗜',
+                    pinyin: 'shèn',
+                    characters: ['𡗜', '深', '探', '琛', '賝', '棎', '㤾', '𦜊', '𧷉', '𢊖'],
+                    examples: ['深浅', '深刻']
+                }
+            ],
+            // 第六组：5个声符
+            [
+                {
+                    phonetic: '𠣮',
+                    pinyin: 'jú',
+                    characters: ['𠣮', '𥱩', '𡫬', '𥩁', '𩍸', '𡙳', '𢱬', '𤜔', '𦶗', '𠤄'],
+                    examples: ['𠣮集', '𠣮聚']
+                },
+                {
+                    phonetic: '休',
+                    pinyin: 'xiū',
+                    characters: ['休', '咻', '庥', '貅', '鵂', '髤', '茠', '烋', '𣐾', '㳜'],
+                    examples: ['休息', '退休']
+                },
+                {
+                    phonetic: '憂',
+                    pinyin: 'yōu',
+                    characters: ['憂', '優', '擾', '獶', '櫌', '耰', '鄾', '纋', '嚘', '懮'],
+                    examples: ['忧虑', '忧愁']
+                },
+                {
+                    phonetic: '旋',
+                    pinyin: 'xuán',
+                    characters: ['旋', '漩', '璇', '嫙', '䗠', '蜁', '暶', '颴', '縼', '鏇'],
+                    examples: ['旋转', '旋律']
+                },
+                {
+                    phonetic: '鬳',
+                    pinyin: 'yǎn',
+                    characters: ['鬳', '獻', '甗', '讞', '齾', '巘', '瓛', '钀', '𦉧', '𣡌'],
+                    examples: ['鬳器', '鬳具']
+                }
+            ],
+            // 第七组：5个声符
+            [
+                {
+                    phonetic: '刪',
+                    pinyin: 'shān',
+                    characters: ['刪', '姍', '珊', '跚', '狦', '銏', '䈀', '𠜂', '𠱡', '𦙱'],
+                    examples: ['删除', '删改']
+                },
+                {
+                    phonetic: '千',
+                    pinyin: 'qiān',
+                    characters: ['千', '年', '仟', '芊', '阡', '迁', '杄', '汘', '谸', '刋'],
+                    examples: ['千万', '千年']
+                },
+                {
+                    phonetic: '川',
+                    pinyin: 'chuān',
+                    characters: ['川', '巡', '順', '馴', '圳', '甽', '玔', '紃', '釧', '䡅'],
+                    examples: ['四川', '河川']
+                },
+                {
+                    phonetic: '兀',
+                    pinyin: 'wù',
+                    characters: ['兀', '髡', '杌', '阢', '屼', '矹', '軏', '鼿', '扤', '𧿁'],
+                    examples: ['兀立', '突兀']
+                },
+                {
+                    phonetic: '惠',
+                    pinyin: 'huì',
+                    characters: ['惠', '蕙', '蟪', '橞', '穗', '潓', '寭', '繐', '韢', '鏸'],
+                    examples: ['优惠', '恩惠']
+                }
+            ],
+            // 第八组：5个声符
+            [
+                {
+                    phonetic: '化',
+                    pinyin: 'huà',
+                    characters: ['化', '花', '貨', '訛', '靴', '吪', '鈋', '囮', '杹', '沎'],
+                    examples: ['变化', '文化']
+                },
+                {
+                    phonetic: '羅',
+                    pinyin: 'luó',
+                    characters: ['羅', '囉', '邏', '蘿', '欏', '鑼', '籮', '儸', '㿚', '饠'],
+                    examples: ['罗列', '罗网']
+                },
+                {
+                    phonetic: '尸',
+                    pinyin: 'shī',
+                    characters: ['尸', '屍', '屎', '鳲', '杘', '𡰥', '𡱁', '㕧', '𣢂', '𡰣'],
+                    examples: ['尸体', '尸位']
+                },
+                {
+                    phonetic: '屖',
+                    pinyin: 'xī',
+                    characters: ['屖', '遲', '遟', '墀', '稺', '謘', '搱', '徲', '㜨', '漽'],
+                    examples: ['屖迟', '屖缓']
+                },
+                {
+                    phonetic: '褱',
+                    pinyin: 'huái',
+                    characters: ['褱', '懷', '壞', '瀤', '櫰', '瓌', '𧞷', '𪊉', '𡃩', '𢸬'],
+                    examples: ['怀抱', '怀念']
+                }
+            ],
+            // 第九组：5个声符
+            [
+                {
+                    phonetic: '尾',
+                    pinyin: 'wěi',
+                    characters: ['尾', '娓', '犀', '樨', '㓾', '荱', '䅏', '䊊', '䜸', '浘'],
+                    examples: ['尾巴', '结尾']
+                },
+                {
+                    phonetic: '司',
+                    pinyin: 'sī',
+                    characters: ['司', '伺', '詞', '祠', '飼', '笥', '嗣', '呞', '柌', '泀'],
+                    examples: ['公司', '司法']
+                },
+                {
+                    phonetic: '久',
+                    pinyin: 'jiǔ',
+                    characters: ['久', '灸', '玖', '疚', '柩', '羑', '㕗', '匛', '㝌', '畂'],
+                    examples: ['长久', '永久']
+                },
+                {
+                    phonetic: '子',
+                    pinyin: 'zǐ',
+                    characters: ['子', '字', '孜', '仔', '耔', '孖', '杍', '秄', '芓', '虸'],
+                    examples: ['孩子', '子女']
+                },
+                {
+                    phonetic: '爽',
+                    pinyin: 'shuǎng',
+                    characters: ['爽', '塽', '漺', '磢', '傸', '鷞', '騻', '䔪', '樉', '摤'],
+                    examples: ['爽快', '凉爽']
+                }
+            ],
+            // 第十组：5个声符
+            [
+                {
+                    phonetic: '丞',
+                    pinyin: 'chéng',
+                    characters: ['丞', '拯', '烝', '蒸', '篜', '脀', '巹', '䒱', '𧗆', '䡕'],
+                    examples: ['丞相', '丞辅']
+                },
+                {
+                    phonetic: '𠂢',
+                    pinyin: 'pài',
+                    characters: ['𠂢', '派', '脈', '脉', '霢', '眽', '覛', '衇', '㭛', '䤨'],
+                    examples: ['派别', '派送']
+                },
+                {
+                    phonetic: '䙷',
+                    pinyin: 'dé',
+                    characters: ['䙷', '得', '㝵', '㥂', '㧹', '棏', '淂', '䚟', '𣌏', '𤙰'],
+                    examples: ['得到', '得意']
+                },
+                {
+                    phonetic: '角',
+                    pinyin: 'jiǎo',
+                    characters: ['角', '斛', '桷', '埆', '确', '捔', '甪', '䇶', '𧣡', '𧤑'],
+                    examples: ['角度', '角落']
+                },
+                {
+                    phonetic: '尋',
+                    pinyin: 'xún',
+                    characters: ['尋', '潯', '燖', '樳', '鄩', '襑', '蕁', '𤛧', '𦠅', '𢒫'],
+                    examples: ['寻找', '寻常']
+                }
+            ]
+        ];
+
+        // 初始化游戏
+        function initGame() {
+            const tileContainer = document.getElementById('tile-container');
+            
+            // 清空容器
+            tileContainer.innerHTML = '';
+            
+            // 重置游戏状态
+            gameState.currentTiles = [];
+            gameState.revealedTiles = [];
+            gameState.selectedTiles = [];
+            gameState.matchedTiles = [];
+            gameState.gameStarted = true;
+            gameState.currentGroupIndex = 0;
+            
+            // 更新游戏状态显示
+            document.getElementById('game-status').textContent = '点击骨牌开始配对游戏';
+            document.getElementById('current-phonetic').textContent = '当前声符: 无';
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 生成桌面骨牌
+            generateTiles();
+            
+            // 渲染桌面骨牌
+            renderTableTiles();
+        }
+
+        // 生成桌面骨牌
+        function generateTiles() {
+            gameState.currentTiles = [];
+            
+            // 使用当前数据组
+            const currentGroup = hanziGroups[gameState.currentGroupIndex];
+            
+            // 从当前组的5个声符中随机选择字符
+            for (let i = 0; i < 40; i++) {
+                // 随机选择一个声符
+                const randomPhonetic = currentGroup[Math.floor(Math.random() * currentGroup.length)];
+                // 从该声符的字符中随机选择一个
+                const randomCharacter = randomPhonetic.characters[Math.floor(Math.random() * randomPhonetic.characters.length)];
+                
+                gameState.currentTiles.push({
+                    character: randomCharacter,
+                    phonetic: randomPhonetic.phonetic,
+                    pinyin: randomPhonetic.pinyin,
+                    examples: randomPhonetic.examples,
+                    matched: false
+                });
+            }
+        }
+
+        // 渲染桌面骨牌
+        function renderTableTiles() {
+            const tileContainer = document.getElementById('tile-container');
+            tileContainer.innerHTML = '';
+            
+            gameState.currentTiles.forEach((tile, index) => {
+                const tileElement = document.createElement('div');
+                tileElement.className = 'tile';
+                tileElement.dataset.index = index;
+                tileElement.dataset.phonetic = tile.phonetic;
+                
+                // 如果骨牌已匹配，隐藏
+                if (tile.matched) {
+                    tileElement.classList.add('matched');
+                    tileElement.textContent = '';
+                    return;
+                }
+                
+                // 如果骨牌已翻开，显示汉字
+                if (gameState.revealedTiles.includes(index)) {
+                    tileElement.textContent = tile.character;
+                    tileElement.classList.add('revealed');
+                } else {
+                    tileElement.textContent = '';
+                }
+                
+                // 如果骨牌已选中，高亮显示
+                if (gameState.selectedTiles.includes(index)) {
+                    tileElement.classList.add('selected');
+                }
+                
+                tileElement.addEventListener('click', () => {
+                    handleTileClick(index);
+                });
+                
+                tileContainer.appendChild(tileElement);
+            });
+        }
+
+        // 处理桌面骨牌点击
+        function handleTileClick(index) {
+            const tile = gameState.currentTiles[index];
+            
+            // 如果骨牌已匹配，不处理
+            if (tile.matched) {
+                return;
+            }
+            
+            // 如果骨牌未翻开，先翻开
+            if (!gameState.revealedTiles.includes(index)) {
+                gameState.revealedTiles.push(index);
+                renderTableTiles();
+                
+                // 朗读汉字
+                speakCharacter(tile.character);
+                
+                // 更新当前声符显示
+                document.getElementById('current-phonetic').textContent = `当前声符: ${tile.phonetic} (${tile.pinyin})`;
+                
+                return;
+            }
+            
+            // 如果骨牌已翻开，处理选中逻辑
+            if (gameState.selectedTiles.includes(index)) {
+                // 如果点击已选中的骨牌，取消选中
+                gameState.selectedTiles = gameState.selectedTiles.filter(i => i !== index);
+            } else {
+                // 如果点击未选中的骨牌，添加到选中列表
+                gameState.selectedTiles.push(index);
+            }
+            
+            // 重新渲染桌面骨牌
+            renderTableTiles();
+            
+            // 检查是否可以配对
+            checkForMatch();
+        }
+
+        // 检查是否可以配对
+        function checkForMatch() {
+            // 如果选中了2个骨牌
+            if (gameState.selectedTiles.length === 2) {
+                const [index1, index2] = gameState.selectedTiles;
+                const tile1 = gameState.currentTiles[index1];
+                const tile2 = gameState.currentTiles[index2];
+                
+                // 如果两个骨牌属于同一个声符
+                if (tile1.phonetic === tile2.phonetic) {
+                    // 配对成功
+                    tile1.matched = true;
+                    tile2.matched = true;
+                    
+                    // 添加到已匹配列表
+                    gameState.matchedTiles.push(index1, index2);
+                    
+                    // 播放成功音效
+                    playSuccessSound();
+                    
+                    // 更新游戏状态
+                    document.getElementById('game-status').textContent = `配对成功！${tile1.character} 和 ${tile2.character} 属于同一个声符`;
+                    
+                    // 清空选中列表
+                    gameState.selectedTiles = [];
+                    
+                    // 更新统计信息
+                    updateStats();
+                    
+                    // 延迟后重新渲染
+                    setTimeout(() => {
+                        renderTableTiles();
+                        
+                        // 检查游戏是否结束
+                        checkGameEnd();
+                    }, 1000);
+                } else {
+                    // 配对失败
+                    document.getElementById('game-status').textContent = '配对失败，请继续尝试';
+                    
+                    // 延迟后清空选中列表
+                    setTimeout(() => {
+                        gameState.selectedTiles = [];
+                        renderTableTiles();
+                    }, 1500);
+                }
+            }
+        }
+
+        // 朗读汉字
+        function speakCharacter(character) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(character);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 播放成功音效
+        function playSuccessSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log('音频播放失败:', e);
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const matchedCount = gameState.matchedTiles.length / 2;
+            const remainingCount = 40 - gameState.matchedTiles.length;
+            
+            document.getElementById('matched-count').textContent = matchedCount;
+            document.getElementById('remaining-count').textContent = remainingCount;
+        }
+
+        // 检查游戏是否结束
+        function checkGameEnd() {
+            if (gameState.matchedTiles.length === 40) {
+                document.getElementById('game-status').textContent = '恭喜！所有骨牌已配对完成！';
+                document.getElementById('current-phonetic').textContent = '游戏完成！';
+            }
+        }
+
+        // 重新洗牌
+        function reshuffleTiles() {
+            if (!gameState.gameStarted) return;
+            
+            // 切换到下一组数据
+            gameState.currentGroupIndex = (gameState.currentGroupIndex + 1) % hanziGroups.length;
+            
+            // 重置状态
+            gameState.revealedTiles = [];
+            gameState.selectedTiles = [];
+            gameState.matchedTiles = [];
+            
+            // 重新生成桌面骨牌
+            generateTiles();
+            
+            // 重新渲染桌面骨牌
+            renderTableTiles();
+            
+            // 更新声符显示
+            document.getElementById('current-phonetic').textContent = '当前声符: 无';
+            
+            // 更新游戏状态
+            document.getElementById('game-status').textContent = '已重新洗牌，请点击骨牌开始游戏';
+            
+            // 更新统计信息
+            updateStats();
+        }
+
+        // 事件监听
+        document.getElementById('start-btn').addEventListener('click', initGame);
+        document.getElementById('reshuffle-btn').addEventListener('click', reshuffleTiles);
+    </script>
+</body>
+</html>
