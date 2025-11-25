@@ -1,0 +1,1186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字骨牌配对游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .game-container {
+            width: 95%;
+            max-width: 1200px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .game-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .group-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .group-btn {
+            padding: 8px 15px;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+        }
+        
+        .group-btn.active {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+        }
+        
+        .game-status {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .tile-container {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f1f2f6;
+            border-radius: 8px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .tile {
+            aspect-ratio: 1/1;
+            background: linear-gradient(145deg, #8B4513, #A0522D);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .tile:hover {
+            transform: scale(1.05);
+        }
+        
+        .tile.revealed {
+            background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 2.4rem;
+        }
+        
+        .tile.pinyin {
+            background: linear-gradient(145deg, #e1f5fe, #b3e5fc);
+            color: #0277bd;
+        }
+        
+        .tile.example {
+            background: linear-gradient(145deg, #e8f5e9, #c8e6c9);
+            color: #2e7d32;
+            font-size: 1.8rem;
+        }
+        
+        .tile.learned {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+        
+        .phonetic-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .current-phonetic {
+            text-align: center;
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 992px) {
+            .tile-container {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .tile {
+                font-size: 2rem;
+            }
+            
+            .tile.revealed {
+                font-size: 2.2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .tile-container {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .tile {
+                font-size: 1.8rem;
+            }
+            
+            .tile.revealed {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .tile-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .game-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 80%;
+            }
+            
+            .tile {
+                font-size: 1.6rem;
+            }
+            
+            .tile.revealed {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>汉字骨牌配对游戏</h1>
+        </div>
+        
+        <div class="group-selector">
+            <button class="group-btn" data-group="0">第一组</button>
+            <button class="group-btn" data-group="1">第二组</button>
+            <button class="group-btn" data-group="2">第三组</button>
+            <button class="group-btn" data-group="3">第四组</button>
+            <button class="group-btn" data-group="4">第五组</button>
+            <button class="group-btn" data-group="5">第六组</button>
+        </div>
+        
+        <div class="game-controls">
+            <button id="start-btn">开始新游戏</button>
+            <button id="reshuffle-btn">重新洗牌</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="learned-count">0</div>
+                <div class="stat-label">已学习</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="remaining-count">40</div>
+                <div class="stat-label">剩余</div>
+            </div>
+        </div>
+        
+        <div class="game-status" id="game-status">
+            选择组别并点击"开始新游戏"开始
+        </div>
+        
+        <div class="tile-container" id="tile-container">
+            <!-- 骨牌将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="phonetic-section">
+            <div class="current-phonetic" id="current-phonetic">当前汉字: 无</div>
+            <div class="instructions">
+                点击骨牌: 第一次翻面显示汉字，第二次显示拼音，第三次朗读，第四次显示例词
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            currentTiles: [], // 当前桌面骨牌
+            learnedTiles: [], // 已学习的骨牌索引
+            gameStarted: false, // 游戏是否开始
+            currentGroupIndex: 0, // 当前使用的数据组索引
+            clickStates: {} // 记录每个骨牌的点击状态
+        };
+
+        // 汉字数据 - 根据提供的六组数据整理
+        const hanziGroups = [
+            // 第一组
+            {
+                name: "第一组",
+                characters: [
+                    { character: '人', pinyin: 'rén', example: '人民' },
+                    { character: '口', pinyin: 'kǒu', example: '口才' },
+                    { character: '大', pinyin: 'dà', example: '大家' },
+                    { character: '中', pinyin: 'zhōng', example: '中国' },
+                    { character: '小', pinyin: 'xiǎo', example: '小孩' },
+                    { character: '哭', pinyin: 'kū', example: '哭泣' },
+                    { character: '笑', pinyin: 'xiào', example: '笑容' },
+                    { character: '一', pinyin: 'yī', example: '一起' },
+                    { character: '上', pinyin: 'shàng', example: '上面' },
+                    { character: '下', pinyin: 'xià', example: '下面' },
+                    { character: '爸', pinyin: 'bà', example: '爸爸' },
+                    { character: '妈', pinyin: 'mā', example: '妈妈' },
+                    { character: '天', pinyin: 'tiān', example: '天空' },
+                    { character: '太', pinyin: 'tài', example: '太阳' },
+                    { character: '月', pinyin: 'yuè', example: '月亮' },
+                    { character: '二', pinyin: 'èr', example: '二月' },
+                    { character: '地', pinyin: 'dì', example: '地球' },
+                    { character: '星', pinyin: 'xīng', example: '星星' },
+                    { character: '水', pinyin: 'shuǐ', example: '水果' },
+                    { character: '阳', pinyin: 'yáng', example: '阳光' },
+                    { character: '云', pinyin: 'yún', example: '云彩' },
+                    { character: '三', pinyin: 'sān', example: '三月' },
+                    { character: '亮', pinyin: 'liàng', example: '明亮' },
+                    { character: '火', pinyin: 'huǒ', example: '火车' },
+                    { character: '土', pinyin: 'tǔ', example: '土地' },
+                    { character: '山', pinyin: 'shān', example: '山峰' },
+                    { character: '石', pinyin: 'shí', example: '石头' },
+                    { character: '木', pinyin: 'mù', example: '木头' },
+                    { character: '我', pinyin: 'wǒ', example: '我们' },
+                    { character: '好', pinyin: 'hǎo', example: '好人' },
+                    { character: '有', pinyin: 'yǒu', example: '有趣' },
+                    { character: '田', pinyin: 'tián', example: '田地' },
+                    { character: '牛', pinyin: 'niú', example: '牛奶' },
+                    { character: '羊', pinyin: 'yáng', example: '羊毛' },
+                    { character: '聪', pinyin: 'cōng', example: '聪明' },
+                    { character: '耳', pinyin: 'ěr', example: '耳朵' },
+                    { character: '目', pinyin: 'mù', example: '目标' },
+                    { character: '心', pinyin: 'xīn', example: '心情' },
+                    { character: '和', pinyin: 'hé', example: '和平' },
+                    { character: '四', pinyin: 'sì', example: '四季' },
+                    { character: '明', pinyin: 'míng', example: '明天' },
+                    { character: '鼻', pinyin: 'bí', example: '鼻子' },
+                    { character: '头', pinyin: 'tóu', example: '头发' },
+                    { character: '手', pinyin: 'shǒu', example: '手机' },
+                    { character: '眉', pinyin: 'méi', example: '眉毛' },
+                    { character: '花', pinyin: 'huā', example: '花朵' },
+                    { character: '五', pinyin: 'wǔ', example: '五月' },
+                    { character: '树', pinyin: 'shù', example: '树木' },
+                    { character: '叶', pinyin: 'yè', example: '叶子' },
+                    { character: '草', pinyin: 'cǎo', example: '草地' },
+                    { character: '风', pinyin: 'fēng', example: '风景' },
+                    { character: '雨', pinyin: 'yǔ', example: '雨水' },
+                    { character: '日', pinyin: 'rì', example: '日期' },
+                    { character: '的', pinyin: 'de', example: '好的' },
+                    { character: '六', pinyin: 'liù', example: '六月' },
+                    { character: '孩', pinyin: 'hái', example: '孩子' },
+                    { character: '白', pinyin: 'bái', example: '白色' },
+                    { character: '红', pinyin: 'hóng', example: '红色' },
+                    { character: '是', pinyin: 'shì', example: '是的' },
+                    { character: '家', pinyin: 'jiā', example: '家庭' },
+                    { character: '多', pinyin: 'duō', example: '多少' },
+                    { character: '唱', pinyin: 'chàng', example: '唱歌' },
+                    { character: '子', pinyin: 'zǐ', example: '子女' },
+                    { character: '七', pinyin: 'qī', example: '七月' },
+                    { character: '爱', pinyin: 'ài', example: '爱情' },
+                    { character: '爷', pinyin: 'yé', example: '爷爷' },
+                    { character: '奶', pinyin: 'nǎi', example: '奶奶' },
+                    { character: '少', pinyin: 'shǎo', example: '少年' },
+                    { character: '歌', pinyin: 'gē', example: '歌曲' },
+                    { character: '不', pinyin: 'bù', example: '不要' },
+                    { character: '朋', pinyin: 'péng', example: '朋友' },
+                    { character: '八', pinyin: 'bā', example: '八月' },
+                    { character: '宝', pinyin: 'bǎo', example: '宝贝' },
+                    { character: '在', pinyin: 'zài', example: '在家' },
+                    { character: '学', pinyin: 'xué', example: '学习' },
+                    { character: '书', pinyin: 'shū', example: '书本' },
+                    { character: '游', pinyin: 'yóu', example: '游戏' },
+                    { character: '友', pinyin: 'yǒu', example: '友好' },
+                    { character: '儿', pinyin: 'ér', example: '儿童' },
+                    { character: '九', pinyin: 'jiǔ', example: '九月' },
+                    { character: '贝', pinyin: 'bèi', example: '贝壳' },
+                    { character: '生', pinyin: 'shēng', example: '生活' },
+                    { character: '习', pinyin: 'xí', example: '习惯' },
+                    { character: '看', pinyin: 'kàn', example: '看书' },
+                    { character: '戏', pinyin: 'xì', example: '戏剧' },
+                    { character: '字', pinyin: 'zì', example: '字母' },
+                    { character: '气', pinyin: 'qì', example: '气球' },
+                    { character: '十', pinyin: 'shí', example: '十分' }
+                ]
+            },
+            // 第二组
+            {
+                name: "第二组",
+                characters: [
+                    { character: '会', pinyin: 'huì', example: '会议' },
+                    { character: '见', pinyin: 'jiàn', example: '见面' },
+                    { character: '早', pinyin: 'zǎo', example: '早上' },
+                    { character: '雪', pinyin: 'xuě', example: '雪花' },
+                    { character: '黄', pinyin: 'huáng', example: '黄色' },
+                    { character: '跑', pinyin: 'pǎo', example: '跑步' },
+                    { character: '鸡', pinyin: 'jī', example: '鸡蛋' },
+                    { character: '绿', pinyin: 'lǜ', example: '绿色' },
+                    { character: '鱼', pinyin: 'yú', example: '鱼缸' },
+                    { character: '做', pinyin: 'zuò', example: '做饭' },
+                    { character: '飞', pinyin: 'fēi', example: '飞机' },
+                    { character: '青', pinyin: 'qīng', example: '青春' },
+                    { character: '要', pinyin: 'yào', example: '要求' },
+                    { character: '鸟', pinyin: 'niǎo', example: '鸟类' },
+                    { character: '他', pinyin: 'tā', example: '他们' },
+                    { character: '吃', pinyin: 'chī', example: '吃饭' },
+                    { character: '们', pinyin: 'men', example: '我们' },
+                    { character: '秋', pinyin: 'qiū', example: '秋天' },
+                    { character: '都', pinyin: 'dōu', example: '都是' },
+                    { character: '春', pinyin: 'chūn', example: '春天' },
+                    { character: '个', pinyin: 'gè', example: '个人' },
+                    { character: '冬', pinyin: 'dōng', example: '冬天' },
+                    { character: '夏', pinyin: 'xià', example: '夏天' },
+                    { character: '季', pinyin: 'jì', example: '季节' },
+                    { character: '狗', pinyin: 'gǒu', example: '狗窝' },
+                    { character: '猫', pinyin: 'māo', example: '猫咪' },
+                    { character: '蓝', pinyin: 'lán', example: '蓝色' },
+                    { character: '落', pinyin: 'luò', example: '落叶' },
+                    { character: '真', pinyin: 'zhēn', example: '真实' },
+                    { character: '开', pinyin: 'kāi', example: '开心' },
+                    { character: '说', pinyin: 'shuō', example: '说话' },
+                    { character: '也', pinyin: 'yě', example: '也许' },
+                    { character: '马', pinyin: 'mǎ', example: '马上' },
+                    { character: '米', pinyin: 'mǐ', example: '米饭' },
+                    { character: '哥', pinyin: 'gē', example: '哥哥' },
+                    { character: '姐', pinyin: 'jiě', example: '姐姐' },
+                    { character: '来', pinyin: 'lái', example: '来到' },
+                    { character: '黑', pinyin: 'hēi', example: '黑色' },
+                    { character: '去', pinyin: 'qù', example: '去年' },
+                    { character: '出', pinyin: 'chū', example: '出现' },
+                    { character: '跳', pinyin: 'tiào', example: '跳舞' },
+                    { character: '着', pinyin: 'zhe', example: '看着' },
+                    { character: '了', pinyin: 'le', example: '好了' },
+                    { character: '你', pinyin: 'nǐ', example: '你好' },
+                    { character: '妹', pinyin: 'mèi', example: '妹妹' },
+                    { character: '弟', pinyin: 'dì', example: '弟弟' },
+                    { character: '东', pinyin: 'dōng', example: '东方' },
+                    { character: '又', pinyin: 'yòu', example: '又是' },
+                    { character: '就', pinyin: 'jiù', example: '就是' },
+                    { character: '快', pinyin: 'kuài', example: '快乐' },
+                    { character: '得', pinyin: 'dé', example: '得到' },
+                    { character: '乐', pinyin: 'lè', example: '乐观' },
+                    { character: '还', pinyin: 'hái', example: '还有' },
+                    { character: '西', pinyin: 'xī', example: '西瓜' },
+                    { character: '起', pinyin: 'qǐ', example: '起来' },
+                    { character: '到', pinyin: 'dào', example: '到达' },
+                    { character: '捉', pinyin: 'zhuō', example: '捉住' },
+                    { character: '迷', pinyin: 'mí', example: '迷路' },
+                    { character: '玩', pinyin: 'wán', example: '玩具' },
+                    { character: '很', pinyin: 'hěn', example: '很多' },
+                    { character: '高', pinyin: 'gāo', example: '高兴' },
+                    { character: '球', pinyin: 'qiú', example: '球类' },
+                    { character: '鸭', pinyin: 'yā', example: '鸭子' },
+                    { character: '哈', pinyin: 'hā', example: '哈哈' },
+                    { character: '方', pinyin: 'fāng', example: '方法' },
+                    { character: '爬', pinyin: 'pá', example: '爬山' },
+                    { character: '藏', pinyin: 'cáng', example: '藏身' },
+                    { character: '向', pinyin: 'xiàng', example: '方向' },
+                    { character: '对', pinyin: 'duì', example: '对面' },
+                    { character: '兴', pinyin: 'xìng', example: '兴趣' },
+                    { character: '叫', pinyin: 'jiào', example: '叫声' },
+                    { character: '能', pinyin: 'néng', example: '能力' },
+                    { character: '问', pinyin: 'wèn', example: '问题' },
+                    { character: '成', pinyin: 'chéng', example: '成功' },
+                    { character: '变', pinyin: 'biàn', example: '变化' },
+                    { character: '教', pinyin: 'jiào', example: '教育' },
+                    { character: '急', pinyin: 'jí', example: '急忙' },
+                    { character: '再', pinyin: 'zài', example: '再见' },
+                    { character: '门', pinyin: 'mén', example: '门口' },
+                    { character: '只', pinyin: 'zhǐ', example: '只有' },
+                    { character: '回', pinyin: 'huí', example: '回家' },
+                    { character: '公', pinyin: 'gōng', example: '公园' },
+                    { character: '打', pinyin: 'dǎ', example: '打球' },
+                    { character: '兔', pinyin: 'tù', example: '兔子' },
+                    { character: '请', pinyin: 'qǐng', example: '请求' },
+                    { character: '过', pinyin: 'guò', example: '过去' },
+                    { character: '吗', pinyin: 'ma', example: '好吗' },
+                    { character: '泳', pinyin: 'yǒng', example: '游泳' }
+                ]
+            },
+            // 第三组
+            {
+                name: "第三组",
+                characters: [
+                    { character: '虫', pinyin: 'chóng', example: '虫子' },
+                    { character: '把', pinyin: 'bǎ', example: '把握' },
+                    { character: '鹅', pinyin: 'é', example: '天鹅' },
+                    { character: '河', pinyin: 'hé', example: '河流' },
+                    { character: '礼', pinyin: 'lǐ', example: '礼物' },
+                    { character: '背', pinyin: 'bèi', example: '背后' },
+                    { character: '拿', pinyin: 'ná', example: '拿手' },
+                    { character: '里', pinyin: 'lǐ', example: '里面' },
+                    { character: '后', pinyin: 'hòu', example: '后面' },
+                    { character: '谢', pinyin: 'xiè', example: '谢谢' },
+                    { character: '边', pinyin: 'biān', example: '边界' },
+                    { character: '貌', pinyin: 'mào', example: '面貌' },
+                    { character: '班', pinyin: 'bān', example: '班级' },
+                    { character: '幼', pinyin: 'yòu', example: '幼儿' },
+                    { character: '园', pinyin: 'yuán', example: '园林' },
+                    { character: '照', pinyin: 'zhào', example: '照片' },
+                    { character: '梦', pinyin: 'mèng', example: '梦想' },
+                    { character: '婆', pinyin: 'pó', example: '婆婆' },
+                    { character: '老', pinyin: 'lǎo', example: '老师' },
+                    { character: '刀', pinyin: 'dāo', example: '刀子' },
+                    { character: '甜', pinyin: 'tián', example: '甜蜜' },
+                    { character: '盒', pinyin: 'hé', example: '盒子' },
+                    { character: '尺', pinyin: 'chǐ', example: '尺子' },
+                    { character: '时', pinyin: 'shí', example: '时间' },
+                    { character: '具', pinyin: 'jù', example: '具体' },
+                    { character: '长', pinyin: 'cháng', example: '长度' },
+                    { character: '正', pinyin: 'zhèng', example: '正确' },
+                    { character: '笔', pinyin: 'bǐ', example: '笔记' },
+                    { character: '放', pinyin: 'fàng', example: '放心' },
+                    { character: '文', pinyin: 'wén', example: '文化' },
+                    { character: '画', pinyin: 'huà', example: '画面' },
+                    { character: '用', pinyin: 'yòng', example: '用途' },
+                    { character: '总', pinyin: 'zǒng', example: '总是' },
+                    { character: '玉', pinyin: 'yù', example: '玉石' },
+                    { character: '尾', pinyin: 'wěi', example: '尾巴' },
+                    { character: '尖', pinyin: 'jiān', example: '尖锐' },
+                    { character: '苗', pinyin: 'miáo', example: '苗木' },
+                    { character: '竹', pinyin: 'zhú', example: '竹子' },
+                    { character: '巴', pinyin: 'bā', example: '巴士' },
+                    { character: '听', pinyin: 'tīng', example: '听力' },
+                    { character: '猩', pinyin: 'xīng', example: '猩猩' },
+                    { character: '话', pinyin: 'huà', example: '话题' },
+                    { character: '给', pinyin: 'gěi', example: '给予' },
+                    { character: '猴', pinyin: 'hóu', example: '猴子' },
+                    { character: '告', pinyin: 'gào', example: '告诉' },
+                    { character: '进', pinyin: 'jìn', example: '进步' },
+                    { character: '电', pinyin: 'diàn', example: '电视' },
+                    { character: '诉', pinyin: 'sù', example: '诉说' },
+                    { character: '念', pinyin: 'niàn', example: '念头' },
+                    { character: '乖', pinyin: 'guāi', example: '乖巧' },
+                    { character: '住', pinyin: 'zhù', example: '住房' },
+                    { character: '饭', pinyin: 'fàn', example: '饭店' },
+                    { character: '想', pinyin: 'xiàng', example: '想法' },
+                    { character: '前', pinyin: 'qián', example: '前面' },
+                    { character: '面', pinyin: 'miàn', example: '面条' },
+                    { character: '从', pinyin: 'cóng', example: '从前' },
+                    { character: '送', pinyin: 'sòng', example: '送礼' },
+                    { character: '厂', pinyin: 'chǎng', example: '厂家' },
+                    { character: '同', pinyin: 'tóng', example: '同学' },
+                    { character: '果', pinyin: 'guǒ', example: '果实' },
+                    { character: '产', pinyin: 'chǎn', example: '产品' },
+                    { character: '没', pinyin: 'méi', example: '没有' },
+                    { character: '工', pinyin: 'gōng', example: '工作' },
+                    { character: '动', pinyin: 'dòng', example: '动物' },
+                    { character: '关', pinyin: 'guān', example: '关系' },
+                    { character: '年', pinyin: 'nián', example: '年龄' },
+                    { character: '按', pinyin: 'àn', example: '按照' },
+                    { character: '桃', pinyin: 'táo', example: '桃子' },
+                    { character: '荷', pinyin: 'hé', example: '荷花' },
+                    { character: '找', pinyin: 'zhǎo', example: '找到' },
+                    { character: '节', pinyin: 'jié', example: '节日' },
+                    { character: '菊', pinyin: 'jú', example: '菊花' },
+                    { character: '它', pinyin: 'tā', example: '它们' },
+                    { character: '梅', pinyin: 'méi', example: '梅花' },
+                    { character: '怕', pinyin: 'pà', example: '害怕' },
+                    { character: '敢', pinyin: 'gǎn', example: '勇敢' },
+                    { character: '躲', pinyin: 'duǒ', example: '躲藏' },
+                    { character: '勇', pinyin: 'yǒng', example: '勇气' },
+                    { character: '冷', pinyin: 'lěng', example: '冷静' },
+                    { character: '堆', pinyin: 'duī', example: '堆积' },
+                    { character: '农', pinyin: 'nóng', example: '农民' },
+                    { character: '仗', pinyin: 'zhàng', example: '打仗' },
+                    { character: '柳', pinyin: 'liǔ', example: '柳树' },
+                    { character: '伯', pinyin: 'bó', example: '伯父' },
+                    { character: '民', pinyin: 'mín', example: '民族' },
+                    { character: '种', pinyin: 'zhǒng', example: '种类' },
+                    { character: '最', pinyin: 'zuì', example: '最好' }
+                ]
+            },
+            // 第四组
+            {
+                name: "第四组",
+                characters: [
+                    { character: '片', pinyin: 'piàn', example: '片段' },
+                    { character: '吹', pinyin: 'chuī', example: '吹风' },
+                    { character: '浇', pinyin: 'jiāo', example: '浇水' },
+                    { character: '燕', pinyin: 'yàn', example: '燕子' },
+                    { character: '睡', pinyin: 'shuì', example: '睡觉' },
+                    { character: '醒', pinyin: 'xǐng', example: '醒来' },
+                    { character: '蛙', pinyin: 'wā', example: '青蛙' },
+                    { character: '南', pinyin: 'nán', example: '南方' },
+                    { character: '椅', pinyin: 'yǐ', example: '椅子' },
+                    { character: '坐', pinyin: 'zuò', example: '坐下' },
+                    { character: '身', pinyin: 'shēn', example: '身体' },
+                    { character: '布', pinyin: 'bù', example: '布料' },
+                    { character: '吧', pinyin: 'ba', example: '好吧' },
+                    { character: '桌', pinyin: 'zhuō', example: '桌子' },
+                    { character: '抱', pinyin: 'bào', example: '拥抱' },
+                    { character: '摔', pinyin: 'shuāi', example: '摔倒' },
+                    { character: '呢', pinyin: 'ne', example: '你呢' },
+                    { character: '痛', pinyin: 'tòng', example: '痛苦' },
+                    { character: '声', pinyin: 'shēng', example: '声音' },
+                    { character: '谁', pinyin: 'shuí', example: '是谁' },
+                    { character: '认', pinyin: 'rèn', example: '认识' },
+                    { character: '原', pinyin: 'yuán', example: '原来' },
+                    { character: '喊', pinyin: 'hǎn', example: '喊叫' },
+                    { character: '狼', pinyin: 'láng', example: '狼狗' },
+                    { character: '救', pinyin: 'jiù', example: '救命' },
+                    { character: '路', pinyin: 'lù', example: '路线' },
+                    { character: '啦', pinyin: 'la', example: '好啦' },
+                    { character: '假', pinyin: 'jiǎ', example: '假如' },
+                    { character: '赶', pinyin: 'gǎn', example: '赶紧' },
+                    { character: '碰', pinyin: 'pèng', example: '碰面' },
+                    { character: '掉', pinyin: 'diào', example: '掉下' },
+                    { character: '哪', pinyin: 'nǎ', example: '哪里' },
+                    { character: '逃', pinyin: 'táo', example: '逃跑' },
+                    { character: '点', pinyin: 'diǎn', example: '点头' },
+                    { character: '呀', pinyin: 'ya', example: '哎呀' },
+                    { character: '走', pinyin: 'zǒu', example: '走路' },
+                    { character: '音', pinyin: 'yīn', example: '音乐' },
+                    { character: '两', pinyin: 'liǎng', example: '两个' },
+                    { character: '她', pinyin: 'tā', example: '她们' },
+                    { character: '可', pinyin: 'kě', example: '可以' },
+                    { character: '夹', pinyin: 'jiā', example: '夹子' },
+                    { character: '丢', pinyin: 'diū', example: '丢失' },
+                    { character: '伸', pinyin: 'shēn', example: '伸手' },
+                    { character: '缝', pinyin: 'fèng', example: '缝隙' },
+                    { character: '根', pinyin: 'gēn', example: '根本' },
+                    { character: '棍', pinyin: 'gùn', example: '棍子' },
+                    { character: '灰', pinyin: 'huī', example: '灰色' },
+                    { character: '萝', pinyin: 'luó', example: '萝卜' },
+                    { character: '卜', pinyin: 'bo', example: '萝卜' },
+                    { character: '拔', pinyin: 'bá', example: '拔河' },
+                    { character: '拉', pinyin: 'lā', example: '拉手' },
+                    { character: '熟', pinyin: 'shú', example: '熟悉' },
+                    { character: '鼠', pinyin: 'shǔ', example: '老鼠' },
+                    { character: '倒', pinyin: 'dǎo', example: '倒下' },
+                    { character: '右', pinyin: 'yòu', example: '右边' },
+                    { character: '办', pinyin: 'bàn', example: '办法' },
+                    { character: '左', pinyin: 'zuǒ', example: '左边' },
+                    { character: '抬', pinyin: 'tái', example: '抬头' },
+                    { character: '晚', pinyin: 'wǎn', example: '晚上' },
+                    { character: '么', pinyin: 'me', example: '什么' },
+                    { character: '怎', pinyin: 'zěn', example: '怎么' },
+                    { character: '知', pinyin: 'zhī', example: '知道' },
+                    { character: '午', pinyin: 'wǔ', example: '中午' },
+                    { character: '座', pinyin: 'zuò', example: '座位' },
+                    { character: '这', pinyin: 'zhè', example: '这里' },
+                    { character: '道', pinyin: 'dào', example: '道路' },
+                    { character: '洞', pinyin: 'dòng', example: '洞穴' },
+                    { character: '什', pinyin: 'shén', example: '什么' },
+                    { character: '害', pinyin: 'hài', example: '害怕' },
+                    { character: '付', pinyin: 'fù', example: '付出' },
+                    { character: '死', pinyin: 'sǐ', example: '死亡' },
+                    { character: '顶', pinyin: 'dǐng', example: '顶点' },
+                    { character: '角', pinyin: 'jiǎo', example: '角度' },
+                    { character: '扑', pinyin: 'pū', example: '扑克' },
+                    { character: '期', pinyin: 'qī', example: '期间' },
+                    { character: '分', pinyin: 'fēn', example: '分数' },
+                    { character: '带', pinyin: 'dài', example: '带领' },
+                    { character: '清', pinyin: 'qīng', example: '清楚' },
+                    { character: '光', pinyin: 'guāng', example: '光明' },
+                    { character: '今', pinyin: 'jīn', example: '今天' },
+                    { character: '阴', pinyin: 'yīn', example: '阴天' },
+                    { character: '指', pinyin: 'zhǐ', example: '指导' },
+                    { character: '错', pinyin: 'cuò', example: '错误' },
+                    { character: '拇', pinyin: 'mǔ', example: '拇指' },
+                    { character: '昨', pinyin: 'zuó', example: '昨天' }
+                ]
+            },
+            // 第五组
+            {
+                name: "第五组",
+                characters: [
+                    { character: '食', pinyin: 'shí', example: '食物' },
+                    { character: '无', pinyin: 'wú', example: '无法' },
+                    { character: '名', pinyin: 'míng', example: '名字' },
+                    { character: '加', pinyin: 'jiā', example: '加法' },
+                    { character: '共', pinyin: 'gòng', example: '共同' },
+                    { character: '事', pinyin: 'shì', example: '事情' },
+                    { character: '帮', pinyin: 'bāng', example: '帮助' },
+                    { character: '饿', pinyin: 'è', example: '饥饿' },
+                    { character: '肚', pinyin: 'dù', example: '肚子' },
+                    { character: '狮', pinyin: 'shī', example: '狮子' },
+                    { character: '觉', pinyin: 'jué', example: '觉得' },
+                    { character: '毛', pinyin: 'máo', example: '毛发' },
+                    { character: '求', pinyin: 'qiú', example: '请求' },
+                    { character: '等', pinyin: 'děng', example: '等待' },
+                    { character: '香', pinyin: 'xiāng', example: '香水' },
+                    { character: '肉', pinyin: 'ròu', example: '肉类' },
+                    { character: '张', pinyin: 'zhāng', example: '张开' },
+                    { character: '网', pinyin: 'wǎng', example: '网络' },
+                    { character: '嘴', pinyin: 'zuǐ', example: '嘴巴' },
+                    { character: '啊', pinyin: 'a', example: '啊呀' },
+                    { character: '漂', pinyin: 'piào', example: '漂亮' },
+                    { character: '咬', pinyin: 'yǎo', example: '咬住' },
+                    { character: '牙', pinyin: 'yá', example: '牙齿' },
+                    { character: '力', pinyin: 'lì', example: '力量' },
+                    { character: '胡', pinyin: 'hú', example: '胡须' },
+                    { character: '才', pinyin: 'cái', example: '才能' },
+                    { character: '朵', pinyin: 'duǒ', example: '花朵' },
+                    { character: '虎', pinyin: 'hǔ', example: '老虎' },
+                    { character: '贴', pinyin: 'tiē', example: '贴纸' },
+                    { character: '更', pinyin: 'gèng', example: '更好' },
+                    { character: '数', pinyin: 'shù', example: '数学' },
+                    { character: '纸', pinyin: 'zhǐ', example: '纸张' },
+                    { character: '圈', pinyin: 'quān', example: '圈子' },
+                    { character: '圆', pinyin: 'yuán', example: '圆形' },
+                    { character: '眼', pinyin: 'yǎn', example: '眼睛' },
+                    { character: '脸', pinyin: 'liǎn', example: '脸色' },
+                    { character: '睛', pinyin: 'jīng', example: '眼睛' },
+                    { character: '接', pinyin: 'jiē', example: '接受' },
+                    { character: '亲', pinyin: 'qīn', example: '亲人' },
+                    { character: '外', pinyin: 'wài', example: '外面' },
+                    { character: '笨', pinyin: 'bèn', example: '笨蛋' },
+                    { character: '以', pinyin: 'yǐ', example: '以为' },
+                    { character: '慢', pinyin: 'màn', example: '慢走' },
+                    { character: '每', pinyin: 'měi', example: '每天' },
+                    { character: '练', pinyin: 'liàn', example: '练习' },
+                    { character: '己', pinyin: 'jǐ', example: '自己' },
+                    { character: '自', pinyin: 'zì', example: '自然' },
+                    { character: '难', pinyin: 'nán', example: '困难' },
+                    { character: '颗', pinyin: 'kē', example: '颗粒' },
+                    { character: '为', pinyin: 'wèi', example: '为了' },
+                    { character: '样', pinyin: 'yàng', example: '样子' },
+                    { character: '离', pinyin: 'lí', example: '离开' },
+                    { character: '因', pinyin: 'yīn', example: '因为' },
+                    { character: '近', pinyin: 'jìn', example: '近处' },
+                    { character: '象', pinyin: 'xiàng', example: '象征' },
+                    { character: '船', pinyin: 'chuán', example: '船只' },
+                    { character: '金', pinyin: 'jīn', example: '金色' },
+                    { character: '闪', pinyin: 'shǎn', example: '闪光' },
+                    { character: '丽', pinyin: 'lì', example: '美丽' },
+                    { character: '当', pinyin: 'dāng', example: '当时' },
+                    { character: '干', pinyin: 'gàn', example: '干活' },
+                    { character: '美', pinyin: 'měi', example: '美好' },
+                    { character: '满', pinyin: 'mǎn', example: '满意' },
+                    { character: '扇', pinyin: 'shàn', example: '扇子' },
+                    { character: '朝', pinyin: 'cháo', example: '朝向' },
+                    { character: '汽', pinyin: 'qì', example: '汽车' },
+                    { character: '京', pinyin: 'jīng', example: '北京' },
+                    { character: '熊', pinyin: 'xióng', example: '熊猫' },
+                    { character: '车', pinyin: 'chē', example: '车辆' },
+                    { character: '往', pinyin: 'wǎng', example: '往来' },
+                    { character: '娃', pinyin: 'wá', example: '娃娃' },
+                    { character: '北', pinyin: 'běi', example: '北方' },
+                    { character: '蘑', pinyin: 'mó', example: '蘑菇' },
+                    { character: '菇', pinyin: 'gū', example: '蘑菇' },
+                    { character: '林', pinyin: 'lín', example: '树林' },
+                    { character: '鹿', pinyin: 'lù', example: '鹿角' },
+                    { character: '森', pinyin: 'sēn', example: '森林' },
+                    { character: '采', pinyin: 'cǎi', example: '采集' },
+                    { character: '篮', pinyin: 'lán', example: '篮子' },
+                    { character: '直', pinyin: 'zhí', example: '直接' },
+                    { character: '摸', pinyin: 'mō', example: '摸索' },
+                    { character: '科', pinyin: 'kē', example: '科学' },
+                    { character: '该', pinyin: 'gāi', example: '应该' },
+                    { character: '所', pinyin: 'suǒ', example: '所以' },
+                    { character: '应', pinyin: 'yīng', example: '应该' },
+                    { character: '题', pinyin: 'tí', example: '题目' },
+                    { character: '灯', pinyin: 'dēng', example: '灯光' }
+                ]
+            },
+            // 第六组
+            {
+                name: "第六组",
+                characters: [
+                    { character: '停', pinyin: 'tíng', example: '停止' },
+                    { character: '而', pinyin: 'ér', example: '而且' },
+                    { character: '窗', pinyin: 'chuāng', example: '窗户' },
+                    { character: '刚', pinyin: 'gāng', example: '刚才' },
+                    { character: '撞', pinyin: 'zhuàng', example: '撞击' },
+                    { character: '比', pinyin: 'bǐ', example: '比较' },
+                    { character: '记', pinyin: 'jì', example: '记忆' },
+                    { character: '串', pinyin: 'chuàn', example: '串联' },
+                    { character: '被', pinyin: 'bèi', example: '被子' },
+                    { character: '够', pinyin: 'gòu', example: '足够' },
+                    { character: '命', pinyin: 'mìng', example: '命运' },
+                    { character: '定', pinyin: 'dìng', example: '定义' },
+                    { character: '吓', pinyin: 'xià', example: '吓人' },
+                    { character: '破', pinyin: 'pò', example: '破坏' },
+                    { character: '湖', pinyin: 'hú', example: '湖泊' },
+                    { character: '透', pinyin: 'tòu', example: '透明' },
+                    { character: '跟', pinyin: 'gēn', example: '跟随' },
+                    { character: '粗', pinyin: 'cū', example: '粗细' },
+                    { character: '棵', pinyin: 'kē', example: '棵树' },
+                    { character: '瓜', pinyin: 'guā', example: '瓜果' },
+                    { character: '狐', pinyin: 'hú', example: '狐狸' },
+                    { character: '狸', pinyin: 'lí', example: '狸猫' },
+                    { character: '竿', pinyin: 'gān', example: '竹竿' },
+                    { character: '腿', pinyin: 'tuǐ', example: '腿部' },
+                    { character: '钓', pinyin: 'diào', example: '钓鱼' },
+                    { character: '甩', pinyin: 'shuǎi', example: '甩掉' },
+                    { character: '钩', pinyin: 'gōu', example: '钩子' },
+                    { character: '忘', pinyin: 'wàng', example: '忘记' },
+                    { character: '装', pinyin: 'zhuāng', example: '装备' },
+                    { character: '饵', pinyin: 'ěr', example: '诱饵' },
+                    { character: '算', pinyin: 'suàn', example: '算术' },
+                    { character: '桶', pinyin: 'tǒng', example: '水桶' },
+                    { character: '坏', pinyin: 'huài', example: '坏人' },
+                    { character: '忙', pinyin: 'máng', example: '忙碌' },
+                    { character: '洗', pinyin: 'xǐ', example: '洗澡' },
+                    { character: '忽', pinyin: 'hū', example: '忽然' },
+                    { character: '全', pinyin: 'quán', example: '全部' },
+                    { character: '然', pinyin: 'rán', example: '然后' },
+                    { character: '条', pinyin: 'tiáo', example: '条件' },
+                    { character: '怪', pinyin: 'guài', example: '怪物' },
+                    { character: '物', pinyin: 'wù', example: '物品' },
+                    { character: '猪', pinyin: 'zhū', example: '猪肉' },
+                    { character: '影', pinyin: 'yǐng', example: '影子' },
+                    { character: '信', pinyin: 'xìn', example: '信任' },
+                    { character: '呼', pinyin: 'hū', example: '呼吸' },
+                    { character: '结', pinyin: 'jié', example: '结果' },
+                    { character: '冰', pinyin: 'bīng', example: '冰块' },
+                    { character: '枝', pinyin: 'zhī', example: '树枝' },
+                    { character: '发', pinyin: 'fā', example: '发现' },
+                    { character: '抖', pinyin: 'dǒu', example: '抖动' },
+                    { character: '暖', pinyin: 'nuǎn', example: '暖和' },
+                    { character: '屋', pinyin: 'wū', example: '屋子' },
+                    { character: '法', pinyin: 'fǎ', example: '法律' },
+                    { character: '件', pinyin: 'jiàn', example: '事件' },
+                    { character: '于', pinyin: 'yú', example: '于是' },
+                    { character: '松', pinyin: 'sōng', example: '松树' },
+                    { character: '帽', pinyin: 'mào', example: '帽子' },
+                    { character: '戴', pinyin: 'dài', example: '穿戴' },
+                    { character: '热', pinyin: 'rè', example: '热情' },
+                    { character: '候', pinyin: 'hòu', example: '时候' },
+                    { character: '劳', pinyin: 'láo', example: '劳动' },
+                    { character: '流', pinyin: 'liú', example: '流水' },
+                    { character: '汗', pinyin: 'hàn', example: '汗水' },
+                    { character: '凉', pinyin: 'liáng', example: '凉快' },
+                    { character: '别', pinyin: 'bié', example: '别人' },
+                    { character: '整', pinyin: 'zhěng', example: '整体' },
+                    { character: '还', pinyin: 'hái', example: '还有' },
+                    { character: '觉', pinyin: 'jué', example: '觉得' },
+                    { character: '盖', pinyin: 'gài', example: '盖子' },
+                    { character: '怜', pinyin: 'lián', example: '可怜' },
+                    { character: '窝', pinyin: 'wō', example: '窝点' },
+                    { character: '病', pinyin: 'bìng', example: '病人' },
+                    { character: '受', pinyin: 'shòu', example: '受伤' },
+                    { character: '着', pinyin: 'zhe', example: '看着' },
+                    { character: '羽', pinyin: 'yǔ', example: '羽毛' },
+                    { character: '望', pinyin: 'wàng', example: '希望' },
+                    { character: '骑', pinyin: 'qí', example: '骑马' },
+                    { character: '经', pinyin: 'jīng', example: '经过' },
+                    { character: '行', pinyin: 'xíng', example: '行为' },
+                    { character: '旁', pinyin: 'páng', example: '旁边' },
+                    { character: '稀', pinyin: 'xī', example: '稀少' },
+                    { character: '远', pinyin: 'yuǎn', example: '远方' },
+                    { character: '婶', pinyin: 'shěn', example: '婶婶' },
+                    { character: '奇', pinyin: 'qí', example: '奇怪' },
+                    { character: '祝', pinyin: 'zhù', example: '祝福' },
+                    { character: '脑', pinyin: 'nǎo', example: '脑袋' },
+                    { character: '床', pinyin: 'chuáng', example: '床铺' },
+                    { character: '呆', pinyin: 'dāi', example: '呆子' },
+                    { character: '贺', pinyin: 'hè', example: '祝贺' },
+                    { character: '准', pinyin: 'zhǔn', example: '准备' },
+                    { character: '闹', pinyin: 'nào', example: '热闹' },
+                    { character: '拨', pinyin: 'bō', example: '拨打' },
+                    { character: '钟', pinyin: 'zhōng', example: '钟表' },
+                    { character: '备', pinyin: 'bèi', example: '准备' },
+                    { character: '其', pinyin: 'qí', example: '其他' },
+                    { character: '轻', pinyin: 'qīng', example: '轻松' },
+                    { character: '实', pinyin: 'shí', example: '实际' },
+                    { character: '响', pinyin: 'xiǎng', example: '响声' },
+                    { character: '迟', pinyin: 'chí', example: '迟到' },
+                    { character: '已', pinyin: 'yǐ', example: '已经' },
+                    { character: '叠', pinyin: 'dié', example: '重叠' },
+                    { character: '写', pinyin: 'xiě', example: '写字' },
+                    { character: '冒', pinyin: 'mào', example: '冒险' },
+                    { character: '您', pinyin: 'nín', example: '您好' },
+                    { character: '包', pinyin: 'bāo', example: '包裹' },
+                    { character: '碗', pinyin: 'wǎn', example: '碗筷' }
+                ]
+            }
+        ];
+
+        // 初始化游戏
+        function initGame() {
+            const tileContainer = document.getElementById('tile-container');
+            
+            // 清空容器
+            tileContainer.innerHTML = '';
+            
+            // 重置游戏状态
+            gameState.currentTiles = [];
+            gameState.learnedTiles = [];
+            gameState.gameStarted = true;
+            gameState.clickStates = {};
+            
+            // 更新游戏状态显示
+            document.getElementById('game-status').textContent = '点击骨牌开始学习汉字';
+            document.getElementById('current-phonetic').textContent = '当前汉字: 无';
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 生成桌面骨牌
+            generateTiles();
+            
+            // 渲染桌面骨牌
+            renderTableTiles();
+        }
+
+        // 生成桌面骨牌
+        function generateTiles() {
+            gameState.currentTiles = [];
+            
+            // 使用当前数据组
+            const currentGroup = hanziGroups[gameState.currentGroupIndex];
+            
+            // 从当前组的字符中随机选择40个
+            const availableCharacters = [...currentGroup.characters];
+            const shuffledCharacters = shuffleArray(availableCharacters);
+            
+            for (let i = 0; i < 40 && i < shuffledCharacters.length; i++) {
+                const charData = shuffledCharacters[i];
+                
+                gameState.currentTiles.push({
+                    character: charData.character,
+                    pinyin: charData.pinyin,
+                    example: charData.example,
+                    learned: false
+                });
+                
+                // 初始化点击状态
+                gameState.clickStates[i] = 0;
+            }
+        }
+
+        // 渲染桌面骨牌
+        function renderTableTiles() {
+            const tileContainer = document.getElementById('tile-container');
+            tileContainer.innerHTML = '';
+            
+            gameState.currentTiles.forEach((tile, index) => {
+                const tileElement = document.createElement('div');
+                tileElement.className = 'tile';
+                tileElement.dataset.index = index;
+                
+                // 如果骨牌已学习，标记为已学习
+                if (tile.learned) {
+                    tileElement.classList.add('learned');
+                    tileElement.textContent = '';
+                    return;
+                }
+                
+                // 根据点击状态显示不同内容
+                const clickState = gameState.clickStates[index] || 0;
+                
+                if (clickState === 0) {
+                    // 未点击状态
+                    tileElement.textContent = '';
+                } else if (clickState === 1) {
+                    // 第一次点击 - 显示汉字
+                    tileElement.textContent = tile.character;
+                    tileElement.classList.add('revealed');
+                } else if (clickState === 2) {
+                    // 第二次点击 - 显示拼音
+                    tileElement.textContent = tile.pinyin;
+                    tileElement.classList.add('pinyin');
+                } else if (clickState === 3) {
+                    // 第三次点击 - 朗读（显示汉字）
+                    tileElement.textContent = tile.character;
+                    tileElement.classList.add('revealed');
+                } else if (clickState === 4) {
+                    // 第四次点击 - 显示例词
+                    tileElement.textContent = tile.example;
+                    tileElement.classList.add('example');
+                    
+                    // 标记为已学习
+                    tile.learned = true;
+                    gameState.learnedTiles.push(index);
+                    updateStats();
+                }
+                
+                tileElement.addEventListener('click', () => {
+                    handleTileClick(index);
+                });
+                
+                tileContainer.appendChild(tileElement);
+            });
+        }
+
+        // 处理桌面骨牌点击
+        function handleTileClick(index) {
+            const tile = gameState.currentTiles[index];
+            
+            // 如果骨牌已学习，不处理
+            if (tile.learned) {
+                return;
+            }
+            
+            // 更新点击状态
+            gameState.clickStates[index] = (gameState.clickStates[index] || 0) + 1;
+            
+            // 如果超过4次，重置为1
+            if (gameState.clickStates[index] > 4) {
+                gameState.clickStates[index] = 1;
+            }
+            
+            // 重新渲染桌面骨牌
+            renderTableTiles();
+            
+            // 更新当前汉字显示
+            document.getElementById('current-phonetic').textContent = `当前汉字: ${tile.character} (${tile.pinyin})`;
+            
+            // 如果是第三次点击，朗读汉字
+            if (gameState.clickStates[index] === 3) {
+                speakCharacter(tile.character);
+            }
+            
+            // 如果是第四次点击，朗读例词
+            if (gameState.clickStates[index] === 4) {
+                speakCharacter(tile.example);
+            }
+            
+            // 检查游戏是否结束
+            checkGameEnd();
+        }
+
+        // 朗读汉字
+        function speakCharacter(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const learnedCount = gameState.learnedTiles.length;
+            const remainingCount = 40 - learnedCount;
+            
+            document.getElementById('learned-count').textContent = learnedCount;
+            document.getElementById('remaining-count').textContent = remainingCount;
+        }
+
+        // 检查游戏是否结束
+        function checkGameEnd() {
+            if (gameState.learnedTiles.length === 40) {
+                document.getElementById('game-status').textContent = '恭喜！所有汉字已学习完成！';
+                document.getElementById('current-phonetic').textContent = '游戏完成！';
+            }
+        }
+
+        // 重新洗牌
+function reshuffleTiles() {
+    if (!gameState.gameStarted) return;
+    
+    // 重置点击状态
+    gameState.clickStates = {};
+    
+    // 重新生成桌面骨牌（不包含已学习的汉字和只点击过一次的汉字）
+    const currentGroup = hanziGroups[gameState.currentGroupIndex];
+    
+    // 获取已学习的汉字
+    const learnedCharacters = gameState.currentTiles
+        .filter(tile => tile.learned)
+        .map(tile => tile.character);
+    
+    // 过滤出可用的汉字（未学习且未被点击过）
+    const availableCharacters = currentGroup.characters.filter(char => 
+        !learnedCharacters.includes(char.character)
+    );
+    
+    const shuffledCharacters = shuffleArray(availableCharacters);
+    gameState.currentTiles = [];
+    
+    // 添加已学习的汉字
+    for (const char of currentGroup.characters) {
+        if (learnedCharacters.includes(char.character)) {
+            gameState.currentTiles.push({
+                character: char.character,
+                pinyin: char.pinyin,
+                example: char.example,
+                learned: true
+            });
+        }
+    }
+    
+    // 添加未学习的汉字
+    for (let i = 0; i < 40 - learnedCharacters.length && i < shuffledCharacters.length; i++) {
+        const charData = shuffledCharacters[i];
+        
+        gameState.currentTiles.push({
+            character: charData.character,
+            pinyin: charData.pinyin,
+            example: charData.example,
+            learned: false
+        });
+    }
+    
+    // 重新渲染桌面骨牌
+    renderTableTiles();
+    
+    // 更新游戏状态
+    document.getElementById('game-status').textContent = '已重新洗牌，请继续学习汉字';
+    
+    // 更新统计信息
+    updateStats();
+}
+
+        // 选择组别
+        function selectGroup(groupIndex) {
+            gameState.currentGroupIndex = groupIndex;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.group-btn').forEach((btn, index) => {
+                if (index === groupIndex) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            
+            // 重置游戏状态
+            gameState.currentTiles = [];
+            gameState.learnedTiles = [];
+            gameState.gameStarted = false;
+            gameState.clickStates = {};
+            
+            // 更新游戏状态显示
+            document.getElementById('game-status').textContent = `已选择${hanziGroups[groupIndex].name}，点击"开始新游戏"开始`;
+            document.getElementById('current-phonetic').textContent = '当前汉字: 无';
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 清空骨牌容器
+            document.getElementById('tile-container').innerHTML = '';
+        }
+
+        // 辅助函数：随机打乱数组
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        // 事件监听
+        document.getElementById('start-btn').addEventListener('click', initGame);
+        document.getElementById('reshuffle-btn').addEventListener('click', reshuffleTiles);
+        
+        // 组别选择按钮事件
+        document.querySelectorAll('.group-btn').forEach((btn, index) => {
+            btn.addEventListener('click', () => {
+                selectGroup(index);
+            });
+        });
+        
+        // 默认选择第一组
+        selectGroup(0);
+    </script>
+</body>
+</html>
