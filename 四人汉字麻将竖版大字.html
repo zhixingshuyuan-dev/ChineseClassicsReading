@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字声符麻将 - 四人版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            color: #333;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .game-container {
+            display: grid;
+            grid-template-areas: 
+                "north north north"
+                "west center east"
+                "south south south";
+            grid-template-columns: 1fr 3fr 1fr;
+            grid-template-rows: 1fr 3fr 1fr;
+            gap: 15px;
+            width: 95vw;
+            height: 95vh;
+            max-width: 1500px;
+            max-height: 800px;
+        }
+        
+        .player-area {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            border: 2px solid rgba(200, 200, 200, 0.5);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 北侧玩家 - 系统1 */
+        .north-player {
+            grid-area: north;
+            flex-direction: column-reverse;
+        }
+        
+        /* 西侧玩家 - 系统2 */
+        .west-player {
+            grid-area: west;
+            flex-direction: column;
+        }
+        
+        /* 东侧玩家 - 系统3 */
+        .east-player {
+            grid-area: east;
+            flex-direction: column;
+        }
+        
+        /* 南侧玩家 - 用户 */
+        .south-player {
+            grid-area: south;
+        }
+        
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: nowrap;
+            gap: 10px;
+        }
+        
+        .player-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4a6baf;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+        
+        .dragon-badge {
+            background: #ff5252;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 20px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        
+        .player-score {
+            font-size: 20px;
+            background: linear-gradient(135deg, #4a6baf, #6a89cc);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+        
+        .tiles-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            flex: 1;
+            padding: 8px;
+            background: rgba(240, 240, 240, 0.5);
+            border-radius: 8px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 系统1和玩家的特殊居中样式 */
+        .north-player .tiles-container,
+        .south-player .tiles-container {
+            justify-content: center;
+        }
+        
+        /* 东西玩家牌的特殊样式 */
+        .west-player .tiles-container,
+        .east-player .tiles-container {
+            flex-direction: row;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            overflow-y: auto;
+            justify-content: center;
+        }
+        
+        .tile {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 40px;
+            font-weight: bold;
+            border-radius: 6px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+            border: 1px solid #ddd;
+            cursor: pointer;
+        }
+        
+        .tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .tile.matched {
+            background: linear-gradient(135deg, #d8d4b3, #9a9589);
+            box-shadow: 0 0 8px #ffc107;
+        }
+        
+        .tile.dragon {
+            background: linear-gradient(135deg, #f3f7f5, #d5abab);
+            box-shadow: 0 0 12px #ff5252;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .tile.selected {
+            border: 3px solid #ff9800;
+            box-shadow: 0 0 10px #ff9800;
+            transform: translateY(-5px);
+        }
+        
+        .center-area {
+            grid-area: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            gap: 15px;
+        }
+        
+        .table-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: rgba(240, 240, 240, 0.7);
+            border-radius: 10px;
+            min-height: 120px;
+            border: 2px solid rgba(200, 200, 200, 0.5);
+            width: 100%;
+        }
+        
+        .current-tile {
+            width: 120px;
+            height: 160px;
+            background: linear-gradient(135deg, #a5d6a7, #81c784) !important;
+            box-shadow: 0 0 15px #66bb6a !important;
+            cursor: pointer;
+            font-size: 64px;
+        }
+        
+        .discarded-tile {
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffcdd2, #ef9a9a);
+            cursor: pointer;
+            font-size: 28px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        button {
+            padding: 12px 24px;
+            font-size: 22px;
+            background: linear-gradient(135deg, #4a6baf, #6a89cc);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background: linear-gradient(135deg, #5a7bbf, #7a99dc);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:disabled {
+            background: linear-gradient(135deg, #cccccc, #aaaaaa);
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .message-area {
+            text-align: center;
+            font-size: 23px;
+            margin: 10px 0;
+            min-height: 25px;
+            color: #4a6baf;
+            font-weight: bold;
+            width: 100%;
+        }
+        
+        .dragon-group {
+            display: flex;
+            gap: 3px;
+            margin: 2px;
+            padding: 3px;
+            border: 2px dashed #4a6baf;
+            border-radius: 5px;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .game-title {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #4a6baf;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        
+        .winner-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 30px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            font-size: 30px;
+            color: #4a6baf;
+            box-shadow: 0 0 30px rgba(74, 107, 175, 0.5);
+            border: 3px solid #4a6baf;
+            cursor: move;
+            min-width: 300px;
+        }
+        
+        .winner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4a6baf;
+        }
+        
+        .winner-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .close-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .winner-content {
+            margin: 15px 0;
+            font-size: 24px;
+        }
+        
+        .winner-footer {
+            margin-top: 15px;
+        }
+        
+        .continue-btn {
+            padding: 10px 24px;
+            font-size: 20px;
+            background: linear-gradient(135deg, #4a6baf, #6a89cc);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .sound-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .sound-btn {
+            padding: 8px 16px;
+            font-size: 20px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: rgba(200, 200, 200, 0.5);
+            border-radius: 4px;
+            margin: 8px 0;
+            overflow: hidden;
+            width: 100%;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(135deg, #4a6baf, #6a89cc);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .rules-info {
+            text-align: center;
+            margin: 8px 0;
+            font-size: 22px;
+            color: #1a1818;
+            width: 100%;
+        }
+        
+        .phase-indicator {
+            text-align: center;
+            margin: 8px 0;
+            font-size: 25px;
+            color: #151d2d;
+            font-weight: bold;
+            width: 100%;
+        }
+        
+        .countdown-display {
+            text-align: center;
+            font-size: 24px;
+            margin: 8px 0;
+            color: #060f21;
+            font-weight: bold;
+            min-height: 20px;
+            width: 100%;
+        }
+        
+        .dragon-detail {
+            text-align: center;
+            margin: 8px 0;
+            font-size: 25px;
+            color: #151920;
+            font-weight: bold;
+            min-height: 20px;
+            width: 100%;
+        }
+        
+        .current-player {
+            border: 3px solid #ff9800;
+            box-shadow: 0 0 15px #ff9800;
+        }
+        
+        /* 玩家控制按钮放在骨牌上方 */
+        .user-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+        
+        /* 系统2和系统3高度增加 */
+        .west-player, .east-player {
+            height: 100%;
+        }
+        
+        /* 一行显示所有信息 */
+        .status-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 10px;
+        }
+        
+        .status-item {
+            flex: 1;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <!-- 北侧：系统1 -->
+        <div class="player-area north-player" id="north-player">
+            <div class="player-header">
+                <div class="player-name">
+                    系统1 (北) <span class="dragon-badge" id="north-dragon-badge">小龙: 0/5</span>
+                </div>
+                <div class="player-score">得分: <span id="north-score">0</span></div>
+            </div>
+            <div class="tiles-container" id="north-tiles"></div>
+        </div>
+        
+        <!-- 西侧：系统2 -->
+        <div class="player-area west-player" id="west-player">
+            <div class="player-header">
+                <div class="player-name">
+                    系统2 (西) <span class="dragon-badge" id="west-dragon-badge">小龙: 0/5</span>
+                </div>
+                <div class="player-score">得分: <span id="west-score">0</span></div>
+            </div>
+            <div class="tiles-container" id="west-tiles"></div>
+        </div>
+        
+        <!-- 中间：游戏控制区域 -->
+        <div class="center-area">
+            <h1 class="game-title">汉字声符麻将 - 四人版</h1>
+            
+            <div class="status-line">
+                <div class="rules-info">规则：玩家优先决定是否收牌，玩家放弃后系统玩家才能抓牌</div>
+                <div class="phase-indicator" id="phase-indicator">当前阶段：准备中</div>
+            </div>
+            
+            <div class="status-line">
+                <div class="message-area" id="message-area">
+                    <div class="status-item" id="game-status">游戏准备中，请点击"开始游戏"</div>
+                </div>
+                <div class="dragon-detail" id="dragon-detail"></div>
+            </div>
+            
+            <div class="countdown-display" id="countdown-display"></div>
+            
+            <!-- 桌面区域 - 只显示一张大骨牌 -->
+            <div class="table-area" id="table-tiles">
+                <div class="tile current-tile" id="current-table-tile"></div>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress" id="progress-bar"></div>
+            </div>
+            
+            <div class="controls">
+                <button id="start-btn">开始游戏</button>
+                <button id="system-draw-btn" disabled>系统发牌</button>
+            </div>
+            
+            <div class="sound-controls">
+                <button id="sound-toggle" class="sound-btn">关闭音效</button>
+                <button id="voice-toggle" class="sound-btn">关闭语音</button>
+            </div>
+        </div>
+        
+        <!-- 东侧：系统3 -->
+        <div class="player-area east-player" id="east-player">
+            <div class="player-header">
+                <div class="player-name">
+                    系统3 (东) <span class="dragon-badge" id="east-dragon-badge">小龙: 0/5</span>
+                </div>
+                <div class="player-score">得分: <span id="east-score">0</span></div>
+            </div>
+            <div class="tiles-container" id="east-tiles"></div>
+        </div>
+        
+        <!-- 南侧：用户 -->
+        <div class="player-area south-player" id="south-player">
+            <div class="user-controls">
+                <button id="user-discard-btn" disabled>出牌</button>
+                <button id="take-btn" disabled>收取牌</button>
+                <button id="pass-btn" disabled>放弃</button>
+            </div>
+            <div class="player-header">
+                <div class="player-name">
+                    玩家 (南) <span class="dragon-badge" id="south-dragon-badge">小龙: 0/5</span>
+                </div>
+                <div class="player-score">得分: <span id="south-score">0</span></div>
+            </div>
+            <div class="tiles-container" id="south-tiles"></div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const gameData = {
+            // 汉字数据 - 声符相同的汉字组
+            characterGroups: [
+
+            { "sound": "奏", "characters": ["奏", "奏", "𡘶", "揍", "𨂡", "腠", "𧱪", "楱", "湊", "輳", "𪉮", "𦦅", "𥯪"] },
+  { "sound": "岡", "characters": ["岡", "岡", "掆", "犅", "𦱌", "棡", "焵", "堈", "崗", "綱", "鋼", "𤭛", "剛"] },
+  { "sound": "羌", "characters": ["羌", "羌", "𡸓", "𡺛", "𥇉", "唴", "𪁸", "猐", "𧇞", "蜣", "㳾", "𥓌", "錓"] },
+  { "sound": "名", "characters": ["名", "名", "眳", "詺", "𪗸", "佲", "姳", "茗", "䊅", "洺", "㫥", "酩", "銘"] },
+  { "sound": "甹", "characters": ["甹", "甹", "䀻", "聘", "𠷓", "𢓳", "𨉯", "俜", "娉", "騁", "梬", "䛣", "𢖊"] },
+  { "sound": "省", "characters": ["省", "省", "䚇", "㗂", "𢜫", "𡞞", "㾪", "㮐", "渻", "𨵥", "𨜜", "㼳", "箵"] },
+  { "sound": "索", "characters": ["索", "索", "𢱢", "䞽", "䖛", "𧎳", "𦵫", "㮦", "𥻨", "溹", "𩄜", "𡩡", "𩌈"] },
+  { "sound": "革", "characters": ["革", "革", "𠦶", "諽", "愅", "𢯹", "𦑜", "㮖", "䨣", "煂", "緙", "𢃲", "𩉝"] },
+  { "sound": "畟", "characters": ["畟", "畟", "謖", "𢱩", "𨕟", "𤠎", "㹄", "㮨", "稷", "𥡂", "禝", "溭", "𦔎"] },
+  { "sound": "玉", "characters": ["玉", "玉", "𤣪", "𧿷", "䞝", "頊", "鳿", "砡", "鈺", "匤", "珏", "𤤴", "玨"] },
+  { "sound": "仌", "characters": ["仌", "仌", "𠗥", "㓈", "冰", "氷", "馮", "憑", "㵗", "𨝭", "凴", "𠗦", "砯"] },
+  { "sound": "竹", "characters": ["竹", "竹", "竺", "筑", "䈞", "篤", "茿", "築", "𣽆", "𣵸", "𥰺", "𥴁", "𧞶"] },
+  { "sound": "宿", "characters": ["宿", "宿", "㝛", "摍", "蹜", "𧐴", "蓿", "樎", "㴼", "𩘰", "䑿", "縮", "䈹"] },
+  { "sound": "眔", "characters": ["眔", "眔", "𥄳", "䳴", "𦑲", "𦵺", "𣯉", "遝", "嚃", "䜚", "𦾽", "𦿚", "𣝋"] },
+  { "sound": "皃", "characters": ["皃", "皃", "𨓅", "𦑀", "㹸", "䡚", "𢅉", "𢂹", "貌", "㦝", "𢷕", "邈", "藐"] },
+  { "sound": "牟", "characters": ["牟", "牟", "眸", "恈", "䏬", "劺", "侔", "鴾", "蛑", "𩶢", "𦭷", "麰", "鉾"] },
+  { "sound": "缶", "characters": ["缶", "缶", "𡜊", "缹", "缻", "㓡", "㯱", "𣞈", "珤", "寚", "寶", "𧕰", "䴐"] },
+  { "sound": "毌", "characters": ["貫", "謴", "慣", "摜", "遦", "䗰", "樌", "瑻", "𨝑", "鏆", "毌", "貫"] },
+  { "sound": "棥", "characters": ["樊", "𧢜", "䫶", "𩧅", "蠜", "礬", "𨟄", "攀", "棥", "樊", "𤕩", "襻"] },
+                { sound: "牟", characters: ["牟", "眸", "侔", "鴾", "蛑"] },
+                { sound: "虎", characters: ["虎", "唬", "琥", "䗂", "萀"] },
+                { sound: "華", characters: ["華", "嘩", "譁", "樺", "鏵"] },
+                { sound: "丘", characters: ["丘", "邱", "蚯", "㘳", "岴"] },
+                { sound: "心", characters: ["心", "沁", "鈊", "㤈", "伈"] },
+                { sound: "欠", characters: ["欠", "坎", "芡", "㐸", "扻"] },
+                { sound: "貝", characters: ["貝", "唄", "敗", "狽", "鋇"] },
+                { sound: "名", characters: ["名", "銘", "酩", "茗", "眳"] },
+                { sound: "玉", characters: ["玉", "珏", "鈺", "砡", "鳿"] },
+                { sound: "竹", characters: ["竹", "竺", "筑", "䈞", "篤"] },
+                { sound: "牟", characters: ["牟", "眸", "侔", "鴾", "蛑"] }
+            ],
+            
+            // 游戏状态
+            state: {
+                players: {
+                    north: { tiles: [], dragons: [], score: 0, name: "系统1 (北)", isAI: true },
+                    west: { tiles: [], dragons: [], score: 0, name: "系统2 (西)", isAI: true },
+                    east: { tiles: [], dragons: [], score: 0, name: "系统3 (东)", isAI: true },
+                    south: { tiles: [], dragons: [], score: 0, name: "玩家 (南)", isAI: false }
+                },
+                tableTiles: [],
+                discardedTiles: [],
+                gamePhase: "initial", // initial, drawing, playing, finished
+                currentPlayer: null,
+                currentRevealedTile: null,
+                soundEnabled: true,
+                voiceEnabled: true,
+                countdownTimer: null,
+                winConditionDragons: 5, // 获胜需要的小龙数量
+                decisionTime: 15, // 用户决策时间（秒）
+                drawSpeed: 500, // 发牌速度（毫秒）
+                isPaused: false,
+                winnerMessage: null,
+                maxHandSize: 15, // 最大手牌数
+                selectedTile: null, // 用户选择的牌
+                lastDrawnTile: null, // 最后抓取的牌
+                playerDecisionPhase: false // 玩家决策阶段
+            },
+            
+            // 初始化游戏
+            init() {
+                this.createTiles();
+                this.render();
+                this.setupEventListeners();
+                this.speak("游戏准备就绪，请点击开始游戏按钮");
+                this.updatePhaseIndicator();
+            },
+            
+            // 更新阶段指示器
+            updatePhaseIndicator() {
+                const phaseText = {
+                    "initial": "准备中",
+                    "drawing": "抓牌阶段",
+                    "playing": "游戏进行中",
+                    "playerDecision": "玩家决策阶段",
+                    "finished": "游戏结束"
+                };
+                document.getElementById("phase-indicator").textContent = 
+                    `当前阶段：${phaseText[this.state.gamePhase]}`;
+            },
+            
+            // 创建所有骨牌
+            createTiles() {
+                this.state.tableTiles = [];
+                let id = 0;
+                
+                // 为每个声符组创建多个汉字
+                this.characterGroups.forEach(group => {
+                    group.characters.forEach(char => {
+                        // 每个汉字创建多个实例
+                        for (let i = 0; i < 4; i++) {
+                            this.state.tableTiles.push({
+                                id: id++,
+                                character: char,
+                                sound: group.sound,
+                                revealed: false
+                            });
+                        }
+                    });
+                });
+                
+                // 洗牌
+                this.shuffleTiles();
+            },
+            
+            // 洗牌
+            shuffleTiles() {
+                for (let i = this.state.tableTiles.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.state.tableTiles[i], this.state.tableTiles[j]] = 
+                    [this.state.tableTiles[j], this.state.tableTiles[i]];
+                }
+            },
+            
+            // 开始游戏
+            startGame() {
+                if (this.state.gamePhase === "finished") {
+                    this.resetGameForNewRound();
+                    return;
+                }
+                
+                this.state.gamePhase = "drawing";
+                this.updatePhaseIndicator();
+                this.updateGameStatus("开始抓牌...");
+                
+                // 初始抓牌
+                this.initialDraw();
+            },
+            
+            // 初始抓牌
+            initialDraw() {
+                const players = ["north", "west", "east", "south"];
+                let playerIndex = 0;
+                
+                const drawNextPlayer = () => {
+                    if (playerIndex >= players.length) {
+                        this.state.gamePhase = "playing";
+                        this.updatePhaseIndicator();
+                        this.updateGameStatus("抓牌完成，游戏开始");
+                        this.nextTurn();
+                        return;
+                    }
+                    
+                    const player = players[playerIndex];
+                    this.drawTileForPlayer(player, 13); // 初始13张牌
+                    
+                    playerIndex++;
+                    setTimeout(drawNextPlayer, this.state.drawSpeed * 2);
+                };
+                
+                drawNextPlayer();
+            },
+            
+            // 为玩家抓牌
+            drawTileForPlayer(playerId, count = 1) {
+                const player = this.state.players[playerId];
+                
+                for (let i = 0; i < count; i++) {
+                    if (this.state.tableTiles.length === 0) break;
+                    if (player.tiles.length >= this.state.maxHandSize) break;
+                    
+                    const tile = this.state.tableTiles.pop();
+                    tile.revealed = true;
+                    player.tiles.push(tile);
+                    this.playDrawSound();
+                    
+                    // 记录最后抓取的牌
+                    this.state.lastDrawnTile = tile;
+                }
+                
+                // 检查小龙
+                this.checkForDragons(playerId);
+                this.render();
+            },
+            
+            // 系统发牌
+            systemDraw() {
+                if (this.state.gamePhase !== "playing") return;
+                
+                // 从牌堆中取一张牌放到桌面上
+                if (this.state.tableTiles.length > 0) {
+                    const tile = this.state.tableTiles.pop();
+                    tile.revealed = true;
+                    this.state.currentRevealedTile = tile;
+                    
+                    // 更新桌面显示
+                    this.renderTableTiles();
+                    
+                    // 进入玩家决策阶段
+                    this.state.gamePhase = "playerDecision";
+                    this.updatePhaseIndicator();
+                    this.updateGameStatus("请决定是否收取这张牌");
+                    
+                    // 启用玩家决策按钮
+                    document.getElementById("take-btn").disabled = false;
+                    document.getElementById("pass-btn").disabled = false;
+                } else {
+                    this.updateGameStatus("牌堆已空，游戏结束");
+                    this.state.gamePhase = "finished";
+                    this.updatePhaseIndicator();
+                }
+            },
+            
+            // 更新游戏状态显示
+            updateGameStatus(message) {
+                document.getElementById("game-status").textContent = message;
+            },
+            
+            // 下一个回合
+            nextTurn() {
+                // 确定下一个玩家
+                const playerOrder = ["north", "west", "south", "east"];
+                if (!this.state.currentPlayer) {
+                    this.state.currentPlayer = "north";
+                } else {
+                    const currentIndex = playerOrder.indexOf(this.state.currentPlayer);
+                    this.state.currentPlayer = playerOrder[(currentIndex + 1) % 4];
+                }
+                
+                this.updateGameStatus(`${this.state.players[this.state.currentPlayer].name}的回合`);
+                this.render();
+                
+                // 如果是AI玩家，自动操作
+                if (this.state.players[this.state.currentPlayer].isAI) {
+                    setTimeout(() => {
+                        this.AIPlay(this.state.currentPlayer);
+                    }, 1000);
+                } else {
+                    // 用户回合，启用出牌按钮
+                    document.getElementById("user-discard-btn").disabled = false;
+                    this.updateGameStatus("请选择一张牌打出");
+                }
+            },
+            
+            // AI玩家操作
+            AIPlay(playerId) {
+                const player = this.state.players[playerId];
+                
+                // 1. 先打出一张牌
+                const tileToDiscard = this.chooseTileToDiscard(player);
+                if (tileToDiscard) {
+                    this.discardTile(playerId, tileToDiscard);
+                    
+                    // 2. 然后收取一张牌
+                    setTimeout(() => {
+                        this.drawTileForPlayer(playerId);
+                        
+                        // 3. 进入下一回合
+                        setTimeout(() => {
+                            this.nextTurn();
+                        }, 1000);
+                    }, 1000);
+                }
+            },
+            
+            // AI选择要打出的牌
+            chooseTileToDiscard(player) {
+                // 简单策略：优先打出不成对的牌
+                const soundGroups = {};
+                player.tiles.forEach(tile => {
+                    if (!soundGroups[tile.sound]) {
+                        soundGroups[tile.sound] = [];
+                    }
+                    soundGroups[tile.sound].push(tile);
+                });
+                
+                // 找出不成对的声符
+                const singleSounds = Object.keys(soundGroups).filter(sound => soundGroups[sound].length === 1);
+                if (singleSounds.length > 0) {
+                    return soundGroups[singleSounds[0]][0];
+                }
+                
+                // 如果没有不成对的，随机打出一张
+                return player.tiles[Math.floor(Math.random() * player.tiles.length)];
+            },
+            
+            // 玩家出牌
+            discardTile(playerId, tile) {
+                const player = this.state.players[playerId];
+                const tileIndex = player.tiles.indexOf(tile);
+                
+                if (tileIndex !== -1) {
+                    player.tiles.splice(tileIndex, 1);
+                    this.state.discardedTiles.push({
+                        ...tile,
+                        discardedBy: playerId
+                    });
+                    
+                    this.updateGameStatus(`${player.name}打出了: ${tile.character}`);
+                    this.playRevealSound();
+                    
+                    // 清空用户选择的牌
+                    this.state.selectedTile = null;
+                    this.render();
+                    return true;
+                }
+                return false;
+            },
+            
+            // 用户选择牌
+            selectTile(tile) {
+                if (this.state.gamePhase !== "playing" || this.state.currentPlayer !== "south") return;
+                
+                // 如果已经选择了牌，先取消选择
+                if (this.state.selectedTile === tile) {
+                    this.state.selectedTile = null;
+                } else {
+                    this.state.selectedTile = tile;
+                }
+                
+                this.render();
+            },
+            
+            // 用户出牌
+            userDiscard() {
+                if (this.state.gamePhase !== "playing" || this.state.currentPlayer !== "south") return;
+                
+                if (!this.state.selectedTile) {
+                    this.updateGameStatus("请先选择一张牌");
+                    return;
+                }
+                
+                const player = this.state.players.south;
+                if (this.discardTile("south", this.state.selectedTile)) {
+                    document.getElementById("user-discard-btn").disabled = true;
+                    
+                    // 用户出牌后，系统发牌
+                    setTimeout(() => {
+                        this.systemDraw();
+                    }, 1000);
+                }
+            },
+            
+            // 用户收取牌
+            userTake() {
+                if (this.state.gamePhase !== "playerDecision") return;
+                
+                // 将桌面上的牌添加到玩家手牌中
+                if (this.state.currentRevealedTile) {
+                    this.state.players.south.tiles.push(this.state.currentRevealedTile);
+                    this.state.currentRevealedTile = null;
+                    
+                    // 检查小龙
+                    this.checkForDragons("south");
+                    
+                    this.updateGameStatus("您收取了牌，请打出一张牌");
+                    
+                    // 进入玩家出牌阶段
+                    this.state.gamePhase = "playing";
+                    this.updatePhaseIndicator();
+                    
+                    // 禁用收取和放弃按钮，启用出牌按钮
+                    document.getElementById("take-btn").disabled = true;
+                    document.getElementById("pass-btn").disabled = true;
+                    document.getElementById("user-discard-btn").disabled = false;
+                    
+                    this.render();
+                }
+            },
+            
+            // 用户放弃
+            userPass() {
+                if (this.state.gamePhase !== "playerDecision") return;
+                
+                this.updateGameStatus("您放弃了收取牌");
+                
+                // 禁用收取和放弃按钮
+                document.getElementById("take-btn").disabled = true;
+                document.getElementById("pass-btn").disabled = true;
+                
+                // 系统玩家按顺序决定是否收取牌
+                this.AIDecisionForTile();
+            },
+            
+            // AI玩家决定是否收取牌
+            AIDecisionForTile() {
+                const playerOrder = ["north", "west", "east"];
+                let currentIndex = 0;
+                
+                const decideNext = () => {
+                    if (currentIndex >= playerOrder.length) {
+                        // 所有AI玩家都放弃，牌进入弃牌堆
+                        if (this.state.currentRevealedTile) {
+                            this.state.discardedTiles.push({
+                                ...this.state.currentRevealedTile,
+                                discardedBy: "table"
+                            });
+                            this.state.currentRevealedTile = null;
+                        }
+                        
+                        // 回到游戏进行阶段
+                        this.state.gamePhase = "playing";
+                        this.updatePhaseIndicator();
+                        this.updateGameStatus("所有玩家放弃，牌进入弃牌堆");
+                        this.render();
+                        return;
+                    }
+                    
+                    const playerId = playerOrder[currentIndex];
+                    const player = this.state.players[playerId];
+                    
+                    // AI决定是否收取牌
+                    const shouldTake = this.AIShouldTakeTile(player);
+                    
+                    if (shouldTake) {
+                        // AI收取牌
+                        this.state.players[playerId].tiles.push(this.state.currentRevealedTile);
+                        this.state.currentRevealedTile = null;
+                        
+                        this.updateGameStatus(`${player.name}收取了牌`);
+                        
+                        // 检查小龙
+                        this.checkForDragons(playerId);
+                        
+                        // AI收取牌后必须打出一张牌
+                        setTimeout(() => {
+                            const tileToDiscard = this.chooseTileToDiscard(player);
+                            if (tileToDiscard) {
+                                this.discardTile(playerId, tileToDiscard);
+                                
+                                // 回到游戏进行阶段
+                                setTimeout(() => {
+                                    this.state.gamePhase = "playing";
+                                    this.updatePhaseIndicator();
+                                    this.render();
+                                }, 1000);
+                            }
+                        }, 1000);
+                    } else {
+                        // AI放弃
+                        this.updateGameStatus(`${player.name}放弃了收取牌`);
+                        currentIndex++;
+                        setTimeout(decideNext, 800);
+                    }
+                };
+                
+                decideNext();
+            },
+            
+            // AI决定是否收取牌
+            AIShouldTakeTile(player) {
+                // 简单策略：如果牌与手牌中的声符匹配，则收取
+                if (this.state.currentRevealedTile) {
+                    const tileSound = this.state.currentRevealedTile.sound;
+                    return player.tiles.some(tile => tile.sound === tileSound);
+                }
+                return false;
+            },
+            
+            // 检查是否形成小龙
+            checkForDragons(playerId) {
+                const player = this.state.players[playerId];
+                const tiles = player.tiles;
+                
+                // 按声符分组
+                const soundGroups = {};
+                tiles.forEach(tile => {
+                    if (!soundGroups[tile.sound]) {
+                        soundGroups[tile.sound] = [];
+                    }
+                    soundGroups[tile.sound].push(tile);
+                });
+                
+                // 检查每个声符组是否有3个或以上相同声符的牌
+                Object.keys(soundGroups).forEach(sound => {
+                    if (soundGroups[sound].length >= 3) {
+                        // 检查是否已经存在这个小龙
+                        const existingDragon = player.dragons.find(d => d.sound === sound);
+                        if (!existingDragon) {
+                            // 新形成的小龙
+                            player.dragons.push({
+                                sound: sound,
+                                tiles: soundGroups[sound]
+                            });
+                            
+                            // 显示小龙信息
+                            const dragonDetail = document.getElementById('dragon-detail');
+                            dragonDetail.textContent = `${player.name}形成了${sound}声符小龙`;
+                            
+                            // 检查是否达到获胜条件
+                            if (player.dragons.length >= this.state.winConditionDragons) {
+                                this.winGame(playerId);
+                            }
+                        }
+                    }
+                });
+                
+                this.render();
+            },
+            
+            // 获胜
+            winGame(playerId) {
+                this.state.gamePhase = "finished";
+                this.updatePhaseIndicator();
+                
+                const player = this.state.players[playerId];
+                player.score += 100;
+                
+                this.updateGameStatus(`恭喜！${player.name}形成了${this.state.winConditionDragons}条小龙，获得100分`);
+                this.playWinSound();
+                this.render();
+                
+                this.showWinnerMessage(`${player.name}获胜！`, `${player.name}形成了${this.state.winConditionDragons}条小龙`);
+            },
+            
+            // 显示获胜消息窗口
+            showWinnerMessage(title, content) {
+                if (this.state.winnerMessage) {
+                    document.body.removeChild(this.state.winnerMessage);
+                }
+                
+                const winnerMessage = document.createElement("div");
+                winnerMessage.className = "winner-message";
+                winnerMessage.innerHTML = `
+                    <div class="winner-header">
+                        <div class="winner-title">${title}</div>
+                        <button class="close-btn">×</button>
+                    </div>
+                    <div class="winner-content">${content}</div>
+                    <div class="winner-footer">
+                        <button class="continue-btn">开始新游戏</button>
+                    </div>
+                `;
+                
+                const closeBtn = winnerMessage.querySelector('.close-btn');
+                closeBtn.addEventListener('click', () => {
+                    document.body.removeChild(winnerMessage);
+                    this.state.winnerMessage = null;
+                });
+                
+                const continueBtn = winnerMessage.querySelector('.continue-btn');
+                continueBtn.addEventListener('click', () => {
+                    document.body.removeChild(winnerMessage);
+                    this.state.winnerMessage = null;
+                    this.resetGameForNewRound();
+                });
+                
+                this.makeDraggable(winnerMessage);
+                
+                document.body.appendChild(winnerMessage);
+                this.state.winnerMessage = winnerMessage;
+            },
+            
+            // 重置游戏状态（准备新的一局）
+            resetGameForNewRound() {
+                // 重置所有玩家
+                Object.keys(this.state.players).forEach(playerId => {
+                    this.state.players[playerId].tiles = [];
+                    this.state.players[playerId].dragons = [];
+                });
+                
+                this.state.discardedTiles = [];
+                this.state.currentPlayer = null;
+                this.state.currentRevealedTile = null;
+                this.state.isPaused = false;
+                this.state.selectedTile = null;
+                this.state.lastDrawnTile = null;
+                this.state.playerDecisionPhase = false;
+                
+                // 清除倒计时
+                if (this.state.countdownTimer) {
+                    clearInterval(this.state.countdownTimer);
+                    document.getElementById('progress-bar').style.width = '0%';
+                    document.getElementById('countdown-display').textContent = '';
+                    document.getElementById('dragon-detail').textContent = '';
+                }
+                
+                this.createTiles();
+                this.state.gamePhase = "initial";
+                this.updatePhaseIndicator();
+                this.updateGameStatus("新游戏开始，请点击开始游戏按钮");
+                this.render();
+            },
+            
+            // 渲染游戏界面
+            render() {
+                // 渲染每个玩家的牌
+                Object.keys(this.state.players).forEach(playerId => {
+                    this.renderPlayerTiles(playerId);
+                });
+                
+                // 渲染桌面
+                this.renderTableTiles();
+                
+                // 更新分数和小龙计数
+                Object.keys(this.state.players).forEach(playerId => {
+                    const player = this.state.players[playerId];
+                    document.getElementById(`${playerId}-score`).textContent = player.score;
+                    document.getElementById(`${playerId}-dragon-badge`).textContent = 
+                        `小龙: ${player.dragons.length}/${this.state.winConditionDragons}`;
+                });
+                
+                // 更新按钮状态
+                this.updateButtonStates();
+                
+                // 更新音效按钮文本
+                document.getElementById("sound-toggle").textContent = 
+                    this.state.soundEnabled ? "关闭音效" : "开启音效";
+                document.getElementById("voice-toggle").textContent = 
+                    this.state.voiceEnabled ? "关闭语音" : "开启语音";
+                
+                // 高亮当前玩家
+                this.highlightCurrentPlayer();
+            },
+            
+            // 高亮当前玩家
+            highlightCurrentPlayer() {
+                // 移除所有高亮
+                document.querySelectorAll('.player-area').forEach(el => {
+                    el.classList.remove('current-player');
+                });
+                
+                // 高亮当前玩家
+                if (this.state.currentPlayer) {
+                    document.getElementById(`${this.state.currentPlayer}-player`).classList.add('current-player');
+                }
+            },
+            
+            // 渲染玩家牌
+            renderPlayerTiles(playerId) {
+                const container = document.getElementById(`${playerId}-tiles`);
+                const player = this.state.players[playerId];
+                container.innerHTML = "";
+                
+                // 按声符分组显示
+                const soundGroups = {};
+                player.tiles.forEach(tile => {
+                    if (!soundGroups[tile.sound]) {
+                        soundGroups[tile.sound] = [];
+                    }
+                    soundGroups[tile.sound].push(tile);
+                });
+                
+                Object.keys(soundGroups).forEach(sound => {
+                    const group = document.createElement("div");
+                    group.className = "dragon-group";
+                    
+                    soundGroups[sound].forEach(tile => {
+                        const tileElement = document.createElement("div");
+                        tileElement.className = "tile";
+                        tileElement.textContent = tile.character;
+                        tileElement.dataset.id = tile.id;
+                        
+                        // 检查是否是小龙的一部分
+                        const isInDragon = player.dragons.some(dragon => dragon.sound === sound);
+                        
+                        if (isInDragon) {
+                            tileElement.classList.add("dragon");
+                        } else if (soundGroups[sound].length >= 2) {
+                            tileElement.classList.add("matched");
+                        }
+                        
+                        // 如果是用户选择的牌，添加选中样式
+                        if (playerId === "south" && this.state.selectedTile === tile) {
+                            tileElement.classList.add("selected");
+                        }
+                        
+                        // 为玩家牌添加点击事件
+                        if (playerId === "south") {
+                            tileElement.addEventListener('click', () => {
+                                this.selectTile(tile);
+                                this.speakCharacter(tile.character);
+                            });
+                        }
+                        
+                        group.appendChild(tileElement);
+                    });
+                    
+                    container.appendChild(group);
+                });
+            },
+            
+            // 渲染牌桌
+            renderTableTiles() {
+                const container = document.getElementById("table-tiles");
+                container.innerHTML = "";
+                
+                // 显示当前桌面上的牌
+                if (this.state.currentRevealedTile) {
+                    const tileElement = document.createElement("div");
+                    tileElement.className = "tile current-tile";
+                    tileElement.textContent = this.state.currentRevealedTile.character;
+                    container.appendChild(tileElement);
+                }
+                
+                // 显示剩余牌堆数量
+                const remainingTiles = document.createElement("div");
+                remainingTiles.className = "tile current-tile";
+                remainingTiles.textContent = this.state.tableTiles.length;
+                remainingTiles.title = `剩余牌数: ${this.state.tableTiles.length}`;
+                container.appendChild(remainingTiles);
+            },
+            
+            // 更新按钮状态
+            updateButtonStates() {
+                const startBtn = document.getElementById("start-btn");
+                const systemDrawBtn = document.getElementById("system-draw-btn");
+                const userDiscardBtn = document.getElementById("user-discard-btn");
+                const takeBtn = document.getElementById("take-btn");
+                const passBtn = document.getElementById("pass-btn");
+                
+                // 根据游戏阶段更新按钮状态
+                switch (this.state.gamePhase) {
+                    case "initial":
+                        startBtn.disabled = false;
+                        startBtn.textContent = "开始游戏";
+                        systemDrawBtn.disabled = true;
+                        userDiscardBtn.disabled = true;
+                        takeBtn.disabled = true;
+                        passBtn.disabled = true;
+                        break;
+                    case "drawing":
+                        startBtn.disabled = true;
+                        systemDrawBtn.disabled = true;
+                        userDiscardBtn.disabled = true;
+                        takeBtn.disabled = true;
+                        passBtn.disabled = true;
+                        break;
+                    case "playing":
+                        startBtn.disabled = true;
+                        systemDrawBtn.disabled = false;
+                        
+                        // 用户控制按钮状态
+                        const isUserTurn = this.state.currentPlayer === "south";
+                        userDiscardBtn.disabled = !isUserTurn;
+                        
+                        if (!isUserTurn) {
+                            takeBtn.disabled = true;
+                            passBtn.disabled = true;
+                        }
+                        break;
+                    case "playerDecision":
+                        startBtn.disabled = true;
+                        systemDrawBtn.disabled = true;
+                        userDiscardBtn.disabled = true;
+                        // takeBtn和passBtn在进入此阶段时启用
+                        break;
+                    case "finished":
+                        startBtn.disabled = false;
+                        startBtn.textContent = "新游戏";
+                        systemDrawBtn.disabled = true;
+                        userDiscardBtn.disabled = true;
+                        takeBtn.disabled = true;
+                        passBtn.disabled = true;
+                        break;
+                }
+            },
+            
+            // 设置事件监听器
+            setupEventListeners() {
+                // 开始游戏按钮
+                document.getElementById("start-btn").addEventListener("click", () => {
+                    this.startGame();
+                });
+                
+                // 系统发牌按钮
+                document.getElementById("system-draw-btn").addEventListener("click", () => {
+                    this.systemDraw();
+                });
+                
+                // 用户出牌按钮
+                document.getElementById("user-discard-btn").addEventListener("click", () => {
+                    this.userDiscard();
+                });
+                
+                // 用户收取牌按钮
+                document.getElementById("take-btn").addEventListener("click", () => {
+                    this.userTake();
+                });
+                
+                // 用户放弃按钮
+                document.getElementById("pass-btn").addEventListener("click", () => {
+                    this.userPass();
+                });
+                
+                // 音效控制按钮
+                document.getElementById("sound-toggle").addEventListener("click", () => {
+                    this.state.soundEnabled = !this.state.soundEnabled;
+                    this.render();
+                    this.speak(this.state.soundEnabled ? "音效已开启" : "音效已关闭");
+                });
+                
+                // 语音控制按钮
+                document.getElementById("voice-toggle").addEventListener("click", () => {
+                    this.state.voiceEnabled = !this.state.voiceEnabled;
+                    this.render();
+                    if (this.state.voiceEnabled) {
+                        this.speak("语音已开启");
+                    }
+                });
+            },
+            
+            // 播放抓牌音效
+            playDrawSound() {
+                if (!this.state.soundEnabled) return;
+                
+                // 简单的音效模拟
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 523.25; // C5
+                    oscillator.type = 'sine';
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (e) {
+                    console.log("音效播放失败:", e);
+                }
+            },
+            
+            // 播放翻牌音效
+            playRevealSound() {
+                if (!this.state.soundEnabled) return;
+                
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 659.25; // E5
+                    oscillator.type = 'triangle';
+                    
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                } catch (e) {
+                    console.log("音效播放失败:", e);
+                }
+            },
+            
+            // 播放获胜音效
+            playWinSound() {
+                if (!this.state.soundEnabled) return;
+                
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // 播放胜利音阶
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    let startTime = audioContext.currentTime;
+                    
+                    notes.forEach((frequency, index) => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.value = frequency;
+                        oscillator.type = 'sine';
+                        
+                        gainNode.gain.setValueAtTime(0, startTime);
+                        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.1);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.5);
+                        
+                        oscillator.start(startTime);
+                        oscillator.stop(startTime + 0.5);
+                        
+                        startTime += 0.2;
+                    });
+                } catch (e) {
+                    console.log("音效播放失败:", e);
+                }
+            },
+            
+            // 语音合成
+            speak(text) {
+                if (!this.state.voiceEnabled) return;
+                
+                if ('speechSynthesis' in window) {
+                    // 停止任何正在进行的语音
+                    speechSynthesis.cancel();
+                    
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = 1.0;
+                    utterance.pitch = 1.0;
+                    
+                    // 设置语音合成完成后的回调
+                    utterance.onend = function() {
+                        console.log('语音播放完成');
+                    };
+                    
+                    utterance.onerror = function(event) {
+                        console.error('语音合成错误:', event);
+                    };
+                    
+                    speechSynthesis.speak(utterance);
+                }
+            },
+            
+            // 朗读汉字
+            speakCharacter(character) {
+                if (!this.state.voiceEnabled) return;
+                this.speak(character);
+            },
+            
+            // 使元素可拖动
+            makeDraggable(element) {
+                let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                
+                const dragMouseDown = (e) => {
+                    e = e || window.event;
+                    e.preventDefault();
+                    
+                    // 获取鼠标初始位置
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    
+                    // 设置鼠标移动和释放事件
+                    document.onmouseup = closeDragElement;
+                    document.onmousemove = elementDrag;
+                };
+                
+                const elementDrag = (e) => {
+                    e = e || window.event;
+                    e.preventDefault();
+                    
+                    // 计算新位置
+                    pos1 = pos3 - e.clientX;
+                    pos2 = pos4 - e.clientY;
+                    pos3 = e.clientX;
+                    pos4 = e.clientY;
+                    
+                    // 设置元素新位置
+                    element.style.top = (element.offsetTop - pos2) + "px";
+                    element.style.left = (element.offsetLeft - pos1) + "px";
+                };
+                
+                const closeDragElement = () => {
+                    // 停止拖动
+                    document.onmouseup = null;
+                    document.onmousemove = null;
+                };
+                
+                // 设置标题栏为拖动区域
+                const header = element.querySelector('.winner-header');
+                if (header) {
+                    header.onmousedown = dragMouseDown;
+                } else {
+                    element.onmousedown = dragMouseDown;
+                }
+            }
+        };
+
+        // 初始化游戏
+        document.addEventListener('DOMContentLoaded', function() {
+            gameData.init();
+        });
+    </script>
+</body>
+</html>
