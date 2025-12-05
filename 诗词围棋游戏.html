@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>唐诗围棋识字游戏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', 'SimHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            background: linear-gradient(90deg, #ff9a9e 0%, #fad0c4 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #aaa;
+        }
+        
+        .game-area {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .left-panel {
+            flex: 2;
+        }
+        
+        .right-panel {
+            flex: 1;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .board-container {
+            width: 100%;
+            background: #deb887;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .board-title {
+            text-align: center;
+            color: #5d3a00;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        /* 围棋棋盘设计 */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+            gap: 1px;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #e3b778;
+            border: 3px solid #8b4513;
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        /* 围棋棋盘线 */
+        .board::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(to right, #000 1px, transparent 1px),
+                linear-gradient(to bottom, #000 1px, transparent 1px);
+            background-size: calc(100% / 15) calc(100% / 15);
+            pointer-events: none;
+        }
+        
+        /* 棋盘星点 */
+        .board::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #000;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* 棋子样式 */
+        .cell {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1;
+            transition: all 0.3s;
+        }
+        
+        .cell:hover {
+            transform: scale(1.05);
+            z-index: 2;
+        }
+        
+        .cell-front, .cell-back {
+            position: absolute;
+            width: 85%;
+            height: 85%;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backface-visibility: hidden;
+            transition: transform 0.6s;
+            font-weight: bold;
+            font-size: 2.0rem;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 棋子正面 - 黑色或白色 */
+        .cell-front {
+            background: radial-gradient(circle at 30% 30%, #333, #000);
+            transform: rotateY(0deg);
+        }
+        
+        .cell.white-piece .cell-front {
+            background: radial-gradient(circle at 30% 30%, #fff, #ddd);
+        }
+        
+        /* 棋子背面 - 根据棋子颜色显示文字颜色 */
+        .cell-back {
+            background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%);
+            color: #000; /* 默认黑色字 */
+            transform: rotateY(180deg);
+            border: 2px solid #333;
+        }
+        
+        .cell.white-piece .cell-back {
+            background: linear-gradient(135deg, #000 0%, #333 100%);
+            color: #fff; /* 白色棋子显示白色字 */
+            border: 2px solid #666;
+        }
+        
+        .cell.flipped .cell-front {
+            transform: rotateY(180deg);
+        }
+        
+        .cell.flipped .cell-back {
+            transform: rotateY(360deg);
+        }
+        
+        /* 已排列的诗歌行样式 */
+        .cell.arranged .cell-back {
+            background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%);
+            color: #000;
+            border: 2px solid #333;
+        }
+        
+        .cell.white-piece.arranged .cell-back {
+            background: linear-gradient(135deg, #000 0%, #333 100%);
+            color: #fff;
+            border: 2px solid #666;
+        }
+        
+        /* 已完成的棋子样式 - 不再变为空棋子 */
+        .cell.completed {
+            cursor: default;
+        }
+        
+        .cell.completed:hover {
+            transform: none;
+        }
+        
+        /* 棋子飞行动画 - 复制品 */
+        .cell.flying-copy {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.8rem;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            animation: flyToBox 1.5s ease-in-out forwards;
+            pointer-events: none;
+        }
+        
+        .white-piece.flying-copy {
+            background: linear-gradient(135deg, #fff 0%, #f5f5f5 100%);
+            color: #000;
+            border: 2px solid #333;
+        }
+        
+        .black-piece.flying-copy {
+            background: linear-gradient(135deg, #000 0%, #333 100%);
+            color: #fff;
+            border: 2px solid #666;
+        }
+        
+        @keyframes flyToBox {
+            0% {
+                transform: scale(1) translate(0, 0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) translate(var(--tx), var(--ty));
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(0.1) translate(var(--tx), var(--ty));
+                opacity: 0;
+                visibility: hidden;
+            }
+        }
+        
+        .line-start::before {
+            content: "";
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: #ffcc00;
+            border-radius: 50%;
+            top: 3px;
+            left: 3px;
+            z-index: 3;
+        }
+        
+        .info-panel {
+            width: 100%;
+            background: rgba(40, 40, 60, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .score-container {
+            background: linear-gradient(to right, #2d7bc9, #1a5fb4);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .score-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+            border: 2px solid #4fc3f7;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(100, 150, 255, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #ffa726;
+        }
+        
+        .instructions h3 {
+            color: #4fc3f7;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            font-size: 1.05rem;
+        }
+        
+        .status {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            color: #aaa;
+            font-size: 1.05rem;
+        }
+        
+        .completed-poems {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        
+        .highlighted .cell-back {
+            animation: highlight 1s ease infinite alternate;
+        }
+        
+        @keyframes highlight {
+            from { 
+                background-color: #c1d8f0; 
+                box-shadow: 0 0 10px #4fc3f7;
+            }
+            to { 
+                background-color: #e1ebff; 
+                box-shadow: 0 0 20px #4fc3f7;
+            }
+        }
+        
+        /* 汉字详情弹窗 - 3cm大小 */
+        .char-detail-popup {
+            position: fixed;
+            width: 300px; /* 大约3cm */
+            height: 300px;
+            background: linear-gradient(135deg, #fff 0%, #f9f9f9 100%);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+            border: 4px solid #8b4513;
+            animation: popupAppear 0.3s ease-out;
+        }
+        
+        @keyframes popupAppear {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .char-detail-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #8b4513;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        .char-detail-close:hover {
+            background: #a0522d;
+        }
+        
+        .char-detail-hanzi {
+            font-size: 5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #000;
+        }
+        
+        .char-detail-pinyin {
+            font-size: 1.8rem;
+            color: #d32f2f;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .char-detail-meaning {
+            text-align: center;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            color: #444;
+        }
+        
+        .char-detail-en {
+            color: #1976d2;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        
+        /* 棋盒样式 - 圆形设计，上下排列 */
+        .chess-box-container {
+            background: rgba(40, 40, 60, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: fit-content;
+            margin-top: -30px; /* 向上移动，与棋盘对齐 */
+        }
+        
+        .chess-box-container h2 {
+            color: #4fc3f7;
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.8rem;
+            border-bottom: 2px solid #4fc3f7;
+            padding-bottom: 10px;
+            width: 100%;
+        }
+        
+        .chess-boxes {
+            display: flex;
+            flex-direction: column;
+            gap: 60px; /* 增加间距以容纳按钮 */
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .chess-box-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .chess-box {
+            width: 400px; /* 圆形宽度 */
+            height: 400px; /* 圆形高度 */
+            border-radius: 50%; /* 圆形 */
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 25px;
+            transition: transform 0.3s ease;
+            border: 5px solid #8b4513;
+        }
+        
+        .chess-box:hover {
+            transform: scale(1.02);
+        }
+        
+        .box-white {
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+        }
+        
+        .box-black {
+            background: linear-gradient(135deg, #333 0%, #222 100%);
+        }
+        
+        .box-label {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.3rem;
+            font-weight: bold;
+            padding: 8px 25px;
+            border-radius: 20px;
+            z-index: 2;
+            white-space: nowrap;
+        }
+        
+        .white-box-label {
+            background: #8b4513;
+            color: white;
+        }
+        
+        .black-box-label {
+            background: #8b4513;
+            color: white;
+        }
+        
+        .box-content {
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.6;
+            letter-spacing: 2px;
+            padding: 15px;
+            border-radius: 15px;
+            width: 90%;
+            height: 75%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .white-box-content {
+            color: #000;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        
+        .black-box-content {
+            color: #fff;
+            background: rgba(0, 0, 0, 0.7);
+        }
+        
+        /* 诗句行容器 */
+        .poem-lines-container {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .poem-line {
+            font-size: 2.2rem;
+            margin: 8px 0;
+            text-align: center;
+            transition: all 0.5s ease;
+            opacity: 0.6;
+            transform: translateY(0);
+        }
+        
+        .poem-line.highlighted {
+            opacity: 1;
+            color: #ffcc00 !important;
+            text-shadow: 0 0 10px #ffcc00;
+            font-weight: bold;
+            transform: scale(1.1);
+        }
+        
+        .box-poem-title {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.1rem;
+            text-align: center;
+            padding: 8px 15px;
+            border-radius: 10px;
+            max-width: 90%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        
+        .white-box-title {
+            background: rgba(139, 69, 19, 0.9);
+            color: white;
+        }
+        
+        .black-box-title {
+            background: rgba(139, 69, 19, 0.9);
+            color: white;
+        }
+        
+        .box-highlight {
+            animation: box-highlight 1s ease infinite alternate;
+        }
+        
+        @keyframes box-highlight {
+            from { 
+                box-shadow: 0 0 15px 5px rgba(255, 204, 0, 0.5);
+                transform: scale(1);
+            }
+            to { 
+                box-shadow: 0 0 25px 10px rgba(255, 204, 0, 0.8);
+                transform: scale(1.03);
+            }
+        }
+        
+        /* 朗读按钮 - 放在棋盒下方 */
+        .read-box-btn {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #4fc3f7 0%, #2d7bc9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            min-width: 250px;
+        }
+        
+        .read-box-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(135deg, #29b6f6 0%, #1e88e5 100%);
+        }
+        
+        .read-box-btn:disabled {
+            background: linear-gradient(135deg, #cccccc 0%, #aaaaaa 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        @media (max-width: 1400px) {
+            .game-area {
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+            }
+            
+            .chess-boxes {
+                flex-direction: row;
+                justify-content: center;
+                gap: 60px;
+            }
+            
+            .chess-box-wrapper {
+                width: 280px;
+            }
+            
+            .chess-box {
+                width: 260px;
+                height: 260px;
+            }
+            
+            .chess-box-container {
+                margin-top: 0;
+            }
+        }
+        
+        @media (max-width: 1000px) {
+            .chess-boxes {
+                flex-direction: column;
+                align-items: center;
+                gap: 50px;
+            }
+            
+            .chess-box-wrapper {
+                width: 300px;
+            }
+            
+            .chess-box {
+                width: 280px;
+                height: 280px;
+            }
+            
+            .poem-line {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .board {
+                grid-template-columns: repeat(15, 1fr);
+                grid-template-rows: repeat(15, 1fr);
+            }
+            
+            .cell-front, .cell-back {
+                font-size: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .board-title {
+                font-size: 1.5rem;
+            }
+            
+            button {
+                min-width: 120px;
+                font-size: 1rem;
+            }
+            
+            .char-detail-popup {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .char-detail-hanzi {
+                font-size: 4rem;
+            }
+            
+            .char-detail-pinyin {
+                font-size: 1.5rem;
+            }
+            
+            .chess-box {
+                width: 240px;
+                height: 240px;
+            }
+            
+            .poem-line {
+                font-size: 1.6rem;
+            }
+            
+            .read-box-btn {
+                min-width: 220px;
+                padding: 10px 20px;
+                font-size: 1.1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .cell-front, .cell-back {
+                font-size: 1.2rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .board-title {
+                font-size: 1.3rem;
+            }
+            
+            button {
+                min-width: 100%;
+            }
+            
+            .char-detail-popup {
+                width: 220px;
+                height: 220px;
+                padding: 15px;
+            }
+            
+            .char-detail-hanzi {
+                font-size: 3.5rem;
+            }
+            
+            .chess-box {
+                width: 220px;
+                height: 220px;
+            }
+            
+            .poem-line {
+                font-size: 1.4rem;
+            }
+            
+            .read-box-btn {
+                min-width: 200px;
+                padding: 8px 15px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-chess-board"></i> 唐诗围棋识字游戏</h1>
+            <p class="subtitle">点击棋盘棋子，翻开汉字，聆听唐诗，感受古典诗词之美</p>
+        </header>
+        
+        <div class="game-area">
+            <div class="left-panel">
+                <div class="board-container">
+                    <h2 class="board-title">唐诗围棋盘 (15×15)</h2>
+                    <div class="board" id="board">
+                        <!-- 棋盘单元格将通过JavaScript生成 -->
+                    </div>
+                </div>
+                
+                <div class="info-panel">
+                    <div class="score-container">
+                        <div class="score-title">当前积分</div>
+                        <div class="score" id="score">0</div>
+                    </div>
+                    
+                    <div class="controls">
+                        <button class="btn-secondary" id="reset-btn">
+                            <i class="fas fa-redo"></i> 重新开始
+                        </button>
+                    </div>
+                    
+                    <div class="instructions">
+                        <h3><i class="fas fa-info-circle"></i> 游戏说明</h3>
+                        <ul>
+                            <li>点击棋盘上的任意棋子，翻开一个汉字</li>
+                            <li>系统会自动播放包含该汉字的唐诗，并同步翻开诗中的所有汉字</li>
+                            <li>棋盘上黑白棋子相间：白子黑字诗 / 黑子白字诗</li>
+                            <li>每完成一首诗，汉字复制品会飞入对应棋盒，原汉字保留在棋盘</li>
+                            <li>点击已翻开的棋子可查看汉字详情（拼音、中英文释义）</li>
+                            <li>每完成一首诗，获得100积分</li>
+                            <li>使用棋盒下方的朗读按钮可重新聆听棋盒中的诗句</li>
+                            <li>完成所有诗歌后游戏结束，获得全场积分</li>
+                        </ul>
+                        
+                        <div class="status">
+                            <div>已完成: <span class="completed-poems" id="completed-count">0/8</span></div>
+                            <div>剩余汉字: <span id="remaining-chars">225</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="right-panel">
+                <div class="chess-box-container">
+                    <h2><i class="fas fa-chess"></i> 诗句棋盒</h2>
+                    <div class="chess-boxes">
+                        <div class="chess-box-wrapper">
+                            <div class="chess-box box-white">
+                                <div class="box-label white-box-label">白棋盒</div>
+                                <div class="box-content white-box-content" id="white-box-content">
+                                    <div class="poem-lines-container" id="white-poem-lines">
+                                        等待诗句...
+                                    </div>
+                                </div>
+                                <div class="box-poem-title white-box-title" id="white-box-title">--</div>
+                            </div>
+                            <button class="read-box-btn" id="read-white-btn">
+                                <i class="fas fa-volume-up"></i> 朗读白棋盒诗句
+                            </button>
+                        </div>
+                        
+                        <div class="chess-box-wrapper">
+                            <div class="chess-box box-black">
+                                <div class="box-label black-box-label">黑棋盒</div>
+                                <div class="box-content black-box-content" id="black-box-content">
+                                    <div class="poem-lines-container" id="black-poem-lines">
+                                        等待诗句...
+                                    </div>
+                                </div>
+                                <div class="box-poem-title black-box-title" id="black-box-title">--</div>
+                            </div>
+                            <button class="read-box-btn" id="read-black-btn">
+                                <i class="fas fa-volume-up"></i> 朗读黑棋盒诗句
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 汉字详情弹窗 -->
+    <div class="char-detail-popup" id="char-detail-popup">
+        <button class="char-detail-close" id="char-detail-close">&times;</button>
+        <div class="char-detail-hanzi" id="char-detail-hanzi">字</div>
+        <div class="char-detail-pinyin" id="char-detail-pinyin">pīn yīn</div>
+        <div class="char-detail-meaning">
+            <div id="char-detail-cn">中文释义</div>
+            <div class="char-detail-en" id="char-detail-en">English meaning</div>
+        </div>
+    </div>
+
+    <audio id="flip-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="go-stone-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-plastic-bubble-click-1124.mp3" type="audio/mpeg">
+    </audio>
+    
+    <audio id="complete-sound" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        // 汉字数据库 - 包含拼音和中英文释义
+        const charDictionary = {
+            "床": { pinyin: "chuáng", cn: "供人睡卧的家具", en: "bed" },
+            "前": { pinyin: "qián", cn: "方位词，指正面的", en: "front, before" },
+            "明": { pinyin: "míng", cn: "光亮，清晰", en: "bright, clear" },
+            "月": { pinyin: "yuè", cn: "月亮", en: "moon" },
+            "光": { pinyin: "guāng", cn: "光线，明亮", en: "light" },
+            "疑": { pinyin: "yí", cn: "怀疑，不确定", en: "doubt, suspect" },
+            "是": { pinyin: "shì", cn: "表示判断或肯定", en: "is, are" },
+            "地": { pinyin: "dì", cn: "大地，地面", en: "ground, earth" },
+            "上": { pinyin: "shàng", cn: "位置在高处的", en: "above, on" },
+            "霜": { pinyin: "shuāng", cn: "水汽遇冷凝结的白色晶体", en: "frost" },
+            "举": { pinyin: "jǔ", cn: "抬起，向上托", en: "lift, raise" },
+            "头": { pinyin: "tóu", cn: "脑袋", en: "head" },
+            "望": { pinyin: "wàng", cn: "向远处看", en: "gaze, look at" },
+            "低": { pinyin: "dī", cn: "位置在一般标准之下", en: "low" },
+            "思": { pinyin: "sī", cn: "思考，想念", en: "think, miss" },
+            "故": { pinyin: "gù", cn: "从前的，旧的", en: "old, former" },
+            "乡": { pinyin: "xiāng", cn: "家乡，故乡", en: "hometown" },
+            "白": { pinyin: "bái", cn: "白色", en: "white" },
+            "日": { pinyin: "rì", cn: "太阳", en: "sun" },
+            "依": { pinyin: "yī", cn: "靠着，依照", en: "lean on, according to" },
+            "山": { pinyin: "shān", cn: "地面形成的高耸部分", en: "mountain" },
+            "尽": { pinyin: "jìn", cn: "完，终结", en: "end, exhaust" },
+            "黄": { pinyin: "huáng", cn: "黄色", en: "yellow" },
+            "河": { pinyin: "hé", cn: "河流，特指黄河", en: "river" },
+            "入": { pinyin: "rù", cn: "进入", en: "enter" },
+            "海": { pinyin: "hǎi", cn: "海洋", en: "sea" },
+            "流": { pinyin: "liú", cn: "液体移动", en: "flow" },
+            "欲": { pinyin: "yù", cn: "想要，希望", en: "want, desire" },
+            "穷": { pinyin: "qióng", cn: "尽，完", en: "exhaust, poor" },
+            "千": { pinyin: "qiān", cn: "数目，十个一百", en: "thousand" },
+            "里": { pinyin: "lǐ", cn: "长度单位，也指内部", en: "mile, inside" },
+            "目": { pinyin: "mù", cn: "眼睛", en: "eye" },
+            "更": { pinyin: "gèng", cn: "再，又", en: "more, again" },
+            "一": { pinyin: "yī", cn: "数字一", en: "one" },
+            "层": { pinyin: "céng", cn: "层次，楼层", en: "layer, floor" },
+            "楼": { pinyin: "lóu", cn: "楼房", en: "building, tower" },
+            "春": { pinyin: "chūn", cn: "春天", en: "spring" },
+            "眠": { pinyin: "mián", cn: "睡觉", en: "sleep" },
+            "不": { pinyin: "bù", cn: "否定词", en: "not" },
+            "觉": { pinyin: "jué", cn: "感觉，察觉", en: "feel, sense" },
+            "晓": { pinyin: "xiǎo", cn: "天亮，知道", en: "dawn, know" },
+            "处": { pinyin: "chù", cn: "地方", en: "place" },
+            "闻": { pinyin: "wén", cn: "听见", en: "hear" },
+            "啼": { pinyin: "tí", cn: "鸟兽叫", en: "cry, call" },
+            "鸟": { pinyin: "niǎo", cn: "鸟类", en: "bird" },
+            "夜": { pinyin: "yè", cn: "夜晚", en: "night" },
+            "来": { pinyin: "lái", cn: "来到", en: "come" },
+            "风": { pinyin: "fēng", cn: "空气流动的现象", en: "wind" },
+            "雨": { pinyin: "yǔ", cn: "从云层降下的水滴", en: "rain" },
+            "声": { pinyin: "shēng", cn: "声音", en: "sound" },
+            "花": { pinyin: "huā", cn: "花朵", en: "flower" },
+            "落": { pinyin: "luò", cn: "掉下，下降", en: "fall, drop" },
+            "知": { pinyin: "zhī", cn: "知道，了解", en: "know" },
+            "多": { pinyin: "duō", cn: "数量大", en: "many" },
+            "少": { pinyin: "shǎo", cn: "数量小", en: "few" },
+            "诗": { pinyin: "shī", cn: "诗歌，文学体裁", en: "poem" },
+            // 更多汉字可以继续添加...
+        };
+
+        // 游戏数据 - 8首唐诗（4首五言绝句，4首七言绝句）
+        const poems = [
+            {
+                id: 1,
+                title: "静夜思",
+                author: "李白",
+                type: "五言绝句",
+                content: "床前明月光，疑是地上霜。举头望明月，低头思故乡。",
+                lines: ["床前明月光", "疑是地上霜", "举头望明月", "低头思故乡"],
+                arranged: false,
+                positions: [], // 将在初始化时填充
+                pieceType: "white", // 白色棋子（白子黑字）
+                boxContent: "", // 存储在棋盒中的内容
+                currentLineIndex: 0 // 当前朗读到的行索引
+            },
+            {
+                id: 2,
+                title: "登鹳雀楼",
+                author: "王之涣",
+                type: "五言绝句",
+                content: "白日依山尽，黄河入海流。欲穷千里目，更上一层楼。",
+                lines: ["白日依山尽", "黄河入海流", "欲穷千里目", "更上一层楼"],
+                arranged: false,
+                positions: [],
+                pieceType: "black", // 黑色棋子（黑子白字）
+                boxContent: "",
+                currentLineIndex: 0
+            },
+            {
+                id: 3,
+                title: "春晓",
+                author: "孟浩然",
+                type: "五言绝句",
+                content: "春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。",
+                lines: ["春眠不觉晓", "处处闻啼鸟", "夜来风雨声", "花落知多少"],
+                arranged: false,
+                positions: [],
+                pieceType: "white",
+                boxContent: "",
+                currentLineIndex: 0
+            },
+            {
+                id: 4,
+                title: "江雪",
+                author: "柳宗元",
+                type: "五言绝句",
+                content: "千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。",
+                lines: ["千山鸟飞绝", "万径人踪灭", "孤舟蓑笠翁", "独钓寒江雪"],
+                arranged: false,
+                positions: [],
+                pieceType: "black",
+                boxContent: "",
+                currentLineIndex: 0
+            },
+            {
+                id: 5,
+                title: "黄鹤楼送孟浩然之广陵",
+                author: "李白",
+                type: "七言绝句",
+                content: "故人西辞黄鹤楼，烟花三月下扬州。孤帆远影碧空尽，唯见长江天际流。",
+                lines: ["故人西辞黄鹤楼", "烟花三月下扬州", "孤帆远影碧空尽", "唯见长江天际流"],
+                arranged: false,
+                positions: [],
+                pieceType: "white",
+                boxContent: "",
+                currentLineIndex: 0
+            },
+            {
+                id: 6,
+                title: "早发白帝城",
+                author: "李白",
+                type: "七言绝句",
+                content: "朝辞白帝彩云间，千里江陵一日还。两岸猿声啼不住，轻舟已过万重山。",
+                lines: ["朝辞白帝彩云间", "千里江陵一日还", "两岸猿声啼不住", "轻舟已过万重山"],
+                arranged: false,
+                positions: [],
+                pieceType: "black",
+                boxContent: "",
+                currentLineIndex: 0
+            },
+            {
+                id: 7,
+                title: "枫桥夜泊",
+                author: "张继",
+                type: "七言绝句",
+                content: "月落乌啼霜满天，江枫渔火对愁眠。姑苏城外寒山寺，夜半钟声到客船。",
+                lines: ["月落乌啼霜满天", "江枫渔火对愁眠", "姑苏城外寒山寺", "夜半钟声到客船"],
+                arranged: false,
+                positions: [],
+                pieceType: "white",
+                boxContent: "",
+                currentLineIndex: 0
+            },
+            {
+                id: 8,
+                title: "清明",
+                author: "杜牧",
+                type: "七言绝句",
+                content: "清明时节雨纷纷，路上行人欲断魂。借问酒家何处有，牧童遥指杏花村。",
+                lines: ["清明时节雨纷纷", "路上行人欲断魂", "借问酒家何处有", "牧童遥指杏花村"],
+                arranged: false,
+                positions: [],
+                pieceType: "black",
+                boxContent: "",
+                currentLineIndex: 0
+            }
+        ];
+
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            revealedCells: 0,
+            totalCells: 225, // 15x15
+            currentPoem: null,
+            isProcessing: false,
+            isGameComplete: false,
+            boardData: [],
+            isReadingPoem: false,
+            currentReadingIndex: 0,
+            currentLineIndex: 0,
+            currentBoxHighlightIndex: -1,
+            currentBoxType: null,
+            whiteBoxPoem: null, // 白棋盒当前存储的诗歌
+            blackBoxPoem: null,  // 黑棋盒当前存储的诗歌
+            isReadingWhiteBox: false,
+            isReadingBlackBox: false
+        };
+
+        // 音频元素
+        const flipSound = document.getElementById('flip-sound');
+        const goStoneSound = document.getElementById('go-stone-sound');
+        const completeSound = document.getElementById('complete-sound');
+
+        // DOM元素
+        const boardElement = document.getElementById('board');
+        const scoreElement = document.getElementById('score');
+        const resetButton = document.getElementById('reset-btn');
+        const completedCountElement = document.getElementById('completed-count');
+        const remainingCharsElement = document.getElementById('remaining-chars');
+        const whitePoemLines = document.getElementById('white-poem-lines');
+        const blackPoemLines = document.getElementById('black-poem-lines');
+        const whiteBoxTitle = document.getElementById('white-box-title');
+        const blackBoxTitle = document.getElementById('black-box-title');
+        const readWhiteBtn = document.getElementById('read-white-btn');
+        const readBlackBtn = document.getElementById('read-black-btn');
+        
+        // 汉字详情弹窗元素
+        const charDetailPopup = document.getElementById('char-detail-popup');
+        const charDetailHanzi = document.getElementById('char-detail-hanzi');
+        const charDetailPinyin = document.getElementById('char-detail-pinyin');
+        const charDetailCn = document.getElementById('char-detail-cn');
+        const charDetailEn = document.getElementById('char-detail-en');
+        const charDetailClose = document.getElementById('char-detail-close');
+
+        // 初始化棋盘
+        function initBoard() {
+            // 清空棋盘
+            boardElement.innerHTML = '';
+            gameState.boardData = [];
+            
+            // 重置棋盒
+            resetChessBoxes();
+            
+            // 重置诗歌状态
+            poems.forEach(poem => {
+                poem.arranged = false;
+                poem.boxContent = "";
+                poem.currentLineIndex = 0;
+            });
+            
+            // 创建15x15的棋盘
+            for (let row = 0; row < 15; row++) {
+                for (let col = 0; col < 15; col++) {
+                    const cellIndex = row * 15 + col;
+                    
+                    // 创建单元格元素
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    cell.dataset.index = cellIndex;
+                    
+                    // 创建正面（棋子样式）
+                    const front = document.createElement('div');
+                    front.className = 'cell-front';
+                    
+                    // 创建背面（汉字）
+                    const back = document.createElement('div');
+                    back.className = 'cell-back';
+                    
+                    cell.appendChild(front);
+                    cell.appendChild(back);
+                    
+                    // 存储单元格数据
+                    gameState.boardData[cellIndex] = {
+                        row,
+                        col,
+                        index: cellIndex,
+                        char: '',
+                        poemId: null,
+                        flipped: false,
+                        arranged: false,
+                        element: cell,
+                        pieceType: null, // 'white' 或 'black'
+                        originalChar: '', // 记录原始汉字，用于详情显示
+                        completed: false // 是否已完成（飞入棋盒）
+                    };
+                    
+                    boardElement.appendChild(cell);
+                }
+            }
+            
+            // 初始化诗歌位置
+            initPoemPositions();
+            
+            // 更新显示
+            updateDisplay();
+        }
+
+        // 重置棋盒
+        function resetChessBoxes() {
+            whitePoemLines.innerHTML = "等待诗句...";
+            blackPoemLines.innerHTML = "等待诗句...";
+            whiteBoxTitle.textContent = "--";
+            blackBoxTitle.textContent = "--";
+            gameState.whiteBoxPoem = null;
+            gameState.blackBoxPoem = null;
+            
+            // 重置按钮状态
+            readWhiteBtn.disabled = true;
+            readBlackBtn.disabled = true;
+        }
+
+        // 初始化诗歌在棋盘上的位置
+        function initPoemPositions() {
+            // 重置所有诗歌的位置数据
+            poems.forEach(poem => {
+                poem.positions = [];
+            });
+            
+            // 用于跟踪已使用的棋盘位置
+            const usedPositions = new Set();
+            
+            // 为每首诗歌分配位置
+            poems.forEach(poem => {
+                // 从诗歌内容中移除标点符号
+                const cleanContent = poem.content.replace(/[，。]/g, '');
+                
+                // 尝试找到一个合适的位置放置诗歌
+                let placed = false;
+                let attempts = 0;
+                
+                while (!placed && attempts < 200) {
+                    // 随机选择一个起始位置
+                    const startRow = Math.floor(Math.random() * 15);
+                    const startCol = Math.floor(Math.random() * 15);
+                    
+                    // 检查是否水平放置（随机选择水平或垂直）
+                    const isHorizontal = Math.random() > 0.5;
+                    
+                    // 检查是否有足够的空间
+                    let canPlace = true;
+                    const positions = [];
+                    
+                    for (let i = 0; i < cleanContent.length; i++) {
+                        const row = isHorizontal ? startRow : startRow + i;
+                        const col = isHorizontal ? startCol + i : startCol;
+                        
+                        // 检查是否超出边界
+                        if (row >= 15 || col >= 15) {
+                            canPlace = false;
+                            break;
+                        }
+                        
+                        const positionIndex = row * 15 + col;
+                        
+                        // 检查位置是否已被占用
+                        if (usedPositions.has(positionIndex)) {
+                            canPlace = false;
+                            break;
+                        }
+                        
+                        positions.push({
+                            row,
+                            col,
+                            index: positionIndex,
+                            char: cleanContent[i]
+                        });
+                    }
+                    
+                    if (canPlace) {
+                        // 放置诗歌
+                        positions.forEach(pos => {
+                            usedPositions.add(pos.index);
+                            
+                            // 更新棋盘数据
+                            const cellData = gameState.boardData[pos.index];
+                            cellData.char = pos.char;
+                            cellData.originalChar = pos.char; // 保存原始汉字
+                            cellData.poemId = poem.id;
+                            cellData.pieceType = poem.pieceType;
+                            
+                            // 根据棋子类型设置CSS类
+                            if (poem.pieceType === "white") {
+                                cellData.element.classList.add('white-piece');
+                            } else {
+                                cellData.element.classList.add('black-piece');
+                            }
+                            
+                            // 更新背面显示的汉字
+                            const backElement = cellData.element.querySelector('.cell-back');
+                            backElement.textContent = pos.char;
+                            
+                            // 更新诗歌的位置数据
+                            poem.positions.push(pos.index);
+                        });
+                        
+                        placed = true;
+                    }
+                    
+                    attempts++;
+                }
+                
+                // 如果无法放置，使用备用方案（简单放置）
+                if (!placed) {
+                    console.warn(`无法为《${poem.title}》找到合适位置，使用备用方案`);
+                    // 简单地将诗歌字符放入第一个可用的位置
+                    let charIndex = 0;
+                    for (let i = 0; i < gameState.boardData.length && charIndex < cleanContent.length; i++) {
+                        if (!gameState.boardData[i].char) {
+                            const cellData = gameState.boardData[i];
+                            cellData.char = cleanContent[charIndex];
+                            cellData.originalChar = cleanContent[charIndex];
+                            cellData.poemId = poem.id;
+                            cellData.pieceType = poem.pieceType;
+                            
+                            if (poem.pieceType === "white") {
+                                cellData.element.classList.add('white-piece');
+                            } else {
+                                cellData.element.classList.add('black-piece');
+                            }
+                            
+                            // 更新背面显示的汉字
+                            const backElement = cellData.element.querySelector('.cell-back');
+                            backElement.textContent = cleanContent[charIndex];
+                            
+                            poem.positions.push(i);
+                            charIndex++;
+                        }
+                    }
+                }
+            });
+            
+            // 为剩余的空格填充随机汉字（来自诗歌的字符）
+            const allChars = poems.map(p => p.content.replace(/[，。]/g, '')).join('');
+            for (let i = 0; i < gameState.boardData.length; i++) {
+                if (!gameState.boardData[i].char) {
+                    const randomChar = allChars[Math.floor(Math.random() * allChars.length)];
+                    const cellData = gameState.boardData[i];
+                    cellData.char = randomChar || "诗";
+                    cellData.originalChar = cellData.char;
+                    cellData.poemId = null;
+                    
+                    // 随机分配棋子颜色
+                    const pieceType = Math.random() > 0.5 ? "white" : "black";
+                    cellData.pieceType = pieceType;
+                    cellData.element.classList.add(pieceType + '-piece');
+                    
+                    // 更新背面显示的汉字
+                    const backElement = cellData.element.querySelector('.cell-back');
+                    backElement.textContent = cellData.char;
+                }
+            }
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            scoreElement.textContent = gameState.score;
+            completedCountElement.textContent = `${poems.filter(p => p.arranged).length}/${poems.length}`;
+            
+            // 计算剩余的未翻开汉字
+            const remaining = gameState.boardData.filter(cell => !cell.flipped).length;
+            remainingCharsElement.textContent = remaining;
+            
+            // 检查游戏是否完成
+            if (poems.every(p => p.arranged) && !gameState.isGameComplete) {
+                gameState.isGameComplete = true;
+                completeGame();
+            }
+        }
+
+        // 显示汉字详情弹窗
+        function showCharDetail(char, cellElement) {
+            // 获取汉字详情
+            const detail = charDictionary[char] || {
+                pinyin: "未知",
+                cn: "暂无中文释义",
+                en: "No English meaning available"
+            };
+            
+            // 更新弹窗内容
+            charDetailHanzi.textContent = char;
+            charDetailPinyin.textContent = detail.pinyin;
+            charDetailCn.textContent = detail.cn;
+            charDetailEn.textContent = detail.en;
+            
+            // 获取单元格位置
+            const rect = cellElement.getBoundingClientRect();
+            
+            // 计算弹窗位置（在单元格上方）
+            const popupWidth = 300;
+            const popupHeight = 300;
+            let left = rect.left + rect.width / 2 - popupWidth / 2;
+            let top = rect.top - popupHeight - 10;
+            
+            // 确保弹窗在可视区域内
+            if (top < 10) top = rect.bottom + 10;
+            if (left < 10) left = 10;
+            if (left + popupWidth > window.innerWidth - 10) {
+                left = window.innerWidth - popupWidth - 10;
+            }
+            
+            // 设置位置并显示
+            charDetailPopup.style.left = left + 'px';
+            charDetailPopup.style.top = top + 'px';
+            charDetailPopup.style.display = 'flex';
+        }
+
+        // 翻转单元格
+        function flipCell(cellIndex) {
+            const cellData = gameState.boardData[cellIndex];
+            if (!cellData || cellData.flipped) return;
+            
+            // 播放翻牌音效
+            flipSound.currentTime = 0;
+            flipSound.play().catch(e => console.log("音频播放失败:", e));
+            
+            // 翻转单元格
+            cellData.flipped = true;
+            cellData.element.classList.add('flipped');
+            
+            gameState.revealedCells++;
+            
+            return cellData;
+        }
+
+        // 处理单元格点击
+        function handleCellClick(cellIndex) {
+            if (gameState.isProcessing || gameState.isGameComplete) return;
+            
+            const cellData = gameState.boardData[cellIndex];
+            if (!cellData) return;
+            
+            // 如果棋子已经翻开，显示汉字详情
+            if (cellData.flipped) {
+                // 显示汉字的详情
+                showCharDetail(cellData.char, cellData.element);
+                return;
+            }
+            
+            // 先朗读当前点击的汉字
+            speakText(cellData.char, 0.8);
+            
+            // 延迟后翻转单元格
+            setTimeout(() => {
+                flipCell(cellIndex);
+                
+                // 查找包含该汉字的诗歌
+                if (cellData.poemId) {
+                    const poem = poems.find(p => p.id === cellData.poemId);
+                    if (poem && !poem.arranged) {
+                        // 触发该诗歌的朗读和展示
+                        triggerPoem(poem);
+                    }
+                }
+                
+                updateDisplay();
+            }, 800); // 等待朗读完成再翻牌
+        }
+
+        // 触发诗歌展示
+        function triggerPoem(poem) {
+            if (gameState.isProcessing || poem.arranged) return;
+            
+            gameState.isProcessing = true;
+            gameState.currentPoem = poem;
+            gameState.currentBoxType = poem.pieceType;
+            
+            // 开始朗读诗歌并同步翻开汉字
+            readPoemWithReveal(poem);
+        }
+
+        // 朗读诗歌并同步翻开汉字
+        function readPoemWithReveal(poem) {
+            // 获取诗歌的所有位置
+            const poemPositions = poem.positions;
+            
+            // 标记诗歌中的所有单元格
+            poemPositions.forEach(posIndex => {
+                const cellData = gameState.boardData[posIndex];
+                if (cellData) {
+                    cellData.element.classList.add('highlighted');
+                }
+            });
+            
+            // 设置当前正在朗读的诗句索引
+            gameState.currentLineIndex = 0;
+            
+            // 开始逐句朗读（棋盘上展示）
+            readNextLineOnBoard(poem);
+        }
+
+        // 在棋盘上朗读下一句诗
+        function readNextLineOnBoard(poem) {
+            if (gameState.currentLineIndex >= poem.lines.length) {
+                // 棋盘上诗歌朗读完成，开始飞入棋盒
+                setTimeout(() => {
+                    flyPoemCopiesToBox(poem);
+                }, 1500);
+                return;
+            }
+            
+            const line = poem.lines[gameState.currentLineIndex];
+            const lineChars = line.split('');
+            
+            // 朗读整句诗
+            speakText(line, 0.7);
+            
+            // 计算这首诗中对应这一句的字符位置
+            const poemContent = poem.content.replace(/[，。]/g, '');
+            const lineStartIndex = poemContent.indexOf(line);
+            
+            if (lineStartIndex >= 0) {
+                // 翻转这一句的所有汉字
+                for (let i = 0; i < lineChars.length; i++) {
+                    const globalCharIndex = lineStartIndex + i;
+                    if (globalCharIndex < poem.positions.length) {
+                        const posIndex = poem.positions[globalCharIndex];
+                        
+                        // 延迟翻开每个汉字
+                        setTimeout(() => {
+                            if (posIndex !== undefined) {
+                                const cellData = gameState.boardData[posIndex];
+                                
+                                // 确保单元格已翻开
+                                if (!cellData.flipped) {
+                                    flipCell(posIndex);
+                                }
+                            }
+                        }, i * 600);
+                    }
+                }
+            }
+            
+            // 设置下一句的延迟
+            gameState.currentLineIndex++;
+            setTimeout(() => {
+                readNextLineOnBoard(poem);
+            }, line.length * 600 + 1500);
+        }
+
+        // 诗歌复制品飞入棋盒
+        function flyPoemCopiesToBox(poem) {
+            // 移除高亮
+            poem.positions.forEach(posIndex => {
+                const cellData = gameState.boardData[posIndex];
+                if (cellData) {
+                    cellData.element.classList.remove('highlighted');
+                    cellData.completed = true;
+                    cellData.element.classList.add('completed');
+                }
+            });
+            
+            // 获取对应棋盒的位置
+            const targetBox = poem.pieceType === "white" ? 
+                document.querySelector('.box-white') : 
+                document.querySelector('.box-black');
+                
+            const boxRect = targetBox.getBoundingClientRect();
+            
+            // 让每个汉字的复制品飞入棋盒
+            let completedFlies = 0;
+            
+            poem.positions.forEach((posIndex, index) => {
+                const cellData = gameState.boardData[posIndex];
+                const cellRect = cellData.element.getBoundingClientRect();
+                
+                // 创建复制品
+                const flyingCopy = document.createElement('div');
+                flyingCopy.className = `flying-copy ${poem.pieceType}-piece`;
+                flyingCopy.textContent = cellData.char;
+                flyingCopy.style.left = cellRect.left + 'px';
+                flyingCopy.style.top = cellRect.top + 'px';
+                document.body.appendChild(flyingCopy);
+                
+                // 计算飞行路径
+                const dx = boxRect.left + boxRect.width/2 - cellRect.left;
+                const dy = boxRect.top + boxRect.height/2 - cellRect.top;
+                
+                // 设置飞行参数
+                flyingCopy.style.setProperty('--tx', dx + 'px');
+                flyingCopy.style.setProperty('--ty', dy + 'px');
+                
+                // 播放围棋投子音效
+                setTimeout(() => {
+                    goStoneSound.currentTime = 0;
+                    goStoneSound.play().catch(e => console.log("围棋投子音效播放失败:", e));
+                }, index * 150);
+                
+                // 延迟开始飞行
+                setTimeout(() => {
+                    // 开始飞行动画
+                    
+                    // 飞行完成后，移除复制品
+                    setTimeout(() => {
+                        flyingCopy.remove();
+                        completedFlies++;
+                        
+                        // 所有汉字复制品都飞入后，更新棋盒并完成诗歌
+                        if (completedFlies === poem.positions.length) {
+                            completePoem(poem);
+                        }
+                    }, 1500); // 飞行动画时间
+                }, index * 150); // 每个汉字飞行间隔
+            });
+        }
+
+        // 完成诗歌
+        function completePoem(poem) {
+            // 标记诗歌为已排列
+            poem.arranged = true;
+            
+            // 将诗歌存入棋盒
+            updateChessBoxWithPoem(poem);
+            
+            // 增加积分
+            gameState.score += 100;
+            
+            // 播放完成音效
+            setTimeout(() => {
+                completeSound.currentTime = 0;
+                completeSound.play().catch(e => console.log("音频播放失败:", e));
+            }, 500);
+            
+            // 朗读诗歌标题和作者
+            speakText(`《${poem.title}》，${poem.author}，已完成`, 0.8);
+            
+            // 更新显示
+            updateDisplay();
+            
+            // 重置状态
+            gameState.isProcessing = false;
+            gameState.currentPoem = null;
+            gameState.currentBoxType = null;
+        }
+
+        // 更新棋盒显示整首诗
+        function updateChessBoxWithPoem(poem) {
+            const boxType = poem.pieceType;
+            const poemLinesContainer = boxType === "white" ? whitePoemLines : blackPoemLines;
+            const boxTitle = boxType === "white" ? whiteBoxTitle : blackBoxTitle;
+            
+            // 更新棋盒内容
+            poem.boxContent = poem.content;
+            if (boxType === "white") {
+                gameState.whiteBoxPoem = poem;
+                readWhiteBtn.disabled = false;
+            } else {
+                gameState.blackBoxPoem = poem;
+                readBlackBtn.disabled = false;
+            }
+            
+            // 清空并重新创建诗句行
+            poemLinesContainer.innerHTML = '';
+            
+            // 分割诗句，每句一行
+            const lines = poem.content.split(/[，。]/).filter(line => line.length > 0);
+            
+            lines.forEach(line => {
+                const lineElement = document.createElement('div');
+                lineElement.className = 'poem-line';
+                lineElement.textContent = line;
+                poemLinesContainer.appendChild(lineElement);
+            });
+            
+            // 更新标题
+            boxTitle.textContent = `《${poem.title}》· ${poem.author}`;
+            
+            // 高亮棋盒
+            const chessBox = boxType === "white" ? 
+                document.querySelector('.box-white') : 
+                document.querySelector('.box-black');
+            chessBox.classList.add('box-highlight');
+            
+            // 移除之前的高亮
+            setTimeout(() => {
+                chessBox.classList.remove('box-highlight');
+            }, 2000);
+        }
+
+        // 朗读棋盒中的诗句
+        function readChessBoxPoem(boxType) {
+            const poem = boxType === "white" ? gameState.whiteBoxPoem : gameState.blackBoxPoem;
+            
+            if (!poem || (boxType === "white" && gameState.isReadingWhiteBox) || 
+                (boxType === "black" && gameState.isReadingBlackBox)) {
+                return;
+            }
+            
+            // 设置阅读状态
+            if (boxType === "white") {
+                gameState.isReadingWhiteBox = true;
+                readWhiteBtn.disabled = true;
+            } else {
+                gameState.isReadingBlackBox = true;
+                readBlackBtn.disabled = true;
+            }
+            
+            // 重置行索引
+            poem.currentLineIndex = 0;
+            
+            // 开始逐句朗读
+            readNextLineFromBox(poem, boxType);
+        }
+
+        // 从棋盒中朗读下一句诗
+        function readNextLineFromBox(poem, boxType) {
+            if (poem.currentLineIndex >= poem.lines.length) {
+                // 朗读完成，重置状态
+                if (boxType === "white") {
+                    gameState.isReadingWhiteBox = false;
+                    readWhiteBtn.disabled = false;
+                } else {
+                    gameState.isReadingBlackBox = false;
+                    readBlackBtn.disabled = false;
+                }
+                
+                // 移除所有高亮
+                const poemLinesContainer = boxType === "white" ? whitePoemLines : blackPoemLines;
+                const lines = poemLinesContainer.querySelectorAll('.poem-line');
+                lines.forEach(line => {
+                    line.classList.remove('highlighted');
+                    line.style.transform = 'translateY(0)';
+                });
+                return;
+            }
+            
+            const line = poem.lines[poem.currentLineIndex];
+            
+            // 朗读整句诗
+            speakText(line, 0.7);
+            
+            // 高亮棋盒中的当前行
+            highlightCurrentLineInBox(poem, boxType, poem.currentLineIndex);
+            
+            // 设置下一句的延迟
+            poem.currentLineIndex++;
+            setTimeout(() => {
+                readNextLineFromBox(poem, boxType);
+            }, line.length * 600 + 1000);
+        }
+
+        // 高亮棋盒中的当前行
+        function highlightCurrentLineInBox(poem, boxType, lineIndex) {
+            const poemLinesContainer = boxType === "white" ? whitePoemLines : blackPoemLines;
+            const lines = poemLinesContainer.querySelectorAll('.poem-line');
+            
+            // 移除所有高亮
+            lines.forEach(line => {
+                line.classList.remove('highlighted');
+                line.style.transform = 'translateY(0)';
+            });
+            
+            // 高亮当前行
+            if (lineIndex < lines.length) {
+                lines[lineIndex].classList.add('highlighted');
+                
+                // 如果当前行不是第一行，向上移动前面的行
+                for (let i = 0; i < lineIndex; i++) {
+                    lines[i].style.transform = `translateY(-${(lineIndex - i) * 10}px)`;
+                }
+            }
+        }
+
+        // 文本转语音（普通话）- 确保使用标准普通话
+        function speakText(text, rate = 1) {
+            if ('speechSynthesis' in window) {
+                // 停止任何正在进行的朗读
+                speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN'; // 普通话
+                utterance.rate = rate;
+                utterance.pitch = 1.0; // 标准音高
+                utterance.volume = 1.0; // 音量
+                
+                // 寻找中文普通话语音
+                const voices = speechSynthesis.getVoices();
+                
+                // 优先选择中文普通话语音
+                let chineseVoice = voices.find(voice => {
+                    return voice.lang.startsWith('zh-CN') && 
+                           (voice.name.includes('普通话') || voice.name.includes('Chinese'));
+                });
+                
+                // 如果没有找到，尝试其他中文语音
+                if (!chineseVoice) {
+                    chineseVoice = voices.find(voice => {
+                        return voice.lang.startsWith('zh-CN');
+                    });
+                }
+                
+                if (!chineseVoice) {
+                    chineseVoice = voices.find(voice => {
+                        return voice.lang.startsWith('zh');
+                    });
+                }
+                
+                if (chineseVoice) {
+                    utterance.voice = chineseVoice;
+                    console.log("使用语音:", chineseVoice.name, chineseVoice.lang);
+                } else {
+                    console.log("未找到中文语音，使用默认语音");
+                }
+                
+                speechSynthesis.speak(utterance);
+            } else {
+                console.log("浏览器不支持语音合成");
+            }
+        }
+
+        // 完成游戏
+        function completeGame() {
+            // 计算最终得分
+            const bonus = poems.length * 50; // 每首诗额外50分奖励
+            gameState.score += bonus;
+            
+            // 播放胜利音效
+            completeSound.currentTime = 0;
+            completeSound.play().catch(e => console.log("音频播放失败:", e));
+            
+            // 朗读祝贺语
+            setTimeout(() => {
+                speakText(`恭喜您完成游戏，您成功排列了所有${poems.length}首唐诗，总共获得了${gameState.score}分`, 0.8);
+            }, 1000);
+            
+            updateDisplay();
+        }
+
+        // 重置游戏
+        function resetGame() {
+            if (confirm("确定要重新开始游戏吗？当前进度将丢失。")) {
+                // 重置游戏状态
+                gameState = {
+                    score: 0,
+                    revealedCells: 0,
+                    totalCells: 225,
+                    currentPoem: null,
+                    isProcessing: false,
+                    isGameComplete: false,
+                    boardData: [],
+                    isReadingPoem: false,
+                    currentReadingIndex: 0,
+                    currentLineIndex: 0,
+                    currentBoxHighlightIndex: -1,
+                    currentBoxType: null,
+                    whiteBoxPoem: null,
+                    blackBoxPoem: null,
+                    isReadingWhiteBox: false,
+                    isReadingBlackBox: false
+                };
+                
+                // 重新初始化棋盘
+                initBoard();
+                
+                // 停止语音
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.cancel();
+                }
+                
+                // 关闭弹窗
+                charDetailPopup.style.display = 'none';
+            }
+        }
+
+        // 初始化游戏
+        function initGame() {
+            // 初始化棋盘
+            initBoard();
+            
+            // 为每个单元格添加点击事件
+            boardElement.addEventListener('click', (e) => {
+                const cell = e.target.closest('.cell');
+                if (cell) {
+                    const cellIndex = parseInt(cell.dataset.index);
+                    handleCellClick(cellIndex);
+                }
+            });
+            
+            // 为按钮添加事件
+            resetButton.addEventListener('click', resetGame);
+            readWhiteBtn.addEventListener('click', () => readChessBoxPoem('white'));
+            readBlackBtn.addEventListener('click', () => readChessBoxPoem('black'));
+            
+            // 关闭弹窗按钮事件
+            charDetailClose.addEventListener('click', () => {
+                charDetailPopup.style.display = 'none';
+            });
+            
+            // 点击弹窗外部关闭
+            charDetailPopup.addEventListener('click', (e) => {
+                if (e.target === charDetailPopup) {
+                    charDetailPopup.style.display = 'none';
+                }
+            });
+            
+            // 初始化语音合成
+            if ('speechSynthesis' in window) {
+                // 预加载语音
+                setTimeout(() => {
+                    const voices = speechSynthesis.getVoices();
+                    console.log("可用的语音:", voices.map(v => `${v.name} (${v.lang})`));
+                }, 100);
+                
+                // 播放欢迎语
+                setTimeout(() => {
+                    speakText("欢迎来到唐诗围棋识字游戏，请点击棋盘上的任意棋子开始游戏", 0.8);
+                }, 1500);
+            }
+        }
+
+        // 页面加载完成后初始化游戏
+        document.addEventListener('DOMContentLoaded', initGame);
+    </script>
+</body>
+</html>
