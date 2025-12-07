@@ -1,0 +1,3505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>五子围棋 - 汉字声符游戏</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 基础样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        /* 头部样式 */
+        .game-header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .game-header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .game-info {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .level-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #level-select {
+            padding: 8px 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            font-family: 'Noto Sans SC', sans-serif;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        #level-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* 主游戏区域 */
+        .game-main {
+            display: flex;
+            gap: 20px;
+            flex: 1;
+            margin-bottom: 20px;
+        }
+
+        /* 玩家和AI区域样式 */
+        .player-section, .ai-section {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            min-width: 300px;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .player-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+        }
+
+        .player-human {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .player-ai {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .player-info h2 {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .score {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin-left: auto;
+            padding: 8px 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        /* 棋盒样式 */
+        .character-box {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .box-header h3 {
+            font-size: 1.4rem;
+            color: #555;
+        }
+
+        .character-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        .character-tile {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .character-tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .player-character {
+            background: white;
+            color: #333;
+            border: 2px solid #4facfe;
+        }
+
+        .player-character.selected {
+            background: #4facfe;
+            color: white;
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.5);
+        }
+
+        .ai-character {
+            background: #0d0d0d;
+            color: #fafcfd;
+            border: 2px solid #ddd;
+        }
+
+        .used-character {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 棋盘区域样式 */
+        .board-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .board-container {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .game-board {
+            width: 600px;
+            height: 600px;
+            background: #F0D9B5;
+            border: 3px solid #8B4513;
+            border-radius: 5px;
+            position: relative;
+            margin: 20px auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: grid;
+            grid-template-columns: repeat(13, 1fr);
+            grid-template-rows: repeat(13, 1fr);
+        }
+
+        .board-cell {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .board-cell::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .board-cell.horizontal-line::before {
+            border-top: 1px solid rgba(0,0,0,0.3);
+            border-bottom: 1px solid rgba(0,0,0,0.3);
+        }
+
+        .board-cell.vertical-line::before {
+            border-left: 1px solid rgba(0,0,0,0.3);
+            border-right: 1px solid rgba(0,0,0,0.3);
+        }
+
+        .board-cell.center::before {
+            border: 1px solid rgba(0,0,0,0.3);
+        }
+
+        .board-stone {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        .board-stone:hover {
+            transform: scale(1.1);
+            z-index: 2;
+        }
+
+        .stone-black {
+            background: linear-gradient(145deg, #2c3e50, #1a1a1a);
+            color: white;
+            border: 2px solid #000;
+        }
+
+        .stone-white {
+            background: linear-gradient(145deg, #ffffff, #f0f0f0);
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .stone-highlight {
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 20px #ff0000;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .round-info {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .round-counter {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .total-score {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 10px 0;
+            font-size: 1.3rem;
+        }
+
+        .player-score-total {
+            color: #4facfe;
+            font-weight: bold;
+        }
+
+        .ai-score-total {
+            color: #f5576c;
+            font-weight: bold;
+        }
+
+        .vs {
+            color: #999;
+        }
+
+        .game-status {
+            font-size: 1.1rem;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            color: #1976d2;
+            font-weight: 500;
+        }
+
+        /* 游戏历史记录 */
+        .game-history {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .move-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .move-item {
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+        }
+
+        .move-item.black {
+            border-left: 4px solid #333;
+        }
+
+        .move-item.white {
+            border-left: 4px solid #4facfe;
+        }
+
+        /* AI思考指示器 */
+        .ai-thinking {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            color: #f5576c;
+            font-weight: 500;
+        }
+
+        .ai-thinking.show {
+            display: flex;
+        }
+
+        /* 当前回合指示器 */
+        .current-turn {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .turn-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .selected-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            color: #555;
+        }
+
+        /* 控制按钮组 */
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: auto;
+        }
+
+        /* AI信息和设置 */
+        .ai-info, .settings {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .ai-info h3, .settings h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .difficulty {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .ai-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .setting-item {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 底部样式 */
+        .game-footer {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-left {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .radical-info {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .hint {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .footer-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 110vh;
+            overflow-y: auto;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .modal-header {
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .character-display {
+            font-size: 3rem;
+            font-weight: bold;
+            text-shadow: 3px 3px 5px rgba(0,0,0,0.3);
+        }
+
+        .character-info {
+            flex: 1;
+        }
+
+        .pinyin {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .radical {
+            font-size: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .definition h3, .related-characters h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 8px;
+        }
+
+        #modal-definition, #modal-detail {
+            margin-bottom: 15px;
+            line-height: 1.8;
+        }
+
+        .related-chars-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .related-char {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 1.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .related-char:hover {
+            background: #e3f2fd;
+            transform: scale(1.1);
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* 规则模态框 */
+        .rules-content {
+            max-width: 800px;
+        }
+
+        .rules-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .rule-item {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+
+        .rule-item:hover {
+            transform: translateY(-5px);
+            background: #e3f2fd;
+        }
+
+        .rule-item i {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .rule-item h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .rule-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        /* 游戏结束模态框 */
+        .gameover-content {
+            text-align: center;
+            max-width: 500px;
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            color: #ffd700;
+            margin: 20px 0;
+        }
+
+        .result-icon i {
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        #gameover-title {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .result-details {
+            margin: 30px 0;
+        }
+
+        .final-score {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .score-item {
+            flex: 1;
+            padding: 20px;
+            border-radius: 15px;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .player-final {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .ai-final {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .vs-final {
+            color: #999;
+            font-size: 2rem;
+        }
+
+        .gameover-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1400px) {
+            .game-main {
+                flex-direction: column;
+            }
+            
+            .player-section, .ai-section {
+                min-width: auto;
+            }
+            
+            .game-board {
+                width: 500px;
+                height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .game-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .game-board {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1;
+                max-width: 400px;
+            }
+            
+            .character-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .rules-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .related-chars-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .player-info {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .score {
+                margin-left: 0;
+            }
+            
+            .character-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .related-chars-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .modal-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .character-display {
+                font-size: 3.5rem;
+            }
+            
+            .pinyin {
+                font-size: 1rem;
+            }
+        }
+
+        /* 提示框样式 */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+        }
+
+        .toast-success {
+            background: #4caf50;
+            color: white;
+        }
+
+        .toast-error {
+            background: #f44336;
+            color: white;
+        }
+
+        .toast-info {
+            background: #2196f3;
+            color: white;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部标题和关卡选择 -->
+        <header class="game-header">
+            <h1><i class="fas fa-chess-board"></i> 五子围棋 - 汉字声符版</h1>
+            <div class="game-info">
+                <div class="level-selector">
+                    <label for="level-select">选择关卡: </label>
+                    <select id="level-select">
+                        <!-- 关卡选项将通过JS动态生成，顺序随机 -->
+                    </select>
+                </div>
+                <button id="new-game-btn" class="btn btn-primary">
+                    <i class="fas fa-play"></i> 新游戏
+                </button>
+                <button id="rules-btn" class="btn btn-secondary">
+                    <i class="fas fa-question-circle"></i> 规则
+                </button>
+            </div>
+        </header>
+
+        <!-- 主游戏区域 -->
+        <main class="game-main">
+            <!-- 左侧：玩家区域 -->
+            <section class="player-section">
+                <div class="player-info">
+                    <div class="player-icon player-human">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h2>玩家 (白方)</h2>
+                    <div class="score">得分: <span id="player-score">0</span></div>
+                </div>
+                
+                <div class="character-box">
+                    <div class="box-header">
+                        <h3>你的棋盒</h3>
+                        <button id="refresh-btn" class="btn btn-small">
+                            <i class="fas fa-sync-alt"></i> 刷新 (剩余: <span id="refresh-count">5</span>)
+                        </button>
+                    </div>
+                    <div id="player-characters" class="character-grid">
+                        <!-- 玩家字符将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="current-turn">
+                    <div id="turn-indicator" class="turn-indicator">
+                        <i class="fas fa-arrow-right"></i> 等待玩家落子
+                    </div>
+                    <div class="selected-info">
+                        <div>已选择: <span id="selected-character">无</span></div>
+                        <div>声符: <span id="selected-radical">-</span></div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="speak-btn" class="btn btn-small">
+                        <i class="fas fa-volume-up"></i> 朗读选中汉字
+                    </button>
+                    <button id="undo-btn" class="btn btn-small">
+                        <i class="fas fa-undo"></i> 悔棋
+                    </button>
+                    <button id="hint-btn" class="btn btn-small">
+                        <i class="fas fa-lightbulb"></i> 提示
+                    </button>
+                </div>
+            </section>
+
+            <!-- 中间：棋盘区域 -->
+            <section class="board-section">
+                <div class="board-container">
+                    <div id="game-board" class="game-board">
+                        <!-- 13x13棋盘将通过JS动态生成 -->
+                    </div>
+                    
+                    <div class="round-info">
+                        <div class="round-counter">第 <span id="current-round">1</span> 局 / 共 10 局</div>
+                        <div class="total-score">
+                            <span class="player-score-total">玩家: 0</span> 
+                            <span class="vs">vs</span> 
+                            <span class="ai-score-total">AI: 0</span>
+                        </div>
+                        <div class="game-status" id="game-status">游戏准备中...</div>
+                    </div>
+                </div>
+                
+                <div class="game-history">
+                    <h3>对局记录</h3>
+                    <div id="move-history" class="move-list">
+                        <!-- 走棋记录将通过JS动态生成 -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 右侧：AI区域 -->
+            <section class="ai-section">
+                <div class="player-info">
+                    <div class="player-icon player-ai">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h2>AI系统 (黑方)</h2>
+                    <div class="score">得分: <span id="ai-score">0</span></div>
+                </div>
+                
+                <div class="character-box">
+                    <div class="box-header">
+                        <h3>AI棋盒</h3>
+                        <div class="ai-thinking" id="ai-thinking">
+                            <i class="fas fa-cog fa-spin"></i> AI思考中...
+                        </div>
+                    </div>
+                    <div id="ai-characters" class="character-grid">
+                        <!-- AI字符将通过JS动态生成 -->
+                    </div>
+                </div>
+                
+                <div class="ai-info">
+                    <h3>AI策略</h3>
+                    <div class="difficulty">
+                        <label for="difficulty">难度:</label>
+                        <select id="difficulty">
+                            <option value="easy">简单</option>
+                            <option value="medium" selected>中等</option>
+                            <option value="hard">困难</option>
+                            <option value="expert">专家</option>
+                        </select>
+                    </div>
+                    <div class="ai-stats">
+                        <div>思考时间: <span id="ai-time">0.5</span>秒</div>
+                        <div>已使用汉字: <span id="ai-used">0</span></div>
+                    </div>
+                </div>
+                
+                <div class="settings">
+                    <h3>游戏设置</h3>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="sound-toggle" checked> 开启音效
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="animation-toggle" checked> 开启动画
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label for="volume">音量:</label>
+                        <input type="range" id="volume" min="0" max="100" value="80">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="game-footer">
+            <div class="footer-left">
+                <div class="radical-info">
+                    当前声符: <span id="current-radical">离</span> 
+                    (<span id="current-pinyin">lí</span>)
+                </div>
+                <div class="hint">提示: 点击棋盘上的汉字可查看详细信息</div>
+            </div>
+            <div class="footer-right">
+                <button id="fullscreen-btn" class="btn btn-small">
+                    <i class="fas fa-expand"></i> 全屏
+                </button>
+                <button id="help-btn" class="btn btn-small">
+                    <i class="fas fa-info-circle"></i> 帮助
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 汉字详情模态框 -->
+    <div id="character-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div class="modal-header">
+                <div class="character-display" id="modal-character">离</div>
+                <div class="character-info">
+                    
+                    
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="definition">
+                    <h3>释义</h3>
+                    <p id="modal-definition">英文: to leave, to part from, to be away from</p>
+                    <p id="modal-detail">中文: 分离，离开，距离</p>
+                </div>
+                <div class="related-characters">
+                 <div class="radical" id="modal-radical">声符: 离</div>     <div class="pinyin" id="modal-pinyin">lí</div>
+
+                    <h3>同声符汉字</h3>
+                    <div id="related-chars" class="related-chars-grid">
+                        <!-- 相关字符将通过JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="speak-modal-btn" class="btn btn-small">
+                    <i class="fas fa-volume-up"></i> 朗读
+                </button>
+                <button id="practice-btn" class="btn btn-small">
+                    <i class="fas fa-book"></i> 学习卡片
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏规则模态框 -->
+    <div id="rules-modal" class="modal">
+        <div class="modal-content rules-content">
+            <span class="close-modal">&times;</span>
+            <h2>游戏规则</h2>
+            <div class="rules-list">
+                <div class="rule-item">
+                    <i class="fas fa-chess-board"></i>
+                    <h3>棋盘与棋子</h3>
+                    <p>使用13×13路围棋棋盘，棋子为带有汉字的圆形棋子。黑方先行，双方交替落子。</p>
+                </div>
+                <div class="rule-item">
+                    <i class="fas fa-trophy"></i>
+                    <h3>胜利条件</h3>
+                    <p>首先将五个<b>相同声符</b>的汉字连成一条线的一方获胜。连线可以是横线、竖线或对角线。</p>
+                </div>
+                <div class="rule-item">
+                    <i class="fas fa-font"></i>
+                    <h3>汉字棋子</h3>
+                    <p>每个关卡基于一个特定的声符（如"离"）。玩家和AI各有25个汉字棋子，每次显示5×5个。</p>
+                </div>
+                <div class="rule-item">
+                    <i class="fas fa-redo"></i>
+                    <h3>刷新功能</h3>
+                    <p>玩家每局有5次刷新机会，可以更换棋盒中的汉字。AI自动管理其汉字。</p>
+                </div>
+                <div class="rule-item">
+                    <i class="fas fa-gamepad"></i>
+                    <h3>游戏赛制</h3>
+                    <p>采用十局五胜制。先赢得五局的一方获得最终胜利。</p>
+                </div>
+                <div class="rule-item">
+                    <i class="fas fa-volume-up"></i>
+                    <h3>学习功能</h3>
+                    <p>点击棋子可朗读汉字，点击棋盘上的汉字可查看详细释义和同声符汉字。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 游戏结束模态框 -->
+    <div id="gameover-modal" class="modal">
+        <div class="modal-content gameover-content">
+            <span class="close-modal">&times;</span>
+            <div class="result-icon" id="result-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h2 id="gameover-title">游戏结束</h2>
+            <div class="result-details">
+                <p id="gameover-message"></p>
+                <div class="final-score">
+                    <div class="score-item player-final">
+                        <span>玩家</span>
+                        <span id="player-final-score">0</span>
+                    </div>
+                    <div class="vs-final">vs</div>
+                    <div class="score-item ai-final">
+                        <span>AI</span>
+                        <span id="ai-final-score">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="gameover-actions">
+                <button id="play-again-btn" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> 再来一局
+                </button>
+                <button id="next-level-btn" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right"></i> 下一关卡
+                </button>
+                <button id="review-btn" class="btn btn-small">
+                    <i class="fas fa-history"></i> 回顾对局
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 音频元素 -->
+    <audio id="place-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-unlock-game-notification-253.mp3" preload="auto"></audio>
+    <audio id="win-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-winning-chimes-2015.mp3" preload="auto"></audio>
+    <audio id="select-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3" preload="auto"></audio>
+    <audio id="refresh-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-page-turn-swipe-1403.mp3" preload="auto"></audio>
+
+    <script>
+        // ==================== 汉字数据 ====================
+        const characterData = [
+            // 关卡1
+            { id: 1, radical: "离", pinyin: "lí", characters: ["离", "瞝", "𠻗", "謧", "𢟢", "摛", "𪅆", "𩥬", "𪖂", "螭", "𡴥", "樆", "䅻", "黐", "䄜", "魑", "漓", "㷰", "璃", "𨝏", "縭", "褵", "醨", "離", "𢥗", "攡", "㒧", "𧕮", "蘺", "㰚", "灕", "𤫚", "𢌈", "㒿", "籬", "䍦"] },
+            { id: 2, radical: "無", pinyin: "wú", characters: ["無", "𣞤", "橆", "𣟒", "𤍍", "瞴", "嘸", "譕", "憮", "撫", "膴", "㒇", "嫵", "鷡", "蟱", "𩻚", "蕪", "橅", "潕", "墲", "𨼊", "璑", "廡", "鄦", "䌗", "幠", "甒", "䉑", "䍢", "舞", "儛", "㵲", "𢋑", "䒉", "𦆞", "𦌬"] },
+            { id: 3, radical: "䀠", pinyin: "jú", characters: ["瞿", "懼", "忂", "躣", "𧾱", "衢", "臞", "鸜", "𩧘", "𤣓", "𪖏", "蠷", "欋", "灈", "𥗫", "𢌄", "𨟠", "氍", "鑺", "戵", "𣃖", "䀠", "愳", "𣚏", "𥉁", "癯", "𥈸", "𥇛", "瞿", "𥌪", "𧬮", "𩖀", "𨞜", "𩍭", "𣰠", "㪺", "𣂐"] },
+            { id: 4, radical: "甬", pinyin: "yǒng", characters: ["甬", "誦", "悀", "恿", "捅", "㪌", "踊", "𧻹", "𧗴", "俑", "㛚", "痛", "蛹", "桶", "埇", "硧", "𨴭", "𥦁", "𣭲", "銿", "㼧", "筩", "㦷", "𪔜", "𪔝", "勇", "涌", "通", "踴", "䞻", "𧍛", "湧", "慂"] },
+            { id: 5, radical: "林", pinyin: "lín", characters: ["林", "啉", "諃", "惏", "𢛓", "𠓭", "痳", "菻", "淋", "霖", "琳", "㝝", "郴", "綝", "醂", "箖", "罧", "㰈", "㯬", "禁", "婪", "㛦", "噤", "㦗", "㩒", "䫴", "齽", "僸", "𦽔", "㯲", "澿", "𥖜", "䌝", "襟", "凚", "漤"] },
+            
+            // 关卡2
+            { id: 6, radical: "敖", pinyin: "áo", characters: ["敖", "𢾕", "聱", "嗸", "嗷", "謷", "謸", "慠", "摮", "遨", "𨅚", "䫨", "𩪋", "𩪕", "䦋", "𠢕", "傲", "嫯", "鷔", "驁", "獒", "螯", "鰲", "鼇", "蔜", "𣘢", "䵅", "滶", "熬", "嶅", "磝", "璈", "廒", "𦪈", "鏊", "𢧴"] },
+            { id: 7, radical: "幺", pinyin: "yāo", characters: ["幼", "眑", "黝", "呦", "詏", "𣢜", "怮", "拗", "𨱧", "㑃", "鴢", "狕", "蚴", "䱂", "苭", "泑", "䬀", "坳", "𤱎", "岰", "窈", "軪", "𥿌", "靿", "袎", "𢂊", "幺", "𦔷", "吆", "𢆷", "幽", "幼", "𠣎", "㗀", "䫜", "𪋎", "𧍘"] },
+            { id: 8, radical: "曼", pinyin: "màn", characters: ["曼", "𣁜", "謾", "慢", "摱", "𢿜", "𢿕", "䟂", "鬘", "僈", "嫚", "獌", "䝢", "蟃", "鰻", "䅼", "䊡", "䜱", "熳", "墁", "鄤", "䡬", "縵", "㿸", "幔", "饅", "鏝", "𦔔", "蔓", "漫", "槾", "䕕", "𩆓", "𨞼", "𣡠"] },
+            { id: 9, radical: "會", pinyin: "huì", characters: ["會", "𣌭", "瞺", "䵳", "䶐", "噲", "譮", "懀", "𢶒", "𨗥", "鬠", "膾", "䯤", "儈", "嬒", "癐", "獪", "鱠", "薈", "檜", "𥢶", "禬", "䢈", "澮", "𩆁", "璯", "廥", "鄶", "繪", "旝", "襘", "𨭗", "𥵊", "劊", "𦔦"] },
+            { id: 10, radical: "兒", pinyin: "ér", characters: ["兒", "𠒆", "睨", "𧡎", "唲", "𠴺", "誽", "掜", "㪒", "齯", "倪", "婗", "鶂", "鶃", "猊", "觬", "貎", "䍲", "麑", "𪕨", "蜺", "鯢", "𪓬", "棿", "霓", "晲", "堄", "𡸢", "𥓋", "郳", "輗", "䘽", "𢏱", "帠", "𡞭"] },
+            
+            // 关卡3
+            { id: 11, radical: "瓜", pinyin: "guā", characters: ["瓜", "𤓰", "𥄼", "呱", "㧓", "胍", "𠇗", "𡜁", "𡗷", "㽿", "𩢍", "狐", "𧲲", "苽", "柧", "泒", "𣲖", "坬", "𨸯", "畖", "軱", "𧙆", "𠛒", "罛", "弧", "攨", "窊", "孤", "觚", "菰", "箛", "𦋆", "䠚", "溛", "䉉"] },
+            { id: 12, radical: "正", pinyin: "zhèng", characters: ["正", "𣥔", "㱏", "眐", "証", "怔", "征", "𨒌", "𢌛", "頙", "𦙫", "佂", "症", "鴊", "泟", "阷", "竀", "䋊", "𧘿", "鉦", "政", "定", "𥇓", "𪏉", "靛", "掟", "顁", "淀", "䧑", "綻", "䘺", "錠", "整", "𢿋", "䈣"] },
+            { id: 13, radical: "朋", pinyin: "péng", characters: ["朋", "㥊", "掤", "𨂃", "鬅", "𣨥", "倗", "痭", "鵬", "𧌇", "𩸀", "棚", "稝", "淜", "䨜", "堋", "𨹹", "硼", "𢉁", "𥦜", "輣", "𠜳", "弸", "𣂤", "崩", "傰", "𡡈", "漰", "塴", "𨻱", "磞", "䣙", "繃", "剻", "𢐒"] },
+            { id: 14, radical: "冉", pinyin: "rǎn", characters: ["冉", "冄", "舑", "𧦦", "抩", "髯", "𩑺", "𩓾", "𩓿", "𨈭", "姌", "㾆", "䎃", "𦐎", "𦐃", "蚺", "𪓚", "䶲", "𤱣", "𤱋", "苒", "柟", "𡖝", "㴂", "㘱", "𨸱", "畘", "袡", "䤡", "𥬕", "聃", "呥", "䔜", "𣼚", "𣶞"] },
+            { id: 15, radical: "欮", pinyin: "jué", characters: ["厥", "憠", "撅", "蹶", "蹷", "𧽸", "𧼞", "𦠒", "𩪜", "𠢤", "𡡕", "鷢", "獗", "𤛦", "𧤼", "𦏅", "蟨", "蟩", "鱖", "蕨", "橜", "橛", "㵐", "嶡", "𥕲", "𨬐", "劂", "欮", "瘚", "𣖬", "厥", "闕", "𨇮", "灍", "𥗮"] },
+            
+            // 关卡4
+            { id: 16, radical: "孛", pinyin: "bèi", characters: ["孛", "𦫛", "䪬", "馞", "哱", "誖", "悖", "挬", "脖", "侼", "㛘", "𥩾", "鵓", "𩣡", "𩷚", "桲", "𥹸", "𪌰", "浡", "㶿", "㫲", "𩗓", "𡋯", "郣", "綍", "𣭷", "餑", "𩱚", "勃", "㪍", "愂", "渤", "𢠜", "𦸦"] },
+            { id: 17, radical: "尼", pinyin: "ní", characters: ["尼", "眤", "呢", "䛏", "𣢞", "怩", "𢘒", "抳", "迡", "跜", "妮", "痆", "狔", "䝚", "蚭", "柅", "秜", "𪏸", "昵", "坭", "屔", "𨋗", "旎", "𩚯", "鈮", "泥", "苨", "𣐉", "𠱟", "𧩴", "𡳭", "𦰫", "埿", "𩋪"] },
+            { id: 18, radical: "矢", pinyin: "shǐ", characters: ["矢", "𠂕", "䀢", "聅", "䛈", "鴙", "䒨", "鉃", "笶", "知", "雉", "彘", "𡱁", "𢔊", "踟", "痴", "蜘", "䝷", "䣽", "鼅", "智", "䚐", "潪", "𣉻", "𥏼", "𥏾", "𤂥", "𤁰", "𩻼", "璏", "𨢮", "䵹", "薙", "䐅"] },
+            { id: 19, radical: "弟", pinyin: "dì", characters: ["弟", "𢦢", "睇", "䶏", "㖒", "悌", "挮", "递", "𨁃", "鬀", "娣", "𡥩", "鵜", "𨿘", "𧳋", "𧋘", "鮷", "𦯔", "梯", "祶", "涕", "珶", "䑯", "䬾", "銻", "豑", "𤭌", "第", "剃", "罤", "稊", "綈", "蕛", "𦌢"] },
+            { id: 20, radical: "次", pinyin: "cì", characters: ["次", "恣", "𢫴", "趑", "䯸", "佽", "姿", "𣣌", "䳐", "𧊒", "茨", "粢", "𣳩", "䨏", "垐", "絘", "餈", "瓷", "𦈱", "咨", "資", "䪡", "𩐒", "𩐋", "𧾒", "𡳠", "蠀", "薋", "䆅", "澬", "𩆂", "諮", "楶", "𩜴"] },
+            
+            // 关卡5
+            { id: 21, radical: "㞢", pinyin: "zhī", characters: ["寺", "詩", "恃", "持", "歭", "跱", "痔", "𪀔", "特", "鼭", "㭙", "秲", "洔", "畤", "峙", "庤", "䦙", "等", "䝰", "待", "邿", "時", "侍", "㞢", "旹", "峕", "寺", "鰣", "蒔", "榯", "塒", "偫", "𤲵", "㣥"] },
+            { id: 22, radical: "侯", pinyin: "hóu", characters: ["侯", "矦", "睺", "𧩨", "𣣠", "𢜵", "䫛", "候", "𠋫", "瘊", "䳧", "翭", "猴", "䗔", "鯸", "葔", "㮢", "糇", "𧯁", "𩃺", "堠", "𡹵", "鄇", "緱", "𥀃", "䙈", "帿", "餱", "鍭", "篌", "䂉", "䞀", "喉", "𪅺"] },
+            { id: 23, radical: "霝", pinyin: "líng", characters: ["霝", "霛", "㪮", "𩖊", "孁", "麢", "𧕅", "蘦", "櫺", "𩵀", "龗", "靇", "𩄀", "𩆈", "𩆜", "𤫊", "酃", "䡼", "𦫃", "醽", "𩆮", "𦉢", "𩆚", "靈", "𢺰", "𤣤", "𦏰", "𧖜", "欞", "𥤞", "爧", "䡿", "𦫊", "䉹"] },
+            { id: 24, radical: "𧷗", pinyin: "dú", characters: ["𧷗", "𧶠", "覿", "黷", "讀", "讟", "𢖏", "䢱", "殰", "儥", "嬻", "贕", "𩧈", "犢", "藚", "櫝", "𩴺", "瀆", "豄", "𨽍", "𥖿", "瓄", "𨏔", "續", "韇", "皾", "襩", "牘", "匵", "𦌷", "𠠠", "贖", "竇", "𤅋"] },
+            { id: 25, radical: "敫", pinyin: "jiǎo", characters: ["敫", "皦", "噭", "譥", "㰾", "憿", "㦘", "𢶡", "𢵿", "撽", "徼", "邀", "儌", "鸄", "獥", "䚫", "薂", "檄", "𣜥", "𥢹", "𩅢", "燩", "曒", "墽", "礉", "璬", "𡫀", "竅", "繳", "𦅾", "𢅎", "覈", "激", "𥨿"] },
+            
+            // 关卡6
+            { id: 26, radical: "翟", pinyin: "dí", characters: ["翟", "矅", "𤾫", "𣤩", "㪬", "䢰", "躍", "趯", "嬥", "㿑", "鸐", "㺟", "𤛹", "蠗", "藋", "櫂", "𥜔", "燿", "耀", "曜", "𨞩", "䌦", "𩱲", "籊", "戳", "擢", "濯", "䊮", "糴", "糶", "𧅛", "𧃔", "𥷘", "𩆸"] },
+            { id: 27, radical: "秋", pinyin: "qiū", characters: ["秋", "秌", "䎿", "啾", "愀", "揫", "揪", "鬏", "㾭", "鶖", "䨂", "鰍", "䵸", "𪛁", "萩", "楸", "湫", "煍", "𨍊", "䋺", "鞦", "㡑", "𥡤", "𥡱", "醔", "𨡲", "鍫", "鍬", "甃", "篍", "愁", "𠿈", "僽", "㵞"] },
+            { id: 28, radical: "㐱", pinyin: "zhěn", characters: ["㐱", "𠘱", "眕", "𧠝", "𪐲", "聄", "診", "𧦜", "𧦽", "抮", "跈", "趁", "趂", "䪾", "𩒉", "胗", "疹", "𤵜", "駗", "沴", "沵", "畛", "䂦", "珍", "珎", "軫", "紾", "袗", "飻", "鉁", "䝩", "殄", "餮"] },
+            { id: 29, radical: "員", pinyin: "yuán", characters: ["員", "𧶊", "員", "貟", "𪔅", "䚋", "𪏚", "𪏔", "韻", "愪", "損", "䫟", "䐣", "殞", "勛", "傊", "㜏", "𡤀", "𤸫", "鶰", "蒷", "溳", "霣", "䨶", "熉", "塤", "隕", "磒", "圓", "圎", "鄖", "縜", "篔", "𦔐"] },
+            { id: 30, radical: "列", pinyin: "liè", characters: ["列", "𧧋", "㤠", "挒", "迾", "趔", "䶛", "𣧿", "例", "姴", "㾐", "鴷", "𩢾", "䮋", "蛚", "鮤", "𩶽", "茢", "栵", "䅀", "洌", "烈", "颲", "𡊻", "㽝", "峛", "裂", "𧙩", "𢂥", "㡂", "冽", "銐", "𥁟"] },
+            
+            // 关卡7
+            { id: 31, radical: "坐", pinyin: "zuò", characters: ["坐", "𡋲", "睉", "𧨀", "挫", "趖", "𡯨", "髽", "脞", "侳", "㛗", "痤", "㭫", "㟇", "䂳", "𨛏", "𢒐", "𩛠", "銼", "𡎬", "剉", "矬", "座", "𥭭", "莝", "夎", "蓌", "遳", "𦹇", "𣖵", "𡎻", "𥲽", "𣹶"] },
+            { id: 32, radical: "爲", pinyin: "wéi", characters: ["爲", "為", "𦥮", "𥊪", "噅", "譌", "撝", "𧽶", "僞", "偽", "嬀", "媯", "𤺉", "㺔", "𧲄", "蟡", "𩻟", "𩴞", "潙", "溈", "㬙", "䧦", "䃣", "𢊯", "䦱", "寪", "鄬", "䈧", "䞈", "蔿", "蘤", "𤾸", "儰"] },
+            { id: 33, radical: "麗", pinyin: "lì", characters: ["麗", "矖", "䚕", "𧢮", "攦", "𣀷", "邐", "躧", "儷", "孋", "㿛", "鸝", "驪", "𧥖", "𧕯", "鱺", "䕻", "欐", "穲", "𥜰", "曬", "廲", "酈", "纚", "𩎉", "彲", "襹", "釃", "籭", "𠠫", "𦌿", "灑", "𥸗"] },
+            { id: 34, radical: "癸", pinyin: "guǐ", characters: ["癸", "𤼩", "𧡫", "聧", "𢜽", "䠏", "𦝢", "𠊾", "䳫", "騤", "猤", "𧍜", "𩹍", "楑", "𤬉", "湀", "暌", "鄈", "𢃯", "䤆", "鍨", "𥯫", "戣", "揆", "葵", "𦷡", "睽", "闋", "𧬧", "𤢑", "𦺕", "藈", "𦘍"] },
+            { id: 35, radical: "予", pinyin: "yǔ", characters: ["予", "𪐧", "忬", "抒", "伃", "妤", "魣", "芧", "杼", "𣏗", "沀", "䦽", "𤰩", "紓", "𡱣", "𢎻", "㐨", "㜿", "舒", "預", "豫", "序", "野", "𪅰", "𦺗", "𥳕", "𧐓", "𤍓", "墅", "蕷", "澦", "𤂻", "𦯅"] },
+            
+            // 关卡8
+            { id: 36, radical: "禺", pinyin: "yú", characters: ["禺", "喁", "愚", "顒", "齵", "腢", "髃", "偶", "媀", "𤸒", "𪃍", "𩤛", "𧍪", "鰅", "禑", "㷒", "堣", "隅", "嵎", "庽", "𨜖", "𦂕", "鍝", "㼴", "湡", "遇", "寓", "耦", "𢡎", "𥴪", "蕅", "䴁", "藕"] },
+            { id: 37, radical: "唐", pinyin: "táng", characters: ["唐", "赯", "搪", "膅", "傏", "鶶", "𤚫", "𧱵", "𪕹", "螗", "𩹶", "蓎", "榶", "糖", "禟", "溏", "煻", "𩘜", "塘", "䧜", "嵣", "磄", "瑭", "𨶈", "鄌", "𨍴", "䌅", "㲥", "餹", "醣", "鎕", "㼺", "篖"] },
+            { id: 38, radical: "卩", pinyin: "jié", characters: ["即", "唧", "𣣝", "𣢼", "揤", "𨂢", "䐚", "𪃹", "蝍", "鯽", "楖", "𥠈", "𤊵", "堲", "節", "㘉", "㦢", "擳", "癤", "蠞", "䲙", "櫛", "瀄", "㸅", "幯", "卩", "𢎛", "卪", "𠬨", "𢱄", "𡴺", "岊", "即", "卽"] },
+            { id: 39, radical: "詹", pinyin: "zhān", characters: ["詹", "瞻", "聸", "噡", "舚", "譫", "憺", "擔", "䠨", "膽", "儋", "𪆻", "蟾", "薝", "檐", "䄡", "澹", "曕", "㙴", "𨼮", "䃫", "韂", "䪜", "襜", "幨", "𩟋", "甔", "簷", "贍", "黵", "䦲", "𥸣", "𣡞"] },
+            { id: 40, radical: "甲", pinyin: "jiǎ", characters: ["甲", "呷", "䛅", "𣢗", "𢘉", "押", "𨒇", "𧿵", "胛", "鴨", "翈", "狎", "柙", "𦾏", "炠", "岬", "𥑐", "玾", "㕅", "庘", "䆘", "㘡", "𩉾", "𩚲", "鉀", "笚", "匣", "閘", "𧆥", "𤲍", "筪", "𨆇", "𣘭"] },
+            
+            // 关卡9
+            { id: 41, radical: "𦐇", pinyin: "tà", characters: ["𦐇", "𠹥", "𦧭", "𧪦", "搨", "𢴄", "遢", "蹋", "傝", "𩥑", "鰨", "鮙", "𦶑", "榻", "禢", "溻", "塌", "䑽", "䌈", "𩌇", "毾", "䪚", "褟", "𩝣", "鎉", "𤭼", "䈳", "𠞈", "闒", "𧮑", "躢", "𤒻", "𡓲"] },
+            { id: 42, radical: "卓", pinyin: "zhuō", characters: ["卓", "㔬", "𠤞", "𥇍", "啅", "悼", "掉", "逴", "踔", "趠", "𡯴", "倬", "婥", "鵫", "䮓", "㹿", "𧣺", "𧳝", "棹", "𥢔", "淖", "晫", "䂽", "𨌬", "䑲", "繛", "鋽", "䈇", "罩", "焯", "綽", "㷹", "羄"] },
+            { id: 43, radical: "孚", pinyin: "fú", characters: ["孚", "𤓽", "𧠾", "哹", "捊", "䞯", "脬", "殍", "俘", "䳕", "孵", "𤙤", "蜉", "䱐", "莩", "桴", "稃", "粰", "䴸", "𩳎", "𡦄", "䨗", "烰", "垺", "𥒫", "琈", "郛", "艀", "㲗", "筟", "罦", "浮", "𥰛"] },
+            { id: 44, radical: "彥", pinyin: "yàn", characters: ["產", "㦃", "摌", "𨄉", "𪙞", "䐮", "𩥮", "㹌", "薩", "㯆", "䊲", "𥽽", "𥽱", "滻", "嵼", "鏟", "簅", "剷", "彥", "彥", "彦", "喭", "諺", "遃", "𩠪", "顏", "顔", "齴", "偐", "楌", "嵃", "𨩱", "產", "産"] },
+            { id: 45, radical: "爰", pinyin: "yuán", characters: ["爰", "䁔", "𧡩", "喛", "愋", "援", "𩔃", "䐘", "𠋠", "媛", "鶢", "𦑛", "猨", "蝯", "鰀", "楥", "湲", "㬊", "𤲫", "嵈", "瑗", "緩", "𦅻", "褑", "鍰", "䈠", "暖", "煖", "諼", "𤀣", "蕿", "蘐"] },
+            
+            // 关卡10
+            { id: 46, radical: "剌", pinyin: "là", characters: ["剌", "𥈙", "喇", "揧", "𪘼", "瘌", "鵣", "蝲", "䓶", "楋", "𥻃", "𥻌", "㻝", "𢉨", "𢈠", "𢃴", "賴", "𡃤", "懶", "攋", "嬾", "癩", "𪈐", "獺", "䲚", "藾", "䄤", "瀨", "瀬", "㸊", "襰", "籟"] },
+            { id: 47, radical: "截", pinyin: "jié", characters: ["截", "𢧵", "𡁶", "㘍", "擮", "䟌", "𧾢", "䰏", "𩯰", "䶪", "𪙻", "𡣯", "𤻛", "𤻵", "𪇲", "䘁", "𧓷", "蠘", "𧕾", "蠽", "䕙", "𦿐", "𥣩", "㵶", "𤁢", "嶻", "巀", "𧞛", "𧞩", "𩟙", "𩟦", "䥫"] },
+            { id: 48, radical: "畢", pinyin: "bì", characters: ["畢", "𤲃", "𧫤", "㪤", "蹕", "䟆", "𠌫", "𡠚", "𤹝", "鷝", "𩺷", "蓽", "㮿", "𥛘", "魓", "滭", "熚", "䬛", "𡻞", "㻫", "縪", "鞸", "韠", "𥀕", "饆", "𨢡", "㓖", "鏎", "篳", "𥴂", "罼", "彃"] },
+            { id: 49, radical: "與", pinyin: "yǔ", characters: ["與", "譽", "歟", "㦛", "𧾚", "䑂", "㒜", "嬩", "鸒", "𪇬", "𩁕", "𩦡", "㺞", "𦏜", "𪋮", "鱮", "藇", "𣝑", "穥", "㵰", "𡒊", "嶼", "礜", "璵", "𨣦", "𨮖", "籅", "𥎗", "旟", "轝", "㶛", "𤄕"] },
+            { id: 50, radical: "巴", pinyin: "bā", characters: ["巴", "吧", "把", "爬", "跁", "𩨜", "妑", "𥩙", "疤", "𧣃", "豝", "羓", "蚆", "𧎱", "芭", "杷", "𥝧", "𨊹", "舥", "靶", "㿬", "帊", "鈀", "笆", "弝", "耙", "爸", "皅", "琶", "𧑡", "潖", "葩"] },
+
+
+            // 关卡11
+            { id: 51, radical: "玄", pinyin: "xuán", characters: ["玄", "眩", "弦", "舷", "炫"] },
+            { id: 52, radical: "甘", pinyin: "gān", characters: ["甘", "柑", "泔", "钳", "酣"] },
+            { id: 53, radical: "介", pinyin: "jiè", characters: ["介", "界", "芥", "尬", "阶"] },
+            { id: 54, radical: "才", pinyin: "cái", characters: ["才", "材", "财", "豺", "在"] },
+            { id: 55, radical: "勺", pinyin: "sháo", characters: ["勺", "芍", "钓", "酌", "灼"] },
+            
+            // 关卡12
+            { id: 56, radical: "堇", pinyin: "jǐn", characters: ["堇", "谨", "勤", "瑾", "觐"] },
+            { id: 57, radical: "危", pinyin: "wēi", characters: ["危", "诡", "跪", "桅", "脆"] },
+            { id: 58, radical: "弁", pinyin: "biàn", characters: ["弁", "拚", "昪", "笲", "鴘"] },
+            { id: 59, radical: "覃", pinyin: "tán", characters: ["覃", "谭", "潭", "潭", "簟"] },
+            { id: 60, radical: "農", pinyin: "nóng", characters: ["農", "浓", "脓", "侬", "穠"] },
+            
+            // 关卡13
+            { id: 61, radical: "尗", pinyin: "shū", characters: ["叔", "淑", "寂", "督", "椒"] },
+            { id: 62, radical: "䍃", pinyin: "yáo", characters: ["摇", "遥", "瑶", "谣", "鹞"] },
+            { id: 63, radical: "萬", pinyin: "wàn", characters: ["万", "厉", "迈", "励", "砺"] },
+            { id: 64, radical: "賁", pinyin: "bēn", characters: ["奔", "喷", "愤", "墳", "豶"] },
+            { id: 65, radical: "蒦", pinyin: "huò", characters: ["获", "护", "擭", "濩", "嚄"] },
+            
+            // 关卡14
+            { id: 66, radical: "菐", pinyin: "pú", characters: ["扑", "璞", "僕", "濮", "蹼"] },
+            { id: 67, radical: "夂", pinyin: "zhǐ", characters: ["冬", "终", "佟", "疼", "鼕"] },
+            { id: 68, radical: "𠬶", pinyin: "qīn", characters: ["侵", "寝", "浸", "锓", "骎"] },
+            { id: 69, radical: "芻", pinyin: "chú", characters: ["刍", "雏", "皱", "趋", "诌"] },
+            { id: 70, radical: "豈", pinyin: "qǐ", characters: ["岂", "凯", "恺", "皑", "觊"] },
+            
+            // 关卡15
+            { id: 71, radical: "睪", pinyin: "yì", characters: ["睪", "译", "绎", "驿", "铎"] },
+            { id: 72, radical: "复", pinyin: "fù", characters: ["复", "腹", "覆", "馥", "蝮"] },
+            { id: 73, radical: "𦭝", pinyin: "miè", characters: ["蔑", "篾", "蠛", "懱", "衊"] },
+            { id: 74, radical: "奚", pinyin: "xī", characters: ["奚", "溪", "蹊", "雞", "鷄"] },
+            { id: 75, radical: "虍", pinyin: "hū", characters: ["虎", "虚", "虏", "虑", "虞"] },
+            
+            // 关卡16
+            { id: 76, radical: "叚", pinyin: "jiǎ", characters: ["假", "暇", "霞", "瑕", "蝦"] },
+            { id: 77, radical: "烏", pinyin: "wū", characters: ["乌", "呜", "坞", "邬", "钨"] },
+            { id: 78, radical: "需", pinyin: "xū", characters: ["需", "儒", "濡", "懦", "蠕"] },
+            { id: 79, radical: "疋", pinyin: "pǐ", characters: ["疋", "胥", "疏", "楚", "蔬"] },
+            { id: 80, radical: "青", pinyin: "qīng", characters: ["青", "清", "晴", "情", "请"] },
+            
+            // 关卡17
+            { id: 81, radical: "包", pinyin: "bāo", characters: ["包", "抱", "饱", "胞", "苞"] },
+            { id: 82, radical: "方", pinyin: "fāng", characters: ["方", "放", "房", "防", "访"] },
+            { id: 83, radical: "分", pinyin: "fēn", characters: ["分", "份", "芬", "纷", "粉"] },
+            { id: 84, radical: "工", pinyin: "gōng", characters: ["工", "功", "攻", "贡", "空"] },
+            { id: 85, radical: "古", pinyin: "gǔ", characters: ["古", "故", "固", "姑", "估"] },
+            
+            // 关卡18
+            { id: 86, radical: "化", pinyin: "huà", characters: ["化", "花", "华", "货", "哗"] },
+            { id: 87, radical: "交", pinyin: "jiāo", characters: ["交", "校", "较", "饺", "狡"] },
+            { id: 88, radical: "可", pinyin: "kě", characters: ["可", "河", "何", "哥", "歌"] },
+            { id: 89, radical: "良", pinyin: "liáng", characters: ["良", "粮", "狼", "浪", "朗"] },
+            { id: 90, radical: "令", pinyin: "lìng", characters: ["令", "铃", "领", "零", "龄"] },
+            
+            // 关卡19
+            { id: 91, radical: "金", pinyin: "jīn", characters: ["金", "鑫", "淦", "崟", "碒", "䋮", "錦", "䘳", "鑫", "欽", "撳", "嶔", "䃢", "廞", "㕋"] },
+            { id: 92, radical: "劦", pinyin: "xié", characters: ["劦", "協", "恊", "勰", "拹", "姭", "䅄", "䬅", "珕", "脅", "脇", "嗋", "愶", "搚", "熁"] },
+            { id: 93, radical: "臿", pinyin: "chā", characters: ["臿", "喢", "䛽", "歃", "插", "敮", "偛", "㛼", "㞚", "䮢", "䅤", "鍤", "牐", "䙄", "疀"] },
+            { id: 94, radical: "夭", pinyin: "yāo", characters: ["夭", "妖", "祅", "宎", "穾", "飫", "芺", "沃", "笑", "咲", "㗛", "鋈", "仸", "訞", "殀"] },
+            { id: 95, radical: "舟", pinyin: "zhōu", characters: ["舟", "侜", "鵃", "䎇", "洀", "烐", "珘", "輈", "矪", "受", "㖟", "䛵", "授", "涭", "綬"] },
+            
+            // 关卡20
+            { id: 96, radical: "肅", pinyin: "sù", characters: ["肅", "嘯", "歗", "㩋", "㪩", "䐹", "鷫", "䎘", "驌", "蟰", "鱐", "橚", "潚", "熽", "璛"] },
+            { id: 97, radical: "求", pinyin: "qiú", characters: ["求", "救", "逑", "䟵", "脙", "殏", "俅", "觩", "蛷", "鯄", "莍", "梂", "球", "絿", "毬"] },
+            { id: 98, radical: "倝", pinyin: "gàn", characters: ["倝", "鶾", "雗", "䮧", "螒", "榦", "㲦", "幹", "韓", "翰", "乾", "擀", "澣", "簳", "㨴"] },
+            { id: 99, radical: "寒", pinyin: "hán", characters: ["寒", "䞿", "鶱", "蹇", "謇", "騫", "寋", "搴", "褰", "攓", "䙭", "鑳", "𠽱", "𢷘", "藆"] },
+            { id: 100, radical: "彖", pinyin: "tuàn", characters: ["彖", "䛹", "掾", "腞", "鶨", "猭", "蝝", "䱲", "椽", "湪", "堟", "䧘", "瑑", "褖", "篆"] },
+            
+            // 关卡21
+            { id: 101, radical: "反", pinyin: "fǎn", characters: ["反", "叛", "眅", "扳", "返", "魬", "板", "粄", "汳", "昄", "坂", "阪", "畈", "䡊", "舨"] },
+            { id: 102, radical: "見", pinyin: "jiàn", characters: ["見", "睍", "哯", "誢", "悓", "挸", "䏹", "俔", "蜆", "莧", "梘", "粯", "麲", "涀", "䨘"] },
+            { id: 103, radical: "侖", pinyin: "lún", characters: ["侖", "睔", "論", "惀", "掄", "踚", "腀", "蜦", "鯩", "菕", "棆", "淪", "埨", "陯", "崘"] },
+            { id: 104, radical: "帶", pinyin: "dài", characters: ["帶", "㦅", "摕", "遰", "蹛", "䠠", "僀", "㿃", "螮", "蔕", "㯂", "墆", "嵽", "廗", "艜"] },
+            { id: 105, radical: "彗", pinyin: "huì", characters: ["彗", "嘒", "㨹", "槥", "熭", "暳", "轊", "鏏", "䵻", "篲", "蔧", "慧", "雪", "䨮", "嚖"] },
+            
+            // 关卡22
+            { id: 106, radical: "骨", pinyin: "gǔ", characters: ["骨", "嗗", "愲", "搰", "尳", "顝", "䶤", "䯇", "㾶", "鶻", "䮩", "猾", "螖", "䱻", "蓇"] },
+            { id: 107, radical: "夷", pinyin: "yí", characters: ["夷", "眱", "咦", "恞", "跠", "胰", "侇", "姨", "痍", "鴺", "䮊", "羠", "蛦", "鮧", "荑"] },
+            { id: 108, radical: "希", pinyin: "xī", characters: ["希", "睎", "唏", "䛥", "欷", "悕", "脪", "俙", "㾙", "鵗", "䮎", "狶", "豨", "莃", "桸"] },
+            { id: 109, radical: "思", pinyin: "sī", characters: ["思", "恖", "諰", "愢", "揌", "䰄", "顋", "腮", "偲", "騦", "䚡", "葸", "楒", "禗", "㴓"] },
+            { id: 110, radical: "臾", pinyin: "yú", characters: ["臾", "㬰", "諛", "䛕", "㥚", "腴", "瘐", "萸", "茰", "楰", "㳛", "㻀", "斞", "庾", "㺄"] },
+            
+            // 关卡23
+            { id: 111, radical: "光", pinyin: "guāng", characters: ["光", "灮", "咣", "恍", "胱", "䯑", "侊", "駫", "觥", "茪", "桄", "洸", "垙", "硄", "珖"] },
+            { id: 112, radical: "音", pinyin: "yīn", characters: ["音", "黯", "喑", "諳", "愔", "揞", "腤", "瘖", "鶕", "䅧", "䜾", "湆", "暗", "䬓", "隌"] },
+            { id: 113, radical: "匊", pinyin: "jū", characters: ["匊", "諊", "㥌", "掬", "踘", "趜", "鵴", "㹼", "䗇", "䱡", "菊", "椈", "粷", "麴", "淗"] },
+            { id: 114, radical: "疌", pinyin: "jié", characters: ["疌", "睫", "啑", "誱", "捷", "徢", "踕", "脻", "倢", "婕", "蜨", "萐", "㫸", "崨", "寁"] },
+            { id: 115, radical: "立", pinyin: "lì", characters: ["立", "趇", "䶘", "鴗", "柆", "粒", "雴", "颯", "岦", "砬", "㕇", "笠", "苙", "泣", "位"] },
+            
+            // 关卡24
+            { id: 116, radical: "沓", pinyin: "tà", characters: ["沓", "䵬", "誻", "㧺", "踏", "㛥", "㹺", "䓠", "㭼", "涾", "䂿", "鞜", "錔", "䈋", "䍝"] },
+            { id: 117, radical: "少", pinyin: "shǎo", characters: ["少", "吵", "訬", "抄", "仯", "妙", "觘", "䖢", "䒚", "杪", "秒", "麨", "炒", "玅", "鈔"] },
+            { id: 118, radical: "免", pinyin: "miǎn", characters: ["免", "睌", "悗", "挽", "脕", "俛", "㝃", "鮸", "莬", "浼", "晚", "晩", "輓", "絻", "鞔"] },
+            { id: 119, radical: "算", pinyin: "suàn", characters: ["算", "䵵", "篹", "䉵", "匴", "纂", "㔍", "篡", "簒", "攥", "繤", "䥷", "𨰉", "𣃍", "𢸥"] },
+            { id: 120, radical: "閒", pinyin: "jiān", characters: ["閒", "瞯", "瞷", "㗴", "譋", "憪", "撊", "鬜", "鬝", "僩", "僴", "嫺", "癇", "癎", "鷳"] },
+            
+            // 关卡25
+            { id: 121, radical: "因", pinyin: "yīn", characters: ["因", "咽", "欭", "㧢", "胭", "姻", "駰", "茵", "栶", "秵", "洇", "烟", "氤", "絪", "恩"] },
+            { id: 122, radical: "垔", pinyin: "yīn", characters: ["垔", "䚈", "黫", "㖶", "諲", "歅", "湮", "堙", "陻", "闉", "鄄", "禋", "煙", "甄", "薽"] },
+            { id: 123, radical: "尊", pinyin: "zūn", characters: ["尊", "噂", "譐", "撙", "遵", "蹲", "僔", "壿", "竴", "鷷", "鱒", "樽", "澊", "燇", "嶟"] },
+            { id: 124, radical: "胃", pinyin: "wèi", characters: ["胃", "䁌", "喟", "謂", "㥜", "媦", "猬", "彙", "蝟", "渭", "煟", "䬑", "緭", "𩋤", "𦳢"] },
+            { id: 125, radical: "畏", pinyin: "wèi", characters: ["畏", "喂", "揋", "㞇", "腲", "㱬", "偎", "猥", "鰃", "葨", "椳", "渨", "煨", "隈", "嵔"] },
+            
+            // 关卡26
+            { id: 126, radical: "里", pinyin: "lǐ", characters: ["里", "釐", "哩", "悝", "俚", "娌", "狸", "鯉", "梩", "理", "厘", "艃", "䋥", "裏", "裡"] },
+            { id: 127, radical: "冓", pinyin: "gòu", characters: ["冓", "覯", "㗕", "講", "搆", "遘", "顜", "䐟", "媾", "溝", "煹", "䃓", "鞲", "韝", "褠"] },
+            { id: 128, radical: "兄", pinyin: "xiōng", characters: ["兄", "眖", "怳", "況", "㫛", "岲", "軦", "况", "貺", "竟", "摬", "傹", "獍", "䔔", "樈"] },
+            { id: 129, radical: "亙", pinyin: "gèn", characters: ["亙", "恆", "揯", "搄", "䱭", "㮓", "暅", "堩", "緪", "縆", "姮", "絚", "恆", "𢛢", "恒"] },
+            { id: 130, radical: "平", pinyin: "píng", characters: ["平", "評", "怦", "抨", "胓", "伻", "駍", "䍬", "䶄", "蚲", "鮃", "枰", "泙", "坪", "砰"] },
+            
+            // 关卡27
+            { id: 131, radical: "戚", pinyin: "qī", characters: ["戚", "㗤", "嘁", "慽", "摵", "顣", "傶", "槭", "墄", "磩", "縬", "鏚", "慼", "蹙", "䠞"] },
+            { id: 132, radical: "曹", pinyin: "cáo", characters: ["曹", "䏆", "嘈", "慒", "傮", "螬", "蓸", "槽", "糟", "漕", "㷮", "嶆", "艚", "褿", "醩"] },
+            { id: 133, radical: "丑", pinyin: "chǒu", characters: ["丑", "䛝", "忸", "扭", "衄", "妞", "䖡", "杻", "粈", "沑", "㺲", "紐", "鈕", "䂇", "狃"] },
+            { id: 134, radical: "官", pinyin: "guān", characters: ["官", "悹", "捾", "逭", "倌", "婠", "痯", "菅", "棺", "涫", "琯", "䦡", "舘", "輨", "綰"] },
+            { id: 135, radical: "般", pinyin: "bān", characters: ["般", "搫", "搬", "䰉", "媻", "瘢", "螌", "槃", "磐", "縏", "鞶", "幋", "鎜", "䈲", "盤"] },
+            
+            // 关卡28
+            { id: 136, radical: "半", pinyin: "bàn", characters: ["半", "眫", "拌", "跘", "頖", "胖", "伴", "姅", "柈", "泮", "坢", "畔", "絆", "靽", "袢"] },
+            { id: 137, radical: "典", pinyin: "diǎn", characters: ["典", "㥏", "捵", "敟", "腆", "婰", "痶", "淟", "晪", "碘", "琠", "賟", "殿", "澱", "壂"] },
+            { id: 138, radical: "申", pinyin: "shēn", characters: ["申", "眒", "呻", "訷", "抻", "胂", "柛", "神", "䰠", "電", "珅", "紳", "伸", "敒", "㔤"] },
+            { id: 139, radical: "先", pinyin: "xiān", characters: ["先", "詵", "㪇", "跣", "侁", "姺", "駪", "毨", "冼", "銑", "筅", "兟", "洗", "鍌", "箲"] },
+            { id: 140, radical: "𦘔", pinyin: "jìn", characters: ["𦘔", "津", "㶳", "珒", "賮", "盡", "䀆", "儘", "嬧", "藎", "濜", "壗", "贐", "燼", "葏"] },
+            
+            // 关卡29
+            { id: 141, radical: "末", pinyin: "mò", characters: ["末", "眜", "抹", "妺", "茉", "枺", "秣", "粖", "沫", "昩", "砞", "靺", "韎", "袜", "帓"] },
+            { id: 142, radical: "朮", pinyin: "shù", characters: ["朮", "术", "訹", "怵", "䟣", "㾁", "沭", "炢", "絉", "鉥", "秫", "述", "術", "蒁", "䢤"] },
+            { id: 143, radical: "𣎆", pinyin: "luǒ", characters: ["𣎆", "鸁", "驘", "蠃", "臝", "羸", "䇔", "𢺑", "㱻", "䯁", "𧄿", "䌴", "𨰠", "𢺆", "𨰊"] },
+            { id: 144, radical: "沙", pinyin: "shā", characters: ["沙", "髿", "魦", "鯊", "莎", "桬", "砂", "硰", "紗", "裟", "䤬", "挱", "挲", "娑", "桫"] },
+            { id: 145, radical: "医", pinyin: "yī", characters: ["殹", "瞖", "黳", "㗨", "嫛", "㿄", "鷖", "毉", "瑿", "繄", "醫", "贀", "翳", "医", "嫕"] },
+            
+            // 关卡30
+            { id: 146, radical: "巳", pinyin: "sì", characters: ["巳", "㰝", "攺", "起", "祀", "汜", "圯", "戺", "釲", "异", "巸", "媐", "熙", "煕", "㜯"] },
+            { id: 147, radical: "力", pinyin: "lì", characters: ["力", "忇", "扐", "肋", "鳨", "艻", "朸", "氻", "屴", "玏", "釛", "竻", "仂", "阞", "勒"] },
+            { id: 148, radical: "𡴆", pinyin: "lù", characters: ["坴", "睦", "踛", "勎", "鵱", "鯥", "稑", "淕", "䡜", "㓐", "陸", "𡴆", "圥", "鼀", "𨽰"] },
+            { id: 149, radical: "執", pinyin: "zhí", characters: ["執", "謺", "慹", "摯", "䠟", "鷙", "騺", "蟄", "䲀", "蓻", "瓡", "墊", "㝪", "縶", "褺"] },
+            { id: 150, radical: "樂", pinyin: "lè", characters: ["樂", "䁻", "皪", "嚛", "擽", "躒", "䟏", "櫟", "濼", "爍", "礫", "瓅", "轢", "纅", "藥"] },
+            
+            // 关卡31
+            { id: 151, radical: "气", pinyin: "qì", characters: ["气", "㰟", "忾", "㧉", "芞", "汽", "刏", "忥", "氣", "愾", "㑶", "犔", "滊", "霼", "熂"] },
+            { id: 152, radical: "妥", pinyin: "tuǒ", characters: ["妥", "哸", "挼", "㞂", "脮", "骽", "娞", "鵎", "鮾", "荽", "桵", "䅑", "㼏", "浽", "綏"] },
+            { id: 153, radical: "戶", pinyin: "hù", characters: ["戶", "頋", "鳸", "芦", "淭", "昈", "帍", "戽", "雇", "扈", "所", "滬", "熩", "簄", "顧"] },
+            { id: 154, radical: "宁", pinyin: "zhù", characters: ["宁", "眝", "詝", "㤖", "佇", "竚", "羜", "苧", "柠", "泞", "坾", "貯", "㿾", "紵", "䋖"] },
+            { id: 155, radical: "豦", pinyin: "jù", characters: ["豦", "噱", "懅", "據", "躆", "䟊", "臄", "勮", "㯫", "澽", "璩", "醵", "鐻", "劇", "遽"] },
+            
+            // 关卡32
+            { id: 156, radical: "赤", pinyin: "chì", characters: ["赤", "赩", "哧", "赥", "捇", "䞰", "浾", "焃", "郝", "䦝", "赦", "赫", "嚇", "爀", "螫"] },
+            { id: 157, radical: "聶", pinyin: "niè", characters: ["聶", "囁", "讘", "懾", "攝", "躡", "顳", "㒤", "䯀", "䝕", "欇", "灄", "㸎", "襵", "鑷"] },
+            { id: 158, radical: "耴", pinyin: "yì", characters: ["耴", "䎲", "㤴", "踂", "䳖", "鮿", "㭯", "輒", "輙", "銸", "𤭗", "𡷝", "𣹵", "𢬴", "𨓊"] },
+            { id: 159, radical: "乏", pinyin: "fá", characters: ["乏", "眨", "姂", "疺", "鴔", "柉", "砭", "窆", "貶", "覂", "䒦", "泛", "㴀", "𥁷", "𠰏"] },
+            { id: 160, radical: "暴", pinyin: "bào", characters: ["暴", "嚗", "謈", "懪", "儤", "犦", "瀑", "爆", "曝", "㿺", "襮", "䤖", "㬥", "曓", "𣉱"] },
+            
+            // 关卡33
+            { id: 161, radical: "毛", pinyin: "máo", characters: ["毛", "眊", "覒", "髦", "耄", "毣", "㲝", "芼", "枆", "秏", "酕", "㲏", "耗", "旄", "𣹪"] },
+            { id: 162, radical: "全", pinyin: "quán", characters: ["全", "詮", "恮", "拴", "跧", "佺", "痊", "駩", "牷", "栓", "洤", "烇", "硂", "絟", "銓"] },
+            { id: 163, radical: "歺", pinyin: "è", characters: ["歺", "歹", "㱚", "粲", "殩", "薒", "澯", "燦", "璨", "㛑", "餐", "䬸", "𣦼", "𢂺", "𥹏"] },
+            { id: 164, radical: "斯", pinyin: "sī", characters: ["斯", "嘶", "撕", "㒋", "蟴", "蟖", "䔮", "澌", "燍", "厮", "廝", "䡳", "凘", "鐁", "㽄"] },
+            { id: 165, radical: "崔", pinyin: "cuī", characters: ["崔", "皠", "嗺", "慛", "摧", "膗", "催", "槯", "漼", "璀", "繀", "凗", "鏙", "𦉎", "𤗯"] },
+            
+            // 关卡34
+            { id: 166, radical: "乎", pinyin: "hū", characters: ["乎", "呼", "苸", "泘", "垀", "軤", "虖", "嘑", "謼", "歑", "嫭", "滹", "㙤", "㻯", "罅"] },
+            { id: 167, radical: "矣", pinyin: "yǐ", characters: ["矣", "唉", "誒", "欸", "挨", "逘", "娭", "竢", "騃", "㸻", "涘", "㶼", "埃", "俟", "𢰇"] },
+            { id: 168, radical: "賏", pinyin: "yīng", characters: ["嬰", "嚶", "攖", "孾", "癭", "鸚", "蘡", "櫻", "瀴", "瓔", "纓", "䙬", "賏", "譻", "鸎"] },
+            { id: 169, radical: "矍", pinyin: "jué", characters: ["矍", "䂄", "戄", "攫", "躩", "玃", "貜", "蠼", "䣤", "钁", "彏", "矡", "籰", "篗", "𥸘"] },
+            { id: 170, radical: "益", pinyin: "yì", characters: ["益", "嗌", "謚", "搤", "齸", "膉", "鷁", "貖", "螠", "榏", "溢", "隘", "艗", "縊", "鎰"] },
+            
+            // 关卡35
+            { id: 171, radical: "直", pinyin: "zhí", characters: ["直", "㨁", "徝", "殖", "值", "犆", "植", "稙", "淔", "埴", "置", "惪", "㥁", "德", "㯰"] },
+            { id: 172, radical: "則", pinyin: "zé", characters: ["則", "惻", "側", "鰂", "萴", "測", "崱", "廁", "厠", "鍘", "賊", "蠈", "鱡", "𦽒", "𣿐"] },
+            { id: 173, radical: "鹿", pinyin: "lù", characters: ["鹿", "摝", "蹗", "騼", "螰", "蔍", "樚", "麓", "漉", "熝", "䃙", "鄜", "轆", "鏕", "簏"] },
+            { id: 174, radical: "豖", pinyin: "chù", characters: ["豖", "啄", "諑", "㧻", "瘃", "椓", "涿", "㙇", "琢", "剢", "𧰵", "𣫔", "𣂡", "𢽚", "𧼙"] },
+            { id: 175, radical: "壬", pinyin: "rén", characters: ["任", "䛘", "恁", "拰", "鵀", "荏", "栠", "絍", "袵", "餁", "賃", "壬", "䏕", "妊", "紝"] },
+            
+            // 关卡36
+            { id: 176, radical: "函", pinyin: "hán", characters: ["函", "圅", "顄", "蜬", "菡", "㮀", "䨡", "䘶", "䤴", "䈄", "涵", "𥲌", "𦥖", "𩔞", "𡣔"] },
+            { id: 177, radical: "冃", pinyin: "mào", characters: ["冒", "勖", "勗", "媢", "蝐", "萺", "瑁", "艒", "帽", "賵", "冃", "㒻", "㺺", "𠕬", "𡈘"] },
+            { id: 178, radical: "妟", pinyin: "yàn", characters: ["匽", "愝", "揠", "躽", "偃", "鶠", "鼴", "蝘", "鰋", "椻", "堰", "郾", "褗", "妟", "宴"] },
+            { id: 179, radical: "建", pinyin: "jiàn", characters: ["建", "睷", "揵", "徤", "踺", "健", "騝", "犍", "楗", "湕", "鞬", "毽", "旔", "腱", "鍵"] },
+            { id: 180, radical: "間", pinyin: "jiān", characters: ["間", "覸", "覵", "蕳", "蕑", "澗", "磵", "襇", "鐧", "簡", "㶕", "𧟉", "𪙨", "㵎", "襉"] },
+            
+            // 关卡37
+            { id: 181, radical: "𢽳", pinyin: "sàn", characters: ["散", "撒", "糤", "霰", "繖", "饊", "鏾", "䉈", "潸", "𢽳", "㪔", "䵇", "𢿱", "𢿨", "𩀼"] },
+            { id: 182, radical: "刃", pinyin: "rèn", characters: ["刃", "訒", "肕", "仞", "牣", "杒", "軔", "紉", "韌", "㠴", "忍", "認", "䏰", "荵", "涊"] },
+            { id: 183, radical: "曳", pinyin: "yè", characters: ["曳", "曵", "䛖", "拽", "齥", "栧", "䄿", "洩", "絏", "䇩", "𢘽", "𡜄", "㹭", "𡲭", "𩊒"] },
+            { id: 184, radical: "日", pinyin: "rì", characters: ["圼", "捏", "揑", "㘿", "陧", "隉", "涅", "湼", "日", "馹", "衵", "圼", "篞", "𨑨", "𢁯"] },
+            { id: 185, radical: "聿", pinyin: "yù", characters: ["聿", "𢘶", "茟", "硉", "銉", "律", "筆", "𠽩", "潷", "㻶", "𪑯", "葎", "嵂", "箻", "䢖"] },
+            
+            // 关卡38
+            { id: 186, radical: "吳", pinyin: "wú", characters: ["吳", "吴", "誤", "悞", "俁", "娛", "麌", "蜈", "茣", "祦", "鋘", "虞", "噳", "鸆", "澞"] },
+            { id: 187, radical: "父", pinyin: "fù", characters: ["父", "爸", "㕮", "䭸", "蚥", "布", "斧", "釜", "怖", "抪", "鈽", "𪂀", "䗄", "滏", "𧦞"] },
+            { id: 188, radical: "馬", pinyin: "mǎ", characters: ["馬", "傌", "媽", "㾺", "鷌", "獁", "螞", "鰢", "榪", "禡", "溤", "碼", "瑪", "罵", "駡"] },
+            { id: 189, radical: "兹", pinyin: "zī", characters: ["兹", "茲", "嗞", "孳", "鶿", "鷀", "螆", "鰦", "稵", "糍", "滋", "㽧", "嵫", "磁", "慈"] },
+            { id: 190, radical: "𡿧", pinyin: "zī", characters: ["甾", "䐉", "鶅", "鯔", "菑", "葘", "椔", "淄", "湽", "輜", "緇", "錙", "鍿", "䎩", "𡿧"] },
+            
+            // 关卡39
+            { id: 191, radical: "金", pinyin: "jīn", characters: ["金", "鑫", "淦", "崟", "碒", "䋮", "錦", "䘳", "鑫", "欽", "撳", "嶔", "䃢", "廞", "㕋"] },
+            { id: 192, radical: "劦", pinyin: "xié", characters: ["劦", "協", "恊", "勰", "拹", "姭", "䅄", "䬅", "珕", "脅", "脇", "嗋", "愶", "搚", "熁"] },
+            { id: 193, radical: "臿", pinyin: "chā", characters: ["臿", "喢", "䛽", "歃", "插", "敮", "偛", "㛼", "㞚", "䮢", "䅤", "鍤", "牐", "䙄", "疀"] },
+            { id: 194, radical: "夭", pinyin: "yāo", characters: ["夭", "妖", "祅", "宎", "穾", "飫", "芺", "沃", "笑", "咲", "㗛", "鋈", "仸", "訞", "殀"] },
+            { id: 195, radical: "舟", pinyin: "zhōu", characters: ["舟", "侜", "鵃", "䎇", "洀", "烐", "珘", "輈", "矪", "受", "㖟", "䛵", "授", "涭", "綬"] },
+            
+            // 关卡40
+            { id: 196, radical: "肅", pinyin: "sù", characters: ["肅", "嘯", "歗", "㩋", "㪩", "䐹", "鷫", "䎘", "驌", "蟰", "鱐", "橚", "潚", "熽", "璛"] },
+            { id: 197, radical: "求", pinyin: "qiú", characters: ["求", "救", "逑", "䟵", "脙", "殏", "俅", "觩", "蛷", "鯄", "莍", "梂", "球", "絿", "毬"] },
+            { id: 198, radical: "倝", pinyin: "gàn", characters: ["倝", "鶾", "雗", "䮧", "螒", "榦", "㲦", "幹", "韓", "翰", "乾", "擀", "澣", "簳", "㨴"] },
+            { id: 199, radical: "寒", pinyin: "hán", characters: ["寒", "䞿", "鶱", "蹇", "謇", "騫", "寋", "搴", "褰", "攓", "䙭", "鑳", "𠽱", "𢷘", "藆"] },
+            { id: 200, radical: "彖", pinyin: "tuàn", characters: ["彖", "䛹", "掾", "腞", "鶨", "猭", "蝝", "䱲", "椽", "湪", "堟", "䧘", "瑑", "褖", "篆"] },
+            
+            // 关卡41
+            { id: 201, radical: "反", pinyin: "fǎn", characters: ["反", "叛", "眅", "扳", "返", "魬", "板", "粄", "汳", "昄", "坂", "阪", "畈", "䡊", "舨"] },
+            { id: 202, radical: "見", pinyin: "jiàn", characters: ["見", "睍", "哯", "誢", "悓", "挸", "䏹", "俔", "蜆", "莧", "梘", "粯", "麲", "涀", "䨘"] },
+            { id: 203, radical: "侖", pinyin: "lún", characters: ["侖", "睔", "論", "惀", "掄", "踚", "腀", "蜦", "鯩", "菕", "棆", "淪", "埨", "陯", "崘"] },
+            { id: 204, radical: "帶", pinyin: "dài", characters: ["帶", "㦅", "摕", "遰", "蹛", "䠠", "僀", "㿃", "螮", "蔕", "㯂", "墆", "嵽", "廗", "艜"] },
+            { id: 205, radical: "彗", pinyin: "huì", characters: ["彗", "嘒", "㨹", "槥", "熭", "暳", "轊", "鏏", "䵻", "篲", "蔧", "慧", "雪", "䨮", "嚖"] },
+            
+            // 关卡42
+            { id: 206, radical: "骨", pinyin: "gǔ", characters: ["骨", "嗗", "愲", "搰", "尳", "顝", "䶤", "䯇", "㾶", "鶻", "䮩", "猾", "螖", "䱻", "蓇"] },
+            { id: 207, radical: "夷", pinyin: "yí", characters: ["夷", "眱", "咦", "恞", "跠", "胰", "侇", "姨", "痍", "鴺", "䮊", "羠", "蛦", "鮧", "荑"] },
+            { id: 208, radical: "希", pinyin: "xī", characters: ["希", "睎", "唏", "䛥", "欷", "悕", "脪", "俙", "㾙", "鵗", "䮎", "狶", "豨", "莃", "桸"] },
+            { id: 209, radical: "思", pinyin: "sī", characters: ["思", "恖", "諰", "愢", "揌", "䰄", "顋", "腮", "偲", "騦", "䚡", "葸", "楒", "禗", "㴓"] },
+            { id: 210, radical: "臾", pinyin: "yú", characters: ["臾", "㬰", "諛", "䛕", "㥚", "腴", "瘐", "萸", "茰", "楰", "㳛", "㻀", "斞", "庾", "㺄"] },
+            
+            // 关卡43
+            { id: 211, radical: "光", pinyin: "guāng", characters: ["光", "灮", "咣", "恍", "胱", "䯑", "侊", "駫", "觥", "茪", "桄", "洸", "垙", "硄", "珖"] },
+            { id: 212, radical: "音", pinyin: "yīn", characters: ["音", "黯", "喑", "諳", "愔", "揞", "腤", "瘖", "鶕", "䅧", "䜾", "湆", "暗", "䬓", "隌"] },
+            { id: 213, radical: "匊", pinyin: "jū", characters: ["匊", "諊", "㥌", "掬", "踘", "趜", "鵴", "㹼", "䗇", "䱡", "菊", "椈", "粷", "麴", "淗"] },
+            { id: 214, radical: "疌", pinyin: "jié", characters: ["疌", "睫", "啑", "誱", "捷", "徢", "踕", "脻", "倢", "婕", "蜨", "萐", "㫸", "崨", "寁"] },
+            { id: 215, radical: "立", pinyin: "lì", characters: ["立", "趇", "䶘", "鴗", "柆", "粒", "雴", "颯", "岦", "砬", "㕇", "笠", "苙", "泣", "位"] },
+            
+            // 关卡44
+            { id: 216, radical: "沓", pinyin: "tà", characters: ["沓", "䵬", "誻", "㧺", "踏", "㛥", "㹺", "䓠", "㭼", "涾", "䂿", "鞜", "錔", "䈋", "䍝"] },
+            { id: 217, radical: "少", pinyin: "shǎo", characters: ["少", "吵", "訬", "抄", "仯", "妙", "觘", "䖢", "䒚", "杪", "秒", "麨", "炒", "玅", "鈔"] },
+            { id: 218, radical: "免", pinyin: "miǎn", characters: ["免", "睌", "悗", "挽", "脕", "俛", "㝃", "鮸", "莬", "浼", "晚", "晩", "輓", "絻", "鞔"] },
+            { id: 219, radical: "算", pinyin: "suàn", characters: ["算", "䵵", "篹", "䉵", "匴", "纂", "㔍", "篡", "簒", "攥", "繤", "䥷", "𨰉", "𣃍", "𢸥"] },
+            { id: 220, radical: "閒", pinyin: "jiān", characters: ["閒", "瞯", "瞷", "㗴", "譋", "憪", "撊", "鬜", "鬝", "僩", "僴", "嫺", "癇", "癎", "鷳"] },
+            
+            // 关卡45
+            { id: 221, radical: "因", pinyin: "yīn", characters: ["因", "咽", "欭", "㧢", "胭", "姻", "駰", "茵", "栶", "秵", "洇", "烟", "氤", "絪", "恩"] },
+            { id: 222, radical: "垔", pinyin: "yīn", characters: ["垔", "䚈", "黫", "㖶", "諲", "歅", "湮", "堙", "陻", "闉", "鄄", "禋", "煙", "甄", "薽"] },
+            { id: 223, radical: "尊", pinyin: "zūn", characters: ["尊", "噂", "譐", "撙", "遵", "蹲", "僔", "壿", "竴", "鷷", "鱒", "樽", "澊", "燇", "嶟"] },
+            { id: 224, radical: "胃", pinyin: "wèi", characters: ["胃", "䁌", "喟", "謂", "㥜", "媦", "猬", "彙", "蝟", "渭", "煟", "䬑", "緭", "𩋤", "𦳢"] },
+            { id: 225, radical: "畏", pinyin: "wèi", characters: ["畏", "喂", "揋", "㞇", "腲", "㱬", "偎", "猥", "鰃", "葨", "椳", "渨", "煨", "隈", "嵔"] },
+            
+            // 关卡46
+            { id: 226, radical: "里", pinyin: "lǐ", characters: ["里", "釐", "哩", "悝", "俚", "娌", "狸", "鯉", "梩", "理", "厘", "艃", "䋥", "裏", "裡"] },
+            { id: 227, radical: "冓", pinyin: "gòu", characters: ["冓", "覯", "㗕", "講", "搆", "遘", "顜", "䐟", "媾", "溝", "煹", "䃓", "鞲", "韝", "褠"] },
+            { id: 228, radical: "兄", pinyin: "xiōng", characters: ["兄", "眖", "怳", "況", "㫛", "岲", "軦", "况", "貺", "竟", "摬", "傹", "獍", "䔔", "樈"] },
+            { id: 229, radical: "亙", pinyin: "gèn", characters: ["亙", "恆", "揯", "搄", "䱭", "㮓", "暅", "堩", "緪", "縆", "姮", "絚", "恆", "𢛢", "恒"] },
+            { id: 230, radical: "平", pinyin: "píng", characters: ["平", "評", "怦", "抨", "胓", "伻", "駍", "䍬", "䶄", "蚲", "鮃", "枰", "泙", "坪", "砰"] },
+            
+            // 关卡47
+            { id: 231, radical: "戚", pinyin: "qī", characters: ["戚", "㗤", "嘁", "慽", "摵", "顣", "傶", "槭", "墄", "磩", "縬", "鏚", "慼", "蹙", "䠞"] },
+            { id: 232, radical: "曹", pinyin: "cáo", characters: ["曹", "䏆", "嘈", "慒", "傮", "螬", "蓸", "槽", "糟", "漕", "㷮", "嶆", "艚", "褿", "醩"] },
+            { id: 233, radical: "丑", pinyin: "chǒu", characters: ["丑", "䛝", "忸", "扭", "衄", "妞", "䖡", "杻", "粈", "沑", "㺲", "紐", "鈕", "䂇", "狃"] },
+            { id: 234, radical: "官", pinyin: "guān", characters: ["官", "悹", "捾", "逭", "倌", "婠", "痯", "菅", "棺", "涫", "琯", "䦡", "舘", "輨", "綰"] },
+            { id: 235, radical: "般", pinyin: "bān", characters: ["般", "搫", "搬", "䰉", "媻", "瘢", "螌", "槃", "磐", "縏", "鞶", "幋", "鎜", "䈲", "盤"] },
+            
+            // 关卡48
+            { id: 236, radical: "半", pinyin: "bàn", characters: ["半", "眫", "拌", "跘", "頖", "胖", "伴", "姅", "柈", "泮", "坢", "畔", "絆", "靽", "袢"] },
+            { id: 237, radical: "典", pinyin: "diǎn", characters: ["典", "㥏", "捵", "敟", "腆", "婰", "痶", "淟", "晪", "碘", "琠", "賟", "殿", "澱", "壂"] },
+            { id: 238, radical: "申", pinyin: "shēn", characters: ["申", "眒", "呻", "訷", "抻", "胂", "柛", "神", "䰠", "電", "珅", "紳", "伸", "敒", "㔤"] },
+            { id: 239, radical: "先", pinyin: "xiān", characters: ["先", "詵", "㪇", "跣", "侁", "姺", "駪", "毨", "冼", "銑", "筅", "兟", "洗", "鍌", "箲"] },
+            { id: 240, radical: "𦘔", pinyin: "jìn", characters: ["𦘔", "津", "㶳", "珒", "賮", "盡", "䀆", "儘", "嬧", "藎", "濜", "壗", "贐", "燼", "葏"] },
+            
+            // 关卡49
+            { id: 241, radical: "末", pinyin: "mò", characters: ["末", "眜", "抹", "妺", "茉", "枺", "秣", "粖", "沫", "昩", "砞", "靺", "韎", "袜", "帓"] },
+            { id: 242, radical: "朮", pinyin: "shù", characters: ["朮", "术", "訹", "怵", "䟣", "㾁", "沭", "炢", "絉", "鉥", "秫", "述", "術", "蒁", "䢤"] },
+            { id: 243, radical: "𣎆", pinyin: "luǒ", characters: ["𣎆", "鸁", "驘", "蠃", "臝", "羸", "䇔", "𢺑", "㱻", "䯁", "𧄿", "䌴", "𨰠", "𢺆", "𨰊"] },
+            { id: 244, radical: "沙", pinyin: "shā", characters: ["沙", "髿", "魦", "鯊", "莎", "桬", "砂", "硰", "紗", "裟", "䤬", "挱", "挲", "娑", "桫"] },
+            { id: 245, radical: "医", pinyin: "yī", characters: ["殹", "瞖", "黳", "㗨", "嫛", "㿄", "鷖", "毉", "瑿", "繄", "醫", "贀", "翳", "医", "嫕"] },
+            
+            // 关卡50
+            { id: 246, radical: "巳", pinyin: "sì", characters: ["巳", "㰝", "攺", "起", "祀", "汜", "圯", "戺", "釲", "异", "巸", "媐", "熙", "煕", "㜯"] },
+            { id: 247, radical: "力", pinyin: "lì", characters: ["力", "忇", "扐", "肋", "鳨", "艻", "朸", "氻", "屴", "玏", "釛", "竻", "仂", "阞", "勒"] },
+            { id: 248, radical: "𡴆", pinyin: "lù", characters: ["坴", "睦", "踛", "勎", "鵱", "鯥", "稑", "淕", "䡜", "㓐", "陸", "𡴆", "圥", "鼀", "𨽰"] },
+            { id: 249, radical: "執", pinyin: "zhí", characters: ["執", "謺", "慹", "摯", "䠟", "鷙", "騺", "蟄", "䲀", "蓻", "瓡", "墊", "㝪", "縶", "褺"] },
+            { id: 250, radical: "樂", pinyin: "lè", characters: ["樂", "䁻", "皪", "嚛", "擽", "躒", "䟏", "櫟", "濼", "爍", "礫", "瓅", "轢", "纅", "藥"] }
+
+
+
+
+
+
+
+
+
+        ];
+
+        // 打乱关卡顺序
+        function shuffleLevels() {
+            // 只取前50个关卡
+            const firstTenLevels = characterData.slice(0, 50);
+            
+            // 使用Fisher-Yates洗牌算法
+            for (let i = firstTenLevels.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [firstTenLevels[i], firstTenLevels[j]] = [firstTenLevels[j], firstTenLevels[i]];
+            }
+            
+            // 重新分配ID（保持1-50）
+            firstTenLevels.forEach((level, index) => {
+                level.id = index + 1;
+            });
+            
+            // 返回打乱后的关卡
+            return firstTenLevels.concat(characterData.slice(50));
+        }
+
+        // 获取关卡数据
+        function getLevelData(level) {
+            return shuffledCharacterData.find(item => item.id === level) || shuffledCharacterData[0];
+        }
+
+        // 获取英文释义
+        function getEnglishDefinition(character, radical) {
+            const definitions = {
+                "离": "to leave, to part from, to be away from",
+                "瞝": "to gaze at, to look intently",
+                "漓": "dripping, to seep, to leak",
+                "璃": "glass, glaze",
+                "魑": "mountain demon, evil spirit",
+                "無": "not, have not, none",
+                "撫": "to comfort, to console, to stroke",
+                "舞": "to dance, to wield, to brandish",
+                "瞿": "startled, to look around in fear",
+                "衢": "thoroughfare, crossroads",
+                "甬": "path, corridor, Ningbo",
+                "通": "to go through, to know well, to connect",
+                "勇": "brave, courageous, valiant",
+                "林": "forest, woods, grove",
+                "淋": "to drip, to sprinkle, to pour",
+                "霖": "long spell of rain",
+                "禁": "to prohibit, to forbid, to ban",
+                "敖": "to roam, to ramble, to wander",
+                "幼": "young, immature, childhood",
+                "曼": "long, extended, graceful",
+                "會": "to meet, to gather, society",
+                "兒": "child, son, young",
+                "瓜": "melon, gourd, squash",
+                "正": "right, correct, upright",
+                "朋": "friend, companion",
+                "冉": "tender, weak, gradual",
+                "厥": "his, her, its, their",
+                "孛": "comet, confused",
+                "尼": "nun, Buddhist nun",
+                "矢": "arrow, dart, to vow",
+                "弟": "younger brother",
+                "次": "order, sequence, next",
+                "寺": "temple, monastery",
+                "侯": "marquis, nobleman",
+                "霝": "rain, to rain",
+                "𧷗": "to sell, to trade",
+                "敫": "to shine, to illuminate",
+                "翟": "pheasant, long-tailed bird",
+                "秋": "autumn, fall, harvest time",
+                "㐱": "dense, thick hair",
+                "員": "member, person, employee",
+                "列": "to arrange, to line up, series",
+                "坐": "to sit, to seat",
+                "爲": "to do, to act, for",
+                "麗": "beautiful, pretty, gorgeous",
+                "癸": "tenth heavenly stem",
+                "予": "I, me, to give",
+                "禺": "a kind of monkey",
+                "唐": "Tang dynasty, exaggerated",
+                "卩": "seal, tally",
+                "詹": "verbose, to talk too much",
+                "甲": "first, armor, shell",
+                "𦐇": "to fly, to flutter",
+                "卓": "outstanding, tall and erect",
+                "孚": "to trust, to believe in",
+                "彥": "elegant, accomplished",
+                "爰": "thereupon, consequently",
+                "剌": "perverse, rebellious",
+                "截": "to cut, to intercept",
+                "畢": "to finish, to complete",
+                "與": "and, with, to give",
+                "巴": "to hope, to wish, to cling to"
+            };
+            
+            return definitions[character] || `A character with radical "${radical}"`;
+        }
+
+        // 获取中文释义
+        function getChineseDefinition(character, radical) {
+            const definitions = {
+                "离": "分离，离开，距离",
+                "瞝": "注视，凝视",
+                "漓": "淋漓，渗漏",
+                "璃": "玻璃，琉璃",
+                "魑": "山神，鬼怪",
+                "無": "没有，不",
+                "撫": "抚摸，安慰",
+                "舞": "舞蹈，挥舞",
+                "瞿": "惊视，惊恐四顾",
+                "衢": "大路，四通八达的道路",
+                "甬": "道路，走廊，宁波简称",
+                "通": "通过，通晓，连接",
+                "勇": "勇敢，勇气",
+                "林": "树林，森林",
+                "淋": "淋湿，淋雨",
+                "霖": "久雨，甘霖",
+                "禁": "禁止，禁令",
+                "敖": "漫游，遨游",
+                "幼": "幼小，幼稚",
+                "曼": "曼妙，延长",
+                "會": "会议，聚会",
+                "兒": "儿童，儿子",
+                "瓜": "瓜果，瓜类",
+                "正": "正确，正直",
+                "朋": "朋友，同伴",
+                "冉": "冉冉，慢慢",
+                "厥": "其，他的",
+                "孛": "彗星，混乱",
+                "尼": "尼姑，僧尼",
+                "矢": "箭矢，发誓",
+                "弟": "弟弟，兄弟",
+                "次": "次序，次第",
+                "寺": "寺庙，寺院",
+                "侯": "诸侯，侯爵",
+                "霝": "雨水，降雨",
+                "𧷗": "买卖，贸易",
+                "敫": "照耀，明亮",
+                "翟": "长尾野鸡",
+                "秋": "秋天，秋季",
+                "㐱": "毛发浓密",
+                "員": "人员，成员",
+                "列": "排列，行列",
+                "坐": "坐下，乘坐",
+                "爲": "作为，为了",
+                "麗": "美丽，华丽",
+                "癸": "天干第十位",
+                "予": "给予，我",
+                "禺": "一种猴子",
+                "唐": "唐朝，夸大",
+                "卩": "符节，印章",
+                "詹": "多言，喋喋不休",
+                "甲": "第一，甲壳",
+                "𦐇": "飞翔，飞舞",
+                "卓": "卓越，高超",
+                "孚": "信任，信服",
+                "彥": "才德出众的人",
+                "爰": "于是，就",
+                "剌": "乖戾，违背",
+                "截": "截断，拦截",
+                "畢": "完毕，完成",
+                "與": "和，与，给予",
+                "巴": "巴望，盼望"
+            };
+            
+            return definitions[character] || `包含声符"${radical}"的汉字`;
+        }
+
+        // ==================== 工具函数 ====================
+        // 生成随机数
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // 从数组中随机选择多个元素
+        function getRandomElements(array, count) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled.slice(0, count);
+        }
+
+        // 播放音频
+        function playAudio(audioId, volume = 1) {
+            try {
+                const audio = document.getElementById(audioId);
+                if (audio) {
+                    audio.volume = volume;
+                    audio.currentTime = 0;
+                    const playPromise = audio.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(e => console.log("音频播放失败:", e));
+                    }
+                }
+            } catch (e) {
+                console.log("音频播放错误:", e);
+            }
+        }
+
+        // 朗读文本
+        function speakText(text, lang = 'zh-CN') {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                utterance.rate = 0.8;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 显示提示
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+                color: white;
+                border-radius: 8px;
+                z-index: 9999;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // ==================== 增强版AI玩家逻辑 ====================
+        class SmartAIPlayer {
+            constructor(difficulty = 'medium') {
+                this.difficulty = difficulty;
+                this.thinkingTime = this.getThinkingTime();
+                this.strategy = this.getStrategy();
+                this.searchDepth = this.getSearchDepth();
+            }
+            
+            getThinkingTime() {
+                const times = {
+                    'easy': 800,
+                    'medium': 1200,
+                    'hard': 1800,
+                    'expert': 2500
+                };
+                return times[this.difficulty] || 1200;
+            }
+            
+            getStrategy() {
+                const strategies = {
+                    'easy': { attack: 0.3, defense: 0.5, random: 0.2 },
+                    'medium': { attack: 0.5, defense: 0.4, random: 0.1 },
+                    'hard': { attack: 0.6, defense: 0.4, random: 0.0 },
+                    'expert': { attack: 0.7, defense: 0.3, random: 0.0 }
+                };
+                return strategies[this.difficulty] || strategies.medium;
+            }
+            
+            getSearchDepth() {
+                const depths = {
+                    'easy': 1,
+                    'medium': 2,
+                    'hard': 3,
+                    'expert': 4
+                };
+                return depths[this.difficulty] || 2;
+            }
+            
+            setDifficulty(difficulty) {
+                this.difficulty = difficulty;
+                this.thinkingTime = this.getThinkingTime();
+                this.strategy = this.getStrategy();
+                this.searchDepth = this.getSearchDepth();
+            }
+            
+            async makeMove(board, aiCharacters, usedCharacters, currentRadical) {
+                this.showThinking(true);
+                await new Promise(resolve => setTimeout(resolve, this.thinkingTime));
+                
+                const availableCells = this.getAvailableCells(board);
+                const bestMove = this.evaluateBestMove(board, aiCharacters, availableCells, currentRadical);
+                
+                this.showThinking(false);
+                return bestMove;
+            }
+            
+            showThinking(show) {
+                const thinkingElement = document.getElementById('ai-thinking');
+                if (thinkingElement) {
+                    if (show) {
+                        thinkingElement.classList.add('show');
+                    } else {
+                        thinkingElement.classList.remove('show');
+                    }
+                }
+            }
+            
+            getAvailableCells(board) {
+                const cells = [];
+                for (let row = 0; row < 13; row++) {
+                    for (let col = 0; col < 13; col++) {
+                        if (!board[row][col]) {
+                            cells.push({ row, col });
+                        }
+                    }
+                }
+                return cells;
+            }
+            
+            evaluateBestMove(board, aiCharacters, availableCells, currentRadical) {
+                // 第一步：检查是否能直接获胜
+                for (const cell of availableCells) {
+                    for (const character of aiCharacters) {
+                        if (character.used) continue;
+                        
+                        const tempBoard = this.copyBoard(board);
+                        tempBoard[cell.row][cell.col] = {
+                            character: character.char,
+                            radical: currentRadical,
+                            player: 'black'
+                        };
+                        
+                        if (this.checkWin(tempBoard, cell.row, cell.col, 'black')) {
+                            return { position: cell, character: character };
+                        }
+                    }
+                }
+                
+                // 第二步：检查是否需要阻止玩家获胜
+                for (const cell of availableCells) {
+                    const tempBoard = this.copyBoard(board);
+                    tempBoard[cell.row][cell.col] = {
+                        character: '?',
+                        radical: currentRadical,
+                        player: 'white'
+                    };
+                    
+                    if (this.checkWin(tempBoard, cell.row, cell.col, 'white')) {
+                        // 阻止这个位置
+                        const bestChar = this.getBestCharacterForDefense(aiCharacters, currentRadical);
+                        return { position: cell, character: bestChar };
+                    }
+                }
+                
+                // 第三步：评估最佳位置
+                let bestScore = -Infinity;
+                let bestMove = null;
+                let bestCharacter = null;
+                
+                for (const cell of availableCells) {
+                    for (const character of aiCharacters) {
+                        if (character.used) continue;
+                        
+                        const tempBoard = this.copyBoard(board);
+                        tempBoard[cell.row][cell.col] = {
+                            character: character.char,
+                            radical: currentRadical,
+                            player: 'black'
+                        };
+                        
+                        const score = this.calculateMoveScore(tempBoard, cell, character, currentRadical);
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = cell;
+                            bestCharacter = character;
+                        }
+                    }
+                }
+                
+                if (!bestMove) {
+                    const randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+                    const availableChars = aiCharacters.filter(c => !c.used);
+                    const randomChar = availableChars.length > 0 ? availableChars[0] : aiCharacters[0];
+                    bestMove = randomCell;
+                    bestCharacter = randomChar;
+                }
+                
+                return {
+                    position: bestMove,
+                    character: bestCharacter
+                };
+            }
+            
+            getBestCharacterForDefense(aiCharacters, radical) {
+                // 优先选择与声符匹配的字符
+                for (const char of aiCharacters) {
+                    if (!char.used && char.radical === radical) {
+                        return char;
+                    }
+                }
+                
+                // 如果没有匹配的，选择未使用的字符
+                const availableChars = aiCharacters.filter(c => !c.used);
+                if (availableChars.length > 0) {
+                    return availableChars[Math.floor(Math.random() * availableChars.length)];
+                }
+                
+                return aiCharacters[0];
+            }
+            
+            calculateMoveScore(board, position, character, radical) {
+                let score = 0;
+                
+                // 基础分数
+                score += 10;
+                
+                // 检查连线长度
+                const lineLength = this.checkMaxLineLength(board, position, radical, 'black');
+                score += lineLength * 50;
+                
+                // 检查是否能形成4连
+                if (lineLength >= 4) score += 500;
+                
+                // 检查是否能形成3连
+                if (lineLength >= 3) score += 100;
+                
+                // 检查对手的威胁
+                const opponentThreat = this.checkOpponentThreat(board, position, radical);
+                score -= opponentThreat * 80;
+                
+                // 位置优势（中心位置更好）
+                score += this.getPositionScore(position);
+                
+                // 聚集效应（靠近现有棋子）
+                score += this.checkProximityScore(board, position) * 15;
+                
+                // 攻击性策略
+                score += Math.random() * 20 * this.strategy.attack;
+                
+                // 如果是匹配的声符，额外加分
+                if (character.radical === radical) {
+                    score += 30;
+                }
+                
+                return score;
+            }
+            
+            checkMaxLineLength(board, position, radical, player) {
+                const directions = [
+                    [0, 1], [1, 0], [1, 1], [1, -1]
+                ];
+                
+                let maxLength = 0;
+                
+                for (const [dx, dy] of directions) {
+                    let length = 1;
+                    
+                    // 正向检查
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = position.row + dx * i;
+                        const newCol = position.col + dy * i;
+                        
+                        if (this.isValidPosition(newRow, newCol) && 
+                            board[newRow][newCol] && 
+                            board[newRow][newCol].player === player &&
+                            board[newRow][newCol].radical === radical) {
+                            length++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // 反向检查
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = position.row - dx * i;
+                        const newCol = position.col - dy * i;
+                        
+                        if (this.isValidPosition(newRow, newCol) && 
+                            board[newRow][newCol] && 
+                            board[newRow][newCol].player === player &&
+                            board[newRow][newCol].radical === radical) {
+                            length++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (length > maxLength) {
+                        maxLength = length;
+                    }
+                }
+                
+                return maxLength;
+            }
+            
+            checkOpponentThreat(board, position, radical) {
+                let maxThreat = 0;
+                
+                // 模拟玩家在这个位置落子
+                const tempBoard = this.copyBoard(board);
+                tempBoard[position.row][position.col] = {
+                    character: '?',
+                    radical: radical,
+                    player: 'white'
+                };
+                
+                // 检查玩家能形成的最大连线
+                const playerLineLength = this.checkMaxLineLength(tempBoard, position, radical, 'white');
+                maxThreat = Math.max(maxThreat, playerLineLength);
+                
+                // 检查周围位置
+                for (let dr = -2; dr <= 2; dr++) {
+                    for (let dc = -2; dc <= 2; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        
+                        const newRow = position.row + dr;
+                        const newCol = position.col + dc;
+                        
+                        if (this.isValidPosition(newRow, newCol) && !tempBoard[newRow][newCol]) {
+                            tempBoard[newRow][newCol] = {
+                                character: '?',
+                                radical: radical,
+                                player: 'white'
+                            };
+                            
+                            const lineLength = this.checkMaxLineLength(tempBoard, {row: newRow, col: newCol}, radical, 'white');
+                            maxThreat = Math.max(maxThreat, lineLength);
+                            
+                            // 恢复棋盘
+                            tempBoard[newRow][newCol] = null;
+                        }
+                    }
+                }
+                
+                return maxThreat;
+            }
+            
+            checkProximityScore(board, position) {
+                let proximityScore = 0;
+                
+                for (let dr = -3; dr <= 3; dr++) {
+                    for (let dc = -3; dc <= 3; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        
+                        const newRow = position.row + dr;
+                        const newCol = position.col + dc;
+                        
+                        if (this.isValidPosition(newRow, newCol) && board[newRow][newCol]) {
+                            const distance = Math.max(Math.abs(dr), Math.abs(dc));
+                            proximityScore += (4 - distance);
+                        }
+                    }
+                }
+                
+                return proximityScore;
+            }
+            
+            getPositionScore(position) {
+                const centerRow = 6;
+                const centerCol = 6;
+                const rowDist = Math.abs(position.row - centerRow);
+                const colDist = Math.abs(position.col - centerCol);
+                const distance = Math.max(rowDist, colDist);
+                return (6 - distance) * 8;
+            }
+            
+            checkWin(board, row, col, player) {
+                const directions = [
+                    [0, 1], [1, 0], [1, 1], [1, -1]
+                ];
+                
+                const stone = board[row][col];
+                if (!stone) return false;
+                
+                const radical = stone.radical;
+                
+                for (const [dx, dy] of directions) {
+                    let line = 1;
+                    
+                    // 正向检查
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = row + dx * i;
+                        const newCol = col + dy * i;
+                        
+                        if (this.isValidPosition(newRow, newCol) && 
+                            board[newRow][newCol] && 
+                            board[newRow][newCol].player === player &&
+                            board[newRow][newCol].radical === radical) {
+                            line++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // 反向检查
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = row - dx * i;
+                        const newCol = col - dy * i;
+                        
+                        if (this.isValidPosition(newRow, newCol) && 
+                            board[newRow][newCol] && 
+                            board[newRow][newCol].player === player &&
+                            board[newRow][newCol].radical === radical) {
+                            line++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (line >= 5) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+            
+            isValidPosition(row, col) {
+                return row >= 0 && row < 13 && col >= 0 && col < 13;
+            }
+            
+            copyBoard(board) {
+                return board.map(row => [...row]);
+            }
+        }
+
+        // ==================== 游戏核心逻辑 ====================
+        class FiveCharacterGoGame {
+            constructor() {
+                this.currentLevel = 1;
+                this.currentRound = 1;
+                this.maxRounds = 50;
+                this.scores = { player: 0, ai: 0 };
+                this.currentTurn = 'black';
+                this.board = this.createEmptyBoard();
+                this.playerCharacters = [];
+                this.aiCharacters = [];
+                this.selectedCharacter = null;
+                this.usedCharacters = new Set();
+                this.moveHistory = [];
+                this.gameActive = false;
+                this.refreshCount = 5;
+                this.aiPlayer = new SmartAIPlayer('medium');
+                this.winningLine = [];
+                
+                this.init();
+            }
+            
+            init() {
+                // 先打乱关卡顺序
+                this.shuffleLevels();
+                
+                // 然后加载关卡数据
+                this.loadLevelData(this.currentLevel);
+                this.renderBoard();
+                this.updateUI();
+                this.bindEvents();
+                
+                // 自动开始游戏
+                this.startNewGame();
+            }
+            
+            shuffleLevels() {
+                // 打乱前10个关卡
+                const firstTenLevels = characterData.slice(0, 50);
+                
+                // 使用Fisher-Yates洗牌算法
+                for (let i = firstTenLevels.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [firstTenLevels[i], firstTenLevels[j]] = [firstTenLevels[j], firstTenLevels[i]];
+                }
+                
+                // 重新分配ID（保持1-50）
+                firstTenLevels.forEach((level, index) => {
+                    level.id = index + 1;
+                });
+                
+                // 创建打乱后的数据
+                this.shuffledCharacterData = firstTenLevels.concat(characterData.slice(50));
+                
+                // 更新关卡选择下拉框
+                this.updateLevelSelect();
+            }
+            
+            updateLevelSelect() {
+                const levelSelect = document.getElementById('level-select');
+                if (!levelSelect) return;
+                
+                levelSelect.innerHTML = '';
+                
+                // 只显示前50个打乱后的关卡
+                for (let i = 1; i <= 50; i++) {
+                    const level = this.shuffledCharacterData[i - 1];
+                    const option = document.createElement('option');
+                    option.value = i;
+                    option.textContent = `关卡 ${i} (${level.radical} ${level.pinyin})`;
+                    levelSelect.appendChild(option);
+                }
+            }
+            
+            createEmptyBoard() {
+                const board = [];
+                for (let i = 0; i < 13; i++) {
+                    board[i] = new Array(13).fill(null);
+                }
+                return board;
+            }
+            
+            loadLevelData(level) {
+                const levelData = this.shuffledCharacterData.find(item => item.id === level);
+                if (!levelData) return;
+                
+                const currentRadical = document.getElementById('current-radical');
+                const currentPinyin = document.getElementById('current-pinyin');
+                
+                if (currentRadical) currentRadical.textContent = levelData.radical;
+                if (currentPinyin) currentPinyin.textContent = levelData.pinyin;
+                
+                this.prepareCharacters(levelData);
+                this.board = this.createEmptyBoard();
+                this.winningLine = [];
+                this.selectedCharacter = null;
+                this.updateCharacterDisplays();
+            }
+            
+            prepareCharacters(levelData) {
+                const allCharacters = [...levelData.characters];
+                
+                // 先打乱所有字符
+                const shuffledAll = [...allCharacters];
+                for (let i = shuffledAll.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffledAll[i], shuffledAll[j]] = [shuffledAll[j], shuffledAll[i]];
+                }
+                
+                // 为玩家和AI选择字符
+                const playerChars = shuffledAll.slice(0, Math.min(25, shuffledAll.length));
+                
+                // 为AI选择不同的字符（从剩余字符中）
+                const remainingChars = shuffledAll.slice(25);
+                let aiChars;
+                if (remainingChars.length >= 25) {
+                    aiChars = remainingChars.slice(0, 25);
+                } else {
+                    // 如果剩余字符不够，从所有字符中重新选择
+                    aiChars = shuffledAll.slice(0, 25);
+                }
+                
+                this.playerCharacters = playerChars.map((char, index) => ({
+                    id: `player-${index}`,
+                    char: char,
+                    radical: levelData.radical,
+                    pinyin: levelData.pinyin,
+                    used: false,
+                    selected: false
+                }));
+                
+                this.aiCharacters = aiChars.map((char, index) => ({
+                    id: `ai-${index}`,
+                    char: char,
+                    radical: levelData.radical,
+                    pinyin: levelData.pinyin,
+                    used: false,
+                    selected: false
+                }));
+            }
+            
+            renderBoard() {
+                const boardElement = document.getElementById('game-board');
+                if (!boardElement) return;
+                
+                boardElement.innerHTML = '';
+                
+                for (let row = 0; row < 13; row++) {
+                    for (let col = 0; col < 13; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'board-cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        // 添加网格线
+                        if (row > 0 && row < 12 && col > 0 && col < 12) {
+                            cell.classList.add('center');
+                        }
+                        
+                        // 添加星位标记
+                        const starPoints = [[3,3], [3,9], [6,6], [9,3], [9,9]];
+                        if (starPoints.some(([r, c]) => r === row && c === col)) {
+                            const star = document.createElement('div');
+                            star.className = 'star-point';
+                            star.style.cssText = `
+                                position: absolute;
+                                width: 4px;
+                                height: 4px;
+                                background: #000;
+                                border-radius: 50%;
+                                top: 50%;
+                                left: 50%;
+                                transform: translate(-50%, -50%);
+                            `;
+                            cell.appendChild(star);
+                        }
+                        
+                        // 如果该位置有棋子，渲染棋子
+                        if (this.board[row][col]) {
+                            const stone = document.createElement('div');
+                            stone.className = `board-stone stone-${this.board[row][col].player}`;
+                            stone.textContent = this.board[row][col].character;
+                            stone.dataset.row = row;
+                            stone.dataset.col = col;
+                            
+                            // 如果是获胜连线的一部分，添加高亮
+                            if (this.winningLine.some(pos => pos.row === row && pos.col === col)) {
+                                stone.classList.add('stone-highlight');
+                            }
+                            
+                            cell.appendChild(stone);
+                        }
+                        
+                        boardElement.appendChild(cell);
+                    }
+                }
+            }
+            
+            updateUI() {
+                const playerScore = document.getElementById('player-score');
+                const aiScore = document.getElementById('ai-score');
+                const playerScoreTotal = document.getElementById('player-score-total');
+                const aiScoreTotal = document.getElementById('ai-score-total');
+                const currentRound = document.getElementById('current-round');
+                const refreshCount = document.getElementById('refresh-count');
+                const gameStatus = document.getElementById('game-status');
+                const turnIndicator = document.getElementById('turn-indicator');
+                const selectedCharElement = document.getElementById('selected-character');
+                const selectedRadical = document.getElementById('selected-radical');
+                const aiUsed = document.getElementById('ai-used');
+                
+                if (playerScore) playerScore.textContent = this.scores.player;
+                if (aiScore) aiScore.textContent = this.scores.ai;
+                if (playerScoreTotal) playerScoreTotal.textContent = this.scores.player;
+                if (aiScoreTotal) aiScoreTotal.textContent = this.scores.ai;
+                if (currentRound) currentRound.textContent = this.currentRound;
+                if (refreshCount) refreshCount.textContent = this.refreshCount;
+                
+                if (gameStatus) {
+                    if (!this.gameActive) {
+                        gameStatus.textContent = '游戏准备中...';
+                        gameStatus.style.background = '#e3f2fd';
+                        gameStatus.style.color = '#1976d2';
+                    } else if (this.currentTurn === 'black') {
+                        gameStatus.textContent = 'AI回合 (黑方)';
+                        gameStatus.style.background = '#333';
+                        gameStatus.style.color = 'white';
+                    } else {
+                        gameStatus.textContent = '玩家回合 (白方)';
+                        gameStatus.style.background = '#4facfe';
+                        gameStatus.style.color = 'white';
+                    }
+                }
+                
+                if (turnIndicator) {
+                    if (this.currentTurn === 'black') {
+                        turnIndicator.innerHTML = '<i class="fas fa-robot"></i> AI回合 (黑方)';
+                        turnIndicator.style.color = '#f5576c';
+                    } else {
+                        turnIndicator.innerHTML = '<i class="fas fa-user"></i> 玩家回合 (白方)';
+                        turnIndicator.style.color = '#4facfe';
+                    }
+                }
+                
+                if (selectedCharElement) {
+                    selectedCharElement.textContent = this.selectedCharacter ? this.selectedCharacter.char : '无';
+                }
+                if (selectedRadical) {
+                    selectedRadical.textContent = this.selectedCharacter ? this.selectedCharacter.radical : '-';
+                }
+                
+                if (aiUsed) {
+                    const aiUsedCount = this.aiCharacters.filter(c => c.used).length;
+                    aiUsed.textContent = aiUsedCount;
+                }
+            }
+            
+            updateCharacterDisplays() {
+                this.updatePlayerCharacters();
+                this.updateAICharacters();
+            }
+                       updatePlayerCharacters() {
+                const playerGrid = document.getElementById('player-characters');
+                if (!playerGrid) return;
+                
+                playerGrid.innerHTML = '';
+                
+                // 只显示25个字符
+                const displayCount = Math.min(25, this.playerCharacters.length);
+                
+                for (let i = 0; i < displayCount; i++) {
+                    const char = this.playerCharacters[i];
+                    if (!char) continue;
+                    
+                    const tile = document.createElement('div');
+                    tile.className = 'character-tile player-character';
+                    tile.textContent = char.char;
+                    tile.dataset.id = char.id;
+                    
+                    if (char.used) {
+                        tile.classList.add('used-character');
+                        tile.style.opacity = '0.5';
+                        tile.style.cursor = 'not-allowed';
+                    } else {
+                        if (char.selected) {
+                            tile.classList.add('selected');
+                        }
+                        tile.addEventListener('click', () => this.selectCharacter(char));
+                    }
+                    
+                    playerGrid.appendChild(tile);
+                }
+            }
+            
+            updateAICharacters() {
+                const aiGrid = document.getElementById('ai-characters');
+                if (!aiGrid) return;
+                
+                aiGrid.innerHTML = '';
+                
+                // 只显示25个字符
+                const displayCount = Math.min(25, this.aiCharacters.length);
+                
+                for (let i = 0; i < displayCount; i++) {
+                    const char = this.aiCharacters[i];
+                    if (!char) continue;
+                    
+                    const tile = document.createElement('div');
+                    tile.className = 'character-tile ai-character';
+                    tile.textContent = char.char;
+                    tile.dataset.id = char.id;
+                    
+                    if (char.used) {
+                        tile.classList.add('used-character');
+                        tile.style.opacity = '0.5';
+                    }
+                    
+                    aiGrid.appendChild(tile);
+                }
+            }
+            
+            selectCharacter(character) {
+                if (!this.gameActive || this.currentTurn === 'black' || character.used) return;
+                
+                // 取消之前的选择
+                this.playerCharacters.forEach(c => {
+                    c.selected = false;
+                });
+                
+                // 选择新字符
+                character.selected = true;
+                this.selectedCharacter = character;
+                
+                // 播放选择音效
+                if (document.getElementById('sound-toggle')?.checked) {
+                    playAudio('select-sound', document.getElementById('volume')?.value / 100 || 0.8);
+                }
+                
+                this.updateCharacterDisplays();
+                this.updateUI();
+                
+                showToast(`已选择: ${character.char}`, 'info');
+            }
+            
+            async placeStone(row, col) {
+                // 检查游戏状态
+                if (!this.gameActive) {
+                    showToast('游戏未开始!', 'error');
+                    return;
+                }
+                
+                // 检查回合
+                if (this.currentTurn === 'black') {
+                    showToast('现在是AI回合!', 'error');
+                    return;
+                }
+                
+                // 检查位置是否为空
+                if (this.board[row][col]) {
+                    showToast('该位置已有棋子!', 'error');
+                    return;
+                }
+                
+                // 检查是否选择了字符
+                if (!this.selectedCharacter) {
+                    showToast('请先选择一个汉字!', 'error');
+                    return;
+                }
+                
+                // 放置棋子
+                this.board[row][col] = {
+                    character: this.selectedCharacter.char,
+                    radical: this.selectedCharacter.radical,
+                    player: 'white'
+                };
+                
+                // 标记字符已使用
+                this.selectedCharacter.used = true;
+                const selectedId = this.selectedCharacter.id;
+                this.selectedCharacter = null;
+                
+                // 播放落子音效
+                if (document.getElementById('sound-toggle')?.checked) {
+                    playAudio('place-sound', document.getElementById('volume')?.value / 100 || 0.8);
+                }
+                
+                // 记录走棋
+                this.recordMove(row, col, 'white', this.playerCharacters.find(c => c.id === selectedId)?.char || '?');
+                
+                // 渲染棋盘
+                this.renderBoard();
+                this.updateCharacterDisplays();
+                
+                // 检查是否获胜
+                if (this.checkWin(row, col, 'white')) {
+                    this.handleWin('player');
+                    return;
+                }
+                
+                // 检查是否平局
+                if (this.checkDraw()) {
+                    this.handleDraw();
+                    return;
+                }
+                
+                // 切换回合
+                this.currentTurn = 'black';
+                this.updateUI();
+                
+                // AI思考并落子
+                await this.aiMove();
+            }
+            
+            async aiMove() {
+                try {
+                    // 获取AI可用的字符
+                    const availableAICharacters = this.aiCharacters.filter(c => !c.used);
+                    
+                    if (availableAICharacters.length === 0) {
+                        showToast('AI没有可用的汉字了!', 'error');
+                        return;
+                    }
+                    
+                    // AI思考
+                    const aiMove = await this.aiPlayer.makeMove(
+                        this.board,
+                        availableAICharacters,
+                        this.usedCharacters,
+                        this.getCurrentRadical()
+                    );
+                    
+                    if (!aiMove) {
+                        showToast('AI无法做出决定', 'error');
+                        return;
+                    }
+                    
+                    const { position, character } = aiMove;
+                    
+                    // 放置AI棋子
+                    this.board[position.row][position.col] = {
+                        character: character.char,
+                        radical: this.getCurrentRadical(),
+                        player: 'black'
+                    };
+                    
+                    // 标记字符已使用
+                    character.used = true;
+                    
+                    // 播放落子音效
+                    if (document.getElementById('sound-toggle')?.checked) {
+                        playAudio('place-sound', document.getElementById('volume')?.value / 100 || 0.8);
+                    }
+                    
+                    // 记录走棋
+                    this.recordMove(position.row, position.col, 'black', character.char);
+                    
+                    // 渲染棋盘
+                    this.renderBoard();
+                    this.updateCharacterDisplays();
+                    
+                    // 检查是否获胜
+                    if (this.checkWin(position.row, position.col, 'black')) {
+                        this.handleWin('ai');
+                        return;
+                    }
+                    
+                    // 检查是否平局
+                    if (this.checkDraw()) {
+                        this.handleDraw();
+                        return;
+                    }
+                    
+                    // 切换回合
+                    this.currentTurn = 'white';
+                    this.updateUI();
+                    
+                } catch (error) {
+                    console.error('AI移动错误:', error);
+                    showToast('AI移动出错', 'error');
+                }
+            }
+            
+            getCurrentRadical() {
+                const currentLevel = this.shuffledCharacterData.find(item => item.id === this.currentLevel);
+                return currentLevel ? currentLevel.radical : '';
+            }
+            
+            checkWin(row, col, player) {
+                const directions = [
+                    [0, 1],  // 水平
+                    [1, 0],  // 垂直
+                    [1, 1],  // 对角线（右下）
+                    [1, -1]  // 对角线（左下）
+                ];
+                
+                const stone = this.board[row][col];
+                if (!stone) return false;
+                
+                const radical = stone.radical;
+                this.winningLine = [{row, col}];
+                
+                for (const [dx, dy] of directions) {
+                    let line = 1;
+                    let tempLine = [{row, col}];
+                    
+                    // 正向检查
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = row + dx * i;
+                        const newCol = col + dy * i;
+                        
+                        if (this.isValidPosition(newRow, newCol) && 
+                            this.board[newRow][newCol] && 
+                            this.board[newRow][newCol].player === player &&
+                            this.board[newRow][newCol].radical === radical) {
+                            line++;
+                            tempLine.push({row: newRow, col: newCol});
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // 反向检查
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = row - dx * i;
+                        const newCol = col - dy * i;
+                        
+                        if (this.isValidPosition(newRow, newCol) && 
+                            this.board[newRow][newCol] && 
+                            this.board[newRow][newCol].player === player &&
+                            this.board[newRow][newCol].radical === radical) {
+                            line++;
+                            tempLine.push({row: newRow, col: newCol});
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (line >= 5) {
+                        this.winningLine = tempLine;
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+            
+            isValidPosition(row, col) {
+                return row >= 0 && row < 13 && col >= 0 && col < 13;
+            }
+            
+            checkDraw() {
+                // 检查棋盘是否已满
+                for (let row = 0; row < 13; row++) {
+                    for (let col = 0; col < 13; col++) {
+                        if (!this.board[row][col]) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            recordMove(row, col, player, character) {
+                const move = {
+                    round: this.currentRound,
+                    player: player,
+                    character: character,
+                    position: {row, col},
+                    timestamp: new Date().toLocaleTimeString()
+                };
+                
+                this.moveHistory.push(move);
+                this.updateMoveHistory();
+            }
+            
+            updateMoveHistory() {
+                const moveHistoryElement = document.getElementById('move-history');
+                if (!moveHistoryElement) return;
+                
+                // 只显示最近10步
+                const recentMoves = this.moveHistory.slice(-10);
+                
+                moveHistoryElement.innerHTML = '';
+                
+                recentMoves.forEach((move, index) => {
+                    const moveItem = document.createElement('div');
+                    moveItem.className = `move-item ${move.player}`;
+                    moveItem.innerHTML = `
+                        <span>${move.character}</span>
+                        <span>(${String.fromCharCode(65 + move.position.col)}${move.position.row + 1})</span>
+                        <span>${move.timestamp}</span>
+                    `;
+                    moveHistoryElement.appendChild(moveItem);
+                });
+                
+                // 滚动到底部
+                moveHistoryElement.scrollTop = moveHistoryElement.scrollHeight;
+            }
+            
+            handleWin(winner) {
+                this.gameActive = false;
+                
+                // 更新分数
+                if (winner === 'player') {
+                    this.scores.player++;
+                    showToast('恭喜你获胜!', 'success');
+                } else {
+                    this.scores.ai++;
+                    showToast('AI获胜!', 'error');
+                }
+                
+                // 播放获胜音效
+                if (document.getElementById('sound-toggle')?.checked) {
+                    playAudio('win-sound', document.getElementById('volume')?.value / 100 || 0.8);
+                }
+                
+                // 高亮显示获胜连线
+                this.renderBoard();
+                this.updateUI();
+                
+                // 检查是否赢得比赛（先赢5局）
+                if (this.scores.player >= 5 || this.scores.ai >= 5) {
+                    setTimeout(() => this.showGameOverModal(), 1000);
+                } else {
+                    // 继续下一局
+                    setTimeout(() => {
+                        this.currentRound++;
+                        if (this.currentRound > this.maxRounds) {
+                            this.showGameOverModal();
+                        } else {
+                            this.startNewRound();
+                        }
+                    }, 2000);
+                }
+            }
+            
+            handleDraw() {
+                this.gameActive = false;
+                showToast('平局!', 'info');
+                
+                // 继续下一局
+                setTimeout(() => {
+                    this.currentRound++;
+                    if (this.currentRound > this.maxRounds) {
+                        this.showGameOverModal();
+                    } else {
+                        this.startNewRound();
+                    }
+                }, 2000);
+            }
+            
+            startNewGame() {
+                this.currentRound = 1;
+                this.scores = { player: 0, ai: 0 };
+                this.startNewRound();
+                
+                showToast('新游戏开始!', 'success');
+            }
+            
+            startNewRound() {
+                // 重置棋盘
+                this.board = this.createEmptyBoard();
+                this.winningLine = [];
+                
+                // 重置字符使用状态
+                this.playerCharacters.forEach(c => {
+                    c.used = false;
+                    c.selected = false;
+                });
+                this.aiCharacters.forEach(c => {
+                    c.used = false;
+                });
+                
+                // 重置选择
+                this.selectedCharacter = null;
+                
+                // 重置回合（黑方先行）
+                this.currentTurn = 'black';
+                
+                // 激活游戏
+                this.gameActive = true;
+                
+                // 更新界面
+                this.renderBoard();
+                this.updateCharacterDisplays();
+                this.updateUI();
+                
+                // 如果是AI回合，AI先手
+                if (this.currentTurn === 'black') {
+                    setTimeout(() => this.aiMove(), 500);
+                }
+            }
+            
+            showGameOverModal() {
+                const modal = document.getElementById('gameover-modal');
+                const title = document.getElementById('gameover-title');
+                const message = document.getElementById('gameover-message');
+                const playerScore = document.getElementById('player-final-score');
+                const aiScore = document.getElementById('ai-final-score');
+                const resultIcon = document.getElementById('result-icon');
+                
+                if (!modal || !title || !message || !playerScore || !aiScore) return;
+                
+                playerScore.textContent = this.scores.player;
+                aiScore.textContent = this.scores.ai;
+                
+                let finalMessage = '';
+                let finalTitle = '';
+                
+                if (this.scores.player > this.scores.ai) {
+                    finalTitle = '恭喜获胜!';
+                    finalMessage = `你在${this.maxRounds}局中赢得${this.scores.player}局，战胜了AI!`;
+                    resultIcon.innerHTML = '<i class="fas fa-trophy"></i>';
+                    resultIcon.style.color = '#ffd700';
+                } else if (this.scores.ai > this.scores.player) {
+                    finalTitle = 'AI获胜!';
+                    finalMessage = `AI在${this.maxRounds}局中赢得${this.scores.ai}局，再试一次吧!`;
+                    resultIcon.innerHTML = '<i class="fas fa-robot"></i>';
+                    resultIcon.style.color = '#f5576c';
+                } else {
+                    finalTitle = '平局!';
+                    finalMessage = `双方战成${this.scores.player}平，旗鼓相当!`;
+                    resultIcon.innerHTML = '<i class="fas fa-handshake"></i>';
+                    resultIcon.style.color = '#4facfe';
+                }
+                
+                title.textContent = finalTitle;
+                message.textContent = finalMessage;
+                
+                modal.classList.add('show');
+            }
+            
+            refreshPlayerCharacters() {
+                if (this.refreshCount <= 0) {
+                    showToast('刷新次数已用完!', 'error');
+                    return;
+                }
+                
+                if (!this.gameActive || this.currentTurn === 'black') {
+                    showToast('当前不能刷新!', 'error');
+                    return;
+                }
+                
+                this.refreshCount--;
+                
+                // 播放刷新音效
+                if (document.getElementById('sound-toggle')?.checked) {
+                    playAudio('refresh-sound', document.getElementById('volume')?.value / 100 || 0.8);
+                }
+                
+                // 获取当前关卡数据
+                const levelData = this.shuffledCharacterData.find(item => item.id === this.currentLevel);
+                if (!levelData) return;
+                
+                // 获取所有可用的字符
+                const allCharacters = [...levelData.characters];
+                
+                // 移除已使用的字符
+                const usedChars = new Set(this.playerCharacters.filter(c => c.used).map(c => c.char));
+                const availableChars = allCharacters.filter(char => !usedChars.has(char));
+                
+                // 随机选择新的字符替换未使用的字符
+                const unusedPlayerChars = this.playerCharacters.filter(c => !c.used);
+                const newChars = getRandomElements(availableChars, Math.min(unusedPlayerChars.length, 5));
+                
+                // 替换字符
+                for (let i = 0; i < Math.min(unusedPlayerChars.length, newChars.length); i++) {
+                    const charIndex = this.playerCharacters.findIndex(c => c.id === unusedPlayerChars[i].id);
+                    if (charIndex !== -1) {
+                        this.playerCharacters[charIndex].char = newChars[i];
+                    }
+                }
+                
+                // 取消选择
+                if (this.selectedCharacter) {
+                    this.selectedCharacter.selected = false;
+                    this.selectedCharacter = null;
+                }
+                
+                // 更新界面
+                this.updateCharacterDisplays();
+                this.updateUI();
+                
+                showToast(`刷新成功! 剩余刷新次数: ${this.refreshCount}`, 'success');
+            }
+            
+            showCharacterModal(character, row, col) {
+                const modal = document.getElementById('character-modal');
+                const modalChar = document.getElementById('modal-character');
+                const modalPinyin = document.getElementById('modal-pinyin');
+                const modalRadical = document.getElementById('modal-radical');
+                const modalDefinition = document.getElementById('modal-definition');
+                const modalDetail = document.getElementById('modal-detail');
+                const relatedChars = document.getElementById('related-chars');
+                
+                if (!modal || !modalChar) return;
+                
+                // 获取当前关卡数据
+                const levelData = this.shuffledCharacterData.find(item => item.id === this.currentLevel);
+                if (!levelData) return;
+                
+                // 设置模态框内容
+                modalChar.textContent = character;
+                modalPinyin.textContent = levelData.pinyin;
+                modalRadical.textContent = `声符: ${levelData.radical}`;
+                modalDefinition.textContent = `英文: ${getEnglishDefinition(character, levelData.radical)}`;
+                modalDetail.textContent = `中文: ${getChineseDefinition(character, levelData.radical)}`;
+                
+                // 显示相关字符
+                if (relatedChars) {
+                    relatedChars.innerHTML = '';
+                    
+                    // 从当前关卡中获取相关字符（最多12个）
+                    const relatedCharacters = levelData.characters
+                        .filter(c => c !== character)
+                        .slice(0, 12);
+                    
+                    relatedCharacters.forEach(char => {
+                        const charElement = document.createElement('div');
+                        charElement.className = 'related-char';
+                        charElement.textContent = char;
+                        charElement.addEventListener('click', () => {
+                            speakText(char, 'zh-CN');
+                        });
+                        relatedChars.appendChild(charElement);
+                    });
+                }
+                
+                modal.classList.add('show');
+            }
+            
+            showRulesModal() {
+                const modal = document.getElementById('rules-modal');
+                if (modal) {
+                    modal.classList.add('show');
+                }
+            }
+            
+            bindEvents() {
+                // 棋盘点击事件
+                document.getElementById('game-board')?.addEventListener('click', (e) => {
+                    const cell = e.target.closest('.board-cell');
+                    if (cell) {
+                        const row = parseInt(cell.dataset.row);
+                        const col = parseInt(cell.dataset.col);
+                        this.placeStone(row, col);
+                    }
+                    
+                    // 如果点击的是棋子，显示详情
+                    const stone = e.target.closest('.board-stone');
+                    if (stone) {
+                        const row = parseInt(stone.dataset.row);
+                        const col = parseInt(stone.dataset.col);
+                        const stoneData = this.board[row][col];
+                        if (stoneData) {
+                            this.showCharacterModal(stoneData.character, row, col);
+                        }
+                    }
+                });
+                
+                // 新游戏按钮
+                document.getElementById('new-game-btn')?.addEventListener('click', () => {
+                    this.startNewGame();
+                });
+                
+                // 刷新按钮
+                document.getElementById('refresh-btn')?.addEventListener('click', () => {
+                    this.refreshPlayerCharacters();
+                });
+                
+                // 规则按钮
+                document.getElementById('rules-btn')?.addEventListener('click', () => {
+                    this.showRulesModal();
+                });
+                
+                // 悔棋按钮
+                document.getElementById('undo-btn')?.addEventListener('click', () => {
+                    this.undoMove();
+                });
+                
+                // 提示按钮
+                document.getElementById('hint-btn')?.addEventListener('click', () => {
+                    this.showHint();
+                });
+                
+                // 朗读按钮
+                document.getElementById('speak-btn')?.addEventListener('click', () => {
+                    if (this.selectedCharacter) {
+                        speakText(this.selectedCharacter.char, 'zh-CN');
+                    } else {
+                        showToast('请先选择一个汉字', 'error');
+                    }
+                });
+                
+                // 关卡选择
+                document.getElementById('level-select')?.addEventListener('change', (e) => {
+                    const level = parseInt(e.target.value);
+                    this.changeLevel(level);
+                });
+                
+                // 难度选择
+                document.getElementById('difficulty')?.addEventListener('change', (e) => {
+                    const difficulty = e.target.value;
+                    this.aiPlayer.setDifficulty(difficulty);
+                    showToast(`AI难度已设置为: ${difficulty}`, 'info');
+                });
+                
+                // 全屏按钮
+                document.getElementById('fullscreen-btn')?.addEventListener('click', () => {
+                    this.toggleFullscreen();
+                });
+                
+                // 帮助按钮
+                document.getElementById('help-btn')?.addEventListener('click', () => {
+                    this.showRulesModal();
+                });
+                
+                // 模态框关闭按钮
+                document.querySelectorAll('.close-modal').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.target.closest('.modal')?.classList.remove('show');
+                    });
+                });
+                
+                // 点击模态框外部关闭
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.addEventListener('click', (e) => {
+                        if (e.target === modal) {
+                            modal.classList.remove('show');
+                        }
+                    });
+                });
+                
+                // 游戏结束模态框按钮
+                document.getElementById('play-again-btn')?.addEventListener('click', () => {
+                    document.getElementById('gameover-modal')?.classList.remove('show');
+                    this.startNewGame();
+                });
+                
+                document.getElementById('next-level-btn')?.addEventListener('click', () => {
+                    document.getElementById('gameover-modal')?.classList.remove('show');
+                    this.currentLevel = (this.currentLevel % 50) + 1;
+                    this.changeLevel(this.currentLevel);
+                    this.startNewGame();
+                });
+                
+                // 朗读模态框按钮
+                document.getElementById('speak-modal-btn')?.addEventListener('click', () => {
+                    const char = document.getElementById('modal-character')?.textContent;
+                    if (char) {
+                        speakText(char, 'zh-CN');
+                    }
+                });
+                
+                // 音量控制
+                document.getElementById('volume')?.addEventListener('input', (e) => {
+                    const volume = e.target.value / 100;
+                    // 可以在这里更新所有音频的音量
+                });
+            }
+            
+            undoMove() {
+                if (!this.gameActive || this.moveHistory.length < 2) {
+                    showToast('无法悔棋', 'error');
+                    return;
+                }
+                
+                // 移除最后两步（玩家和AI各一步）
+                for (let i = 0; i < 2; i++) {
+                    const lastMove = this.moveHistory.pop();
+                    if (!lastMove) break;
+                    
+                    // 从棋盘移除棋子
+                    const { row, col } = lastMove.position;
+                    this.board[row][col] = null;
+                    
+                    // 恢复字符使用状态
+                    if (lastMove.player === 'white') {
+                        const playerChar = this.playerCharacters.find(c => c.char === lastMove.character && c.used);
+                        if (playerChar) {
+                            playerChar.used = false;
+                            playerChar.selected = false;
+                        }
+                    } else {
+                        const aiChar = this.aiCharacters.find(c => c.char === lastMove.character && c.used);
+                        if (aiChar) {
+                            aiChar.used = false;
+                        }
+                    }
+                }
+                
+                // 重置选择
+                this.selectedCharacter = null;
+                
+                // 恢复回合（回到玩家回合）
+                this.currentTurn = 'white';
+                
+                // 清除获胜连线
+                this.winningLine = [];
+                
+                // 更新界面
+                this.renderBoard();
+                this.updateCharacterDisplays();
+                this.updateMoveHistory();
+                this.updateUI();
+                
+                showToast('已悔棋一步', 'info');
+            }
+            
+            showHint() {
+                if (!this.gameActive || this.currentTurn === 'black') {
+                    showToast('当前无法提示', 'error');
+                    return;
+                }
+                
+                // 寻找最佳位置
+                const bestMove = this.findBestHint();
+                if (!bestMove) {
+                    showToast('无法提供提示', 'error');
+                    return;
+                }
+                
+                // 高亮提示位置
+                const { row, col } = bestMove.position;
+                
+                // 临时高亮
+                const cell = document.querySelector(`.board-cell[data-row="${row}"][data-col="${col}"]`);
+                if (cell) {
+                    const originalBorder = cell.style.border;
+                    cell.style.border = '3px solid #4caf50';
+                    cell.style.boxShadow = '0 0 15px #4caf50';
+                    
+                    setTimeout(() => {
+                        cell.style.border = originalBorder;
+                        cell.style.boxShadow = '';
+                    }, 2000);
+                }
+                
+                showToast(`建议位置: ${String.fromCharCode(65 + col)}${row + 1}`, 'success');
+            }
+            
+            findBestHint() {
+                const availableCells = this.getAvailableCells();
+                let bestScore = -Infinity;
+                let bestMove = null;
+                
+                for (const cell of availableCells) {
+                    // 为每个可用字符计算分数
+                    for (const char of this.playerCharacters.filter(c => !c.used)) {
+                        const tempBoard = this.copyBoard(this.board);
+                        tempBoard[cell.row][cell.col] = {
+                            character: char.char,
+                            radical: this.getCurrentRadical(),
+                            player: 'white'
+                        };
+                        
+                        const score = this.evaluatePosition(tempBoard, cell, 'white');
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMove = {
+                                position: cell,
+                                character: char
+                            };
+                        }
+                    }
+                }
+                
+                return bestMove;
+            }
+            
+            getAvailableCells() {
+                const cells = [];
+                for (let row = 0; row < 13; row++) {
+                    for (let col = 0; col < 13; col++) {
+                        if (!this.board[row][col]) {
+                            cells.push({ row, col });
+                        }
+                    }
+                }
+                return cells;
+            }
+            
+            copyBoard(board) {
+                return board.map(row => [...row]);
+            }
+            
+            evaluatePosition(board, position, player) {
+                let score = 0;
+                
+                // 检查是否能形成连线
+                const lineLength = this.checkLineLength(board, position, player);
+                score += lineLength * 100;
+                
+                // 中心位置优势
+                const centerRow = 6;
+                const centerCol = 6;
+                const distance = Math.max(
+                    Math.abs(position.row - centerRow),
+                    Math.abs(position.col - centerCol)
+                );
+                score += (6 - distance) * 10;
+                
+                // 靠近现有棋子
+                score += this.checkProximity(board, position) * 15;
+                
+                return score;
+            }
+            
+            checkLineLength(board, position, player) {
+                const stone = board[position.row][position.col];
+                if (!stone) return 0;
+                
+                const directions = [[0,1], [1,0], [1,1], [1,-1]];
+                let maxLength = 0;
+                
+                for (const [dx, dy] of directions) {
+                    let length = 1;
+                    
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = position.row + dx * i;
+                        const newCol = position.col + dy * i;
+                        
+                        if (this.isValidPosition(newRow, newCol) && 
+                            board[newRow][newCol] && 
+                            board[newRow][newCol].player === player &&
+                            board[newRow][newCol].radical === stone.radical) {
+                            length++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = position.row - dx * i;
+                        const newCol = position.col - dy * i;
+                        
+                        if (this.isValidPosition(newRow, newCol) && 
+                            board[newRow][newCol] && 
+                            board[newRow][newCol].player === player &&
+                            board[newRow][newCol].radical === stone.radical) {
+                            length++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    maxLength = Math.max(maxLength, length);
+                }
+                
+                return maxLength;
+            }
+            
+            checkProximity(board, position) {
+                let proximity = 0;
+                
+                for (let dr = -2; dr <= 2; dr++) {
+                    for (let dc = -2; dc <= 2; dc++) {
+                        if (dr === 0 && dc === 0) continue;
+                        
+                        const newRow = position.row + dr;
+                        const newCol = position.col + dc;
+                        
+                        if (this.isValidPosition(newRow, newCol) && board[newRow][newCol]) {
+                            const distance = Math.max(Math.abs(dr), Math.abs(dc));
+                            proximity += (3 - distance);
+                        }
+                    }
+                }
+                
+                return proximity;
+            }
+            
+            changeLevel(level) {
+                if (level < 1 || level > 50) return;
+                
+                this.currentLevel = level;
+                this.refreshCount = 5; // 重置刷新次数
+                
+                const levelData = this.shuffledCharacterData.find(item => item.id === level);
+                if (levelData) {
+                    // 更新当前声符显示
+                    const currentRadical = document.getElementById('current-radical');
+                    const currentPinyin = document.getElementById('current-pinyin');
+                    
+                    if (currentRadical) currentRadical.textContent = levelData.radical;
+                    if (currentPinyin) currentPinyin.textContent = levelData.pinyin;
+                    
+                    // 重新准备字符
+                    this.prepareCharacters(levelData);
+                    
+                    // 开始新游戏
+                    this.startNewGame();
+                    
+                    showToast(`已切换到关卡 ${level}: ${levelData.radical} (${levelData.pinyin})`, 'success');
+                }
+            }
+            
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => {
+                        console.log(`全屏请求失败: ${err.message}`);
+                    });
+                } else {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    }
+                }
+            }
+        }
+
+        // ==================== 初始化游戏 ====================
+        // 等待DOM加载完成
+        document.addEventListener('DOMContentLoaded', () => {
+            // 创建游戏实例
+            window.game = new FiveCharacterGoGame();
+            
+            // 显示欢迎消息
+            setTimeout(() => {
+                showToast('欢迎来到五子围棋汉字声符版! 黑方先行，AI开始思考...', 'info');
+            }, 1000);
+        });
+
+        // ==================== 辅助函数 ====================
+        // 处理键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (!window.game) return;
+            
+            switch(e.key.toLowerCase()) {
+                case 'r':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        window.game.refreshPlayerCharacters();
+                    }
+                    break;
+                case 'n':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        window.game.startNewGame();
+                    }
+                    break;
+                case 'z':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        window.game.undoMove();
+                    }
+                    break;
+                case 'h':
+                    if (e.ctrlKey) {
+                        e.preventDefault();
+                        window.game.showHint();
+                    }
+                    break;
+                case 'escape':
+                    // 退出全屏
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    }
+                    break;
+            }
+        });
+
+        // 防止右键菜单
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('#game-board')) {
+                e.preventDefault();
+            }
+        });
+
+        // 添加CSS动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            @keyframes bounceIn {
+                0% { transform: scale(0.3); opacity: 0; }
+                50% { transform: scale(1.05); }
+                70% { transform: scale(0.9); }
+                100% { transform: scale(1); opacity: 1; }
+            }
+            
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+            
+            .animate-fadeIn {
+                animation: fadeIn 0.6s ease-out;
+            }
+            
+            .animate-bounceIn {
+                animation: bounceIn 0.6s ease-out;
+            }
+            
+            .animate-pulse {
+                animation: pulse 2s infinite;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
