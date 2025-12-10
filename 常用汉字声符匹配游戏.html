@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉字骨牌配对游戏</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .game-container {
+            width: 95%;
+            max-width: 1200px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .game-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .game-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .game-status {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .tile-container {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 6px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f1f2f6;
+            border-radius: 8px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .tile {
+            aspect-ratio: 1/1;
+            background: linear-gradient(145deg, #8B4513, #A0522D);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .tile:hover {
+            transform: scale(1.05);
+        }
+        
+        .tile.revealed {
+            background: linear-gradient(145deg, #f0f0f0, #e0e0e0);
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 2.4rem;
+        }
+        
+        .tile.selected {
+            background: linear-gradient(145deg, #f1c40f, #f39c12);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .tile.matched {
+            opacity: 0;
+            transform: scale(0);
+            pointer-events: none;
+        }
+        
+        .phonetic-section {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .current-phonetic {
+            text-align: center;
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 992px) {
+            .tile-container {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            
+            .tile {
+                font-size: 2rem;
+            }
+            
+            .tile.revealed {
+                font-size: 2.2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .tile-container {
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .game-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+            
+            .tile {
+                font-size: 1.8rem;
+            }
+            
+            .tile.revealed {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .tile-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .game-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 80%;
+            }
+            
+            .tile {
+                font-size: 1.6rem;
+            }
+            
+            .tile.revealed {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>汉字骨牌配对游戏</h1>
+        </div>
+        
+        <div class="game-controls">
+            <button id="start-btn">开始新游戏</button>
+            <button id="reshuffle-btn">重新洗牌</button>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="matched-count">0</div>
+                <div class="stat-label">已配对</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="remaining-count">40</div>
+                <div class="stat-label">剩余</div>
+            </div>
+        </div>
+        
+        <div class="game-status" id="game-status">
+            点击"开始新游戏"开始
+        </div>
+        
+        <div class="tile-container" id="tile-container">
+            <!-- 骨牌将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="phonetic-section">
+            <div class="current-phonetic" id="current-phonetic">当前声符: 无</div>
+            <div class="instructions">
+                点击骨牌翻面，如果两个汉字同属一个声符，再次点击则配对消除
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 游戏状态
+        const gameState = {
+            currentTiles: [], // 当前桌面骨牌
+            revealedTiles: [], // 已翻开的骨牌
+            selectedTiles: [], // 已选中的骨牌索引
+            matchedTiles: [], // 已匹配的骨牌索引
+            gameStarted: false, // 游戏是否开始
+            currentGroupIndex: 0 // 当前使用的数据组索引
+        };
+
+        // 汉字数据 - 根据提供的数据整理
+        const hanziGroups = [
+           
+    [
+        { phonetic: '哀', pinyin: 'āi', characters: ['哀', '埃', '挨', '唉'] },
+        { phonetic: '艾', pinyin: 'ài', characters: ['艾', '爱', '暧', '嗳'] },
+        { phonetic: '安', pinyin: 'ān', characters: ['安', '鞍', '按', '案'] },
+        { phonetic: '昂', pinyin: 'áng', characters: ['昂', '仰', '迎'] },
+        { phonetic: '奥', pinyin: 'ào', characters: ['奥', '懊', '澳'] },
+        { phonetic: '敖', pinyin: 'áo', characters: ['敖', '傲', '赘', '熬'] },
+        { phonetic: '八', pinyin: 'bā', characters: ['八', '扒', '趴'] },
+        { phonetic: '巴', pinyin: 'bā', characters: ['巴', '爸', '疤', '靶', '把', '芭'] },
+        { phonetic: '白', pinyin: 'bái', characters: ['白', '百', '伯', '泊', '柏'] },
+        { phonetic: '贝', pinyin: 'bèi', characters: ['贝', '坝', '败', '呗', '财'] }
+    ],
+    [
+        { phonetic: '本', pinyin: 'běn', characters: ['本', '笨', '体', '苯'] },
+        { phonetic: '比', pinyin: 'bǐ', characters: ['比', '毕', '毙', '庇', '屁'] },
+        { phonetic: '辟', pinyin: 'pì', characters: ['辟', '僻', '癖', '避', '壁'] },
+        { phonetic: '皮', pinyin: 'pí', characters: ['皮', '彼', '披', '波', '婆'] },
+        { phonetic: '付', pinyin: 'fù', characters: ['付', '附', '府', '符', '俯'] },
+        { phonetic: '甫', pinyin: 'fǔ', characters: ['甫', '辅', '傅', '缚', '搏'] },
+        { phonetic: '弗', pinyin: 'fú', characters: ['弗', '佛', '拂', '费', '沸'] },
+        { phonetic: '反', pinyin: 'fǎn', characters: ['反', '返', '饭', '贩', '板'] },
+        { phonetic: '分', pinyin: 'fēn', characters: ['分', '份', '芬', '纷', '粉'] },
+        { phonetic: '方', pinyin: 'fāng', characters: ['方', '放', '房', '防', '芳'] }
+    ],
+    [
+        { phonetic: '夫', pinyin: 'fū', characters: ['夫', '肤', '扶', '芙'] },
+        { phonetic: '父', pinyin: 'fù', characters: ['父', '斧', '釜', '讣'] },
+        { phonetic: '非', pinyin: 'fēi', characters: ['非', '悲', '辈', '匪', '诽'] },
+        { phonetic: '凡', pinyin: 'fán', characters: ['凡', '帆', '矾'] },
+        { phonetic: '风', pinyin: 'fēng', characters: ['风', '疯', '枫', '讽'] },
+        { phonetic: '阜', pinyin: 'fù', characters: ['阜', '埠'] },
+        { phonetic: '复', pinyin: 'fù', characters: ['复', '腹', '覆', '馥'] },
+        { phonetic: '富', pinyin: 'fù', characters: ['富', '副', '辐', '蝠'] },
+        { phonetic: '伏', pinyin: 'fú', characters: ['伏', '茯', '袱'] },
+        { phonetic: '孚', pinyin: 'fú', characters: ['孚', '俘', '浮', '孵'] }
+    ],
+    [
+        { phonetic: '盖', pinyin: 'gài', characters: ['盖', '溉', '概'] },
+        { phonetic: '干', pinyin: 'gān', characters: ['干', '杆', '肝', '竿', '赶'] },
+        { phonetic: '甘', pinyin: 'gān', characters: ['甘', '柑', '苷', '泔'] },
+        { phonetic: '敢', pinyin: 'gǎn', characters: ['敢', '憨', '瞰', '阚'] },
+        { phonetic: '冈', pinyin: 'gāng', characters: ['冈', '刚', '钢', '纲', '岗'] },
+        { phonetic: '高', pinyin: 'gāo', characters: ['高', '膏', '篙', '糕', '搞'] },
+        { phonetic: '告', pinyin: 'gào', characters: ['告', '浩', '酷', '靠', '造'] },
+        { phonetic: '各', pinyin: 'gè', characters: ['各', '格', '阁', '搁', '路'] },
+        { phonetic: '艮', pinyin: 'gěn', characters: ['艮', '根', '跟', '很', '狠'] },
+        { phonetic: '更', pinyin: 'gèng', characters: ['更', '便', '硬', '梗'] }
+    ],
+    [
+        { phonetic: '工', pinyin: 'gōng', characters: ['工', '功', '攻', '贡', '空'] },
+        { phonetic: '公', pinyin: 'gōng', characters: ['公', '松', '讼', '颂', '翁'] },
+        { phonetic: '共', pinyin: 'gòng', characters: ['共', '供', '洪', '哄', '拱'] },
+        { phonetic: '勾', pinyin: 'gōu', characters: ['勾', '沟', '钩', '构', '购'] },
+        { phonetic: '古', pinyin: 'gǔ', characters: ['古', '故', '姑', '估', '固'] },
+        { phonetic: '谷', pinyin: 'gǔ', characters: ['谷', '俗', '欲', '浴', '裕'] },
+        { phonetic: '骨', pinyin: 'gǔ', characters: ['骨', '滑', '猾', '骰'] },
+        { phonetic: '瓜', pinyin: 'guā', characters: ['瓜', '呱', '孤', '弧'] },
+        { phonetic: '官', pinyin: 'guān', characters: ['官', '管', '馆', '棺'] },
+        { phonetic: '光', pinyin: 'guāng', characters: ['光', '恍', '晃', '觥'] }
+    ],
+    [
+        { phonetic: '广', pinyin: 'guǎng', characters: ['广', '矿', '旷', '圹'] },
+        { phonetic: '圭', pinyin: 'guī', characters: ['圭', '硅', '闺', '桂', '奎'] },
+        { phonetic: '鬼', pinyin: 'guǐ', characters: ['鬼', '瑰', '傀', '愧', '魁'] },
+        { phonetic: '癸', pinyin: 'guǐ', characters: ['癸', '葵', '揆', '睽'] },
+        { phonetic: '果', pinyin: 'guǒ', characters: ['果', '裹', '棵', '颗', '课'] },
+        { phonetic: '亥', pinyin: 'hài', characters: ['亥', '孩', '骸', '骇'] },
+        { phonetic: '害', pinyin: 'hài', characters: ['害', '豁', '割', '瞎'] },
+        { phonetic: '函', pinyin: 'hán', characters: ['函', '涵', '菡'] },
+        { phonetic: '翰', pinyin: 'hàn', characters: ['翰', '瀚'] },
+        { phonetic: '豪', pinyin: 'háo', characters: ['豪', '壕', '嚎', '濠'] }
+    ],
+    [
+        { phonetic: '禾', pinyin: 'hé', characters: ['禾', '和', '利', '秋', '科'] },
+        { phonetic: '合', pinyin: 'hé', characters: ['合', '盒', '答', '拾', '拿'] },
+        { phonetic: '何', pinyin: 'hé', characters: ['何', '河', '荷', '苛', '柯'] },
+        { phonetic: '曷', pinyin: 'hé', characters: ['曷', '喝', '渴', '歇', '揭'] },
+        { phonetic: '黑', pinyin: 'hēi', characters: ['黑', '墨', '默', '黔', '黛'] },
+        { phonetic: '恒', pinyin: 'héng', characters: ['恒', '衡', '横', '桁'] },
+        { phonetic: '亨', pinyin: 'hēng', characters: ['亨', '哼', '烹', '享'] },
+        { phonetic: '虹', pinyin: 'hóng', characters: ['虹', '红', '江', '鸿', '缸'] },
+        { phonetic: '侯', pinyin: 'hóu', characters: ['侯', '候', '喉', '猴', '篌'] },
+        { phonetic: '乎', pinyin: 'hū', characters: ['乎', '呼', '忽', '惚'] }
+    ],
+    [
+        { phonetic: '胡', pinyin: 'hú', characters: ['胡', '湖', '糊', '蝴', '瑚'] },
+        { phonetic: '虎', pinyin: 'hǔ', characters: ['虎', '唬', '琥', '遽'] },
+        { phonetic: '户', pinyin: 'hù', characters: ['户', '护', '沪', '庐', '炉'] },
+        { phonetic: '华', pinyin: 'huá', characters: ['华', '哗', '桦', '烨'] },
+        { phonetic: '化', pinyin: 'huà', characters: ['化', '花', '货', '讹', '靴'] },
+        { phonetic: '怀', pinyin: 'huái', characters: ['怀', '坏', '还', '环'] },
+        { phonetic: '奂', pinyin: 'huàn', characters: ['奂', '换', '唤', '涣', '焕'] },
+        { phonetic: '皇', pinyin: 'huáng', characters: ['皇', '煌', '惶', '蝗', '凰'] },
+        { phonetic: '黄', pinyin: 'huáng', characters: ['黄', '横', '簧', '磺', '潢'] },
+        { phonetic: '回', pinyin: 'huí', characters: ['回', '徊', '蛔', '茴'] }
+    ],
+    [
+        { phonetic: '会', pinyin: 'huì', characters: ['会', '绘', '烩', '荟', '脍'] },
+        { phonetic: '彗', pinyin: 'huì', characters: ['彗', '慧', '惠', '蕙', '穗'] },
+        { phonetic: '昏', pinyin: 'hūn', characters: ['昏', '婚', '阍', '惽'] },
+        { phonetic: '火', pinyin: 'huǒ', characters: ['火', '伙', '炎', '灾', '灭'] },
+        { phonetic: '或', pinyin: 'huò', characters: ['或', '域', '惑', '阈', '蜮'] },
+        { phonetic: '霍', pinyin: 'huò', characters: ['霍', '藿', '嚯', '攉'] },
+        { phonetic: '几', pinyin: 'jī', characters: ['几', '机', '饥', '肌', '矶'] },
+        { phonetic: '及', pinyin: 'jí', characters: ['及', '级', '极', '吸', '汲'] },
+        { phonetic: '吉', pinyin: 'jí', characters: ['吉', '结', '洁', '桔', '诘'] },
+        { phonetic: '即', pinyin: 'jí', characters: ['即', '既', '暨', '概', '慨'] }
+    ],
+    [
+        { phonetic: '己', pinyin: 'jǐ', characters: ['己', '记', '纪', '忌', '起'] },
+        { phonetic: '夹', pinyin: 'jiā', characters: ['夹', '颊', '侠', '峡', '狭'] },
+        { phonetic: '家', pinyin: 'jiā', characters: ['家', '嫁', '稼', '豪', '蒙'] },
+        { phonetic: '甲', pinyin: 'jiǎ', characters: ['甲', '鸭', '押', '闸', '钾'] },
+        { phonetic: '间', pinyin: 'jiān', characters: ['间', '简', '涧', '锏', '裥'] },
+        { phonetic: '兼', pinyin: 'jiān', characters: ['兼', '谦', '歉', '嫌', '赚'] },
+        { phonetic: '见', pinyin: 'jiàn', characters: ['见', '现', '视', '规', '觅'] },
+        { phonetic: '建', pinyin: 'jiàn', characters: ['建', '健', '键', '毽', '腱'] },
+        { phonetic: '将', pinyin: 'jiāng', characters: ['将', '奖', '浆', '酱', '蒋'] },
+        { phonetic: '交', pinyin: 'jiāo', characters: ['交', '校', '较', '效', '郊'] }
+    ],
+
+    [
+        { phonetic: '哀', pinyin: 'āi', characters: ['哀', '埃', '挨', '唉'] },
+        { phonetic: '艾', pinyin: 'ài', characters: ['艾', '爱', '暧', '嗳'] },
+        { phonetic: '安', pinyin: 'ān', characters: ['安', '鞍', '按', '案'] },
+        { phonetic: '昂', pinyin: 'áng', characters: ['昂', '仰', '迎'] },
+        { phonetic: '奥', pinyin: 'ào', characters: ['奥', '懊', '澳'] },
+        { phonetic: '敖', pinyin: 'áo', characters: ['敖', '傲', '赘', '熬'] },
+        { phonetic: '八', pinyin: 'bā', characters: ['八', '扒', '趴'] },
+        { phonetic: '巴', pinyin: 'bā', characters: ['巴', '爸', '疤', '靶', '把', '芭'] },
+        { phonetic: '白', pinyin: 'bái', characters: ['白', '百', '伯', '泊', '柏'] },
+        { phonetic: '贝', pinyin: 'bèi', characters: ['贝', '坝', '败', '呗', '财'] }
+    ],
+    [
+        { phonetic: '本', pinyin: 'běn', characters: ['本', '笨', '体', '苯'] },
+        { phonetic: '比', pinyin: 'bǐ', characters: ['比', '毕', '毙', '庇', '屁'] },
+        { phonetic: '辟', pinyin: 'pì', characters: ['辟', '僻', '癖', '避', '壁'] },
+        { phonetic: '皮', pinyin: 'pí', characters: ['皮', '彼', '披', '波', '婆'] },
+        { phonetic: '付', pinyin: 'fù', characters: ['付', '附', '府', '符', '俯'] },
+        { phonetic: '甫', pinyin: 'fǔ', characters: ['甫', '辅', '傅', '缚', '搏'] },
+        { phonetic: '弗', pinyin: 'fú', characters: ['弗', '佛', '拂', '费', '沸'] },
+        { phonetic: '反', pinyin: 'fǎn', characters: ['反', '返', '饭', '贩', '板'] },
+        { phonetic: '分', pinyin: 'fēn', characters: ['分', '份', '芬', '纷', '粉'] },
+        { phonetic: '方', pinyin: 'fāng', characters: ['方', '放', '房', '防', '芳'] }
+    ],
+    [
+        { phonetic: '夫', pinyin: 'fū', characters: ['夫', '肤', '扶', '芙'] },
+        { phonetic: '父', pinyin: 'fù', characters: ['父', '斧', '釜', '讣'] },
+        { phonetic: '非', pinyin: 'fēi', characters: ['非', '悲', '辈', '匪', '诽'] },
+        { phonetic: '凡', pinyin: 'fán', characters: ['凡', '帆', '矾'] },
+        { phonetic: '风', pinyin: 'fēng', characters: ['风', '疯', '枫', '讽'] },
+        { phonetic: '阜', pinyin: 'fù', characters: ['阜', '埠'] },
+        { phonetic: '复', pinyin: 'fù', characters: ['复', '腹', '覆', '馥'] },
+        { phonetic: '富', pinyin: 'fù', characters: ['富', '副', '辐', '蝠'] },
+        { phonetic: '伏', pinyin: 'fú', characters: ['伏', '茯', '袱'] },
+        { phonetic: '孚', pinyin: 'fú', characters: ['孚', '俘', '浮', '孵'] }
+    ],
+    [
+        { phonetic: '既', pinyin: 'gài', characters: ['慨', '溉', '概'] },
+        { phonetic: '干', pinyin: 'gān', characters: ['干', '杆', '肝', '竿', '赶'] },
+        { phonetic: '甘', pinyin: 'gān', characters: ['甘', '柑', '苷', '泔'] },
+        { phonetic: '敢', pinyin: 'gǎn', characters: ['敢', '憨', '瞰', '阚'] },
+        { phonetic: '冈', pinyin: 'gāng', characters: ['冈', '刚', '钢', '纲', '岗'] },
+        { phonetic: '高', pinyin: 'gāo', characters: ['高', '膏', '篙', '糕', '搞'] },
+        { phonetic: '告', pinyin: 'gào', characters: ['告', '浩', '酷', '靠', '造'] },
+        { phonetic: '各', pinyin: 'gè', characters: ['各', '格', '阁', '搁', '路'] },
+        { phonetic: '艮', pinyin: 'gěn', characters: ['艮', '根', '跟', '很', '狠'] },
+        { phonetic: '更', pinyin: 'gèng', characters: ['更', '便', '硬', '梗'] }
+    ],
+    [
+        { phonetic: '工', pinyin: 'gōng', characters: ['工', '功', '攻', '贡', '空'] },
+        { phonetic: '公', pinyin: 'gōng', characters: ['公', '松', '讼', '颂', '翁'] },
+        { phonetic: '共', pinyin: 'gòng', characters: ['共', '供', '洪', '哄', '拱'] },
+        { phonetic: '勾', pinyin: 'gōu', characters: ['勾', '沟', '钩', '构', '购'] },
+        { phonetic: '古', pinyin: 'gǔ', characters: ['古', '故', '姑', '估', '固'] },
+        { phonetic: '谷', pinyin: 'gǔ', characters: ['谷', '俗', '欲', '浴', '裕'] },
+        { phonetic: '骨', pinyin: 'gǔ', characters: ['骨', '滑', '猾', '骰'] },
+        { phonetic: '瓜', pinyin: 'guā', characters: ['瓜', '呱', '孤', '弧'] },
+        { phonetic: '官', pinyin: 'guān', characters: ['官', '管', '馆', '棺'] },
+        { phonetic: '光', pinyin: 'guāng', characters: ['光', '恍', '晃', '觥'] }
+    ],
+    [
+        { phonetic: '广', pinyin: 'guǎng', characters: ['广', '矿', '旷', '圹'] },
+        { phonetic: '圭', pinyin: 'guī', characters: ['圭', '硅', '闺', '桂',] },
+    [
+        { phonetic: '哀', pinyin: 'āi', characters: ['哀', '埃', '挨', '唉'] },
+        { phonetic: '艾', pinyin: 'ài', characters: ['艾', '爱', '暧', '嗳'] },
+        { phonetic: '安', pinyin: 'ān', characters: ['安', '鞍', '按', '案'] },
+        { phonetic: '昂', pinyin: 'áng', characters: ['昂', '仰', '迎'] },
+        { phonetic: '奥', pinyin: 'ào', characters: ['奥', '懊', '澳'] },
+        { phonetic: '敖', pinyin: 'áo', characters: ['敖', '傲', '赘', '熬'] },
+        { phonetic: '八', pinyin: 'bā', characters: ['八', '扒', '趴'] },
+        { phonetic: '巴', pinyin: 'bā', characters: ['巴', '爸', '疤', '靶', '把', '芭'] },
+        { phonetic: '白', pinyin: 'bái', characters: ['白', '百', '伯', '泊', '柏'] },
+        { phonetic: '贝', pinyin: 'bèi', characters: ['贝', '坝', '败', '呗', '财'] }
+    ],
+    [
+        { phonetic: '本', pinyin: 'běn', characters: ['本', '笨', '体', '苯'] },
+        { phonetic: '比', pinyin: 'bǐ', characters: ['比', '毕', '毙', '庇', '屁'] },
+        { phonetic: '辟', pinyin: 'pì', characters: ['辟', '僻', '癖', '避', '壁'] },
+        { phonetic: '皮', pinyin: 'pí', characters: ['皮', '彼', '披', '波', '婆'] },
+        { phonetic: '付', pinyin: 'fù', characters: ['付', '附', '府', '符', '俯'] },
+        { phonetic: '甫', pinyin: 'fǔ', characters: ['甫', '辅', '傅', '缚', '搏'] },
+        { phonetic: '弗', pinyin: 'fú', characters: ['弗', '佛', '拂', '费', '沸'] },
+        { phonetic: '反', pinyin: 'fǎn', characters: ['反', '返', '饭', '贩', '板'] },
+        { phonetic: '分', pinyin: 'fēn', characters: ['分', '份', '芬', '纷', '粉'] },
+        { phonetic: '方', pinyin: 'fāng', characters: ['方', '放', '房', '防', '芳'] }
+    ],
+    [
+        { phonetic: '夫', pinyin: 'fū', characters: ['夫', '肤', '扶', '芙'] },
+        { phonetic: '父', pinyin: 'fù', characters: ['父', '斧', '釜', '讣'] },
+        { phonetic: '非', pinyin: 'fēi', characters: ['非', '悲', '辈', '匪', '诽'] },
+        { phonetic: '凡', pinyin: 'fán', characters: ['凡', '帆', '矾'] },
+        { phonetic: '风', pinyin: 'fēng', characters: ['风', '疯', '枫', '讽'] },
+        { phonetic: '阜', pinyin: 'fù', characters: ['阜', '埠'] },
+        { phonetic: '复', pinyin: 'fù', characters: ['复', '腹', '覆', '馥'] },
+        { phonetic: '富', pinyin: 'fù', characters: ['富', '副', '辐', '蝠'] },
+        { phonetic: '伏', pinyin: 'fú', characters: ['伏', '茯', '袱'] },
+        { phonetic: '孚', pinyin: 'fú', characters: ['孚', '俘', '浮', '孵'] }
+    ],
+    [
+        { phonetic: '盖', pinyin: 'gài', characters: ['盖', '溉', '概'] },
+        { phonetic: '干', pinyin: 'gān', characters: ['干', '杆', '肝', '竿', '赶'] },
+        { phonetic: '甘', pinyin: 'gān', characters: ['甘', '柑', '苷', '泔'] },
+        { phonetic: '敢', pinyin: 'gǎn', characters: ['敢', '憨', '瞰', '阚'] },
+        { phonetic: '冈', pinyin: 'gāng', characters: ['冈', '刚', '钢', '纲', '岗'] },
+        { phonetic: '高', pinyin: 'gāo', characters: ['高', '膏', '篙', '糕', '搞'] },
+        { phonetic: '告', pinyin: 'gào', characters: ['告', '浩', '酷', '靠', '造'] },
+        { phonetic: '各', pinyin: 'gè', characters: ['各', '格', '阁', '搁', '路'] },
+        { phonetic: '艮', pinyin: 'gěn', characters: ['艮', '根', '跟', '很', '狠'] },
+        { phonetic: '更', pinyin: 'gèng', characters: ['更', '便', '硬', '梗'] }
+    ],
+    [
+        { phonetic: '工', pinyin: 'gōng', characters: ['工', '功', '攻', '贡', '空'] },
+        { phonetic: '公', pinyin: 'gōng', characters: ['公', '松', '讼', '颂', '翁'] },
+        { phonetic: '共', pinyin: 'gòng', characters: ['共', '供', '洪', '哄', '拱'] },
+        { phonetic: '勾', pinyin: 'gōu', characters: ['勾', '沟', '钩', '构', '购'] },
+        { phonetic: '古', pinyin: 'gǔ', characters: ['古', '故', '姑', '估', '固'] },
+        { phonetic: '谷', pinyin: 'gǔ', characters: ['谷', '俗', '欲', '浴', '裕'] },
+        { phonetic: '骨', pinyin: 'gǔ', characters: ['骨', '滑', '猾', '骰'] },
+        { phonetic: '瓜', pinyin: 'guā', characters: ['瓜', '呱', '孤', '弧'] },
+        { phonetic: '官', pinyin: 'guān', characters: ['官', '管', '馆', '棺'] },
+        { phonetic: '光', pinyin: 'guāng', characters: ['光', '恍', '晃', '觥'] }
+    ],
+    [
+        { phonetic: '广', pinyin: 'guǎng', characters: ['广', '矿', '旷', '圹'] },
+        { phonetic: '圭', pinyin: 'guī', characters: ['圭', '硅', '闺', '桂', '奎'] },
+        { phonetic: '鬼', pinyin: 'guǐ', characters: ['鬼', '瑰', '傀', '愧', '魁'] },
+        { phonetic: '癸', pinyin: 'guǐ', characters: ['癸', '葵', '揆', '睽'] },
+        { phonetic: '果', pinyin: 'guǒ', characters: ['果', '裹', '棵', '颗', '课'] },
+        { phonetic: '亥', pinyin: 'hài', characters: ['亥', '孩', '骸', '骇'] },
+        { phonetic: '害', pinyin: 'hài', characters: ['害', '豁', '割', '瞎'] },
+        { phonetic: '函', pinyin: 'hán', characters: ['函', '涵', '菡'] },
+        { phonetic: '翰', pinyin: 'hàn', characters: ['翰', '瀚'] },
+        { phonetic: '豪', pinyin: 'háo', characters: ['豪', '壕', '嚎', '濠'] }
+    ],
+    [
+        { phonetic: '禾', pinyin: 'hé', characters: ['禾', '和', '利', '秋', '科'] },
+        { phonetic: '合', pinyin: 'hé', characters: ['合', '盒', '答', '拾', '拿'] },
+        { phonetic: '何', pinyin: 'hé', characters: ['何', '河', '荷', '苛', '柯'] },
+        { phonetic: '曷', pinyin: 'hé', characters: ['曷', '喝', '渴', '歇', '揭'] },
+        { phonetic: '黑', pinyin: 'hēi', characters: ['黑', '墨', '默', '黔', '黛'] },
+        { phonetic: '恒', pinyin: 'héng', characters: ['恒', '衡', '横', '桁'] },
+        { phonetic: '亨', pinyin: 'hēng', characters: ['亨', '哼', '烹', '享'] },
+        { phonetic: '虹', pinyin: 'hóng', characters: ['虹', '红', '江', '鸿', '缸'] },
+        { phonetic: '侯', pinyin: 'hóu', characters: ['侯', '候', '喉', '猴', '篌'] },
+        { phonetic: '乎', pinyin: 'hū', characters: ['乎', '呼', '忽', '惚'] }
+    ],
+    [
+        { phonetic: '胡', pinyin: 'hú', characters: ['胡', '湖', '糊', '蝴', '瑚'] },
+        { phonetic: '虎', pinyin: 'hǔ', characters: ['虎', '唬', '琥', '遽'] },
+        { phonetic: '户', pinyin: 'hù', characters: ['户', '护', '沪', '庐', '炉'] },
+        { phonetic: '华', pinyin: 'huá', characters: ['华', '哗', '桦', '烨'] },
+        { phonetic: '化', pinyin: 'huà', characters: ['化', '花', '货', '讹', '靴'] },
+        { phonetic: '怀', pinyin: 'huái', characters: ['怀', '坏', '还', '环'] },
+        { phonetic: '奂', pinyin: 'huàn', characters: ['奂', '换', '唤', '涣', '焕'] },
+        { phonetic: '皇', pinyin: 'huáng', characters: ['皇', '煌', '惶', '蝗', '凰'] },
+        { phonetic: '黄', pinyin: 'huáng', characters: ['黄', '横', '簧', '磺', '潢'] },
+        { phonetic: '回', pinyin: 'huí', characters: ['回', '徊', '蛔', '茴'] }
+    ],
+    [
+        { phonetic: '会', pinyin: 'huì', characters: ['会', '绘', '烩', '荟', '脍'] },
+        { phonetic: '彗', pinyin: 'huì', characters: ['彗', '慧', '惠', '蕙', '穗'] },
+        { phonetic: '昏', pinyin: 'hūn', characters: ['昏', '婚', '阍', '惽'] },
+        { phonetic: '火', pinyin: 'huǒ', characters: ['火', '伙', '炎', '灾', '灭'] },
+        { phonetic: '或', pinyin: 'huò', characters: ['或', '域', '惑', '阈', '蜮'] },
+        { phonetic: '霍', pinyin: 'huò', characters: ['霍', '藿', '嚯', '攉'] },
+        { phonetic: '几', pinyin: 'jī', characters: ['几', '机', '饥', '肌', '矶'] },
+        { phonetic: '及', pinyin: 'jí', characters: ['及', '级', '极', '吸', '汲'] },
+        { phonetic: '吉', pinyin: 'jí', characters: ['吉', '结', '洁', '桔', '诘'] },
+        { phonetic: '即', pinyin: 'jí', characters: ['即', '既', '暨', '概', '慨'] }
+    ],
+    [
+        { phonetic: '己', pinyin: 'jǐ', characters: ['己', '记', '纪', '忌', '起'] },
+        { phonetic: '夹', pinyin: 'jiā', characters: ['夹', '颊', '侠', '峡', '狭'] },
+        { phonetic: '家', pinyin: 'jiā', characters: ['家', '嫁', '稼', '豪', '蒙'] },
+        { phonetic: '甲', pinyin: 'jiǎ', characters: ['甲', '鸭', '押', '闸', '钾'] },
+        { phonetic: '间', pinyin: 'jiān', characters: ['间', '简', '涧', '锏', '裥'] },
+        { phonetic: '兼', pinyin: 'jiān', characters: ['兼', '谦', '歉', '嫌', '赚'] },
+        { phonetic: '见', pinyin: 'jiàn', characters: ['见', '现', '视', '规', '觅'] },
+        { phonetic: '建', pinyin: 'jiàn', characters: ['建', '健', '键', '毽', '腱'] },
+        { phonetic: '将', pinyin: 'jiāng', characters: ['将', '奖', '浆', '酱', '蒋'] },
+        { phonetic: '交', pinyin: 'jiāo', characters: ['交', '校', '较', '效', '郊'] }
+    ],
+    [
+        { phonetic: '角', pinyin: 'jiǎo', characters: ['角', '解', '触', '觚', '觞'] },
+        { phonetic: '教', pinyin: 'jiào', characters: ['教', '校', '较', '孝', '酵'] },
+        { phonetic: '皆', pinyin: 'jiē', characters: ['皆', '谐', '楷', '偕', '喈'] },
+        { phonetic: '桀', pinyin: 'jié', characters: ['桀', '杰', '揭', '竭', '碣'] },
+        { phonetic: '介', pinyin: 'jiè', characters: ['介', '界', '阶', '芥', '尬'] },
+        { phonetic: '今', pinyin: 'jīn', characters: ['今', '含', '念', '吟', '琴'] },
+        { phonetic: '巾', pinyin: 'jīn', characters: ['巾', '币', '布', '帅', '师'] },
+        { phonetic: '斤', pinyin: 'jīn', characters: ['斤', '近', '新', '欣', '祈'] },
+        { phonetic: '金', pinyin: 'jīn', characters: ['金', '鑫', '鉴', '针', '铁'] },
+        { phonetic: '堇', pinyin: 'jǐn', characters: ['堇', '谨', '勤', '瑾', '觐'] }
+    ],
+    [
+        { phonetic: '京', pinyin: 'jīng', characters: ['京', '景', '惊', '鲸', '影'] },
+        { phonetic: '井', pinyin: 'jǐng', characters: ['井', '阱', '耕', '讲', '进'] },
+        { phonetic: '竟', pinyin: 'jìng', characters: ['竟', '境', '镜', '競'] },
+        { phonetic: '敬', pinyin: 'jìng', characters: ['敬', '警', '擎', '儆'] },
+        { phonetic: '九', pinyin: 'jiǔ', characters: ['九', '究', '仇', '轨', '旭'] },
+        { phonetic: '久', pinyin: 'jiǔ', characters: ['久', '灸', '玖', '疚', '柩'] },
+        { phonetic: '臼', pinyin: 'jiù', characters: ['臼', '舅', '旧', '柏', '舀'] },
+        { phonetic: '居', pinyin: 'jū', characters: ['居', '据', '剧', '锯', '倨'] },
+        { phonetic: '句', pinyin: 'jù', characters: ['句', '拘', '驹', '苟', '够'] },
+        { phonetic: '具', pinyin: 'jù', characters: ['具', '惧', '俱', '飓', '犋'] }
+    ],
+    [
+        { phonetic: '卷', pinyin: 'juǎn', characters: ['卷', '倦', '圈', '蜷', '券'] },
+        { phonetic: '决', pinyin: 'jué', characters: ['决', '诀', '抉', '缺', '块'] },
+        { phonetic: '厥', pinyin: 'jué', characters: ['厥', '蹶', '獗', '蕨', '橛'] },
+        { phonetic: '军', pinyin: 'jūn', characters: ['军', '辉', '浑', '挥', '晕'] },
+        { phonetic: '君', pinyin: 'jūn', characters: ['君', '群', '裙', '郡', '窘'] },
+        { phonetic: '开', pinyin: 'kāi', characters: ['开', '形', '刑', '型', '研'] },
+        { phonetic: '刊', pinyin: 'kān', characters: ['刊', '勘', '堪', '戡', '龛'] },
+        { phonetic: '康', pinyin: 'kāng', characters: ['康', '慷', '糠', '抗', '炕'] },
+        { phonetic: '亢', pinyin: 'kàng', characters: ['亢', '抗', '航', '杭', '吭'] },
+        { phonetic: '考', pinyin: 'kǎo', characters: ['考', '烤', '拷', '铐', '栲'] }
+    ],
+    [
+        { phonetic: '可', pinyin: 'kě', characters: ['可', '河', '何', '哥', '柯'] },
+        { phonetic: '克', pinyin: 'kè', characters: ['克', '刻', '咳', '核', '黑'] },
+        { phonetic: '肯', pinyin: 'kěn', characters: ['肯', '啃', '垦', '恳', '龈'] },
+        { phonetic: '空', pinyin: 'kōng', characters: ['空', '控', '腔', '箜', '崆'] },
+        { phonetic: '孔', pinyin: 'kǒng', characters: ['孔', '吼', '犼', '叩', '扣'] },
+        { phonetic: '口', pinyin: 'kǒu', characters: ['口', '扣', '叩', '叫', '吃'] },
+        { phonetic: '寇', pinyin: 'kòu', characters: ['寇', '蔻', '叩', '扣', '够'] },
+        { phonetic: '哭', pinyin: 'kū', characters: ['哭', '器', '嚣', '犬', '吠'] },
+        { phonetic: '苦', pinyin: 'kǔ', characters: ['苦', '枯', '骷', '酷', '浩'] },
+        { phonetic: '库', pinyin: 'kù', characters: ['库', '裤', '裤', '裤', '裤'] }
+    ],
+    [
+        { phonetic: '夸', pinyin: 'kuā', characters: ['夸', '跨', '挎', '胯', '垮'] },
+        { phonetic: '快', pinyin: 'kuài', characters: ['快', '块', '筷', '抉', '缺'] },
+        { phonetic: '宽', pinyin: 'kuān', characters: ['宽', '髋', '款', '完', '院'] },
+        { phonetic: '款', pinyin: 'kuǎn', characters: ['款', '歀', '欵', '窾', '窽'] },
+        { phonetic: '匡', pinyin: 'kuāng', characters: ['匡', '筐', '眶', '框', '哐'] },
+        { phonetic: '狂', pinyin: 'kuáng', characters: ['狂', '逛', '诳', '框', '眶'] },
+        { phonetic: '况', pinyin: 'kuàng', characters: ['况', '矿', '旷', '邝', '纩'] },
+        { phonetic: '亏', pinyin: 'kuī', characters: ['亏', '污', '夸', '垮', '跨'] },
+        { phonetic: '奎', pinyin: 'kuí', characters: ['奎', '逵', '睽', '葵', '魁'] },
+        { phonetic: '葵', pinyin: 'kuí', characters: ['葵', '睽', '揆', '骙', '阕'] }
+    ],
+    [
+        { phonetic: '昆', pinyin: 'kūn', characters: ['昆', '混', '棍', '馄', '锟'] },
+        { phonetic: '困', pinyin: 'kùn', characters: ['困', '捆', '悃', '阃', '壸'] },
+        { phonetic: '括', pinyin: 'kuò', characters: ['括', '适', '活', '话', '刮'] },
+        { phonetic: '来', pinyin: 'lái', characters: ['来', '莱', '徕', '睐', '铼'] },
+        { phonetic: '兰', pinyin: 'lán', characters: ['兰', '栏', '拦', '烂', '澜'] },
+        { phonetic: '览', pinyin: 'lǎn', characters: ['览', '揽', '缆', '榄', '鉴'] },
+        { phonetic: '郎', pinyin: 'láng', characters: ['郎', '朗', '廊', '螂', '榔'] },
+        { phonetic: '劳', pinyin: 'láo', characters: ['劳', '捞', '唠', '涝', '痨'] },
+        { phonetic: '老', pinyin: 'lǎo', characters: ['老', '姥', '佬', '铑', '栳'] },
+        { phonetic: '乐', pinyin: 'lè', characters: ['乐', '烁', '砾', '栎', '铄'] }
+    ],
+    [
+        { phonetic: '雷', pinyin: 'léi', characters: ['雷', '蕾', '镭', '擂', '檑'] },
+        { phonetic: '累', pinyin: 'lèi', characters: ['累', '骡', '螺', '摞', '缧'] },
+        { phonetic: '类', pinyin: 'lèi', characters: ['类', '泪', '肋', '磊', '垒'] },
+        { phonetic: '离', pinyin: 'lí', characters: ['离', '篱', '璃', '漓', '缡'] },
+        { phonetic: '里', pinyin: 'lǐ', characters: ['里', '理', '鲤', '厘', '狸'] },
+        { phonetic: '力', pinyin: 'lì', characters: ['力', '历', '厉', '励', '沥'] },
+        { phonetic: '立', pinyin: 'lì', characters: ['立', '位', '拉', '泣', '粒'] },
+        { phonetic: '利', pinyin: 'lì', characters: ['利', '梨', '犁', '莉', '痢'] },
+        { phonetic: '栗', pinyin: 'lì', characters: ['栗', '慄', '溧', '篥', '凓'] },
+        { phonetic: '连', pinyin: 'lián', characters: ['连', '莲', '链', '联', '涟'] }
+    ],
+    [
+        { phonetic: '良', pinyin: 'liáng', characters: ['良', '粮', '狼', '娘', '朗'] },
+        { phonetic: '两', pinyin: 'liǎng', characters: ['两', '辆', '俩', '魉', '唡'] },
+        { phonetic: '亮', pinyin: 'liàng', characters: ['亮', '谅', '晾', '辆', '靓'] },
+        { phonetic: '辽', pinyin: 'liáo', characters: ['辽', '疗', '僚', '聊', '寥'] },
+        { phonetic: '了', pinyin: 'liǎo', characters: ['了', '辽', '疗', '料', '瞭'] },
+        { phonetic: '列', pinyin: 'liè', characters: ['列', '烈', '裂', '例', '咧'] },
+        { phonetic: '林', pinyin: 'lín', characters: ['林', '淋', '琳', '霖', '婪'] },
+        { phonetic: '临', pinyin: 'lín', characters: ['临', '监', '览', '鉴', '蓝'] },
+        { phonetic: '令', pinyin: 'lìng', characters: ['令', '铃', '玲', '龄', '伶'] },
+        { phonetic: '留', pinyin: 'liú', characters: ['留', '榴', '瘤', '馏', '遛'] }
+    ],
+    [
+        { phonetic: '龙', pinyin: 'lóng', characters: ['龙', '笼', '聋', '咙', '胧'] },
+        { phonetic: '隆', pinyin: 'lóng', characters: ['隆', '窿', '癃', '漋', '嶐'] },
+        { phonetic: '娄', pinyin: 'lóu', characters: ['娄', '楼', '搂', '篓', '瘘'] },
+        { phonetic: '卢', pinyin: 'lú', characters: ['卢', '炉', '颅', '庐', '鲈'] },
+        { phonetic: '鲁', pinyin: 'lǔ', characters: ['鲁', '橹', '卤', '虏', '掳'] },
+        { phonetic: '录', pinyin: 'lù', characters: ['录', '绿', '禄', '碌', '氯'] },
+        { phonetic: '路', pinyin: 'lù', characters: ['路', '露', '璐', '鹭', '潞'] },
+        { phonetic: '吕', pinyin: 'lǚ', characters: ['吕', '侣', '铝', '闾', '捋'] },
+        { phonetic: '仑', pinyin: 'lún', characters: ['仑', '轮', '伦', '沦', '纶'] },
+        { phonetic: '罗', pinyin: 'luó', characters: ['罗', '萝', '逻', '锣', '箩'] }
+    ],
+    [
+        { phonetic: '洛', pinyin: 'luò', characters: ['洛', '落', '络', '骆', '烙'] },
+        { phonetic: '马', pinyin: 'mǎ', characters: ['马', '吗', '妈', '码', '玛'] },
+        { phonetic: '买', pinyin: 'mǎi', characters: ['买', '卖', '读', '赎', '渎'] },
+        { phonetic: '麦', pinyin: 'mài', characters: ['麦', '脉', '唛', '麸', '麰'] },
+        { phonetic: '卖', pinyin: 'mài', characters: ['卖', '读', '赎', '渎', '窦'] },
+        { phonetic: '曼', pinyin: 'màn', characters: ['曼', '慢', '漫', '蔓', '幔'] },
+        { phonetic: '毛', pinyin: 'máo', characters: ['毛', '耗', '髦', '旄', '牦'] },
+        { phonetic: '矛', pinyin: 'máo', characters: ['矛', '茅', '柔', '揉', '鞣'] },
+        { phonetic: '卯', pinyin: 'mǎo', characters: ['卯', '柳', '留', '聊', '贸'] },
+        { phonetic: '冒', pinyin: 'mào', characters: ['冒', '帽', '瑁', '冕', '勖'] }
+    ],
+    [
+        { phonetic: '眉', pinyin: 'méi', characters: ['眉', '媚', '嵋', '湄', '楣'] },
+        { phonetic: '每', pinyin: 'měi', characters: ['每', '梅', '海', '悔', '晦'] },
+        { phonetic: '美', pinyin: 'měi', characters: ['美', '镁', '渼', '媄', '嵋'] },
+        { phonetic: '门', pinyin: 'mén', characters: ['门', '们', '闷', '闻', '闽'] },
+        { phonetic: '蒙', pinyin: 'méng', characters: ['蒙', '朦', '檬', '朦', '懵'] },
+        { phonetic: '孟', pinyin: 'mèng', characters: ['孟', '猛', '锰', '勐', '蜢'] },
+        { phonetic: '米', pinyin: 'mǐ', characters: ['米', '迷', '眯', '咪', '谜'] },
+        { phonetic: '密', pinyin: 'mì', characters: ['密', '蜜', '谧', '嘧', '樒'] },
+        { phonetic: '免', pinyin: 'miǎn', characters: ['免', '勉', '娩', '冕', '晚'] },
+        { phonetic: '面', pinyin: 'miàn', characters: ['面', '缅', '腼', '麺', '勔'] }
+    ],
+    [
+        { phonetic: '苗', pinyin: 'miáo', characters: ['苗', '描', '瞄', '猫', '锚'] },
+        { phonetic: '民', pinyin: 'mín', characters: ['民', '眠', '抿', '岷', '珉'] },
+        { phonetic: '敏', pinyin: 'mǐn', characters: ['敏', '抿', '悯', '湣', '鰵'] },
+        { phonetic: '名', pinyin: 'míng', characters: ['名', '铭', '茗', '酩', '命'] },
+        { phonetic: '明', pinyin: 'míng', characters: ['明', '盟', '萌', '鸣', '冥'] },
+        { phonetic: '命', pinyin: 'mìng', characters: ['命', '名', '铭', '茗', '酩'] },
+        { phonetic: '莫', pinyin: 'mò', characters: ['莫', '漠', '寞', '摸', '膜'] },
+        { phonetic: '墨', pinyin: 'mò', characters: ['墨', '默', '嘿', '黙', '纆'] },
+        { phonetic: '牟', pinyin: 'móu', characters: ['牟', '眸', '侔', '蛑', '鍪'] },
+        { phonetic: '某', pinyin: 'mǒu', characters: ['某', '谋', '媒', '煤', '莓'] }
+    ],
+    [
+        { phonetic: '母', pinyin: 'mǔ', characters: ['母', '姆', '拇', '拇', '牡'] },
+        { phonetic: '木', pinyin: 'mù', characters: ['木', '林', '森', '沐', '术'] },
+        { phonetic: '目', pinyin: 'mù', characters: ['目', '盯', '盲', '相', '省'] },
+        { phonetic: '那', pinyin: 'nà', characters: ['那', '哪', '挪', '娜', '哪'] },
+        { phonetic: '乃', pinyin: 'nǎi', characters: ['乃', '奶', '扔', '仍', '孕'] },
+        { phonetic: '奈', pinyin: 'nài', characters: ['奈', '捺', '萘', '柰', '佴'] },
+        { phonetic: '南', pinyin: 'nán', characters: ['南', '楠', '喃', '腩', '蝻'] },
+        { phonetic: '难', pinyin: 'nán', characters: ['难', '摊', '滩', '瘫', '傩'] },
+        { phonetic: '囊', pinyin: 'náng', characters: ['囊', '囔', '馕', '攮', '曩'] },
+        { phonetic: '内', pinyin: 'nèi', characters: ['内', '纳', '呐', '钠', '肭'] }
+    ],
+    [
+        { phonetic: '尼', pinyin: 'ní', characters: ['尼', '泥', '呢', '妮', '怩'] },
+        { phonetic: '你', pinyin: 'nǐ', characters: ['你', '您', '称', '弥', '祢'] },
+        { phonetic: '年', pinyin: 'nián', characters: ['年', '粘', '黏', '鲇', '鲶'] },
+        { phonetic: '念', pinyin: 'niàn', characters: ['念', '捻', '黏', '鲶', '谂'] },
+        { phonetic: '鸟', pinyin: 'niǎo', characters: ['鸟', '鸣', '岛', '枭', '鸢'] },
+        { phonetic: '聂', pinyin: 'niè', characters: ['聂', '摄', '慑', '嗫', '镊'] },
+        { phonetic: '宁', pinyin: 'níng', characters: ['宁', '凝', '狞', '泞', '咛'] },
+        { phonetic: '牛', pinyin: 'niú', characters: ['牛', '牢', '牡', '牝', '牟'] },
+        { phonetic: '农', pinyin: 'nóng', characters: ['农', '浓', '脓', '侬', '哝'] },
+        { phonetic: '弄', pinyin: 'nòng', characters: ['弄', '哢', '梇', '硦', '衖'] }
+    ],
+    [
+        { phonetic: '奴', pinyin: 'nú', characters: ['奴', '努', '怒', '弩', '驽'] },
+        { phonetic: '女', pinyin: 'nǚ', characters: ['女', '如', '汝', '奴', '妆'] },
+        { phonetic: '诺', pinyin: 'nuò', characters: ['诺', '喏', '锘', '搦', '掿'] },
+        { phonetic: '欧', pinyin: 'ōu', characters: ['欧', '鸥', '殴', '呕', '沤'] },
+        { phonetic: '偶', pinyin: 'ǒu', characters: ['偶', '耦', '藕', '寓', '隅'] },
+        { phonetic: '爬', pinyin: 'pá', characters: ['爬', '趴', '琶', '耙', '筢'] },
+        { phonetic: '拍', pinyin: 'pāi', characters: ['拍', '迫', '帕', '怕', '柏'] },
+        { phonetic: '排', pinyin: 'pái', characters: ['排', '徘', '牌', '徘', '俳'] },
+        { phonetic: '派', pinyin: 'pài', characters: ['派', '湃', '蒎', '哌', '渧'] },
+        { phonetic: '判', pinyin: 'pàn', characters: ['判', '叛', '畔', '胖', '拌'] }
+    ],
+    [
+        { phonetic: '旁', pinyin: 'páng', characters: ['旁', '傍', '膀', '磅', '螃'] },
+        { phonetic: '跑', pinyin: 'pǎo', characters: ['跑', '泡', '炮', '疱', '匏'] },
+        { phonetic: '朋', pinyin: 'péng', characters: ['朋', '棚', '鹏', '硼', '棚'] },
+        { phonetic: '彭', pinyin: 'péng', characters: ['彭', '膨', '澎', '嘭', '蟛'] },
+        { phonetic: '皮', pinyin: 'pí', characters: ['皮', '疲', '坡', '破', '被'] },
+        { phonetic: '片', pinyin: 'piàn', characters: ['片', '版', '牌', '牍', '牒'] },
+        { phonetic: '票', pinyin: 'piào', characters: ['票', '漂', '飘', '镖', '膘'] },
+        { phonetic: '品', pinyin: 'pǐn', characters: ['品', '晶', '森', '磊', '鑫'] },
+        { phonetic: '平', pinyin: 'píng', characters: ['平', '评', '坪', '苹', '萍'] },
+        { phonetic: '颇', pinyin: 'pō', characters: ['颇', '坡', '破', '婆', '波'] }
+    ],
+    [
+        { phonetic: '破', pinyin: 'pò', characters: ['破', '坡', '婆', '颇', '玻'] },
+        { phonetic: '仆', pinyin: 'pú', characters: ['仆', '扑', '朴', '濮', '噗'] },
+        { phonetic: '普', pinyin: 'pǔ', characters: ['普', '谱', '浦', '溥', '埔'] },
+        { phonetic: '七', pinyin: 'qī', characters: ['七', '柒', '切', '沏', '砌'] },
+        { phonetic: '妻', pinyin: 'qī', characters: ['妻', '凄', '萋', '悽', '棲'] },
+        { phonetic: '其', pinyin: 'qí', characters: ['其', '期', '棋', '旗', '琪'] },
+        { phonetic: '奇', pinyin: 'qí', characters: ['奇', '骑', '琦', '崎', '绮'] },
+        { phonetic: '乞', pinyin: 'qǐ', characters: ['乞', '吃', '迄', '讫', '疙'] },
+        { phonetic: '岂', pinyin: 'qǐ', characters: ['岂', '凯', '恺', '铠', '觊'] },
+        { phonetic: '气', pinyin: 'qì', characters: ['气', '汽', '氧', '氨', '氮'] }
+    ],
+    [
+        { phonetic: '千', pinyin: 'qiān', characters: ['千', '迁', '仟', '阡', '芊'] },
+        { phonetic: '前', pinyin: 'qián', characters: ['前', '剪', '煎', '箭', '湔'] },
+        { phonetic: '欠', pinyin: 'qiàn', characters: ['欠', '款', '坎', '砍', '次'] },
+        { phonetic: '强', pinyin: 'qiáng', characters: ['强', '疆', '僵', '襁', '镪'] },
+        { phonetic: '乔', pinyin: 'qiáo', characters: ['乔', '桥', '侨', '娇', '轿'] },
+        { phonetic: '且', pinyin: 'qiě', characters: ['且', '姐', '组', '祖', '租'] },
+        { phonetic: '切', pinyin: 'qiē', characters: ['切', '窃', '砌', '沏', '彻'] },
+        { phonetic: '亲', pinyin: 'qīn', characters: ['亲', '新', '薪', '辛', '锌'] },
+        { phonetic: '秦', pinyin: 'qín', characters: ['秦', '榛', '臻', '溱', '螓'] },
+        { phonetic: '青', pinyin: 'qīng', characters: ['青', '清', '晴', '精', '静'] }
+    ],
+    [
+        { phonetic: '顷', pinyin: 'qǐng', characters: ['顷', '倾', '颖', '颖', '颖'] },
+        { phonetic: '庆', pinyin: 'qìng', characters: ['庆', '厌', '压', '庄', '桩'] },
+        { phonetic: '丘', pinyin: 'qiū', characters: ['丘', '邱', '蚯', '岳', '兵'] },
+        { phonetic: '秋', pinyin: 'qiū', characters: ['秋', '愁', '瞅', '揪', '锹'] },
+        { phonetic: '求', pinyin: 'qiú', characters: ['求', '球', '救', '裘', '逑'] },
+        { phonetic: '区', pinyin: 'qū', characters: ['区', '驱', '躯', '呕', '欧'] },
+        { phonetic: '曲', pinyin: 'qū', characters: ['曲', '蛐', '屈', '掘', '倔'] },
+        { phonetic: '取', pinyin: 'qǔ', characters: ['取', '娶', '趣', '聚', '最'] },
+        { phonetic: '去', pinyin: 'qù', characters: ['去', '法', '劫', '怯', '却'] },
+        { phonetic: '全', pinyin: 'quán', characters: ['全', '泉', '拳', '栓', '诠'] }
+    ],
+    [
+        { phonetic: '犬', pinyin: 'quǎn', characters: ['犬', '吠', '哭', '献', '厌'] },
+        { phonetic: '却', pinyin: 'què', characters: ['却', '脚', '郄', '隙', '绌'] },
+        { phonetic: '雀', pinyin: 'què', characters: ['雀', '鹊', '错', '措', '醋'] },
+        { phonetic: '然', pinyin: 'rán', characters: ['然', '燃', '髯', '苒', '蚺'] },
+        { phonetic: '冉', pinyin: 'rǎn', characters: ['冉', '苒', '髯', '聃', '姌'] },
+        { phonetic: '让', pinyin: 'ràng', characters: ['让', '壤', '嚷', '攘', '禳'] },
+        { phonetic: '饶', pinyin: 'ráo', characters: ['饶', '绕', '娆', '荛', '桡'] },
+        { phonetic: '人', pinyin: 'rén', characters: ['人', '认', '仁', '任', '忍'] },
+        { phonetic: '刃', pinyin: 'rèn', characters: ['刃', '忍', '韧', '仞', '轫'] },
+        { phonetic: '日', pinyin: 'rì', characters: ['日', '旦', '早', '旭', '旱'] }
+    ],
+    [
+        { phonetic: '荣', pinyin: 'róng', characters: ['荣', '容', '溶', '熔', '蓉'] },
+        { phonetic: '柔', pinyin: 'róu', characters: ['柔', '揉', '蹂', '鞣', '糅'] },
+        { phonetic: '肉', pinyin: 'ròu', characters: ['肉', '腐', '脔', '胬', '胔'] },
+        { phonetic: '如', pinyin: 'rú', characters: ['如', '茹', '汝', '恕', '絮'] },
+        { phonetic: '入', pinyin: 'rù', characters: ['入', '内', '纳', '呐', '衲'] },
+        { phonetic: '若', pinyin: 'ruò', characters: ['若', '诺', '惹', '匿', '溺'] },
+        { phonetic: '弱', pinyin: 'ruò', characters: ['弱', '溺', '搦', '袅', '嫋'] },
+        { phonetic: '洒', pinyin: 'sǎ', characters: ['洒', '晒', '撒', '潵', '躠'] },
+        { phonetic: '萨', pinyin: 'sà', characters: ['萨', '撒', '洒', '卅', '挲'] },
+        { phonetic: '塞', pinyin: 'sāi', characters: ['塞', '赛', '寨', '噻', '鳃'] }
+    ],
+    [
+        { phonetic: '三', pinyin: 'sān', characters: ['三', '叁', '参', '毵', '彡'] },
+        { phonetic: '散', pinyin: 'sàn', characters: ['散', '撒', '霰', '繖', '傘'] },
+        { phonetic: '桑', pinyin: 'sāng', characters: ['桑', '嗓', '搡', '颡', '磉'] },
+        { phonetic: '丧', pinyin: 'sàng', characters: ['丧', '桑', '嗓', '搡', '颡'] },
+        { phonetic: '骚', pinyin: 'sāo', characters: ['骚', '搔', '瘙', '缫', '鳋'] },
+        { phonetic: '扫', pinyin: 'sǎo', characters: ['扫', '嫂', '埽', '瘙', '氉'] },
+        { phonetic: '色', pinyin: 'sè', characters: ['色', '艳', '绝', '绝', '铯'] },
+        { phonetic: '森', pinyin: 'sēn', characters: ['森', '林', '琳', '淋', '霖'] },
+        { phonetic: '杀', pinyin: 'shā', characters: ['杀', '刹', '铩', '弑', '脎'] },
+        { phonetic: '沙', pinyin: 'shā', characters: ['沙', '砂', '莎', '痧', '鲨'] }
+    
+],
+        { phonetic: '鬼', pinyin: 'guǐ', characters: ['鬼', '瑰', '傀', '愧', '魁'] },
+        { phonetic: '癸', pinyin: 'guǐ', characters: ['癸', '葵', '揆', '睽'] },
+        { phonetic: '果', pinyin: 'guǒ', characters: ['果', '裹', '棵', '颗', '课'] },
+        { phonetic: '亥', pinyin: 'hài', characters: ['亥', '孩', '骸', '骇'] },
+        { phonetic: '害', pinyin: 'hài', characters: ['害', '豁', '割', '瞎'] },
+        { phonetic: '函', pinyin: 'hán', characters: ['函', '涵', '菡'] },
+        { phonetic: '翰', pinyin: 'hàn', characters: ['翰', '瀚'] },
+        { phonetic: '豪', pinyin: 'háo', characters: ['豪', '壕', '嚎', '濠'] }
+    ],
+    [
+        { phonetic: '禾', pinyin: 'hé', characters: ['禾', '和', '利', '秋', '科'] },
+        { phonetic: '合', pinyin: 'hé', characters: ['合', '盒', '答', '拾', '拿'] },
+        { phonetic: '何', pinyin: 'hé', characters: ['何', '河', '荷', '苛', '柯'] },
+        { phonetic: '曷', pinyin: 'hé', characters: ['曷', '喝', '渴', '歇', '揭'] },
+        { phonetic: '黑', pinyin: 'hēi', characters: ['黑', '墨', '默', '黔', '黛'] },
+        { phonetic: '恒', pinyin: 'héng', characters: ['恒', '衡', '横', '桁'] },
+        { phonetic: '亨', pinyin: 'hēng', characters: ['亨', '哼', '烹', '享'] },
+        { phonetic: '虹', pinyin: 'hóng', characters: ['虹', '红', '江', '鸿', '缸'] },
+        { phonetic: '侯', pinyin: 'hóu', characters: ['侯', '候', '喉', '猴', '篌'] },
+        { phonetic: '乎', pinyin: 'hū', characters: ['乎', '呼', '忽', '惚'] }
+    ],
+    [
+        { phonetic: '胡', pinyin: 'hú', characters: ['胡', '湖', '糊', '蝴', '瑚'] },
+        { phonetic: '虎', pinyin: 'hǔ', characters: ['虎', '唬', '琥', '遽'] },
+        { phonetic: '户', pinyin: 'hù', characters: ['户', '护', '沪', '庐', '炉'] },
+        { phonetic: '华', pinyin: 'huá', characters: ['华', '哗', '桦', '烨'] },
+        { phonetic: '化', pinyin: 'huà', characters: ['化', '花', '货', '讹', '靴'] },
+        { phonetic: '怀', pinyin: 'huái', characters: ['怀', '坏', '还', '环'] },
+        { phonetic: '奂', pinyin: 'huàn', characters: ['奂', '换', '唤', '涣', '焕'] },
+        { phonetic: '皇', pinyin: 'huáng', characters: ['皇', '煌', '惶', '蝗', '凰'] },
+        { phonetic: '黄', pinyin: 'huáng', characters: ['黄', '横', '簧', '磺', '潢'] },
+        { phonetic: '回', pinyin: 'huí', characters: ['回', '徊', '蛔', '茴'] }
+    ],
+    [
+        { phonetic: '会', pinyin: 'huì', characters: ['会', '绘', '烩', '荟', '脍'] },
+        { phonetic: '彗', pinyin: 'huì', characters: ['彗', '慧', '惠', '蕙', '穗'] },
+        { phonetic: '昏', pinyin: 'hūn', characters: ['昏', '婚', '阍', '惽'] },
+        { phonetic: '火', pinyin: 'huǒ', characters: ['火', '伙', '炎', '灾', '灭'] },
+        { phonetic: '或', pinyin: 'huò', characters: ['或', '域', '惑', '阈', '蜮'] },
+        { phonetic: '霍', pinyin: 'huò', characters: ['霍', '藿', '嚯', '攉'] },
+        { phonetic: '几', pinyin: 'jī', characters: ['几', '机', '饥', '肌', '矶'] },
+        { phonetic: '及', pinyin: 'jí', characters: ['及', '级', '极', '吸', '汲'] },
+        { phonetic: '吉', pinyin: 'jí', characters: ['吉', '结', '洁', '桔', '诘'] },
+        { phonetic: '即', pinyin: 'jí', characters: ['即', '既', '暨', '概', '慨'] }
+    ],
+    [
+        { phonetic: '己', pinyin: 'jǐ', characters: ['己', '记', '纪', '忌', '起'] },
+        { phonetic: '夹', pinyin: 'jiā', characters: ['夹', '颊', '侠', '峡', '狭'] },
+        { phonetic: '家', pinyin: 'jiā', characters: ['家', '嫁', '稼', '豪', '蒙'] },
+        { phonetic: '甲', pinyin: 'jiǎ', characters: ['甲', '鸭', '押', '闸', '钾'] },
+        { phonetic: '间', pinyin: 'jiān', characters: ['间', '简', '涧', '锏', '裥'] },
+        { phonetic: '兼', pinyin: 'jiān', characters: ['兼', '谦', '歉', '嫌', '赚'] },
+        { phonetic: '见', pinyin: 'jiàn', characters: ['见', '现', '视', '规', '觅'] },
+        { phonetic: '建', pinyin: 'jiàn', characters: ['建', '健', '键', '毽', '腱'] },
+        { phonetic: '将', pinyin: 'jiāng', characters: ['将', '奖', '浆', '酱', '蒋'] },
+        { phonetic: '交', pinyin: 'jiāo', characters: ['交', '校', '较', '效', '郊'] }
+    ],
+    [
+        { phonetic: '角', pinyin: 'jiǎo', characters: ['角', '解', '触', '觚', '觞'] },
+        { phonetic: '教', pinyin: 'jiào', characters: ['教', '校', '较', '孝', '酵'] },
+        { phonetic: '皆', pinyin: 'jiē', characters: ['皆', '谐', '楷', '偕', '喈'] },
+        { phonetic: '桀', pinyin: 'jié', characters: ['桀', '杰', '揭', '竭', '碣'] },
+        { phonetic: '介', pinyin: 'jiè', characters: ['介', '界', '阶', '芥', '尬'] },
+        { phonetic: '今', pinyin: 'jīn', characters: ['今', '含', '念', '吟', '琴'] },
+        { phonetic: '巾', pinyin: 'jīn', characters: ['巾', '币', '布', '帅', '师'] },
+        { phonetic: '斤', pinyin: 'jīn', characters: ['斤', '近', '新', '欣', '祈'] },
+        { phonetic: '金', pinyin: 'jīn', characters: ['金', '鑫', '鉴', '针', '铁'] },
+        { phonetic: '堇', pinyin: 'jǐn', characters: ['堇', '谨', '勤', '瑾', '觐'] }
+    ],
+    [
+        { phonetic: '京', pinyin: 'jīng', characters: ['京', '景', '惊', '鲸', '影'] },
+        { phonetic: '井', pinyin: 'jǐng', characters: ['井', '阱', '耕', '讲', '进'] },
+        { phonetic: '竟', pinyin: 'jìng', characters: ['竟', '境', '镜', '競'] },
+        { phonetic: '敬', pinyin: 'jìng', characters: ['敬', '警', '擎', '儆'] },
+        { phonetic: '九', pinyin: 'jiǔ', characters: ['九', '究', '仇', '轨', '旭'] },
+        { phonetic: '久', pinyin: 'jiǔ', characters: ['久', '灸', '玖', '疚', '柩'] },
+        { phonetic: '臼', pinyin: 'jiù', characters: ['臼', '舅', '旧', '柏', '舀'] },
+        { phonetic: '居', pinyin: 'jū', characters: ['居', '据', '剧', '锯', '倨'] },
+        { phonetic: '句', pinyin: 'jù', characters: ['句', '拘', '驹', '苟', '够'] },
+        { phonetic: '具', pinyin: 'jù', characters: ['具', '惧', '俱', '飓', '犋'] }
+    ],
+    [
+        { phonetic: '卷', pinyin: 'juǎn', characters: ['卷', '倦', '圈', '蜷', '券'] },
+        { phonetic: '决', pinyin: 'jué', characters: ['决', '诀', '抉', '缺', '块'] },
+        { phonetic: '厥', pinyin: 'jué', characters: ['厥', '蹶', '獗', '蕨', '橛'] },
+        { phonetic: '军', pinyin: 'jūn', characters: ['军', '辉', '浑', '挥', '晕'] },
+        { phonetic: '君', pinyin: 'jūn', characters: ['君', '群', '裙', '郡', '窘'] },
+        { phonetic: '开', pinyin: 'kāi', characters: ['开', '形', '刑', '型', '研'] },
+        { phonetic: '刊', pinyin: 'kān', characters: ['刊', '勘', '堪', '戡', '龛'] },
+        { phonetic: '康', pinyin: 'kāng', characters: ['康', '慷', '糠', '抗', '炕'] },
+        { phonetic: '亢', pinyin: 'kàng', characters: ['亢', '抗', '航', '杭', '吭'] },
+        { phonetic: '考', pinyin: 'kǎo', characters: ['考', '烤', '拷', '铐', '栲'] }
+    ],
+    [
+        { phonetic: '可', pinyin: 'kě', characters: ['可', '河', '何', '哥', '柯'] },
+        { phonetic: '克', pinyin: 'kè', characters: ['克', '刻', '咳', '核', '黑'] },
+        { phonetic: '肯', pinyin: 'kěn', characters: ['肯', '啃', '垦', '恳', '龈'] },
+        { phonetic: '空', pinyin: 'kōng', characters: ['空', '控', '腔', '箜', '崆'] },
+        { phonetic: '孔', pinyin: 'kǒng', characters: ['孔', '吼', '犼', '叩', '扣'] },
+        { phonetic: '口', pinyin: 'kǒu', characters: ['口', '扣', '叩', '叫', '吃'] },
+        { phonetic: '寇', pinyin: 'kòu', characters: ['寇', '蔻', '叩', '扣', '够'] },
+        { phonetic: '哭', pinyin: 'kū', characters: ['哭', '器', '嚣', '犬', '吠'] },
+        { phonetic: '苦', pinyin: 'kǔ', characters: ['苦', '枯', '骷', '酷', '浩'] },
+        { phonetic: '库', pinyin: 'kù', characters: ['库', '裤', '裤', '裤', '裤'] }
+    ],
+    [
+        { phonetic: '夸', pinyin: 'kuā', characters: ['夸', '跨', '挎', '胯', '垮'] },
+        { phonetic: '快', pinyin: 'kuài', characters: ['快', '块', '筷', '抉', '缺'] },
+        { phonetic: '宽', pinyin: 'kuān', characters: ['宽', '髋', '款', '完', '院'] },
+        { phonetic: '款', pinyin: 'kuǎn', characters: ['款', '歀', '欵', '窾', '窽'] },
+        { phonetic: '匡', pinyin: 'kuāng', characters: ['匡', '筐', '眶', '框', '哐'] },
+        { phonetic: '狂', pinyin: 'kuáng', characters: ['狂', '逛', '诳', '框', '眶'] },
+        { phonetic: '况', pinyin: 'kuàng', characters: ['况', '矿', '旷', '邝', '纩'] },
+        { phonetic: '亏', pinyin: 'kuī', characters: ['亏', '污', '夸', '垮', '跨'] },
+        { phonetic: '奎', pinyin: 'kuí', characters: ['奎', '逵', '睽', '葵', '魁'] },
+        { phonetic: '葵', pinyin: 'kuí', characters: ['葵', '睽', '揆', '骙', '阕'] }
+    ],
+    [
+        { phonetic: '昆', pinyin: 'kūn', characters: ['昆', '混', '棍', '馄', '锟'] },
+        { phonetic: '困', pinyin: 'kùn', characters: ['困', '捆', '悃', '阃', '壸'] },
+        { phonetic: '括', pinyin: 'kuò', characters: ['括', '适', '活', '话', '刮'] },
+        { phonetic: '来', pinyin: 'lái', characters: ['来', '莱', '徕', '睐', '铼'] },
+        { phonetic: '兰', pinyin: 'lán', characters: ['兰', '栏', '拦', '烂', '澜'] },
+        { phonetic: '览', pinyin: 'lǎn', characters: ['览', '揽', '缆', '榄', '鉴'] },
+        { phonetic: '郎', pinyin: 'láng', characters: ['郎', '朗', '廊', '螂', '榔'] },
+        { phonetic: '劳', pinyin: 'láo', characters: ['劳', '捞', '唠', '涝', '痨'] },
+        { phonetic: '老', pinyin: 'lǎo', characters: ['老', '姥', '佬', '铑', '栳'] },
+        { phonetic: '乐', pinyin: 'lè', characters: ['乐', '烁', '砾', '栎', '铄'] }
+    ],
+    [
+        { phonetic: '雷', pinyin: 'léi', characters: ['雷', '蕾', '镭', '擂', '檑'] },
+        { phonetic: '累', pinyin: 'lèi', characters: ['累', '骡', '螺', '摞', '缧'] },
+        { phonetic: '类', pinyin: 'lèi', characters: ['类', '泪', '肋', '磊', '垒'] },
+        { phonetic: '离', pinyin: 'lí', characters: ['离', '篱', '璃', '漓', '缡'] },
+        { phonetic: '里', pinyin: 'lǐ', characters: ['里', '理', '鲤', '厘', '狸'] },
+        { phonetic: '力', pinyin: 'lì', characters: ['力', '历', '厉', '励', '沥'] },
+        { phonetic: '立', pinyin: 'lì', characters: ['立', '位', '拉', '泣', '粒'] },
+        { phonetic: '利', pinyin: 'lì', characters: ['利', '梨', '犁', '莉', '痢'] },
+        { phonetic: '栗', pinyin: 'lì', characters: ['栗', '慄', '溧', '篥', '凓'] },
+        { phonetic: '连', pinyin: 'lián', characters: ['连', '莲', '链', '联', '涟'] }
+    ],
+    [
+        { phonetic: '良', pinyin: 'liáng', characters: ['良', '粮', '狼', '娘', '朗'] },
+        { phonetic: '两', pinyin: 'liǎng', characters: ['两', '辆', '俩', '魉', '唡'] },
+        { phonetic: '亮', pinyin: 'liàng', characters: ['亮', '谅', '晾', '辆', '靓'] },
+        { phonetic: '辽', pinyin: 'liáo', characters: ['辽', '疗', '僚', '聊', '寥'] },
+        { phonetic: '了', pinyin: 'liǎo', characters: ['了', '辽', '疗', '料', '瞭'] },
+        { phonetic: '列', pinyin: 'liè', characters: ['列', '烈', '裂', '例', '咧'] },
+        { phonetic: '林', pinyin: 'lín', characters: ['林', '淋', '琳', '霖', '婪'] },
+        { phonetic: '临', pinyin: 'lín', characters: ['临', '监', '览', '鉴', '蓝'] },
+        { phonetic: '令', pinyin: 'lìng', characters: ['令', '铃', '玲', '龄', '伶'] },
+        { phonetic: '留', pinyin: 'liú', characters: ['留', '榴', '瘤', '馏', '遛'] }
+    ],
+    [
+        { phonetic: '龙', pinyin: 'lóng', characters: ['龙', '笼', '聋', '咙', '胧'] },
+        { phonetic: '隆', pinyin: 'lóng', characters: ['隆', '窿', '癃', '漋', '嶐'] },
+        { phonetic: '娄', pinyin: 'lóu', characters: ['娄', '楼', '搂', '篓', '瘘'] },
+        { phonetic: '卢', pinyin: 'lú', characters: ['卢', '炉', '颅', '庐', '鲈'] },
+        { phonetic: '鲁', pinyin: 'lǔ', characters: ['鲁', '橹', '卤', '虏', '掳'] },
+        { phonetic: '录', pinyin: 'lù', characters: ['录', '绿', '禄', '碌', '氯'] },
+        { phonetic: '路', pinyin: 'lù', characters: ['路', '露', '璐', '鹭', '潞'] },
+        { phonetic: '吕', pinyin: 'lǚ', characters: ['吕', '侣', '铝', '闾', '捋'] },
+        { phonetic: '仑', pinyin: 'lún', characters: ['仑', '轮', '伦', '沦', '纶'] },
+        { phonetic: '罗', pinyin: 'luó', characters: ['罗', '萝', '逻', '锣', '箩'] }
+    ],
+    [
+        { phonetic: '洛', pinyin: 'luò', characters: ['洛', '落', '络', '骆', '烙'] },
+        { phonetic: '马', pinyin: 'mǎ', characters: ['马', '吗', '妈', '码', '玛'] },
+        { phonetic: '买', pinyin: 'mǎi', characters: ['买', '卖', '读', '赎', '渎'] },
+        { phonetic: '麦', pinyin: 'mài', characters: ['麦', '脉', '唛', '麸', '麰'] },
+        { phonetic: '卖', pinyin: 'mài', characters: ['卖', '读', '赎', '渎', '窦'] },
+        { phonetic: '曼', pinyin: 'màn', characters: ['曼', '慢', '漫', '蔓', '幔'] },
+        { phonetic: '毛', pinyin: 'máo', characters: ['毛', '耗', '髦', '旄', '牦'] },
+        { phonetic: '矛', pinyin: 'máo', characters: ['矛', '茅', '柔', '揉', '鞣'] },
+        { phonetic: '卯', pinyin: 'mǎo', characters: ['卯', '柳', '留', '聊', '贸'] },
+        { phonetic: '冒', pinyin: 'mào', characters: ['冒', '帽', '瑁', '冕', '勖'] }
+    ],
+    [
+        { phonetic: '眉', pinyin: 'méi', characters: ['眉', '媚', '嵋', '湄', '楣'] },
+        { phonetic: '每', pinyin: 'měi', characters: ['每', '梅', '海', '悔', '晦'] },
+        { phonetic: '美', pinyin: 'měi', characters: ['美', '镁', '渼', '媄', '嵋'] },
+        { phonetic: '门', pinyin: 'mén', characters: ['门', '们', '闷', '闻', '闽'] },
+        { phonetic: '蒙', pinyin: 'méng', characters: ['蒙', '朦', '檬', '朦', '懵'] },
+        { phonetic: '孟', pinyin: 'mèng', characters: ['孟', '猛', '锰', '勐', '蜢'] },
+        { phonetic: '米', pinyin: 'mǐ', characters: ['米', '迷', '眯', '咪', '谜'] },
+        { phonetic: '密', pinyin: 'mì', characters: ['密', '蜜', '谧', '嘧', '樒'] },
+        { phonetic: '免', pinyin: 'miǎn', characters: ['免', '勉', '娩', '冕', '晚'] },
+        { phonetic: '面', pinyin: 'miàn', characters: ['面', '缅', '腼', '麺', '勔'] }
+    ],
+    [
+        { phonetic: '苗', pinyin: 'miáo', characters: ['苗', '描', '瞄', '猫', '锚'] },
+        { phonetic: '民', pinyin: 'mín', characters: ['民', '眠', '抿', '岷', '珉'] },
+        { phonetic: '敏', pinyin: 'mǐn', characters: ['敏', '抿', '悯', '湣', '鰵'] },
+        { phonetic: '名', pinyin: 'míng', characters: ['名', '铭', '茗', '酩', '命'] },
+        { phonetic: '明', pinyin: 'míng', characters: ['明', '盟', '萌', '鸣', '冥'] },
+        { phonetic: '命', pinyin: 'mìng', characters: ['命', '名', '铭', '茗', '酩'] },
+        { phonetic: '莫', pinyin: 'mò', characters: ['莫', '漠', '寞', '摸', '膜'] },
+        { phonetic: '墨', pinyin: 'mò', characters: ['墨', '默', '嘿', '黙', '纆'] },
+        { phonetic: '牟', pinyin: 'móu', characters: ['牟', '眸', '侔', '蛑', '鍪'] },
+        { phonetic: '某', pinyin: 'mǒu', characters: ['某', '谋', '媒', '煤', '莓'] }
+    ],
+    [
+        { phonetic: '母', pinyin: 'mǔ', characters: ['母', '姆', '拇', '拇', '牡'] },
+        { phonetic: '木', pinyin: 'mù', characters: ['木', '林', '森', '沐', '术'] },
+        { phonetic: '目', pinyin: 'mù', characters: ['目', '盯', '盲', '相', '省'] },
+        { phonetic: '那', pinyin: 'nà', characters: ['那', '哪', '挪', '娜', '哪'] },
+        { phonetic: '乃', pinyin: 'nǎi', characters: ['乃', '奶', '扔', '仍', '孕'] },
+        { phonetic: '奈', pinyin: 'nài', characters: ['奈', '捺', '萘', '柰', '佴'] },
+        { phonetic: '南', pinyin: 'nán', characters: ['南', '楠', '喃', '腩', '蝻'] },
+        { phonetic: '难', pinyin: 'nán', characters: ['难', '摊', '滩', '瘫', '傩'] },
+        { phonetic: '囊', pinyin: 'náng', characters: ['囊', '囔', '馕', '攮', '曩'] },
+        { phonetic: '内', pinyin: 'nèi', characters: ['内', '纳', '呐', '钠', '肭'] }
+    ],
+    [
+        { phonetic: '尼', pinyin: 'ní', characters: ['尼', '泥', '呢', '妮', '怩'] },
+        { phonetic: '你', pinyin: 'nǐ', characters: ['你', '您', '称', '弥', '祢'] },
+        { phonetic: '年', pinyin: 'nián', characters: ['年', '粘', '黏', '鲇', '鲶'] },
+        { phonetic: '念', pinyin: 'niàn', characters: ['念', '捻', '黏', '鲶', '谂'] },
+        { phonetic: '鸟', pinyin: 'niǎo', characters: ['鸟', '鸣', '岛', '枭', '鸢'] },
+        { phonetic: '聂', pinyin: 'niè', characters: ['聂', '摄', '慑', '嗫', '镊'] },
+        { phonetic: '宁', pinyin: 'níng', characters: ['宁', '凝', '狞', '泞', '咛'] },
+        { phonetic: '牛', pinyin: 'niú', characters: ['牛', '牢', '牡', '牝', '牟'] },
+        { phonetic: '农', pinyin: 'nóng', characters: ['农', '浓', '脓', '侬', '哝'] },
+        { phonetic: '弄', pinyin: 'nòng', characters: ['弄', '哢', '梇', '硦', '衖'] }
+    ],
+    [
+        { phonetic: '奴', pinyin: 'nú', characters: ['奴', '努', '怒', '弩', '驽'] },
+        { phonetic: '女', pinyin: 'nǚ', characters: ['女', '如', '汝', '奴', '妆'] },
+        { phonetic: '诺', pinyin: 'nuò', characters: ['诺', '喏', '锘', '搦', '掿'] },
+        { phonetic: '欧', pinyin: 'ōu', characters: ['欧', '鸥', '殴', '呕', '沤'] },
+        { phonetic: '偶', pinyin: 'ǒu', characters: ['偶', '耦', '藕', '寓', '隅'] },
+        { phonetic: '爬', pinyin: 'pá', characters: ['爬', '趴', '琶', '耙', '筢'] },
+        { phonetic: '拍', pinyin: 'pāi', characters: ['拍', '迫', '帕', '怕', '柏'] },
+        { phonetic: '排', pinyin: 'pái', characters: ['排', '徘', '牌', '徘', '俳'] },
+        { phonetic: '派', pinyin: 'pài', characters: ['派', '湃', '蒎', '哌', '渧'] },
+        { phonetic: '判', pinyin: 'pàn', characters: ['判', '叛', '畔', '胖', '拌'] }
+    ],
+    [
+        { phonetic: '旁', pinyin: 'páng', characters: ['旁', '傍', '膀', '磅', '螃'] },
+        { phonetic: '跑', pinyin: 'pǎo', characters: ['跑', '泡', '炮', '疱', '匏'] },
+        { phonetic: '朋', pinyin: 'péng', characters: ['朋', '棚', '鹏', '硼', '棚'] },
+        { phonetic: '彭', pinyin: 'péng', characters: ['彭', '膨', '澎', '嘭', '蟛'] },
+        { phonetic: '皮', pinyin: 'pí', characters: ['皮', '疲', '坡', '破', '被'] },
+        { phonetic: '片', pinyin: 'piàn', characters: ['片', '版', '牌', '牍', '牒'] },
+        { phonetic: '票', pinyin: 'piào', characters: ['票', '漂', '飘', '镖', '膘'] },
+        { phonetic: '品', pinyin: 'pǐn', characters: ['品', '晶', '森', '磊', '鑫'] },
+        { phonetic: '平', pinyin: 'píng', characters: ['平', '评', '坪', '苹', '萍'] },
+        { phonetic: '颇', pinyin: 'pō', characters: ['颇', '坡', '破', '婆', '波'] }
+    ],
+    [
+        { phonetic: '破', pinyin: 'pò', characters: ['破', '坡', '婆', '颇', '玻'] },
+        { phonetic: '仆', pinyin: 'pú', characters: ['仆', '扑', '朴', '濮', '噗'] },
+        { phonetic: '普', pinyin: 'pǔ', characters: ['普', '谱', '浦', '溥', '埔'] },
+        { phonetic: '七', pinyin: 'qī', characters: ['七', '柒', '切', '沏', '砌'] },
+        { phonetic: '妻', pinyin: 'qī', characters: ['妻', '凄', '萋', '悽', '棲'] },
+        { phonetic: '其', pinyin: 'qí', characters: ['其', '期', '棋', '旗', '琪'] },
+        { phonetic: '奇', pinyin: 'qí', characters: ['奇', '骑', '琦', '崎', '绮'] },
+        { phonetic: '乞', pinyin: 'qǐ', characters: ['乞', '吃', '迄', '讫', '疙'] },
+        { phonetic: '岂', pinyin: 'qǐ', characters: ['岂', '凯', '恺', '铠', '觊'] },
+        { phonetic: '气', pinyin: 'qì', characters: ['气', '汽', '氧', '氨', '氮'] }
+    ],
+    [
+        { phonetic: '千', pinyin: 'qiān', characters: ['千', '迁', '仟', '阡', '芊'] },
+        { phonetic: '前', pinyin: 'qián', characters: ['前', '剪', '煎', '箭', '湔'] },
+        { phonetic: '欠', pinyin: 'qiàn', characters: ['欠', '款', '坎', '砍', '次'] },
+        { phonetic: '强', pinyin: 'qiáng', characters: ['强', '疆', '僵', '襁', '镪'] },
+        { phonetic: '乔', pinyin: 'qiáo', characters: ['乔', '桥', '侨', '娇', '轿'] },
+        { phonetic: '且', pinyin: 'qiě', characters: ['且', '姐', '组', '祖', '租'] },
+        { phonetic: '切', pinyin: 'qiē', characters: ['切', '窃', '砌', '沏', '彻'] },
+        { phonetic: '亲', pinyin: 'qīn', characters: ['亲', '新', '薪', '辛', '锌'] },
+        { phonetic: '秦', pinyin: 'qín', characters: ['秦', '榛', '臻', '溱', '螓'] },
+        { phonetic: '青', pinyin: 'qīng', characters: ['青', '清', '晴', '精', '静'] }
+    ],
+    [
+        { phonetic: '顷', pinyin: 'qǐng', characters: ['顷', '倾', '颖', '颖', '颖'] },
+        { phonetic: '庆', pinyin: 'qìng', characters: ['庆', '厌', '压', '庄', '桩'] },
+        { phonetic: '丘', pinyin: 'qiū', characters: ['丘', '邱', '蚯', '岳', '兵'] },
+        { phonetic: '秋', pinyin: 'qiū', characters: ['秋', '愁', '瞅', '揪', '锹'] },
+        { phonetic: '求', pinyin: 'qiú', characters: ['求', '球', '救', '裘', '逑'] },
+        { phonetic: '区', pinyin: 'qū', characters: ['区', '驱', '躯', '呕', '欧'] },
+        { phonetic: '曲', pinyin: 'qū', characters: ['曲', '蛐', '屈', '掘', '倔'] },
+        { phonetic: '取', pinyin: 'qǔ', characters: ['取', '娶', '趣', '聚', '最'] },
+        { phonetic: '去', pinyin: 'qù', characters: ['去', '法', '劫', '怯', '却'] },
+        { phonetic: '全', pinyin: 'quán', characters: ['全', '泉', '拳', '栓', '诠'] }
+    ],
+    [
+        { phonetic: '犬', pinyin: 'quǎn', characters: ['犬', '吠', '哭', '献', '厌'] },
+        { phonetic: '却', pinyin: 'què', characters: ['却', '脚', '郄', '隙', '绌'] },
+        { phonetic: '雀', pinyin: 'què', characters: ['雀', '鹊', '错', '措', '醋'] },
+        { phonetic: '然', pinyin: 'rán', characters: ['然', '燃', '髯', '苒', '蚺'] },
+        { phonetic: '冉', pinyin: 'rǎn', characters: ['冉', '苒', '髯', '聃', '姌'] },
+        { phonetic: '让', pinyin: 'ràng', characters: ['让', '壤', '嚷', '攘', '禳'] },
+        { phonetic: '饶', pinyin: 'ráo', characters: ['饶', '绕', '娆', '荛', '桡'] },
+        { phonetic: '人', pinyin: 'rén', characters: ['人', '认', '仁', '任', '忍'] },
+        { phonetic: '刃', pinyin: 'rèn', characters: ['刃', '忍', '韧', '仞', '轫'] },
+        { phonetic: '日', pinyin: 'rì', characters: ['日', '旦', '早', '旭', '旱'] }
+    ],
+    [
+        { phonetic: '荣', pinyin: 'róng', characters: ['荣', '容', '溶', '熔', '蓉'] },
+        { phonetic: '柔', pinyin: 'róu', characters: ['柔', '揉', '蹂', '鞣', '糅'] },
+        { phonetic: '肉', pinyin: 'ròu', characters: ['肉', '腐', '脔', '胬', '胔'] },
+        { phonetic: '如', pinyin: 'rú', characters: ['如', '茹', '汝', '恕', '絮'] },
+        { phonetic: '入', pinyin: 'rù', characters: ['入', '内', '纳', '呐', '衲'] },
+        { phonetic: '若', pinyin: 'ruò', characters: ['若', '诺', '惹', '匿', '溺'] },
+        { phonetic: '弱', pinyin: 'ruò', characters: ['弱', '溺', '搦', '袅', '嫋'] },
+        { phonetic: '洒', pinyin: 'sǎ', characters: ['洒', '晒', '撒', '潵', '躠'] },
+        { phonetic: '萨', pinyin: 'sà', characters: ['萨', '撒', '洒', '卅', '挲'] },
+        { phonetic: '塞', pinyin: 'sāi', characters: ['塞', '赛', '寨', '噻', '鳃'] }
+    ],
+    [
+        { phonetic: '三', pinyin: 'sān', characters: ['三', '叁', '参', '毵', '彡'] },
+        { phonetic: '散', pinyin: 'sàn', characters: ['散', '撒', '霰', '繖', '傘'] },
+        { phonetic: '桑', pinyin: 'sāng', characters: ['桑', '嗓', '搡', '颡', '磉'] },
+        { phonetic: '丧', pinyin: 'sàng', characters: ['丧', '桑', '嗓', '搡', '颡'] },
+        { phonetic: '骚', pinyin: 'sāo', characters: ['骚', '搔', '瘙', '缫', '鳋'] },
+        { phonetic: '扫', pinyin: 'sǎo', characters: ['扫', '嫂', '埽', '瘙', '氉'] },
+        { phonetic: '色', pinyin: 'sè', characters: ['色', '艳', '绝', '绝', '铯'] },
+        { phonetic: '森', pinyin: 'sēn', characters: ['森', '林', '琳', '淋', '霖'] },
+        { phonetic: '杀', pinyin: 'shā', characters: ['杀', '刹', '铩', '弑', '脎'] },
+        { phonetic: '沙', pinyin: 'shā', characters: ['沙', '砂', '莎', '痧', '鲨'] }
+    ],
+
+
+[
+    { phonetic: '阿', pinyin: 'ā', characters: ['阿', '啊'] },
+    { phonetic: '哀', pinyin: 'āi', characters: ['哀', '唉', '埃', '挨'] },
+    { phonetic: '艾', pinyin: 'ài', characters: ['艾', '哎'] },
+    { phonetic: '爱', pinyin: 'ài', characters: ['爱', '嗳', '暧'] },
+    { phonetic: '安', pinyin: 'ān', characters: ['安', '鞍', '氨', '胺', '俺'] },
+    { phonetic: '暗', pinyin: 'àn', characters: ['暗', '黯'] },
+    { phonetic: '昂', pinyin: 'áng', characters: ['昂', '盎', '迎'] },
+    { phonetic: '敖', pinyin: 'áo', characters: ['敖', '熬', '翱', '傲'] },
+    { phonetic: '奥', pinyin: 'ào', characters: ['奥', '澳', '懊'] },
+    { phonetic: '八', pinyin: 'bā', characters: ['八', '扒', '趴'] },
+    { phonetic: '巴', pinyin: 'bā', characters: ['巴', '把', '爸', '疤', '靶', '芭', '笆', '吧', '爬'] },
+    { phonetic: '白', pinyin: 'bái', characters: ['白', '百', '伯', '柏', '泊', '陌'] },
+    { phonetic: '拜', pinyin: 'bài', characters: ['拜', '湃'] },
+    { phonetic: '般', pinyin: 'bān', characters: ['般', '搬', '磐'] },
+    { phonetic: '半', pinyin: 'bàn', characters: ['半', '伴', '拌', '绊', '叛'] }
+
+    ],
+
+
+[
+
+
+
+
+    { phonetic: '邦', pinyin: 'bāng', characters: ['邦', '帮', '绑', '梆'] },
+    { phonetic: '包', pinyin: 'bāo', characters: ['包', '饱', '抱', '苞', '雹', '鲍', '泡', '炮', '跑'] },
+    { phonetic: '保', pinyin: 'bǎo', characters: ['保', '堡', '褒'] },
+    { phonetic: '报', pinyin: 'bào', characters: ['报', '服'] },
+    { phonetic: '暴', pinyin: 'bào', characters: ['暴', '爆', '瀑', '曝'] },
+    { phonetic: '卑', pinyin: 'bēi', characters: ['卑', '碑', '牌', '啤', '脾'] },
+    { phonetic: '贝', pinyin: 'bèi', characters: ['贝', '败', '坝', '呗'] },
+    { phonetic: '备', pinyin: 'bèi', characters: ['备', '惫'] },
+    { phonetic: '贲', pinyin: 'bēn', characters: ['奔', '喷'] },
+    { phonetic: '本', pinyin: 'běn', characters: ['本', '笨', '体'] },
+    { phonetic: '甭', pinyin: 'béng', characters: ['甭', '甪'] },
+    { phonetic: '泵', pinyin: 'bèng', characters: ['泵', '迸'] },
+    { phonetic: '逼', pinyin: 'bī', characters: ['逼', '幅', '副'] },
+    { phonetic: '鼻', pinyin: 'bí', characters: ['鼻', '鼾'] },
+    { phonetic: '比', pinyin: 'bǐ', characters: ['比', '毕', '毙', '庇', '琵', '批', '屁'] },
+    { phonetic: '必', pinyin: 'bì', characters: ['必', '秘', '泌', '密', '蜜'] },
+    { phonetic: '辟', pinyin: 'bì', characters: ['辟', '壁', '避', '臂', '劈', '癖', '僻'] },
+    { phonetic: '扁', pinyin: 'biǎn', characters: ['扁', '编', '遍', '篇', '骗', '偏', '蝙'] }
+
+
+    ],
+
+
+[
+
+    { phonetic: '便', pinyin: 'biàn', characters: ['便', '鞭', '变'] },
+    { phonetic: '卞', pinyin: 'biàn', characters: ['卞', '汴', '忭'] },
+    { phonetic: '标', pinyin: 'biāo', characters: ['标', '镖', '膘', '骠', '飘', '漂'] },
+    { phonetic: '表', pinyin: 'biǎo', characters: ['表', '裱', '婊'] },
+    { phonetic: '别', pinyin: 'bié', characters: ['别', '拐'] },
+    { phonetic: '宾', pinyin: 'bīn', characters: ['宾', '滨', '殡', '鬓', '缤', '嫔'] },
+    { phonetic: '兵', pinyin: 'bīng', characters: ['兵', '宾'] },
+    { phonetic: '丙', pinyin: 'bǐng', characters: ['丙', '病', '柄'] },
+    { phonetic: '并', pinyin: 'bìng', characters: ['并', '饼', '屏', '瓶', '拼', '迸', '姘'] },
+    { phonetic: '波', pinyin: 'bō', characters: ['波', '玻', '菠', '播', '簸'] },
+    { phonetic: '勃', pinyin: 'bó', characters: ['勃', '脖', '渤'] },
+    { phonetic: '孛', pinyin: 'bó', characters: ['勃', '悖'] },
+    { phonetic: '卜', pinyin: 'bǔ', characters: ['卜', '补', '扑', '朴', '赴'] },
+    { phonetic: '不', pinyin: 'bù', characters: ['不', '否', '坏', '怀', '环', '还'] },
+    { phonetic: '布', pinyin: 'bù', characters: ['布', '怖', '饰'] },
+    { phonetic: '部', pinyin: 'bù', characters: ['部', '陪', '培', '赔'] },
+    { phonetic: '才', pinyin: 'cái', characters: ['才', '材', '财', '闭'] },
+    { phonetic: '采', pinyin: 'cǎi', characters: ['采', '彩', '菜', '踩', '睬'] },
+    { phonetic: '参', pinyin: 'cān', characters: ['参', '惨', '掺', '渗'] },
+    { phonetic: '仓', pinyin: 'cāng', characters: ['仓', '苍', '舱', '沧', '抢', '枪', '疮', '创'] },
+    { phonetic: '曹', pinyin: 'cáo', characters: ['曹', '槽', '遭', '糟'] },
+    { phonetic: '草', pinyin: 'cǎo', characters: ['草', '澡', '藻', '操', '躁', '燥', '噪'] }
+
+
+
+    ],
+
+
+[
+
+    { phonetic: '册', pinyin: 'cè', characters: ['册', '删', '珊', '栅'] },
+    { phonetic: '察', pinyin: 'chá', characters: ['察', '擦', '嚓'] },
+    { phonetic: '叉', pinyin: 'chā', characters: ['叉', '杈', '钗', '汊'] },
+    { phonetic: '查', pinyin: 'chá', characters: ['查', '碴', '喳', '楂'] },
+    { phonetic: '差', pinyin: 'chā', characters: ['差', '搓', '磋', '嵯', '蹉'] },
+    { phonetic: '产', pinyin: 'chǎn', characters: ['产', '铲', '萨'] },
+    { phonetic: '昌', pinyin: 'chāng', characters: ['昌', '猖', '娼', '唱', '倡'] },
+    { phonetic: '尝', pinyin: 'cháng', characters: ['尝', '偿', '赏'] },
+    { phonetic: '长', pinyin: 'cháng', characters: ['长', '张', '涨', '账', '胀', '怅'] },
+    { phonetic: '场', pinyin: 'chǎng', characters: ['场', '肠', '畅', '汤', '荡', '烫'] },
+    { phonetic: '巢', pinyin: 'cháo', characters: ['巢', '缫', '剿'] },
+    { phonetic: '朝', pinyin: 'cháo', characters: ['朝', '潮', '嘲'] },
+    { phonetic: '车', pinyin: 'chē', characters: ['车', '阵', '连', '军', '库'] },
+    { phonetic: '辰', pinyin: 'chén', characters: ['辰', '晨', '唇', '娠', '振', '震', '蜃'] },
+    { phonetic: '尘', pinyin: 'chén', characters: ['尘', '尖'] },
+    { phonetic: '臣', pinyin: 'chén', characters: ['臣', '卧', '臧'] },
+    { phonetic: '成', pinyin: 'chéng', characters: ['成', '城', '诚', '盛'] },
+    { phonetic: '呈', pinyin: 'chéng', characters: ['呈', '程', '逞', '锃'] },
+    { phonetic: '乘', pinyin: 'chéng', characters: ['乘', '剩', '嵊'] },
+    { phonetic: '承', pinyin: 'chéng', characters: ['承', '丞', '蒸'] },
+    { phonetic: '斥', pinyin: 'chì', characters: ['斥', '拆', '诉', '柝'] },
+    { phonetic: '赤', pinyin: 'chì', characters: ['赤', '郝', '赦', '赫', '赧', '赭'] }
+
+
+    ],
+
+
+[
+
+    { phonetic: '充', pinyin: 'chōng', characters: ['充', '统', '铳'] },
+    { phonetic: '虫', pinyin: 'chóng', characters: ['虫', '蛊', '浊', '独'] },
+    { phonetic: '丑', pinyin: 'chǒu', characters: ['丑', '扭', '钮', '妞', '羞'] },
+    { phonetic: '出', pinyin: 'chū', characters: ['出', '础', '绌', '黜', '茁', '拙', '屈'] },
+    { phonetic: '初', pinyin: 'chū', characters: ['初'] },
+    { phonetic: '刍', pinyin: 'chú', characters: ['刍', '皱', '绉', '邹', '趋'] },
+    { phonetic: '除', pinyin: 'chú', characters: ['除', '滁', '蛤'] },
+    { phonetic: '厨', pinyin: 'chú', characters: ['厨', '橱', '蹰'] },
+    { phonetic: '储', pinyin: 'chǔ', characters: ['储', '褚', '诸', '煮', '著'] },
+    { phonetic: '楚', pinyin: 'chǔ', characters: ['楚', '础', '憷'] },
+    { phonetic: '川', pinyin: 'chuān', characters: ['川', '圳', '顺', '训', '驯'] },
+    { phonetic: '穿', pinyin: 'chuān', characters: ['穿', '串', '窜', '患'] },
+    { phonetic: '窗', pinyin: 'chuāng', characters: ['窗', '囱', '匆', '葱'] },
+    { phonetic: '垂', pinyin: 'chuí', characters: ['垂', '捶', '锤', '唾', '睡'] },
+    { phonetic: '春', pinyin: 'chūn', characters: ['春', '椿', '蠢'] },
+    { phonetic: '纯', pinyin: 'chún', characters: ['纯', '顿', '吨', '沌', '囤'] },
+    { phonetic: '醇', pinyin: 'chún', characters: ['醇', '淳', '鹑'] },
+    { phonetic: '此', pinyin: 'cǐ', characters: ['此', '些', '雌', '紫', '龇', '眦'] },
+    { phonetic: '次', pinyin: 'cì', characters: ['次', '瓷', '咨', '姿', '资', '盗'] },
+    { phonetic: '从', pinyin: 'cóng', characters: ['从', '丛', '纵', '耸', '怂'] },
+    { phonetic: '匆', pinyin: 'cōng', characters: ['匆', '葱', '囱'] },
+    { phonetic: '囱', pinyin: 'cōng', characters: ['囱', '窗', '聪'] },
+    { phonetic: '寸', pinyin: 'cùn', characters: ['寸', '村', '付', '守', '导', '寻', '寿', '封', '耐', '射', '尉'] }
+
+    ],
+
+
+
+   
+
+[
+    { phonetic: '错', pinyin: 'cuò', characters: ['错', '措', '厝', '醋'] },
+    { phonetic: '达', pinyin: 'dá', characters: ['达', '哒', '鞑'] },
+    { phonetic: '大', pinyin: 'dà', characters: ['大', '达', '太', '天', '夭', '乔', '奋', '奇'] },
+    { phonetic: '代', pinyin: 'dài', characters: ['代', '袋', '贷', '黛'] },
+    { phonetic: '带', pinyin: 'dài', characters: ['带', '滞', '蒂'] },
+    { phonetic: '单', pinyin: 'dān', characters: ['单', '弹', '惮', '郸', '禅', '蝉'] },
+    { phonetic: '旦', pinyin: 'dàn', characters: ['旦', '但', '担', '胆', '坦', '袒', '昼'] },
+    { phonetic: '当', pinyin: 'dāng', characters: ['当', '档', '挡', '铛'] },
+    { phonetic: '党', pinyin: 'dǎng', characters: ['党', '堂', '棠', '常', '赏', '偿', '敞', '徜'] },
+    { phonetic: '刀', pinyin: 'dāo', characters: ['刀', '叨', '召', '招', '昭', '照', '超', '邵', '削'] },
+    { phonetic: '到', pinyin: 'dào', characters: ['到', '倒', '捯'] },
+    { phonetic: '道', pinyin: 'dào', characters: ['道', '导', '稻'] },
+    { phonetic: '得', pinyin: 'dé', characters: ['得', '德'] },
+    { phonetic: '登', pinyin: 'dēng', characters: ['登', '凳', '澄', '瞪', '蹬', '橙', '证', '惩'] },
+    { phonetic: '狄', pinyin: 'dí', characters: ['狄', '逖', '荻'] },
+    { phonetic: '翟', pinyin: 'dí', characters: ['翟', '戳', '耀', '擢', '濯'] },
+    { phonetic: '弟', pinyin: 'dì', characters: ['弟', '第', '递', '梯', '涕', '剃', '娣', '鹈'] },
+    { phonetic: '帝', pinyin: 'dì', characters: ['帝', '蒂', '谛', '缔', '啼', '蹄'] },
+    { phonetic: '典', pinyin: 'diǎn', characters: ['典', '碘', '腆'] },
+    { phonetic: '电', pinyin: 'diàn', characters: ['电', '奄', '掩', '淹', '腌', '俺', '庵'] }
+
+
+    ],
+
+
+[
+
+    { phonetic: '甸', pinyin: 'diàn', characters: ['甸', '佃', '畋'] },
+    { phonetic: '奠', pinyin: 'diàn', characters: ['奠', '郑', '掷', '踯'] },
+    { phonetic: '刁', pinyin: 'diāo', characters: ['刁', '叼', '凋', '雕', '调', '碉'] },
+    { phonetic: '丁', pinyin: 'dīng', characters: ['丁', '钉', '叮', '顶', '订', '厅', '亭', '停', '婷', '宁', '拧', '狞', '泞'] },
+    { phonetic: '鼎', pinyin: 'dǐng', characters: ['鼎', '鼐'] },
+    { phonetic: '定', pinyin: 'dìng', characters: ['定', '锭', '腚', '绽', '淀'] },
+    { phonetic: '东', pinyin: 'dōng', characters: ['东', '冻', '栋', '陈'] },
+    { phonetic: '冬', pinyin: 'dōng', characters: ['冬', '终', '咚', '图'] },
+    { phonetic: '动', pinyin: 'dòng', characters: ['动', '働', '恸'] },
+    { phonetic: '斗', pinyin: 'dǒu', characters: ['斗', '抖', '蚪', '斜', '斛'] },
+    { phonetic: '豆', pinyin: 'dòu', characters: ['豆', '逗', '痘', '短', '壹', '鼓'] },
+    { phonetic: '都', pinyin: 'dū', characters: ['都', '堵', '睹', '赌', '屠', '暑', '署', '薯', '曙'] },
+    { phonetic: '毒', pinyin: 'dú', characters: ['毒', '毓'] },
+    { phonetic: '读', pinyin: 'dú', characters: ['读', '犊', '牍', '渎', '窦', '赎', '续'] },
+    { phonetic: '独', pinyin: 'dú', characters: ['独', '触', '烛', '蚀'] },
+    { phonetic: '度', pinyin: 'dù', characters: ['度', '渡', '镀', '席'] },
+    { phonetic: '端', pinyin: 'duān', characters: ['端', '瑞', '湍', '喘', '揣', '踹'] },
+    { phonetic: '段', pinyin: 'duàn', characters: ['段', '锻', '缎', '煅', '椴'] },
+    { phonetic: '兑', pinyin: 'duì', characters: ['兑', '说', '悦', '脱', '蜕', '税', '锐'] },
+    { phonetic: '盾', pinyin: 'dùn', characters: ['盾', '循', '遁', '楯'] },
+    { phonetic: '多', pinyin: 'duō', characters: ['多', '哆', '侈', '移', '爹', '够'] },
+    { phonetic: '朵', pinyin: 'duǒ', characters: ['朵', '躲', '剁', '跺', '垛', '踩'] },
+    { phonetic: '惰', pinyin: 'duò', characters: ['惰', '隋', '随', '髓'] }
+
+
+    ],
+
+
+[
+
+
+    { phonetic: '厄', pinyin: 'è', characters: ['厄', '扼', '轭', '呃', '顾'] },
+    { phonetic: '恶', pinyin: 'è', characters: ['恶', '垩', '哑'] },
+    { phonetic: '恩', pinyin: 'ēn', characters: ['恩', '摁'] },
+    { phonetic: '而', pinyin: 'ér', characters: ['而', '耐', '耍', '需', '儒', '糯'] },
+    { phonetic: '尔', pinyin: 'ěr', characters: ['尔', '你', '称', '弥', '玺'] },
+    { phonetic: '耳', pinyin: 'ěr', characters: ['耳', '饵', '洱', '珥', '耶', '闻', '聃', '耽', '耻'] },
+    { phonetic: '二', pinyin: 'èr', characters: ['二', '贰', '仁', '佴'] },
+    { phonetic: '发', pinyin: 'fā', characters: ['发', '拨', '泼', '废'] },
+    { phonetic: '乏', pinyin: 'fá', characters: ['乏', '泛', '贬', '砭', '眨'] },
+    { phonetic: '伐', pinyin: 'fá', characters: ['伐', '阀', '筏', '垡'] },
+    { phonetic: '法', pinyin: 'fǎ', characters: ['法', '砝', '珐'] },
+    { phonetic: '番', pinyin: 'fān', characters: ['番', '翻', '藩', '播', '潘', '蟠'] },
+    { phonetic: '凡', pinyin: 'fán', characters: ['凡', '帆', '矾', '梵', '凤', '风', '岚'] },
+    { phonetic: '反', pinyin: 'fǎn', characters: ['反', '返', '饭', '贩', '扳', '版', '板', '叛', '皈'] },
+    { phonetic: '方', pinyin: 'fāng', characters: ['方', '芳', '房', '防', '妨', '仿', '访', '纺', '放', '旁', '榜', '膀', '磅', '谤'] },
+    { phonetic: '非', pinyin: 'fēi', characters: ['非', '菲', '啡', '匪', '诽', '翡', '悲', '辈', '裴', '徘'] },
+    { phonetic: '飞', pinyin: 'fēi', characters: ['飞', '妃', '绯', '蜚', '匪'] },
+    { phonetic: '肥', pinyin: 'féi', characters: ['肥', '淝', '腓'] },
+    { phonetic: '费', pinyin: 'fèi', characters: ['费', '沸', '拂', '佛', '弗', '氟'] },
+    { phonetic: '分', pinyin: 'fēn', characters: ['分', '份', '粉', '芬', '纷', '氛', '忿', '盆', '颁', '盼', '扮', '掰'] }
+
+
+    ],
+
+
+[
+
+
+    { phonetic: '丰', pinyin: 'fēng', characters: ['丰', '峰', '锋', '烽', '蜂', '逢', '缝', '蓬', '篷'] },
+    { phonetic: '风', pinyin: 'fēng', characters: ['风', '枫', '疯', '讽', '岚', '飘', '飙'] },
+    { phonetic: '奉', pinyin: 'fèng', characters: ['奉', '捧', '棒', '俸', '唪'] },
+    { phonetic: '夫', pinyin: 'fū', characters: ['夫', '肤', '扶', '芙', '趺', '麸', '规', '替'] },
+    { phonetic: '弗', pinyin: 'fú', characters: ['弗', '拂', '佛', '费', '沸', '茀', '氟'] },
+    { phonetic: '伏', pinyin: 'fú', characters: ['伏', '袱', '茯'] },
+    { phonetic: '孚', pinyin: 'fú', characters: ['孚', '孵', '浮', '俘', '桴', '蜉'] },
+    { phonetic: '甫', pinyin: 'fǔ', characters: ['甫', '辅', '脯', '傅', '缚', '敷', '博', '搏', '膊', '薄', '簿', '浦', '埔', '蒲', '葡'] },
+    { phonetic: '府', pinyin: 'fǔ', characters: ['府', '俯', '腑', '腐', '附', '咐', '符'] },
+    { phonetic: '父', pinyin: 'fù', characters: ['父', '斧', '釜', '爷', '爸', '爹'] },
+    { phonetic: '复', pinyin: 'fù', characters: ['复', '腹', '覆', '馥', '履'] },
+    { phonetic: '付', pinyin: 'fù', characters: ['付', '附', '咐', '符', '府', '俯', '腐', '驸', '鲋'] },
+    { phonetic: '阜', pinyin: 'fù', characters: ['阜', '埠', '师', '帅', '归', '狮', '筛'] },
+    { phonetic: '富', pinyin: 'fù', characters: ['富', '副', '幅', '福', '辐', '蝠', '匐', '逼'] },
+    { phonetic: '该', pinyin: 'gāi', characters: ['该', '核', '咳', '孩', '亥', '刻', '劾'] },
+    { phonetic: '改', pinyin: 'gǎi', characters: ['改', '凯', '铠', '剀', '皑'] },
+    { phonetic: '盖', pinyin: 'gài', characters: ['盖', '溉', '概', '慨'] },
+    { phonetic: '干', pinyin: 'gān', characters: ['干', '杆', '竿', '肝', '赶', '刊', '罕', '汗', '旱', '焊', '悍', '捍', '擀'] },
+    { phonetic: '甘', pinyin: 'gān', characters: ['甘', '柑', '坩', '苷', '泔', '酣', '钳', '嵌'] },
+    { phonetic: '感', pinyin: 'gǎn', characters: ['感', '憾', '撼', '喊', '咸', '减', '缄'] },
+    { phonetic: '敢', pinyin: 'gǎn', characters: ['敢', '橄', '憨'] },
+    { phonetic: '冈', pinyin: 'gāng', characters: ['冈', '刚', '钢', '纲', '岗', '缸', '肛', '杠', '康', '慷', '糠'] }
+
+
+
+    ],
+
+
+[
+
+    { phonetic: '高', pinyin: 'gāo', characters: ['高', '膏', '篙', '稿', '搞', '镐', '蒿', '豪', '毫', '亭', '亮', '亨', '享'] },
+    { phonetic: '哥', pinyin: 'gē', characters: ['哥', '歌', '可', '何', '河', '柯', '苛', '珂', '轲', '呵', '奇', '寄', '椅', '崎', '骑', '琦', '绮', '倚', '畸'] },
+    { phonetic: '戈', pinyin: 'gē', characters: ['戈', '划', '战', '找', '戏', '伐', '筏', '阀', '哉', '栽', '载', '裁', '戴', '戛'] },
+    { phonetic: '革', pinyin: 'gé', characters: ['革', '靴', '勒', '鞋', '鞘', '靶', '鞠', '鞭'] },
+    { phonetic: '各', pinyin: 'gè', characters: ['各', '格', '阁', '搁', '胳', '咯', '铬', '客', '额', '洛', '落', '络', '骆', '略', '路', '露', '鹭'] },
+    { phonetic: '艮', pinyin: 'gèn', characters: ['艮', '根', '跟', '垦', '恳', '痕', '很', '狠', '恨', '限', '眼', '银', '垠', '龈'] },
+    { phonetic: '更', pinyin: 'gēng', characters: ['更', '梗', '埂', '哽', '鲠', '便', '鞭', '硬', '粳'] },
+    { phonetic: '工', pinyin: 'gōng', characters: ['工', '功', '攻', '贡', '空', '红', '虹', '江', '扛', '缸', '项', '巧', '差', '左', '巫'] },
+    { phonetic: '弓', pinyin: 'gōng', characters: ['弓', '躬', '穹', '强', '张', '弹', '粥', '引', '弘', '弦', '弥'] },
+    { phonetic: '公', pinyin: 'gōng', characters: ['公', '松', '讼', '颂', '翁', '嗡', '瓮', '蚣', '衮', '滚', '辊', '鲧'] },
+    { phonetic: '共', pinyin: 'gòng', characters: ['共', '供', '拱', '恭', '龚', '洪', '哄', '烘', '巷', '港'] },
+    { phonetic: '勾', pinyin: 'gōu', characters: ['勾', '沟', '构', '购', '钩', '佝', '苟', '够', '句', '拘', '驹', '狗', '煦'] },
+    { phonetic: '古', pinyin: 'gǔ', characters: ['古', '姑', '估', '咕', '沽', '菇', '固', '故', '雇', '枯', '苦', '胡', '湖', '葫', '糊', '蝴', '沽', '怙', '骷'] },
+    { phonetic: '谷', pinyin: 'gǔ', characters: ['谷', '浴', '裕', '欲', '豁', '容', '溶', '蓉', '熔', '颂', '诵'] },
+    { phonetic: '骨', pinyin: 'gǔ', characters: ['骨', '滑', '猾', '骰', '骷', '髓'] },
+    { phonetic: '瓜', pinyin: 'guā', characters: ['瓜', '呱', '孤', '弧', '狐', '觚', '瓢', '瓣', '瓤'] }
+],
+
+
+
+[
+    { phonetic: '卦', pinyin: 'guà', characters: ['卦', '挂', '褂', '诖'] },
+    { phonetic: '乖', pinyin: 'guāi', characters: ['乖', '乘', '剩'] },
+    { phonetic: '官', pinyin: 'guān', characters: ['官', '管', '馆', '棺', '倌', '菅'] },
+    { phonetic: '关', pinyin: 'guān', characters: ['关', '联', '郑', '送', '朕'] },
+    { phonetic: '贯', pinyin: 'guàn', characters: ['贯', '惯', '掼', '痫'] },
+    { phonetic: '光', pinyin: 'guāng', characters: ['光', '晃', '恍', '幌', '觥', '辉', '耀'] },
+    { phonetic: '广', pinyin: 'guǎng', characters: ['广', '矿', '旷', '邝', '圹', '扩', '犷'] },
+    { phonetic: '归', pinyin: 'guī', characters: ['归', '岿', '妇', '追', '师', '帅', '筛'] },
+    { phonetic: '龟', pinyin: 'guī', characters: ['龟', '阄', '涸'] },
+    { phonetic: '规', pinyin: 'guī', characters: ['规', '窥', '窥'] },
+    { phonetic: '鬼', pinyin: 'guǐ', characters: ['鬼', '瑰', '傀', '魁', '魅', '魂', '魄', '魔', '嵬', '魏', '愧', '槐'] },
+    { phonetic: '癸', pinyin: 'guǐ', characters: ['癸', '揆', '睽', '葵', '登', '凳', '邓', '澄'] },
+    { phonetic: '贵', pinyin: 'guì', characters: ['贵', '溃', '馈', '匮', '聩', '篑', '愦', '遗'] },
+    { phonetic: '国', pinyin: 'guó', characters: ['国', '帼', '掴', '蝈'] },
+    { phonetic: '果', pinyin: 'guǒ', characters: ['果', '裹', '棵', '颗', '课', '裸', '踝', '夥', '巢'] },
+    { phonetic: '亥', pinyin: 'hài', characters: ['亥', '该', '核', '刻', '咳', '孩', '骇', '氦', '劾'] },
+    { phonetic: '害', pinyin: 'hài', characters: ['害', '割', '辖', '瞎', '豁'] },
+    { phonetic: '函', pinyin: 'hán', characters: ['函', '涵', '菡', '颔'] },
+    { phonetic: '寒', pinyin: 'hán', characters: ['寒', '塞', '寨', '赛', '噻'] }
+
+
+    ],
+
+
+[
+
+    { phonetic: '罕', pinyin: 'hǎn', characters: ['罕', '焊', '捍', '悍', '睅'] },
+    { phonetic: '汉', pinyin: 'hàn', characters: ['汉', '叹', '难', '滩', '摊', '瘫', '傩'] },
+    { phonetic: '亢', pinyin: 'kàng', characters: ['亢', '抗', '炕', '航', '吭', '沆', '颃'] },
+    { phonetic: '豪', pinyin: 'háo', characters: ['豪', '毫', '壕', '嚎', '濠'] },
+    { phonetic: '好', pinyin: 'hǎo', characters: ['好', '妈', '奶', '她', '妇', '奴', '如', '娃', '姥', '姻', '娼', '婢', '嫖'] },
+    { phonetic: '禾', pinyin: 'hé', characters: ['禾', '和', '利', '季', '秀', '香', '酥', '秦', '泰', '黎'] },
+    { phonetic: '合', pinyin: 'hé', characters: ['合', '盒', '恰', '洽', '答', '拾', '给', '蛤', '鸽', '拿', '哈', '塔', '搭', '袷', '龛'] },
+    { phonetic: '何', pinyin: 'hé', characters: ['何', '河', '荷', '苛', '柯', '珂', '轲', '呵', '奇', '寄', '椅', '崎', '骑', '琦', '绮', '倚', '畸'] },
+    { phonetic: '曷', pinyin: 'hé', characters: ['曷', '喝', '渴', '揭', '竭', '歇', '蝎', '谒', '葛', '蔼', '霭'] },
+    { phonetic: '黑', pinyin: 'hēi', characters: ['黑', '墨', '默', '黔', '黛', '黜', '黝', '黠', '党', '堂', '常', '赏', '偿', '敞', '徜'] },
+    { phonetic: '很', pinyin: 'hěn', characters: ['很', '恨', '狠', '痕', '恳', '垦', '垠', '龈', '银', '限', '眼'] },
+    { phonetic: '亨', pinyin: 'hēng', characters: ['亨', '哼', '烹', '享', '醇', '淳', '敦', '郭', '敦', '熟'] },
+    { phonetic: '恒', pinyin: 'héng', characters: ['恒', '垣', '宣', '桓', '洹', '烜', '亘', '互', '瓦', '瓷', '瓶', '瓮', '瓯'] },
+    { phonetic: '红', pinyin: 'hóng', characters: ['红', '虹', '江', '缸', '扛', '项', '工', '空', '巧', '差', '左', '巫'] },
+    { phonetic: '后', pinyin: 'hòu', characters: ['后', '厚', '适', '刮', '话', '活', '括', '阔', '敌', '乱', '辞', '甜', '舔', '舐'] },
+    { phonetic: '乎', pinyin: 'hū', characters: ['乎', '呼', '烀', '轷', '琥'] },
+    { phonetic: '胡', pinyin: 'hú', characters: ['胡', '湖', '葫', '糊', '蝴', '瑚', '煳', '猢', '鹕'] },
+    { phonetic: '虎', pinyin: 'hǔ', characters: ['虎', '唬', '琥', '彪', '虐', '虑', '虏', '虔', '虚', '虞'] },
+    { phonetic: '互', pinyin: 'hù', characters: ['互', '冱', '沍', '瓠', '瓦', '瓷', '瓶', '瓮', '瓯'] },
+    { phonetic: '户', pinyin: 'hù', characters: ['户', '沪', '护', '扈', '雇', '妒', '庐', '炉', '芦', '驴'] },
+    { phonetic: '化', pinyin: 'huà', characters: ['化', '花', '华', '货', '讹', '靴', '货', '桦', '哗', '骅'] }
+
+
+    ],
+
+
+[
+
+
+    { phonetic: '画', pinyin: 'huà', characters: ['画', '划', '话', '婳'] },
+    { phonetic: '怀', pinyin: 'huái', characters: ['怀', '坏', '还', '环', '不', '否', '丕', '胚', '呸', '邳', '杯'] },
+    { phonetic: '奂', pinyin: 'huàn', characters: ['奂', '换', '唤', '焕', '涣', '痪', '焕'] },
+    { phonetic: '患', pinyin: 'huàn', characters: ['患', '串', '窜', '蹿', '镩'] },
+    { phonetic: '皇', pinyin: 'huáng', characters: ['皇', '凰', '煌', '惶', '蝗', '篁', '隍', '遑', '徨', '湟'] },
+    { phonetic: '黄', pinyin: 'huáng', characters: ['黄', '潢', '璜', '簧', '蟥', '横', '广', '矿', '旷', '邝', '圹', '扩', '犷'] },
+    { phonetic: '灰', pinyin: 'huī', characters: ['灰', '恢', '诙', '盔', '炭', '碳', '崖', '涯', '睚'] },
+    { phonetic: '回', pinyin: 'huí', characters: ['回', '徊', '茴', '蛔', '洄', '佪'] },
+    { phonetic: '会', pinyin: 'huì', characters: ['会', '绘', '烩', '荟', '刽', '侩', '脍', '郐', '桧', '秦', '泰', '漆', '膝', '滕'] },
+    { phonetic: '惠', pinyin: 'huì', characters: ['惠', '穗', '蟪', '蕙', '寔', '实', '贯', '惯', '掼', '痫'] },
+    { phonetic: '昏', pinyin: 'hūn', characters: ['昏', '婚', '阍', '惽', '惽'] },
+    { phonetic: '火', pinyin: 'huǒ', characters: ['火', '炎', '焱', '燚', '灭', '灾', '灵', '灸', '灼', '灾', '焚', '烫', '熨', '爆', '炸', '炮', '灯', '灶', '炉', '烛', '炕', '烤', '烘', '焙', '烩', '炖', '炒', '炊', '炸', '烧', '燎', '燃', '烁', '烂', '烤', '烘', '焙', '烩', '炖', '炒', '炊', '炸', '烧', '燎', '燃', '烁', '烂'] },
+    { phonetic: '或', pinyin: 'huò', characters: ['或', '国', '域', '惑', '蜮', '緎'] },
+    { phonetic: '几', pinyin: 'jǐ', characters: ['几', '机', '讥', '矶', '玑', '肌', '饥', '麂', '凯', '凳', '登', '澄', '瞪', '蹬', '橙', '证', '惩'] },
+    { phonetic: '及', pinyin: 'jí', characters: ['及', '级', '极', '圾', '汲', '芨', '笈', '岌', '吸', '扱', '趿', '觚', '瓢', '瓣', '瓤'] },
+    { phonetic: '吉', pinyin: 'jí', characters: ['吉', '洁', '结', '秸', '诘', '颉', '黠', '佶', '咭', '姞', '髻', '拮', '桔'] },
+    { phonetic: '即', pinyin: 'jí', characters: ['即', '既', '卿', '概', '溉', '慨'] },
+    { phonetic: '疾', pinyin: 'jí', characters: ['疾', '嫉', '蒺', '痵'] }
+
+
+
+
+    ],
+
+
+[
+
+    { phonetic: '己', pinyin: 'jǐ', characters: ['己', '记', '纪', '忌', '起', '岂', '妃', '改', '凯', '铠', '剀', '皑'] },
+    { phonetic: '脊', pinyin: 'jǐ', characters: ['脊', '瘠', '蹐', '鹡'] },
+    { phonetic: '计', pinyin: 'jì', characters: ['计', '记', '纪', '忌', '技', '妓', '芰', '髻', '蓟', '鲚'] },
+    { phonetic: '既', pinyin: 'jì', characters: ['既', '溉', '概', '慨', '厩', '暨', '暨', '塈'] },
+    { phonetic: '加', pinyin: 'jiā', characters: ['加', '架', '驾', '贺', '茄', '伽', '珈', '枷', '笳', '袈', '嘉', '痂'] },
+    { phonetic: '家', pinyin: 'jiā', characters: ['家', '稼', '嫁', '豪', '蒙', '朦', '檬'] },
+    { phonetic: '甲', pinyin: 'jiǎ', characters: ['甲', '钾', '岬', '胛', '闸', '匣', '狎', '柙', '鸭', '押', '呷', '笚'] },
+    { phonetic: '夹', pinyin: 'jiā', characters: ['夹', '侠', '峡', '狭', '浃', '挟', '荚', '颊', '硖', '蛱', '郑', '掷', '踯', '奠'] },
+    { phonetic: '贾', pinyin: 'jiǎ', characters: ['贾', '价', '嫁', '稼', '架', '驾', '贺'] },
+    { phonetic: '尖', pinyin: 'jiān', characters: ['尖', '尘', '劣', '省', '雀', '詹', '瞻', '檐', '赡', '儋', '澹', '憺', '譫'] },
+    { phonetic: '间', pinyin: 'jiān', characters: ['间', '简', '涧', '锏', '裥', '菅', '奸', '姦'] },
+    { phonetic: '见', pinyin: 'jiàn', characters: ['见', '现', '砚', '苋', '觅', '觉', '览', '规', '视', '觊', '觐'] },
+    { phonetic: '建', pinyin: 'jiàn', characters: ['建', '健', '键', '毽', '腱', '犍', '揵'] },
+    { phonetic: '将', pinyin: 'jiāng', characters: ['将', '浆', '奖', '蒋', '酱', '锵', '螀'] },
+    { phonetic: '交', pinyin: 'jiāo', characters: ['交', '郊', '胶', '跤', '绞', '狡', '饺', '较', '校', '咬', '铰', '佼', '皎', '鲛', '效', '傚', '校'] }
+
+
+    ],
+
+
+[
+
+
+
+    { phonetic: '焦', pinyin: 'jiāo', characters: ['焦', '礁', '蕉', '鹪', '憔', '樵', '瞧', '僬', '噍', '醮'] },
+    { phonetic: '角', pinyin: 'jiǎo', characters: ['角', '确', '触', '解', '蟹', '懈', '邂', '觖', '觞', '觚', '觜', '觥', '觫', '觳', '觱'] },
+    { phonetic: '侥', pinyin: 'jiǎo', characters: ['侥', '浇', '绕', '饶', '娆', '桡', '翘', '跷', '铙'] },
+    { phonetic: '敫', pinyin: 'jiǎo', characters: ['敫', '激', '缴', '邀', '儌', '檄', '竅', '璿', '燿', '矅', '礿', '禴'] },
+    { phonetic: '节', pinyin: 'jié', characters: ['节', '栉', '疖', '蝍'] },
+    { phonetic: '介', pinyin: 'jiè', characters: ['介', '界', '芥', '疥', '蚧', '尬', '价', '阶', '届', '挤', '济', '荠', '霁', '齑', '剂', '跻', '侪', '豺'] },
+    { phonetic: '斤', pinyin: 'jīn', characters: ['斤', '近', '靳', '欣', '忻', '昕', '听', '新', '薪', '芹', '斥', '拆', '折', '析', '晰', '浙', '逝', '誓'] },
+    { phonetic: '今', pinyin: 'jīn', characters: ['今', '含', '吟', '衿', '矜', '贪', '念', '岑', '涔', '琴', '黔', '衾', '妗', '钤', '芩', '檎'] },
+    { phonetic: '金', pinyin: 'jīn', characters: ['金', '鑫', '鉴', '淦', '銎', '銮', '錾', '鍪', '鎏', '鏊', '鐾', '鑫'] },
+    { phonetic: '堇', pinyin: 'jǐn', characters: ['堇', '谨', '瑾', '馑', '觐', '勤', '鄞', '廑', '仅', '紧', '锦', '劲', '茎', '径', '经', '泾', '颈', '刭', '氢', '轻', '胫', '痉', '迳', '烃'] },
+    { phonetic: '尽', pinyin: 'jìn', characters: ['尽', '烬', '荩', '赆', '浕'] },
+    { phonetic: '京', pinyin: 'jīng', characters: ['京', '惊', '鲸', '景', '影', '凉', '谅', '掠', '琼', '椋', '辌', '勍', '黥'] },
+    { phonetic: '井', pinyin: 'jǐng', characters: ['井', '阱', '进', '讲', '耕', '畊', '肼', '胼', '汫', '宑', '穽', '荊', '荆', '型', '刑', '邢', '形', '硎', '铏'] },
+    { phonetic: '竞', pinyin: 'jìng', characters: ['竞', '竟', '境', '镜', '獍'] },
+    { phonetic: '敬', pinyin: 'jìng', characters: ['敬', '警', '儆', '擎', '檠'] },
+    { phonetic: '冂', pinyin: 'jiōng', characters: ['冂', '同', '网', '冈', '内', '肉', '周', '用', '甬', '甫', '甬', '庸', '康', '唐', '庚', '赓', '康', '鹿', '麗', '麟', '麟', '麟', '麟', '麟', '麟'] },
+    { phonetic: '九', pinyin: 'jiǔ', characters: ['九', '仇', '究', '鸠', '旭', '旮', '旯', '杂', '染', '轨', '宄', '氿', '究', '阄', '臼', '舅', '旧', '白', '百', '伯', '柏', '泊', '陌'] },
+    { phonetic: '久', pinyin: 'jiǔ', characters: ['久', '玖', '灸', '疚', '柩', '汣', '畂', '羑', '羑', '羑'] },
+    { phonetic: '旧', pinyin: 'jiù', characters: ['旧', '舅', '臼', '柏', '伯', '泊', '迫', '珀', '魄', '舶', '箔', '铂', '鮊'] }
+
+
+    ],
+
+
+[
+
+
+    { phonetic: '咎', pinyin: 'jiù', characters: ['咎', '晷', '厩', '簋', '倃', '鼛'] },
+    { phonetic: '就', pinyin: 'jiù', characters: ['就', '鹫', '僦', '蹴', '噍', '僽', '鷲'] },
+    { phonetic: '居', pinyin: 'jū', characters: ['居', '据', '剧', '锯', '倨', '踞', '琚', '椐', '腒', '裾', '涺', '崌', '蜛'] },
+    { phonetic: '且', pinyin: 'qiě', characters: ['且', '姐', '祖', '阻', '组', '租', '诅', '俎', '疽', '苴', '雎', '助', '锄', '耡', '徂', '殂', '驵', '龃', '狙', '咀', '沮'] },
+    { phonetic: '举', pinyin: 'jǔ', characters: ['举', '榉', '龃', '筥', '簴'] },
+    { phonetic: '巨', pinyin: 'jù', characters: ['巨', '拒', '距', '矩', '炬', '苣', '讵', '钜', '秬', '渠', '遽', '醵', '鐻'] },
+    { phonetic: '具', pinyin: 'jù', characters: ['具', '俱', '惧', '飓', '犋', '颶', '埧', '埾', '寠'] },
+    { phonetic: '卷', pinyin: 'juǎn', characters: ['卷', '倦', '圈', '蜷', '鬈', '惓', '锩', '踡', '棬', '箞', '埢', '婘', '絭', '菤', '餋'] },
+    { phonetic: '厥', pinyin: 'jué', characters: ['厥', '蕨', '撅', '獗', '蹶', '鳜', '劂', '橛', '噘', '爨', '臄', '鐍'] },
+    { phonetic: '军', pinyin: 'jūn', characters: ['军', '辉', '晖', '浑', '挥', '晕', '皲', '郓', '恽', '荤', '诨', '裈', '觚', '瓢', '瓣', '瓤'] },
+    { phonetic: '君', pinyin: 'jūn', characters: ['君', '群', '裙', '郡', '捃', '鲪', '莙', '輑', '麏', '皸', '窘', '菌', '箘', '囷', '麇'] }
+],
+
+
+[
+    { phonetic: '开', pinyin: 'kāi', characters: ['开', '研', '形', '刑', '邢', '型', '硎', '铏', '荊', '荆', '井', '耕', '畊'] },
+    { phonetic: '刊', pinyin: 'kān', characters: ['刊', '勘', '堪', '戡', '龛', '嵁', '歁'] },
+    { phonetic: '侃', pinyin: 'kǎn', characters: ['侃', '楬', '褥', '顑', '鬜', '鶫', '鼾'] },
+    { phonetic: '看', pinyin: 'kàn', characters: ['看', '翰', '瀚', '幹', '擀', '鼾', '暵', '熯', '骭'] },
+    { phonetic: '康', pinyin: 'kāng', characters: ['康', '慷', '糠', '穅', '漮', '槺', '躿'] },
+    { phonetic: '亢', pinyin: 'kàng', characters: ['亢', '抗', '炕', '航', '吭', '沆', '颃', '肮', '伉', '闶', '钪'] },
+    { phonetic: '考', pinyin: 'kǎo', characters: ['考', '拷', '烤', '铐', '栲', '攷', '丂', '巧', '朽', '污', '巧', '朽', '污'] },
+    { phonetic: '可', pinyin: 'kě', characters: ['可', '河', '何', '呵', '诃', '珂', '轲', '苛', '奇', '寄', '椅', '崎', '骑', '琦', '绮', '倚', '畸', '阿', '柯', '舸', '哥', '歌', '哿', '笴', '嗬', '痾', '疴', '蚵', '牁'] },
+    { phonetic: '克', pinyin: 'kè', characters: ['克', '刻', '勀', '氪', '客', '恪', '嗑', '溘', '騍', '緙'] },
+    { phonetic: '肯', pinyin: 'kěn', characters: ['肯', '啃', '垦', '恳', '龈', '裉', '錹'] },
+    { phonetic: '空', pinyin: 'kōng', characters: ['空', '恐', '控', '腔', '倥', '崆', '箜', '椌', '涳', '硿'] },
+    { phonetic: '孔', pinyin: 'kǒng', characters: ['孔', '吼', '犼', '吽', '呴', '昫', '煦', '姁', '欨', '欻'] },
+    { phonetic: '口', pinyin: 'kǒu', characters: ['口', '扣', '叩', '釦', '筘', '寇', '蔻', '窛', '蔲'] },
+    { phonetic: '哭', pinyin: 'kū', characters: ['哭', '器', '嚳', '罊', '豰', '瀫'] },
+    { phonetic: '库', pinyin: 'kù', characters: ['库', '裤', '厍', '俥', '軗'] },
+    { phonetic: '夸', pinyin: 'kuā', characters: ['夸', '垮', '挎', '跨', '胯', '刳', '瓠', '姱', '恗', '袴', '骻', '晇', '誇'] }
+
+
+    ],
+
+
+[
+
+
+    { phonetic: '快', pinyin: 'kuài', characters: ['快', '块', '筷', '哙', '郐', '狯', '脍', '鲙', '旝', '澮', '獪', '噲'] },
+    { phonetic: '宽', pinyin: 'kuān', characters: ['宽', '髋', '臗', '鑧', '髖'] },
+    { phonetic: '款', pinyin: 'kuǎn', characters: ['款', '窾', '欵', '歀', '竄', '躦', '鑧'] },
+    { phonetic: '匡', pinyin: 'kuāng', characters: ['匡', '筐', '框', '眶', '哐', '恇', '劻', '诓', '軭', '洭', '邼'] },
+    { phonetic: '狂', pinyin: 'kuáng', characters: ['狂', '逛', '诳', '俇', '狅', '軖', '忹'] },
+    { phonetic: '况', pinyin: 'kuàng', characters: ['况', '贶', '况', '哙', '磺', '穬', '黋', '爌'] },
+    { phonetic: '亏', pinyin: 'kuī', characters: ['亏', '污', '夸', '垮', '挎', '跨', '胯', '刳', '瓠', '姱', '恗', '袴', '骻', '晇', '誇'] },
+    { phonetic: '奎', pinyin: 'kuí', characters: ['奎', '喹', '蝰', '逵', '馗', '揆', '暌', '睽', '骙', '戣', '鄈', '躨', '鍷', '櫆'] },
+    { phonetic: '夬', pinyin: 'guài', characters: ['夬', '决', '诀', '抉', '玦', '鴂', '駃', '觖', '鈌', '芵', '蚗', '赽', '趹', '鴃', '鳜', '鱖', '缺', '蒛', '阕', '闋', '阕', '闋'] },
+    { phonetic: '困', pinyin: 'kùn', characters: ['困', '捆', '阃', '悃', '壸', '梱', '稇', '裍', '綑', '齫', '閫'] },
+    { phonetic: '扩', pinyin: 'kuò', characters: ['扩', '旷', '矿', '邝', '圹', '犷', '纩', '爌', '曠', '懭', '礦', '穬', '黋'] },
+    { phonetic: '来', pinyin: 'lái', characters: ['来', '莱', '徕', '涞', '崃', '睐', '赉', '铼', '勑', '鶆'] },
+    { phonetic: '兰', pinyin: 'lán', characters: ['兰', '栏', '拦', '烂', '岚', '阑', '谰', '澜', '斓', '褴', '镧', '糷', '闌'] },
+    { phonetic: '览', pinyin: 'lǎn', characters: ['览', '揽', '缆', '榄', '罱', '醂', '擥', '爦', '欖', '灠', '爁', '蘫', '襕', '囒'] },
+    { phonetic: '郎', pinyin: 'láng', characters: ['郎', '朗', '浪', '狼', '廊', '琅', '榔', '螂', '稂', '蒗', '阆', '锒', '螂', '艆', '嫏', '欴'] }
+
+
+
+    ],
+
+
+[
+
+    { phonetic: '劳', pinyin: 'láo', characters: ['劳', '捞', '涝', '唠', '崂', '痨', '镑', '耢', '醪', '磱', '軂', '僗', '髝', '憥', '憦'] },
+    { phonetic: '老', pinyin: 'lǎo', characters: ['老', '佬', '姥', '栳', '铑', '荖', '耂', '耄', '耋', '考', '拷', '烤', '铐', '栲', '攷'] },
+    { phonetic: '乐', pinyin: 'lè', characters: ['乐', '烁', '栎', '砾', '轹', '跞', '铄', '泺', '烁', '藥', '嶅', '摷', '濼', '櫟', '瓅', '皪', '礫', '躒', '轢', '鑠', '藥', '樂'] },
+    { phonetic: '雷', pinyin: 'léi', characters: ['雷', '蕾', '镭', '擂', '檑', '礧', '羸', '缧', '嫘', '罍', '櫑', '瓃', '癗', '藟', '蘲', '鑘', '鼺'] },
+    { phonetic: '垒', pinyin: 'lěi', characters: ['垒', '磊', '儡', '缧', '嫘', '耒', '诔', '涙', '淚', '蕌', '藟', '蘲', '鑘', '鼺'] },
+    { phonetic: '类', pinyin: 'lèi', characters: ['类', '泪', '累', '垒', '磊', '傫', '缧', '嫘', '檑', '礧', '罍', '櫑', '瓃', '癗', '藟', '蘲', '鑘', '鼺'] },
+    { phonetic: '离', pinyin: 'lí', characters: ['离', '篱', '璃', '漓', '缡', '螭', '魑', '摛', '樆', '蓠', '黐', '縭', '鸝', '褵', '罹', '离'] },
+    { phonetic: '里', pinyin: 'lǐ', characters: ['里', '理', '鲤', '俚', '哩', '娌', '锂', '裏', '裡', '厘', '狸', '埋', '野', '量', '童', '重', '動', '鍾', '鐘', '腫', '種', '衝', '幢', '憧', '艟', '撞', '勭', '蕫', '懂', '湩', '蝀', '董', '諌', '諫', '諍', '諠', '諴', '諼', '謇', '謖', '謐', '謨', '謫', '謾', '譁', '譆', '譌', '譎', '譏', '譖', '譙', '譚', '譫', '讋', '讌', '讎', '讒', '讓', '讕', '讖', '讜', '讞', '讟'] },
+    { phonetic: '力', pinyin: 'lì', characters: ['力', '历', '沥', '雳', '励', '荔', '坜', '苈', '呖', '枥', '疬', '铄', '栎', '砾', '轹', '跞', '泺', '勒', '叻', '忇', '扐', '氻', '艻', '阞', '竻', '朸', '叻'] },
+    { phonetic: '历', pinyin: 'lì', characters: ['历', '沥', '雳', '励', '荔', '坜', '苈', '呖', '枥', '疬', '铄', '栎', '砾', '轹', '跞', '泺', '勒', '叻', '忇', '扐', '氻', '艻', '阞', '竻', '朸', '叻'] },
+    { phonetic: '立', pinyin: 'lì', characters: ['立', '粒', '笠', '拉', '垃', '啦', '位', '泣', '站', '飒', '翊', '翋', '岦', '砬', '苙', '鴗', '竰', '涖', '蒞', '砬', '莅', '粒', '笠', '拉', '垃', '啦', '位', '泣', '站', '飒', '翊', '翋', '岦', '砬', '苙', '鴗', '竰', '涖', '蒞', '砬', '莅'] },
+    { phonetic: '丽', pinyin: 'lì', characters: ['丽', '俪', '郦', '骊', '鹂', '鲡', '酈', '纚', '盠', '矖', '邐', '灑', '籭', '襹', '纚'] },
+    { phonetic: '利', pinyin: 'lì', characters: ['利', '梨', '犁', '莉', '俐', '猁', '痢', '蜊', '鬁', '刕', '剓', '梸', '荲', '悡', '棃', '琍', '睝', '筣', '艃', '鋫', '鯬', '鵹', '籬', '鑗', '驪', '酈', '纚', '盠', '矖', '邐', '灑', '籭', '襹', '纚'] },
+    { phonetic: '连', pinyin: 'lián', characters: ['连', '莲', '涟', '链', '鲢', '琏', '裢', '梿', '槤', '嗹', '漣', '謰', '鰱', '薕', '蠊', '覝', '鏟', '僆', '摙', '璉', '槤', '嗹', '漣', '謰', '鰱', '薕', '蠊', '覝', '鏟', '僆', '摙', '璉'] },
+    { phonetic: '廉', pinyin: 'lián', characters: ['廉', '镰', '濂', '蠊', '簾', '薕', '磏', '鬑', '熑', '覝', '劆', '匳', '奁', '匲', '奩', '籢', '籨'] }
+
+
+    ],
+
+
+[
+
+
+    { phonetic: '敛', pinyin: 'liǎn', characters: ['敛', '脸', '检', '俭', '签', '险', '验', '猃', '殓', '潋', '蔹', '裣', '蠊', '磏', '鬑', '熑', '覝', '劆', '匳', '奁', '匲', '奩', '籢', '籨'] },
+    { phonetic: '良', pinyin: 'liáng', characters: ['良', '粮', '浪', '狼', '郎', '朗', '廊', '琅', '榔', '螂', '稂', '蒗', '阆', '锒', '螂', '艆', '嫏', '欴', '踉', '俍', '悢', '桹', '筤', '脼', '蜋', '諒', '輬', '駺'] },
+    { phonetic: '两', pinyin: 'liǎng', characters: ['两', '俩', '辆', '满', '瞒', '颟', '螨', '蹒', '漫', '蔓', '幔', '慢', '谩', '熳', '镘', '嫚', '缦', '墁', '槾', '鏋', '鰻'] },
+    { phonetic: '亮', pinyin: 'liàng', characters: ['亮', '谅', '晾', '辆', '喨', '靓', '倞', '悢', '湸', '輌', '鍄'] },
+    { phonetic: '了', pinyin: 'le', characters: ['了', '辽', '疗', '料', '僚', '寥', '撩', '嘹', '獠', '潦', '缭', '燎', '镣', '尥', '钌', '钉', '叮', '顶', '订', '厅', '亭', '停', '婷', '宁', '拧', '狞', '泞'] },
+    { phonetic: '列', pinyin: 'liè', characters: ['列', '烈', '裂', '冽', '趔', '咧', '例', '咧', '洌', '鴷', '姴', '峛', '挒', '茢', '迾', '颲', '鮤', '鴷'] },
+    { phonetic: '林', pinyin: 'lín', characters: ['林', '琳', '淋', '霖', '婪', '梦', '楚', '禁', '彬', '郴', '梵', '焚', '棽', '碄', '箖', '醂', '惏', '暽', '斴', '辳', '檁', '癛', '癝', '瀶', '鏻', '霖', '淋', '霖', '婪', '梦', '楚', '禁', '彬', '郴', '梵', '焚', '棽', '碄', '箖', '醂', '惏', '暽', '斴', '辳', '檁', '癛', '癝', '瀶', '鏻'] },
+    { phonetic: '临', pinyin: 'lín', characters: ['临', '监', '览', '鉴', '蓝', '篮', '尴', '褴', '槛', '滥', '舰', '檻', '瀐', '監', '藍', '襤', '艦', '鑒', '鹽', '覽', '攬', '欖', '灠', '爁', '蘫', '襕', '囒'] },
+    { phonetic: '吝', pinyin: 'lìn', characters: ['吝', '粼', '嶙', '遴', '辚', '磷', '麟', '鳞', '鳞', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟', '麟'] },
+    { phonetic: '灵', pinyin: 'líng', characters: ['灵', '棂', '櫺', '欞', '蘦', '孁', '龗', '靈', '霛', '酃', '麢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢'] },
+    { phonetic: '令', pinyin: 'lìng', characters: ['令', '玲', '铃', '伶', '羚', '龄', '岭', '领', '零', '苓', '聆', '囹', '泠', '柃', '瓴', '翎', '羚', '聆', '詅', '鴒', '鸰', '砱', '坽', '姈', '岺', '彾', '炩', '狑', '皊', '舲', '笭', '紷', '衑', '袊', '跉', '軨', '閝', '阾', '霗', '駖', '鹷', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢'] },
+    { phonetic: '留', pinyin: 'liú', characters: ['留', '流', '琉', '硫', '馏', '榴', '遛', '骝', '熘', '镏', '飗', '媹', '嵧', '瑠', '磂', '蒥', '蓅', '蟉', '藰', '鎏', '麍', '鏐', '飀', '鐂', '飅', '驑', '鷎', '鶹', '鷚', '鷲', '鰡', '鶹', '鷚', '鷲', '鰡'] },
+    { phonetic: '龙', pinyin: 'lóng', characters: ['龙', '聋', '咙', '笼', '胧', '珑', '垄', '拢', '陇', '庞', '宠', '龚', '龛', '袭', '詟', '垅', '茏', '泷', '栊', '砻', '眬', '昽', '舂', '袭', '龛', '詟', '垅', '茏', '泷', '栊', '砻', '眬', '昽', '舂'] },
+    { phonetic: '娄', pinyin: 'lóu', characters: ['娄', '楼', '搂', '篓', '偻', '蝼', '髅', '耧', '嵝', '镂', '瘘', '窭', '屦', '屡', '缕', '褛', '蔞', '嘍', '嶁', '廔', '慺', '漊', '熡', '瞜', '耬', '艛', '螻', '謱', '軁', '鞻', '髏', '鷜', '塿', '摟', '甊', '瘻', '鏤', '屨', '婁', '寠', '廔', '慺', '漊', '熡', '瞜', '耬', '艛', '螻', '謱', '軁', '鞻', '髏', '鷜', '塿', '摟', '甊', '瘻', '鏤', '屨'] },
+    { phonetic: '卢', pinyin: 'lú', characters: ['卢', '庐', '芦', '炉', '颅', '舻', '鲈', '胪', '栌', '泸', '轳', '鸬', '舻', '顱', '髗', '壚', '瀘', '獹', '璷', '櫨', '臚', '籚', '蠦', '纑', '罏', '艫', '鑪', '髗', '黸'] },
+    { phonetic: '录', pinyin: 'lù', characters: ['录', '禄', '碌', '绿', '氯', '剥', '箓', '琭', '睩', '醁', '趢', '騄', '籙', '鷺', '漉', '轆', '剹', '簏', '籙', '騄'] }
+
+
+    ],
+
+
+[
+
+
+
+    { phonetic: '鹿', pinyin: 'lù', characters: ['鹿', '漉', '辘', '麓', '麒', '麂', '麋', '麈', '麀', '麂', '麃', '麅', '麇', '麈', '麉', '麊', '麌', '麎', '麏', '麐', '麑', '麒', '麓', '麗', '麟', '麟', '麟', '麟', '麟', '麟'] },
+    { phonetic: '路', pinyin: 'lù', characters: ['路', '露', '璐', '潞', '鹭', '簬', '潞', '鷺', '蕗', '鏴', '騼'] },
+    { phonetic: '吕', pinyin: 'lǚ', characters: ['吕', '侣', '铝', '闾', '稆', '佀', '郘', '焒', '梠', '鋁', '膂', '閭', '穞', '褸', '鐒', '鷜', '侶', '郘', '焒', '梠', '鋁', '膂', '閭', '穞', '褸', '鐒', '鷜'] },
+    { phonetic: '率', pinyin: 'lǜ', characters: ['率', '摔', '蟀', '膟', '繂', '哸'] },
+    { phonetic: '仑', pinyin: 'lún', characters: ['仑', '伦', '轮', '沦', '纶', '囵', '论', '抡', '纶', '沦', '囵', '纶', '沦', '囵'] },
+    { phonetic: '罗', pinyin: 'luó', characters: ['罗', '萝', '逻', '锣', '箩', '猡', '椤', '脶', '腡', '覶', '鏍', '儸', '蘿', '囉', '邏', '籮', '玀', '欏', '鑼', '饠', '驘'] },
+    { phonetic: '洛', pinyin: 'luò', characters: ['洛', '落', '络', '骆', '烙', '酪', '珞', '硌', '雒', '咯', '詻', '鮥', '鵅', '犖', '峈', '荦', '洜', '珞', '硌', '雒', '咯', '詻', '鮥', '鵅', '犖', '峈', '荦', '洜'] },
+    { phonetic: '马', pinyin: 'mǎ', characters: ['马', '吗', '妈', '码', '蚂', '骂', '犸', '玛', '笃', '冯', '驭', '驮', '驰', '驱', '驳', '驴', '驹', '驻', '驼', '驿', '驶', '驾', '骂', '骄', '骈', '骆', '驼', '驻', '驿', '驶', '驾', '骂', '骄', '骈', '骆', '驼', '驻', '驿', '驶', '驾', '骂', '骄', '骈', '骆'] },
+    { phonetic: '买', pinyin: 'mǎi', characters: ['买', '卖', '读', '赎', '犊', '牍', '渎', '窦', '续', '觌', '黩', '儥', '凟', '匵', '櫝', '殰', '贕', '皾', '韇', '襩', '豄', '贖', '韥', '韇', '黷'] },
+    { phonetic: '卖', pinyin: 'mài', characters: ['卖', '读', '赎', '犊', '牍', '渎', '窦', '续', '觌', '黩', '儥', '凟', '匵', '櫝', '殰', '贕', '皾', '韇', '襩', '豄', '贖', '韥', '韇', '黷'] },
+    { phonetic: '满', pinyin: 'mǎn', characters: ['满', '瞒', '颟', '螨', '蹒', '漫', '蔓', '幔', '慢', '谩', '熳', '镘', '嫚', '缦', '墁', '槾', '鏋', '鰻'] },
+    { phonetic: '曼', pinyin: 'màn', characters: ['曼', '慢', '漫', '蔓', '幔', '谩', '熳', '镘', '嫚', '缦', '墁', '槾', '鏋', '鰻', '鬘', '僈', '鄤', '慲', '樠', '澫', '獌', '謾', '鏝', '顢', '饅', '鬘', '僈', '鄤', '慲', '樠', '澫', '獌', '謾', '鏝', '顢', '饅'] },
+    { phonetic: '芒', pinyin: 'máng', characters: ['芒', '茫', '忙', '盲', '氓', '硭', '邙', '吂', '汒', '杧', '恾', '笀', '哤', '娏', '庬', '牻', '鋩', '駹', '痝', '蘉'] },
+    { phonetic: '毛', pinyin: 'máo', characters: ['毛', '耗', '髦', '牦', '旄', '酕', '芼', '枆', '毣', '眊', '耄', '氂', '髳', '錨', '锚', '鶜'] },
+    { phonetic: '矛', pinyin: 'máo', characters: ['矛', '茅', '柔', '揉', '蹂', '鞣', '楙', '蟊', '蠡', '雺', '霿', '髳', '鶜'] }
+
+
+    ],
+
+
+[
+
+    { phonetic: '卯', pinyin: 'mǎo', characters: ['卯', '柳', '聊', '铆', '贸', '昂', '迎', '仰', '抑', '茆', '泖', '昴', '铆', '窌', '笷', '軞', '鉚', '緢', '蝥', '雬', '霿', '髳', '鶜'] },
+    { phonetic: '冒', pinyin: 'mào', characters: ['冒', '帽', '瑁', '勖', '媢', '貿', '鄮', '瞀', '懋', '霿', '髳', '鶜'] },
+    { phonetic: '貌', pinyin: 'mào', characters: ['貌', '藐', '邈', '喵', '媌', '描', '瞄', '緢', '鶓'] },
+    { phonetic: '么', pinyin: 'me', characters: ['么', '吆', '幽', '幼', '幻', '茲', '玄', '率', '畜', '玆', '茲', '玄', '率', '畜', '玆'] },
+    { phonetic: '没', pinyin: 'méi', characters: ['没', '殁', '坶', '怋', '捫', '菛', '璊', '瞞', '穈', '蟎', '鏋', '鬗', '鬘', '饅', '顢'] },
+    { phonetic: '每', pinyin: 'měi', characters: ['每', '海', '悔', '晦', '梅', '莓', '酶', '霉', '侮', '敏', '繁', '毓', '坶', '怋', '捫', '菛', '璊', '瞞', '穈', '蟎', '鏋', '鬗', '鬘', '饅', '顢'] },
+    { phonetic: '门', pinyin: 'mén', characters: ['门', '们', '闷', '扪', '闽', '闻', '问', '闫', '闩', '闪', '闭', '闯', '闲', '间', '闹', '闸', '阀', '阁', '闺', '阂', '阃', '阆', '阇', '阈', '阕', '阑', '阒', '阐', '阌', '阍', '阏', '阓', '阘', '阙', '阖', '阗', '阚', '阛', '闱', '闳', '闵', '闶', '闿', '阇', '阛', '闩', '闪', '闭', '闯', '闲', '间', '闹', '闸', '阀', '阁', '闺', '阂', '阃', '阆', '阇', '阈', '阕', '阑', '阒', '阐', '阌', '阍', '阏', '阓', '阘', '阙', '阖', '阗', '阚', '阛', '闱', '闳', '闵', '闶', '闿', '阇', '阛'] },
+    { phonetic: '蒙', pinyin: 'méng', characters: ['蒙', '朦', '檬', '濛', '矇', '礞', '艨', '靀', '曚', '朦', '檬', '濛', '矇', '礞', '艨', '靀', '曚'] },
+    { phonetic: '孟', pinyin: 'mèng', characters: ['孟', '猛', '锰', '勐', '艋', '蜢', '錳', '鯭', '饛', '霥'] },
+    { phonetic: '梦', pinyin: 'mèng', characters: ['梦', '懵', '甍', '薨', '瞢', '儚', '懜', '矇', '霥', '顭', '鸏'] },
+    { phonetic: '米', pinyin: 'mǐ', characters: ['米', '迷', '谜', '眯', '糜', '靡', '敉', '脒', '侎', '洣', '宓', '嘧', '糸', '縻', '麋', '麊', '麿', '黴', '蘼', '醾', '醿', '釄', '鸍', '黴'] },
+    { phonetic: '觅', pinyin: 'mì', characters: ['觅', '幂', '鼏', '幎', '漞', '蓂', '覛', '鼏'] },
+    { phonetic: '密', pinyin: 'mì', characters: ['密', '蜜', '宓', '嘧', '谧', '樒', '蔤', '滵', '漞', '熐', '鼏'] },
+    { phonetic: '免', pinyin: 'miǎn', characters: ['免', '勉', '娩', '冕', '婉', '晚', '挽', '搀', '馋', '谗', '逸', '兔', '逸', '勉', '娩', '冕', '婉', '晚', '挽', '搀', '馋', '谗', '逸', '兔', '逸'] },
+    { phonetic: '面', pinyin: 'miàn', characters: ['面', '缅', '腼', '勔', '沔', '眄', '偭', '喕', '湎', '愐', '緬', '靦', '麪', '麫', '麺'] },
+    { phonetic: '苗', pinyin: 'miáo', characters: ['苗', '描', '瞄', '猫', '锚', '鹋', '媌', '緢', '鶓'] },
+    { phonetic: '灭', pinyin: 'miè', characters: ['灭', '蔑', '篾', '幭', '懱', '瀎', '衊', '鱴', '礣', '蠛', '衂', '衄', '衇', '衈', '衉', '衊', '衋', '衐', '衑', '衒', '術', '衕', '衖', '衘', '衚', '衛', '衞', '衝', '衞', '衡', '衢'] },
+    { phonetic: '民', pinyin: 'mín', characters: ['民', '眠', '抿', '泯', '珉', '岷', '缗', '玟', '苠', '惽', '慜', '敃', '惽', '緡', '罠', '錉', '鍲', '鴖', '潣', '簢', '蟁', '盿', '冺', '刡', '勄', '姄', '怋', '捪', '渂', '睯', '碈', '緍', '緡', '錉', '鍲', '鴖', '潣', '簢', '蟁', '盿', '冺', '刡', '勄', '姄', '怋', '捪', '渂', '睯', '碈', '緍', '緡'] },
+    { phonetic: '名', pinyin: 'míng', characters: ['名', '铭', '茗', '酩', '眳', '姳', '詺', '銘'] },
+    { phonetic: '明', pinyin: 'míng', characters: ['明', '盟', '萌', '鸣', '皿', '酩', '瞑', '冥', '暝', '溟', '螟', '鄳', '榠', '銘', '鳴', '銘', '鳴'] },
+    { phonetic: '命', pinyin: 'mìng', characters: ['命', '令', '玲', '铃', '伶', '羚', '龄', '岭', '领', '零', '苓', '聆', '囹', '泠', '柃', '瓴', '翎', '羚', '聆', '詅', '鴒', '鸰', '砱', '坽', '姈', '岺', '彾', '炩', '狑', '皊', '舲', '笭', '紷', '衑', '袊', '跉', '軨', '閝', '阾', '霗', '駖', '鹷', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢', '齢'] },
+    { phonetic: '谬', pinyin: 'miù', characters: ['谬', '缪', '繆', '謬', '蟉', '繆', '謬'] },
+    { phonetic: '莫', pinyin: 'mò', characters: ['莫', '漠', '寞', '摸', '膜', '摹', '模', '馍', '嫫', '谟', '瘼', '镆', '貘', '瞙', '縸', '藦', '蟆', '鏌', '饃', '髍'] },
+    { phonetic: '牟', pinyin: 'móu', characters: ['牟', '哞', '眸', '侔', '蛑', '谋', '鍪', '鴾', '麰', '鞪'] }
+],
+
+
+
+[
+    { phonetic: '某', pinyin: 'mǒu', characters: ['某', '谋', '媒', '煤', '莓', '酶', '霉', '楳', '脢', '禖', '腜', '鎇', '黴'] },
+    { phonetic: '母', pinyin: 'mǔ', characters: ['母', '拇', '姆', '亩', '牡', '毒', '每', '海', '悔', '晦', '梅', '莓', '酶', '霉', '侮', '敏', '繁', '毓', '坶', '怋', '捫', '菛', '璊', '瞞', '穈', '蟎', '鏋', '鬗', '鬘', '饅', '顢'] },
+    { phonetic: '木', pinyin: 'mù', characters: ['木', '术', '述', '休', '林', '森', '床', '械', '板', '材', '村', '李', '杏', '杰', '某', '案', '集', '梁', '梨', '条', '杀', '杂', '亲', '新', '亲', '新'] },
+    { phonetic: '目', pinyin: 'mù', characters: ['目', '盯', '相', '省', '看', '眉', '着', '睁', '睛', '眼', '睡', '眠', '眨', '瞪', '督', '瞥', '瞩', '瞪', '瞳', '瞻', '盲', '盹', '眩', '眭', '睐', '睇', '睚', '睥', '睨', '睬', '瞅', '瞌', '瞑', '瞠', '瞟', '瞥', '瞰', '瞻', '瞿', '矗'] },
+    { phonetic: '那', pinyin: 'nà', characters: ['那', '哪', '挪', '娜', '傩', '梛', '郍', '橠', '儺', '鎿'] },
+    { phonetic: '乃', pinyin: 'nǎi', characters: ['乃', '奶', '仍', '扔', '礽', '辸', '艿', '鼐', '廼', '迺', '疓'] },
+    { phonetic: '奈', pinyin: 'nài', characters: ['奈', '捺', '柰', '萘', '錼'] },
+    { phonetic: '南', pinyin: 'nán', characters: ['南', '楠', '喃', '腩', '蝻', '湳', '遖', '暔', '煵'] },
+    { phonetic: '难', pinyin: 'nán', characters: ['难', '摊', '滩', '瘫', '傩', '歎', '漢', '熯', '暵', '熯', '暵'] },
+    { phonetic: '囊', pinyin: 'náng', characters: ['囊', '攮', '囔', '馕', '曩', '灢', '欜'] },
+    { phonetic: '内', pinyin: 'nèi', characters: ['内', '纳', '呐', '钠', '衲', '讷', '妠', '靹', '焫', '抐'] },
+    { phonetic: '尼', pinyin: 'ní', characters: ['尼', '泥', '妮', '呢', '怩', '旎', '昵', '铌', '伲', '坭', '柅', '秜', '屔', '蚭', '郳', '鈮', '馜', '濔', '薿', '儞', '懝', '檷', '鑈'] },
+    { phonetic: '你', pinyin: 'nǐ', characters: ['你', '您', '伲', '祢', '旎', '馜'] },
+    { phonetic: '年', pinyin: 'nián', characters: ['年', '念', '捻', '鲶', '黏', '撵', '輦', '鮎', '鲶', '鯰', '躎', '輦', '鮎', '鲶', '鯰', '躎'] },
+    { phonetic: '念', pinyin: 'niàn', characters: ['念', '捻', '鲶', '黏', '撵', '輦', '鮎', '鲶', '鯰', '躎', '輦', '鮎', '鲶', '鯰', '躎'] },
+    { phonetic: '鸟', pinyin: 'niǎo', characters: ['鸟', '鸡', '鸭', '鹅', '莺', '鸽', '鸥', '鹃', '鹉', '鹏', '鹤', '鹳', '鸾', '鸯', '鸭', '鸣', '鸿', '鹄', '鹬', '鹈', '鹋', '鹛', '鹮', '鹡', '鹪', '鹫', '鹬', '鹱', '鹭', '鹰', '鹳', '鸵', '鸸', '鸹', '鸺', '鸼', '鸽', '鸾', '鹂', '鹃', '鹄', '鹅', '鹑', '鹒', '鹔', '鹖', '鹗', '鹘', '鹙', '鹟', '鹠', '鹡', '鹢', '鹣', '鹤', '鹥', '鹧', '鹨', '鹩', '鹪', '鹫', '鹬', '鹱', '鹭', '鹰', '鹳', '鸻', '鸼', '鸰', '鸱', '鸲', '鸴', '鸵', '鸶', '鸷', '鸸', '鸹', '鸺', '鸻', '鸼', '鸰', '鸱', '鸲', '鸴', '鸵', '鸶', '鸷'] },
+    { phonetic: '聂', pinyin: 'niè', characters: ['聂', '镊', '蹑', '颞', '嗫', '慑', '摄', '滠', '囁', '聶', '躡', '鑷', '顳', '懾', '灄'] },
+    { phonetic: '宁', pinyin: 'níng', characters: ['宁', '拧', '狞', '泞', '咛', '柠', '聍', '盵', '鑏'] }
+
+
+    ],
+
+
+[
+
+    { phonetic: '牛', pinyin: 'niú', characters: ['牛', '件', '牧', '物', '牺', '牲', '牵', '犁', '犟', '牦', '牟', '告', '靠', '犀', '犄', '犒', '犍', '犏', '犟', '犨', '犩', '犪', '犫'] },
+    { phonetic: '农', pinyin: 'nóng', characters: ['农', '浓', '脓', '侬', '哝', '秾', '脓', '儂', '噥', '濃', '穠', '襛', '醲'] },
+    { phonetic: '弄', pinyin: 'nòng', characters: ['弄', '玩', '玫', '环', '现', '班', '球', '理', '珍', '珠', '琳', '琅', '琊', '琉', '瑚', '瑙', '瑜', '瑾', '璜', '璎', '璀', '璨', '瓒', '璩', '璺', '璧', '瓒', '瓘', '瓒'] },
+    { phonetic: '奴', pinyin: 'nú', characters: ['奴', '努', '怒', '弩', '驽', '呶', '孥', '帑', '砮', '笯', '駑'] },
+    { phonetic: '女', pinyin: 'nǚ', characters: ['女', '好', '妈', '奶', '她', '妇', '奴', '如', '娃', '姥', '姻', '娼', '婢', '嫖', '娇', '妖', '妨', '妄', '奸', '姦', '妝', '妾', '妻', '姑', '姐', '妹', '娘', '婆', '媳', '婿', '嫁', '娶', '婚', '姻', '媒', '妁', '妊', '娠', '娩', '婴', '孪', '嫖', '婪', '嫉', '妒', '嫌', '媚', '嬉', '嫩', '妍', '妩', '妪', '姹', '姗', '娄', '娄', '娄'] },
+    { phonetic: '暖', pinyin: 'nuǎn', characters: ['暖', '媛', '援', '爰', '暖', '煖', '餪'] },
+    { phonetic: '虐', pinyin: 'nüè', characters: ['虐', '疟', '谑', '瘧', '謔'] },
+    { phonetic: '挪', pinyin: 'nuó', characters: ['挪', '娜', '哪', '那', '梛', '郍', '橠', '儺', '鎿'] },
+    { phonetic: '诺', pinyin: 'nuò', characters: ['诺', '喏', '锘', '搦', '糥', '懧', '榒'] },
+    { phonetic: '欧', pinyin: 'ōu', characters: ['欧', '鸥', '殴', '沤', '讴', '瓯', '怄', '塸', '熰', '甌', '謳', '鴎', '櫙', '藲'] },
+    { phonetic: '偶', pinyin: 'ǒu', characters: ['偶', '遇', '隅', '耦', '藕', '喁', '蕅', '髃', '齲'] },
+    { phonetic: '爬', pinyin: 'pá', characters: ['爬', '琶', '耙', '筢', '掱', '潖'] },
+    { phonetic: '拍', pinyin: 'pāi', characters: ['拍', '啪', '珀', '迫', '魄', '舶', '箔', '铂', '鮊', '怕', '帕', '啪', '葩', '袙'] },
+    { phonetic: '排', pinyin: 'pái', characters: ['排', '徘', '俳', '牌', '簰', '輫'] },
+    { phonetic: '派', pinyin: 'pài', characters: ['派', '脈', '哌', '蒎', '鎃', '湃'] },
+    { phonetic: '判', pinyin: 'pàn', characters: ['判', '叛', '畔', '拚', '潘', '翻', '幡', '藩', '蕃', '燔', '蹯', '璠', '膰', '繙', '轓', '襎', '鐇', '饊', '颿'] },
+    { phonetic: '旁', pinyin: 'páng', characters: ['旁', '傍', '膀', '磅', '镑', '榜', '谤', '蒡', '螃', '鳑', '嗙', '耪', '騯', '髈'] },
+    { phonetic: '抛', pinyin: 'pāo', characters: ['抛', '泡', '炮', '疱', '咆', '庖', '匏', '狍', '鞄', '麅', '爮'] },
+    { phonetic: '袍', pinyin: 'páo', characters: ['袍', '跑', '刨', '咆', '炮', '疱', '庖', '匏', '狍', '鞄', '麅', '爮'] }
+
+
+    ],
+
+
+[
+
+
+    { phonetic: '沛', pinyin: 'pèi', characters: ['沛', '霈', '旆', '姵', '笩', '馷'] },
+    { phonetic: '佩', pinyin: 'pèi', characters: ['佩', '珮', '旆', '帔', '霈', '姵'] },
+    { phonetic: '朋', pinyin: 'péng', characters: ['朋', '鹏', '棚', '硼', '蹦', '崩', '绷', '嘣', '堋', '痭', '鬅', '輣', '錋', '韸', '鵬', '鬅'] },
+    { phonetic: '彭', pinyin: 'péng', characters: ['彭', '澎', '膨', '嘭', '憉', '蟛', '韸', '騯'] },
+    { phonetic: '蓬', pinyin: 'péng', characters: ['蓬', '篷', '纄', '漨', '憉', '蟛'] },
+    { phonetic: '皮', pinyin: 'pí', characters: ['皮', '波', '玻', '披', '彼', '疲', '被', '破', '坡', '婆', '颇', '皱', '跛', '簸', '皴', '皲', '皵', '皶', '皷', '皸', '皹', '皺', '皻', '皽', '皾', '盋', '耚', '翍', '豼', '鮍', '駊'] },
+    { phonetic: '匹', pinyin: 'pǐ', characters: ['匹', '僻', '癖', '譬', '擗', '噼', '甓', '澼', '鷿'] },
+    { phonetic: '偏', pinyin: 'piān', characters: ['偏', '篇', '骗', '翩', '媥', '犏', '蹁', '諞', '騗'] },
+    { phonetic: '票', pinyin: 'piào', characters: ['票', '漂', '飘', '瓢', '瞟', '膘', '镖', '飙', '骠', '剽', '僄', '彯', '慓', '嫖', '旚', '皫', '篻', '縹', '薸', '闝', '醥', '顠', '飃', '驃', '驫'] },
+    { phonetic: '频', pinyin: 'pín', characters: ['频', '濒', '颦', '嚬', '嬪', '矉'] },
+    { phonetic: '品', pinyin: 'pǐn', characters: ['品', '喿', '噪', '操', '澡', '藻', '燥', '躁', '臊', '搔', '缫', '瘮', '懆', '璪', '繰', '趮', '騷'] },
+    { phonetic: '平', pinyin: 'píng', characters: ['平', '评', '坪', '苹', '萍', '砰', '秤', '怦', '抨', '鲆', '伻', '呯', '胓', '蚲', '軿', '輧', '閛', '駍'] },
+    { phonetic: '凭', pinyin: 'píng', characters: ['凭', '凴', '慿', '馮', '憑'] },
+    { phonetic: '屏', pinyin: 'píng', characters: ['屏', '摒', '帡', '栟', '軿', '輧', '郱'] },
+    { phonetic: '坡', pinyin: 'pō', characters: ['坡', '婆', '颇', '破', '陂', '皴', '皲', '皵', '皶', '皷', '皸', '皹', '皺', '皻', '皽', '皾'] },
+    { phonetic: '婆', pinyin: 'pó', characters: ['婆', '皤', '鄱', '嘙', '蔢', '櫇'] },
+    { phonetic: '迫', pinyin: 'pò', characters: ['迫', '珀', '魄', '舶', '箔', '铂', '鮊', '怕', '帕', '啪', '葩', '袙'] },
+    { phonetic: '破', pinyin: 'pò', characters: ['破', '坡', '婆', '颇', '陂', '皴', '皲', '皵', '皶', '皷', '皸', '皹', '皺', '皻', '皽', '皾'] }
+
+    ],
+
+
+[
+
+
+
+    { phonetic: '扑', pinyin: 'pū', characters: ['扑', '仆', '朴', '噗', '濮', '璞', '蹼', '镤', '穙', '鏷', '僕', '轐', '纀', '鏷'] },
+    { phonetic: '铺', pinyin: 'pū', characters: ['铺', '葡', '蒲', '脯', '匍', '莆', '埔', '圃', '浦', '溥', '捕', '哺', '逋', '晡', '鵏', '陠', '痡', '諩', '鯆'] },
+    { phonetic: '甫', pinyin: 'fǔ', characters: ['甫', '辅', '脯', '傅', '缚', '敷', '博', '搏', '膊', '薄', '簿', '浦', '埔', '蒲', '葡'] },
+    { phonetic: '仆', pinyin: 'pū', characters: ['仆', '扑', '朴', '噗', '濮', '璞', '蹼', '镤', '穙', '鏷', '僕', '轐', '纀', '鏷'] },
+    { phonetic: '普', pinyin: 'pǔ', characters: ['普', '谱', '溥', '埔', '潽', '氆', '諩', '鐠'] },
+    { phonetic: '瀑', pinyin: 'pù', characters: ['瀑', '曝', '爆', '曝', '嚗', '懪', '鑤', '虣'] },
+    { phonetic: '七', pinyin: 'qī', characters: ['七', '柒', '漆', '沏', '砌', '切', '窃', '彻', '澈', '砌', '沏', '柒', '漆'] },
+    { phonetic: '妻', pinyin: 'qī', characters: ['妻', '凄', '萋', '悽', '棲', '緀', '霋'] },
+    { phonetic: '其', pinyin: 'qí', characters: ['其', '期', '棋', '旗', '欺', '基', '箕', '甚', '斯', '撕', '嘶', '厕', '咿', '娸', '淇', '琪', '琦', '祺', '麒', '蜞', '骐', '綦', '鲯', '鯕', '踑', '櫀'] },
+    { phonetic: '奇', pinyin: 'qí', characters: ['奇', '骑', '崎', '琦', '绮', '畸', '寄', '椅', '倚', '旖', '猗', '敧', '錡', '攲', '踦', '齮', '剞'] },
+    { phonetic: '齐', pinyin: 'qí', characters: ['齐', '剂', '济', '挤', '荠', '霁', '齑', '跻', '侪', '哜', '蛴', '鲚', '鯯', '齌', '齍', '齎', '齏'] },
+    { phonetic: '乞', pinyin: 'qǐ', characters: ['乞', '吃', '迄', '讫', '屹', '疙', '仡', '纥', '圪', '虼', '肐', '矻', '趷', '釳', '齕'] },
+    { phonetic: '岂', pinyin: 'qǐ', characters: ['岂', '凯', '恺', '铠', '剀', '皑', '闿', '垲', '桤', '觊', '颽', '嵦', '暟', '鎧'] },
+    { phonetic: '气', pinyin: 'qì', characters: ['气', '汽', '忾', '讫', '吃', '疙', '饩', '忔', '汔', '迄', '矵', '芞', '呚', '気', '炁', '犵', '盵', '訖', '趌'] },
+    { phonetic: '千', pinyin: 'qiān', characters: ['千', '迁', '阡', '仟', '扦', '芊', '钎', '歼', '纤', '籼', '跹', '仟', '扦', '芊', '钎'] },
+    { phonetic: '前', pinyin: 'qián', characters: ['前', '剪', '煎', '箭', '湔', '揃', '媊', '瑐', '糋', '鬋', '譛', '蹇', '謇', '瀐', '櫏'] },
+    { phonetic: '钱', pinyin: 'qián', characters: ['钱', '浅', '线', '残', '贱', '盏', '笺', '践', '溅', '栈', '刬', '剗', '俴', '帴', '牮', '珔'] },
+    { phonetic: '欠', pinyin: 'qiàn', characters: ['欠', '坎', '砍', '吹', '欢', '钦', '欣', '欧', '款', '欺', '歇', '歉', '芡', '嵌', '崁', '肷', '蜭', '谺', '豣', '顉', '鬫'] },
+    { phonetic: '强', pinyin: 'qiáng', characters: ['强', '疆', '僵', '缰', '薑', '礓', '麠', '橿', '疅', '壃', '彊', '弶', '摪', '蔃'] },
+    { phonetic: '乔', pinyin: 'qiáo', characters: ['乔', '桥', '侨', '娇', '骄', '轿', '矫', '荞', '峤', '挢', '犞', '毊', '穚', '鐈'] },
+    { phonetic: '且', pinyin: 'qiě', characters: ['且', '姐', '祖', '阻', '组', '租', '诅', '俎', '疽', '苴', '雎', '助', '锄', '耡', '徂', '殂', '驵', '龃', '狙', '咀', '沮'] },
+    { phonetic: '切', pinyin: 'qiē', characters: ['切', '窃', '砌', '沏', '彻', '澈', '徹', '恝', '栔', '趄', '蛪', '緁'] },
+    { phonetic: '亲', pinyin: 'qīn', characters: ['亲', '新', '薪', '辛', '亲', '榇', '媇', '儭', '瀙', '襯', '嚫', '櫬'] }
+
+
+    ],
+
+
+[
+
+
+    { phonetic: '侵', pinyin: 'qīn', characters: ['侵', '寝', '浸', '锓', '骎', '祲', '綅', '梫', '誛', '鋟', '駸'] },
+    { phonetic: '秦', pinyin: 'qín', characters: ['秦', '榛', '臻', '溱', '嗪', '螓', '嫀', '蓁', '籈', '轃', '潧', '樼'] },
+    { phonetic: '青', pinyin: 'qīng', characters: ['青', '清', '晴', '情', '请', '精', '睛', '靖', '静', '菁', '婧', '腈', '靓', '靛', '靓', '蜻', '鲭', '鼱', '箐', '圊', '鲭', '鶄'] },
+    { phonetic: '顷', pinyin: 'qǐng', characters: ['顷', '倾', '颖', '颍', '庼', '廎', '檾', '謦', '漀'] },
+    { phonetic: '秋', pinyin: 'qiū', characters: ['秋', '愁', '瞅', '揪', '锹', '鳅', '楸', '萩', '篍', '鍫', '鶖', '鰌', '鰍'] },
+    { phonetic: '丘', pinyin: 'qiū', characters: ['丘', '邱', '蚯', '邱', '坵', '龟', '岳', '兵', '乒乓', '宾', '滨', '槟', '傧', '缤', '摈', '殡', '鬓', '膑', '髌', '邠', '玢', '砏', '昑', '笉'] },
+    { phonetic: '求', pinyin: 'qiú', characters: ['求', '球', '救', '裘', '逑', '俅', '莍', '觓', '賕', '毬', '皳', '盚', '絿', '蛷', '蜉', '艽', '犰', '訄', '趜', '銶', '鯄', '鰽'] },
+    { phonetic: '区', pinyin: 'qū', characters: ['区', '欧', '鸥', '殴', '沤', '讴', '瓯', '怄', '塸', '熰', '甌', '謳', '鴎', '櫙', '藲', '驅', '軀', '嶇', '敺', '樞', '嘔', '甌', '鏂', '瞘', '醧'] },
+    { phonetic: '曲', pinyin: 'qū', characters: ['曲', '蛐', '麴', '鞠', '掬', '菊', '局', '侷', '挶', '梮', '焗', '锔', '跼', '趜', '駶', '鵙', '鼳'] },
+    { phonetic: '取', pinyin: 'qǔ', characters: ['取', '娶', '趣', '聚', '诹', '陬', '鄹', '鲰', '黀', '齱', '齺', '緅', '諏'] },
+    { phonetic: '去', pinyin: 'qù', characters: ['去', '却', '怯', '劫', '法', '砝', '珐', '盍', '闔', '蓋', '磕', '瞌', '溘', '嗑', '醘', '榼', '鎑'] },
+    { phonetic: '全', pinyin: 'quán', characters: ['全', '泉', '荃', '痊', '铨', '筌', '醛', '詮', '輇', '醑', '鰁', '騡', '姾', '峑', '恮', '跧', '槫', '瑔', '牷', '絟', '銓', '駩', '騡'] },
+    { phonetic: '犬', pinyin: 'quǎn', characters: ['犬', '吠', '状', '献', '厌', '哭', '器', '默', '黙', '獸', '獻', '獣', '獫'] },
+    { phonetic: '却', pinyin: 'què', characters: ['却', '脚', '卻', '郤', '埆', '崅', '悫', '棤', '毃', '碏', '皵', '蒛', '闕'] },
+    { phonetic: '雀', pinyin: 'què', characters: ['雀', '爵', '嚼', '爝', '皭', '釂', '穱'] },
+    { phonetic: '群', pinyin: 'qún', characters: ['群', '裙', '郡', '羣', '裠', '麕'] },
+    { phonetic: '然', pinyin: 'rán', characters: ['然', '燃', '嘫', '髯', '蒅', '橪'] },
+    { phonetic: '冉', pinyin: 'rǎn', characters: ['冉', '苒', '蚺', '髯', '媣', '柟', '冄', '姌', '珃', '聃', '耼', '腅', '蝡', '橪'] },
+    { phonetic: '让', pinyin: 'ràng', characters: ['让', '嚷', '壤', '攘', '禳', '瓤', '勷', '蘘', '獽', '穰', '纕'] },
+    { phonetic: '饶', pinyin: 'ráo', characters: ['饶', '娆', '桡', '荛', '绕', '蟯', '襓'] },
+    { phonetic: '扰', pinyin: 'rǎo', characters: ['扰', '忧', '优', '犹', '鱿', '莸', '沋', '麀', '庮', '怮', '泑', '峳', '逌', '優', '憂', '懮', '耰', '瀀'] },
+    { phonetic: '热', pinyin: 'rè', characters: ['热', '势', '垫', '挚', '贽', '鸷', '絷', '蛰', '褺', '懫', '瓋', '蟄'] }
+],
+
+[
+
+    { phonetic: '人', pinyin: 'rén', characters: ['人', '认', '仁', '任', '妊', '忍', '仞', '韌', '紉', '訒', '軔', '靭', '飪', '餁', '恁', '荏', '稔', '棯', '腍', '鈓', '銋'] },
+    { phonetic: '壬', pinyin: 'rén', characters: ['壬', '任', '妊', '衽', '饪', '恁', '荏', '稔', '棯', '腍', '鈓', '銋', '姙', '紝'] },
+    { phonetic: '刃', pinyin: 'rèn', characters: ['刃', '认', '韧', '仞', '紉', '訒', '軔', '靭', '飪', '餁', '忍', '涊', '栠', '祍'] },
+    { phonetic: '日', pinyin: 'rì', characters: ['日', '旧', '早', '旬', '旭', '旮', '旯', '旨', '时', '明', '星', '春', '昨', '是', '显', '晃', '晕', '晖', '晾', '暗', '暖', '暇', '暮', '曝', '曙', '曛', '曦'] },
+    { phonetic: '容', pinyin: 'róng', characters: ['容', '溶', '蓉', '熔', '榕', '镕', '瑢', '穃', '鰫', '嵱'] },
+    { phonetic: '戎', pinyin: 'róng', characters: ['戎', '绒', '贼', '绒', '茙', '駥', '嬫', '瀜'] },
+    { phonetic: '茸', pinyin: 'róng', characters: ['茸', '聋', '聙', '毧', '搑', '穁', '縙'] },
+    { phonetic: '荣', pinyin: 'róng', characters: ['荣', '莹', '萤', '营', '萦', '嵘', '蝾', '禜', '蠑', '濚', '瀯', '爃'] },
+    { phonetic: '冗', pinyin: 'rǒng', characters: ['冗', '沉', '沈', '枕', '眈', '耽', '酖', '冘', '抌', '紞', '躭', '黕', '馾', '妉'] },
+    { phonetic: '柔', pinyin: 'róu', characters: ['柔', '揉', '糅', '蹂', '鞣', '鍒', '瑈', '腬', '葇', '煣', '渘'] },
+    { phonetic: '肉', pinyin: 'ròu', characters: ['肉', '腐', '瘸', '脔', '膂', '膔', '膢', '臡', '臠', '臡', '臢', '臤'] },
+    { phonetic: '如', pinyin: 'rú', characters: ['如', '茹', '铷', '侞', '鴽', '帤', '挐', '筎', '銣', '蕠'] },
+    { phonetic: '辱', pinyin: 'rǔ', characters: ['辱', '褥', '溽', '缛', '耨', '鎒', '傉', '嗕', '媷', '縟', '鄏'] },
+    { phonetic: '入', pinyin: 'rù', characters: ['入', '内', '纳', '呐', '钠', '衲', '讷', '妠', '靹', '焫', '抐'] },
+    { phonetic: '软', pinyin: 'ruǎn', characters: ['软', '輭', '瓀', '碝', '蝡', '壖', '撋', '輭'] },
+    { phonetic: '蕊', pinyin: 'ruǐ', characters: ['蕊', '橤', '繠', '蘂', '蘃'] },
+    { phonetic: '芮', pinyin: 'ruì', characters: ['芮', '锐', '瑞', '蚋', '枘', '汭', '鈉', '鈉', '鈉'] },
+    { phonetic: '闰', pinyin: 'rùn', characters: ['闰', '润', '瞤', '橍', '潤'] },
+    { phonetic: '若', pinyin: 'ruò', characters: ['若', '诺', '喏', '惹', '匿', '箬', '锘', '婼', '渃', '鄀', '鶸'] }
+
+
+    ],
+
+
+[
+
+    { phonetic: '弱', pinyin: 'ruò', characters: ['弱', '溺', '搦', '嫋', '糑', '篛', '嵶', '鰯'] },
+    { phonetic: '洒', pinyin: 'sǎ', characters: ['洒', '曬', '洒', '攃', '撒', '潵', '躠'] },
+    { phonetic: '萨', pinyin: 'sà', characters: ['萨', '卅', '脎', '趿', '鈒', '颯', '馺'] },
+    { phonetic: '赛', pinyin: 'sài', characters: ['赛', '塞', '噻', '僿', '簺', '賽'] },
+    { phonetic: '三', pinyin: 'sān', characters: ['三', '叁', '仨', '毵', '彡', '弎', '毿', '鬖'] },
+    { phonetic: '伞', pinyin: 'sǎn', characters: ['伞', '散', '糁', '霰', '饊', '繖'] },
+    { phonetic: '桑', pinyin: 'sāng', characters: ['桑', '嗓', '搡', '颡', '槡', '磉', '褬', '鎟'] },
+    { phonetic: '丧', pinyin: 'sàng', characters: ['丧', '嗓', '搡', '颡', '槡', '磉', '褬', '鎟'] },
+    { phonetic: '扫', pinyin: 'sǎo', characters: ['扫', '嫂', '埽', '瘙', '氉', '矂', '鄵'] },
+    { phonetic: '色', pinyin: 'sè', characters: ['色', '绝', '艳', '铯', '艴', '赩', '靘', '铯'] },
+    { phonetic: '瑟', pinyin: 'sè', characters: ['瑟', '琴', '琵', '琶', '珡', '琹', '瑊', '璈', '璿', '瓀'] },
+    { phonetic: '森', pinyin: 'sēn', characters: ['森', '槮', '滲', '襂'] },
+    { phonetic: '杀', pinyin: 'shā', characters: ['杀', '刹', '弑', '铩', '脎', '鎩', '蔱', '榝'] },
+    { phonetic: '沙', pinyin: 'shā', characters: ['沙', '纱', '砂', '莎', '痧', '裟', '鲨', '鯊', '硰', '挲', '桬', '髿', '鎍'] },
+    { phonetic: '筛', pinyin: 'shāi', characters: ['筛', '师', '狮', '筛', '蛳', '浉', '鰤'] },
+    { phonetic: '山', pinyin: 'shān', characters: ['山', '仙', '岩', '灿', '汕', '疝', '舢', '訕', '芟', '姍', '軕', '笧', '軕'] },
+    { phonetic: '善', pinyin: 'shàn', characters: ['善', '膳', '缮', '鳝', '鄯', '僐', '蟮', '鱔', '譱', '饍'] },
+    { phonetic: '伤', pinyin: 'shāng', characters: ['伤', '殇', '觞', '汤', '荡', '烫', '盪', '傷', '殤', '觴'] }
+
+    ],
+
+
+[
+
+
+    { phonetic: '商', pinyin: 'shāng', characters: ['商', '墒', '熵', '螪', '謪', '蔏'] },
+    { phonetic: '上', pinyin: 'shàng', characters: ['上', '让', '尚', '倘', '躺', '淌', '趟', '鞝', '緔', '蠰'] },
+    { phonetic: '尚', pinyin: 'shàng', characters: ['尚', '赏', '裳', '敞', '徜', '倘', '躺', '淌', '趟', '緔', '鞝', '甞', '嘗', '鋿'] },
+    { phonetic: '梢', pinyin: 'shāo', characters: ['梢', '稍', '艄', '鞘', '筲', '蛸', '鮹', '髾', '莦', '輎'] },
+    { phonetic: '勺', pinyin: 'sháo', characters: ['勺', '的', '钓', '灼', '酌', '芍', '杓', '妁', '彴', '汋', '圴', '犳', '妁', '爚', '禴'] },
+    { phonetic: '少', pinyin: 'shǎo', characters: ['少', '沙', '纱', '砂', '莎', '痧', '裟', '鲨', '鯊', '硰', '挲', '桬', '髿', '鎍', '劣', '省', '雀', '眇', '渺', '妙', '秒', '竗'] },
+    { phonetic: '绍', pinyin: 'shào', characters: ['绍', '招', '昭', '沼', '诏', '鉊', '駋', '佋', '妱', '玿', '轈'] },
+    { phonetic: '舌', pinyin: 'shé', characters: ['舌', '舍', '啥', '舒', '舐', '铪', '猞', '銛', '舓', '舚'] },
+    { phonetic: '设', pinyin: 'shè', characters: ['设', '没', '殁', '坶', '怋', '捫', '菛', '璊', '瞞', '穈', '蟎', '鏋', '鬗', '鬘', '饅', '顢'] },
+    { phonetic: '社', pinyin: 'shè', characters: ['社', '杜', '肚', '吐', '牡', '牧', '牳', '炷', '眝', '祏', '秼'] },
+    { phonetic: '射', pinyin: 'shè', characters: ['射', '谢', '榭', '麝', '敨', '屣', '舄', '謝'] },
+    { phonetic: '身', pinyin: 'shēn', characters: ['身', '射', '谢', '榭', '麝', '敨', '屣', '舄', '謝', '軀', '躳', '躬', '軅'] },
+    { phonetic: '深', pinyin: 'shēn', characters: ['深', '探', '琛', '棽', '郴', '綝', '賝', '謓', '瀋'] },
+    { phonetic: '神', pinyin: 'shén', characters: ['神', '审', '婶', '瞫', '谉', '渖', '訠', '姺'] },
+    { phonetic: '甚', pinyin: 'shèn', characters: ['甚', '勘', '堪', '戡', '龛', '嵁', '歁', '湛', '愖', '椹', '煁', '瘎', '黮', '黵'] },
+    { phonetic: '生', pinyin: 'shēng', characters: ['生', '性', '姓', '星', '醒', '腥', '猩', '胜', '笙', '甥', '鉎', '鼪', '眚', '泩', '苼', '狌'] },
+    { phonetic: '声', pinyin: 'shēng', characters: ['声', '馨', '磬', '罄', '謦', '鏧'] },
+    { phonetic: '升', pinyin: 'shēng', characters: ['升', '昇', '陞', '阩', '呏', '竔', '陹'] },
+    { phonetic: '省', pinyin: 'shěng', characters: ['省', '眚', '偗', '渻', '箵'] },
+    { phonetic: '胜', pinyin: 'shèng', characters: ['胜', '牲', '笙', '鉎', '鼪', '眚', '泩', '苼', '狌'] },
+    { phonetic: '圣', pinyin: 'shèng', characters: ['圣', '柽', '蛏', '頎', '檉', '蟶'] }
+
+    ],
+
+
+[
+
+
+    { phonetic: '失', pinyin: 'shī', characters: ['失', '秩', '迭', '跌', '铁', '佚', '劮', '妷', '怢', '泆', '柣', '眣', '胅', '翐', '袠', '詄', '軼', '銕', '鴩'] },
+    { phonetic: '师', pinyin: 'shī', characters: ['师', '狮', '筛', '蛳', '浉', '鰤', '蒒'] },
+    { phonetic: '诗', pinyin: 'shī', characters: ['诗', '侍', '峙', '持', '恃', '痔', '畤', '時', '蒔', '塒', '鰣'] },
+    { phonetic: '十', pinyin: 'shí', characters: ['十', '什', '汁', '计', '针', '叶', '古', '克', '卖', '协', '博', '阜', '卒', '卓', '卑', '南', '真', '直'] },
+    { phonetic: '石', pinyin: 'shí', characters: ['石', '硕', '拓', '泵', '宕', '岩', '砂', '矿', '码', '砰', '破', '研', '砖', '砍', '硬', '确', '碍', '碧', '碰', '碌', '碟', '磊', '磐', '磨', '磬', '礁', '礎', '礦'] },
+    { phonetic: '时', pinyin: 'shí', characters: ['时', '埘', '莳', '鲥', '旹', '蒔', '塒', '鰣'] },
+    { phonetic: '食', pinyin: 'shí', characters: ['食', '餐', '飧', '餮', '饕', '饔', '飨', '饗', '饉', '饋', '饌', '饍', '饈', '饁', '饃', '餀', '餂', '餇', '餈', '餏', '餑', '餔', '餗', '餙', '餜', '餞', '餠', '餢', '餣', '餤', '餥', '餦', '餧', '館', '餩', '餫', '餬', '餭', '餯', '餰', '餱', '餲', '餳', '餴', '餵', '餶', '餷', '餸', '餹', '餺', '餻', '餼', '餽', '餾', '餿', '饀', '饁', '饂', '饃', '饄', '饅', '饆', '饇', '饈', '饉', '饊', '饋', '饌', '饍', '饎', '饏', '饐', '饑', '饒', '饓', '饔', '饕', '饖', '饗', '饘', '饙', '饚', '饛', '饜', '饝', '饞', '饟', '饠', '饡', '饢'] },
+    { phonetic: '实', pinyin: 'shí', characters: ['实', '寔', '湜', '實', '榯', '寔'] },
+    { phonetic: '史', pinyin: 'shǐ', characters: ['史', '使', '驶', '屎', '事', '吏', '彖', '肄', '肆', '渙', '涣', '煥', '喚', '換', '瘓'] },
+    { phonetic: '矢', pinyin: 'shǐ', characters: ['矢', '知', '矩', '矫', '短', '矮', '雉', '疑', '矣', '矤', '矦', '矨', '矪', '矯', '矰', '矱'] },
+    { phonetic: '士', pinyin: 'shì', characters: ['士', '仕', '志', '吉', '壮', '声', '壹', '壶', '壳', '売', '喜', '嘉', '鼓', '鼔', '嚭'] },
+    { phonetic: '氏', pinyin: 'shì', characters: ['氏', '纸', '舐', '芪', '祇', '眂', '蚔', '衹', '軝', '鴲'] },
+    { phonetic: '世', pinyin: 'shì', characters: ['世', '泄', '屉', '蝶', '谍', '喋', '堞', '牒', '蹀', '渫', '绁', '枼', '偞', '媟', '葉', '緤', '靾', '齛', '屟', '屧'] }
+]
+
+
+    
+];
+
+    
+
+        // 初始化游戏
+        function initGame() {
+            const tileContainer = document.getElementById('tile-container');
+            
+            // 清空容器
+            tileContainer.innerHTML = '';
+            
+            // 重置游戏状态
+            gameState.currentTiles = [];
+            gameState.revealedTiles = [];
+            gameState.selectedTiles = [];
+            gameState.matchedTiles = [];
+            gameState.gameStarted = true;
+            gameState.currentGroupIndex = 0;
+            
+            // 更新游戏状态显示
+            document.getElementById('game-status').textContent = '点击骨牌开始配对游戏';
+            document.getElementById('current-phonetic').textContent = '当前声符: 无';
+            
+            // 更新统计信息
+            updateStats();
+            
+            // 生成桌面骨牌
+            generateTiles();
+            
+            // 渲染桌面骨牌
+            renderTableTiles();
+        }
+
+        // 生成桌面骨牌
+        function generateTiles() {
+            gameState.currentTiles = [];
+            
+            // 使用当前数据组
+            const currentGroup = hanziGroups[gameState.currentGroupIndex];
+            
+            // 从当前组的5个声符中随机选择字符
+            for (let i = 0; i < 40; i++) {
+                // 随机选择一个声符
+                const randomPhonetic = currentGroup[Math.floor(Math.random() * currentGroup.length)];
+                // 从该声符的字符中随机选择一个
+                const randomCharacter = randomPhonetic.characters[Math.floor(Math.random() * randomPhonetic.characters.length)];
+                
+                gameState.currentTiles.push({
+                    character: randomCharacter,
+                    phonetic: randomPhonetic.phonetic,
+                    pinyin: randomPhonetic.pinyin,
+                    examples: randomPhonetic.examples,
+                    matched: false
+                });
+            }
+        }
+
+        // 渲染桌面骨牌
+        function renderTableTiles() {
+            const tileContainer = document.getElementById('tile-container');
+            tileContainer.innerHTML = '';
+            
+            gameState.currentTiles.forEach((tile, index) => {
+                const tileElement = document.createElement('div');
+                tileElement.className = 'tile';
+                tileElement.dataset.index = index;
+                tileElement.dataset.phonetic = tile.phonetic;
+                
+                // 如果骨牌已匹配，隐藏
+                if (tile.matched) {
+                    tileElement.classList.add('matched');
+                    tileElement.textContent = '';
+                    return;
+                }
+                
+                // 如果骨牌已翻开，显示汉字
+                if (gameState.revealedTiles.includes(index)) {
+                    tileElement.textContent = tile.character;
+                    tileElement.classList.add('revealed');
+                } else {
+                    tileElement.textContent = '';
+                }
+                
+                // 如果骨牌已选中，高亮显示
+                if (gameState.selectedTiles.includes(index)) {
+                    tileElement.classList.add('selected');
+                }
+                
+                tileElement.addEventListener('click', () => {
+                    handleTileClick(index);
+                });
+                
+                tileContainer.appendChild(tileElement);
+            });
+        }
+
+        // 处理桌面骨牌点击
+        function handleTileClick(index) {
+            const tile = gameState.currentTiles[index];
+            
+            // 如果骨牌已匹配，不处理
+            if (tile.matched) {
+                return;
+            }
+            
+            // 如果骨牌未翻开，先翻开
+            if (!gameState.revealedTiles.includes(index)) {
+                gameState.revealedTiles.push(index);
+                renderTableTiles();
+                
+                // 朗读汉字
+                speakCharacter(tile.character);
+                
+                // 更新当前声符显示
+                document.getElementById('current-phonetic').textContent = `当前声符: ${tile.phonetic} (${tile.pinyin})`;
+                
+                return;
+            }
+            
+            // 如果骨牌已翻开，处理选中逻辑
+            if (gameState.selectedTiles.includes(index)) {
+                // 如果点击已选中的骨牌，取消选中
+                gameState.selectedTiles = gameState.selectedTiles.filter(i => i !== index);
+            } else {
+                // 如果点击未选中的骨牌，添加到选中列表
+                gameState.selectedTiles.push(index);
+            }
+            
+            // 重新渲染桌面骨牌
+            renderTableTiles();
+            
+            // 检查是否可以配对
+            checkForMatch();
+        }
+
+        // 检查是否可以配对
+        function checkForMatch() {
+            // 如果选中了2个骨牌
+            if (gameState.selectedTiles.length === 2) {
+                const [index1, index2] = gameState.selectedTiles;
+                const tile1 = gameState.currentTiles[index1];
+                const tile2 = gameState.currentTiles[index2];
+                
+                // 如果两个骨牌属于同一个声符
+                if (tile1.phonetic === tile2.phonetic) {
+                    // 配对成功
+                    tile1.matched = true;
+                    tile2.matched = true;
+                    
+                    // 添加到已匹配列表
+                    gameState.matchedTiles.push(index1, index2);
+                    
+                    // 播放成功音效
+                    playSuccessSound();
+                    
+                    // 更新游戏状态
+                    document.getElementById('game-status').textContent = `配对成功！${tile1.character} 和 ${tile2.character} 属于同一个声符`;
+                    
+                    // 清空选中列表
+                    gameState.selectedTiles = [];
+                    
+                    // 更新统计信息
+                    updateStats();
+                    
+                    // 延迟后重新渲染
+                    setTimeout(() => {
+                        renderTableTiles();
+                        
+                        // 检查游戏是否结束
+                        checkGameEnd();
+                    }, 1000);
+                } else {
+                    // 配对失败
+                    document.getElementById('game-status').textContent = '配对失败，请继续尝试';
+                    
+                    // 延迟后清空选中列表
+                    setTimeout(() => {
+                        gameState.selectedTiles = [];
+                        renderTableTiles();
+                    }, 1500);
+                }
+            }
+        }
+
+        // 朗读汉字
+        function speakCharacter(character) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(character);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.8;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        // 播放成功音效
+        function playSuccessSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1);
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2);
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log('音频播放失败:', e);
+            }
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            const matchedCount = gameState.matchedTiles.length / 2;
+            const remainingCount = 40 - gameState.matchedTiles.length;
+            
+            document.getElementById('matched-count').textContent = matchedCount;
+            document.getElementById('remaining-count').textContent = remainingCount;
+        }
+
+        // 检查游戏是否结束
+        function checkGameEnd() {
+            if (gameState.matchedTiles.length === 40) {
+                document.getElementById('game-status').textContent = '恭喜！所有骨牌已配对完成！';
+                document.getElementById('current-phonetic').textContent = '游戏完成！';
+            }
+        }
+
+        // 重新洗牌
+        function reshuffleTiles() {
+            if (!gameState.gameStarted) return;
+            
+            // 切换到下一组数据
+            gameState.currentGroupIndex = (gameState.currentGroupIndex + 1) % hanziGroups.length;
+            
+            // 重置状态
+            gameState.revealedTiles = [];
+            gameState.selectedTiles = [];
+            gameState.matchedTiles = [];
+            
+            // 重新生成桌面骨牌
+            generateTiles();
+            
+            // 重新渲染桌面骨牌
+            renderTableTiles();
+            
+            // 更新声符显示
+            document.getElementById('current-phonetic').textContent = '当前声符: 无';
+            
+            // 更新游戏状态
+            document.getElementById('game-status').textContent = '已重新洗牌，请点击骨牌开始游戏';
+            
+            // 更新统计信息
+            updateStats();
+        }
+
+        // 事件监听
+        document.getElementById('start-btn').addEventListener('click', initGame);
+        document.getElementById('reshuffle-btn').addEventListener('click', reshuffleTiles);
+    </script>
+</body>
+</html>
