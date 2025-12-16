@@ -248,6 +248,106 @@
             display: block;
         }
         
+        /* 例字详细信息弹窗 */
+        .example-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .example-modal-content {
+            background-color: white;
+            border-radius: 10px;
+            width: 500px;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .example-big {
+            font-size: 72px;
+            margin: 10px 0;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .example-pinyin {
+            font-size: 24px;
+            color: #e74c3c;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .example-info-section {
+            margin-bottom: 20px;
+        }
+        
+        .example-info-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .example-info-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #555;
+            padding-left: 10px;
+        }
+        
+        .speak-btn {
+            cursor: pointer;
+            color: #3498db;
+            font-size: 20px;
+            transition: color 0.3s;
+        }
+        
+        .speak-btn:hover {
+            color: #2980b9;
+        }
+        
+        .example-word-item {
+            background-color: #f1f1f1;
+            padding: 8px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .example-word-item:hover {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .example-sentence-item {
+            background-color: #f9f9f9;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            border-left: 4px solid #3498db;
+            transition: background-color 0.3s;
+        }
+        
+        .example-sentence-item:hover {
+            background-color: #ecf0f1;
+        }
+        
         /* 练习模式 */
         .practice-mode {
             display: none;
@@ -467,6 +567,14 @@
                 bottom: -25px;
                 font-size: 16px;
             }
+            
+            .example-modal-content {
+                padding: 20px;
+            }
+            
+            .example-big {
+                font-size: 60px;
+            }
         }
     </style>
 </head>
@@ -633,6 +741,16 @@
                 <div class="words-list" id="exampleWords">
                     <!-- 例字将通过JavaScript动态生成 -->
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 例字详细信息弹窗 -->
+    <div class="example-modal" id="exampleModal">
+        <div class="example-modal-content">
+            <span class="close-btn" id="closeExampleModal">&times;</span>
+            <div class="example-info" id="exampleInfo">
+                <!-- 例字详细信息将通过JavaScript动态生成 -->
             </div>
         </div>
     </div>
@@ -1224,6 +1342,964 @@
             }
         };
         
+            // 例字详细信息数据
+const exampleData = {
+    "晴": {
+        pinyin: "qíng",
+        examples: ["晴天", "晴朗", "晴空"],
+        english: "sunny; clear",
+        sentences: ["今天天气很晴朗。", "我喜欢晴天去公园散步。", "晴空万里无云。"]
+    },
+    "明": {
+        pinyin: "míng",
+        examples: ["明天", "明亮", "明白"],
+        english: "bright; tomorrow; understand",
+        sentences: ["明天我要去学校。", "房间的灯光很明亮。", "我明白你的意思。"]
+    },
+    "晒": {
+        pinyin: "shài",
+        examples: ["晒太阳", "晒衣服", "晒黑"],
+        english: "to sunbathe; to dry in the sun",
+        sentences: ["老人在院子里晒太阳。", "妈妈在阳台上晒衣服。", "夏天容易晒黑皮肤。"]
+    },
+    "晨": {
+        pinyin: "chén",
+        examples: ["早晨", "清晨", "晨练"],
+        english: "morning; dawn",
+        sentences: ["早晨的空气很新鲜。", "清晨六点我就起床了。", "爷爷每天去公园晨练。"]
+    },
+    "晚": {
+        pinyin: "wǎn",
+        examples: ["晚上", "晚安", "晚饭"],
+        english: "evening; night; late",
+        sentences: ["晚上七点吃饭。", "晚安，做个好梦！", "我们六点吃晚饭。"]
+    },
+    "河": {
+        pinyin: "hé",
+        examples: ["河流", "黄河", "河边"],
+        english: "river",
+        sentences: ["这条河流很长。", "黄河是中国的母亲河。", "孩子们在河边玩耍。"]
+    },
+    "湖": {
+        pinyin: "hú",
+        examples: ["湖泊", "湖南", "湖边"],
+        english: "lake",
+        sentences: ["这个湖泊很美丽。", "湖南省有很多湖泊。", "湖边有很多柳树。"]
+    },
+    "海": {
+        pinyin: "hǎi",
+        examples: ["大海", "海洋", "海边"],
+        english: "sea; ocean",
+        sentences: ["我喜欢看大海。", "海洋里有丰富的资源。", "夏天我们去海边游泳。"]
+    },
+    "流": {
+        pinyin: "liú",
+        examples: ["流动", "河流", "流泪"],
+        english: "to flow; stream; tear",
+        sentences: ["水在管道中流动。", "这条河流很清澈。", "感动的电影让她流泪。"]
+    },
+    "泪": {
+        pinyin: "lèi",
+        examples: ["眼泪", "泪水", "泪流满面"],
+        english: "tear",
+        sentences: ["她的眼睛里含着眼泪。", "泪水模糊了她的视线。", "他感动得泪流满面。"]
+    },
+    "情": {
+        pinyin: "qíng",
+        examples: ["情感", "情况", "心情"],
+        english: "feeling; emotion; situation",
+        sentences: ["情感需要表达。", "现在的情况怎么样？", "我今天心情很好。"]
+    },
+    "怕": {
+        pinyin: "pà",
+        examples: ["害怕", "怕冷", "恐怕"],
+        english: "afraid; fear; perhaps",
+        sentences: ["小孩子怕黑。", "我很怕冷。", "恐怕要下雨了。"]
+    },
+    "忙": {
+        pinyin: "máng",
+        examples: ["忙碌", "帮忙", "忙不过来"],
+        english: "busy; to help",
+        sentences: ["最近工作很忙碌。", "你能来帮忙吗？", "事情太多，忙不过来。"]
+    },
+    "快": {
+        pinyin: "kuài",
+        examples: ["快乐", "快速", "快点儿"],
+        english: "happy; fast; quick",
+        sentences: ["祝你生日快乐！", "火车快速通过隧道。", "快点儿，要迟到了！"]
+    },
+    "慢": {
+        pinyin: "màn",
+        examples: ["慢慢", "慢走", "缓慢"],
+        english: "slow; slowly",
+        sentences: ["慢慢走，小心点。", "您慢走，再见！", "交通缓慢前进。"]
+    },
+    "打": {
+        pinyin: "dǎ",
+        examples: ["打电话", "打球", "打开"],
+        english: "to hit; to play; to open",
+        sentences: ["我要打电话给妈妈。", "我们一起去打球吧。", "请打开窗户。"]
+    },
+    "拍": {
+        pinyin: "pāi",
+        examples: ["拍照", "拍手", "拍卖"],
+        english: "to pat; to clap; to take photo",
+        sentences: ["请帮我们拍照。", "观众为演员拍手。", "这件古董将要拍卖。"]
+    },
+    "拉": {
+        pinyin: "lā",
+        examples: ["拉手", "拉面", "拉链"],
+        english: "to pull; to drag",
+        sentences: ["妈妈拉着孩子的手。", "我喜欢吃兰州拉面。", "书包的拉链坏了。"]
+    },
+    "推": {
+        pinyin: "tuī",
+        examples: ["推车", "推荐", "推迟"],
+        english: "to push; to recommend; to postpone",
+        sentences: ["他推着自行车走。", "我推荐这本书给你。", "会议推迟到明天。"]
+    },
+    "找": {
+        pinyin: "zhǎo",
+        examples: ["寻找", "找钱", "找工作"],
+        english: "to look for; to find",
+        sentences: ["我正在寻找钥匙。", "这是找你的零钱。", "他刚大学毕业在找工作。"]
+    },
+    "家": {
+        pinyin: "jiā",
+        examples: ["家庭", "家乡", "回家"],
+        english: "home; family; household",
+        sentences: ["我有一个幸福的家庭。", "我很想念我的家乡。", "我每天六点回家。"]
+    },
+    "安": {
+        pinyin: "ān",
+        examples: ["安全", "安静", "安装"],
+        english: "safe; quiet; to install",
+        sentences: ["注意交通安全。", "请保持安静。", "我会安装这个软件。"]
+    },
+    "室": {
+        pinyin: "shì",
+        examples: ["教室", "卧室", "办公室"],
+        english: "room; chamber",
+        sentences: ["教室里有很多学生。", "我的卧室很整洁。", "他在办公室工作。"]
+    },
+    "宅": {
+        pinyin: "zhái",
+        examples: ["住宅", "宅院", "宅男"],
+        english: "house; residence; homebody",
+        sentences: ["这是新建的住宅区。", "老宅院有百年历史。", "他是个宅男，很少出门。"]
+    },
+    "宫": {
+        pinyin: "gōng",
+        examples: ["故宫", "宫殿", "子宫"],
+        english: "palace; temple; womb",
+        sentences: ["故宫是北京的著名景点。", "古代皇帝住在宫殿里。", "子宫是女性生殖器官。"]
+    },
+    "都": {
+        pinyin: "dū",
+        examples: ["首都", "都市", "成都"],
+        english: "capital; city",
+        sentences: ["北京是中国的首都。", "都市生活节奏很快。", "成都的美食很有名。"]
+    },
+    "部": {
+        pinyin: "bù",
+        examples: ["部分", "部门", "部落"],
+        english: "part; department; tribe",
+        sentences: ["这只是其中的一部分。", "他在销售部门工作。", "这个部落有自己的语言。"]
+    },
+    "邻": {
+        pinyin: "lín",
+        examples: ["邻居", "邻近", "邻国"],
+        english: "neighbor; adjacent; neighboring country",
+        sentences: ["我的邻居很友好。", "学校邻近公园。", "中国有14个邻国。"]
+    },
+    "郊": {
+        pinyin: "jiāo",
+        examples: ["郊区", "郊外", "郊游"],
+        english: "suburb; outskirts",
+        sentences: ["他们住在郊区。", "郊外的空气很新鲜。", "周末我们去郊游。"]
+    },
+    "邮": {
+        pinyin: "yóu",
+        examples: ["邮票", "邮局", "邮件"],
+        english: "post; mail",
+        sentences: ["我收集了很多邮票。", "邮局在街对面。", "请查收邮件。"]
+    },
+    "热": {
+        pinyin: "rè",
+        examples: ["热水", "热情", "热带"],
+        english: "hot; warm; enthusiastic",
+        sentences: ["请给我一杯热水。", "他非常热情好客。", "热带气候很温暖。"]
+    },
+    "煮": {
+        pinyin: "zhǔ",
+        examples: ["煮饭", "煮熟", "煮面"],
+        english: "to boil; to cook",
+        sentences: ["妈妈在厨房煮饭。", "鸡蛋要煮熟才能吃。", "我学会了煮面条。"]
+    },
+    "煎": {
+        pinyin: "jiān",
+        examples: ["煎饼", "煎蛋", "煎药"],
+        english: "to fry; to pan-fry",
+        sentences: ["早餐吃煎饼果子。", "他喜欢吃煎蛋。", "中医需要煎药。"]
+    },
+    "照": {
+        pinyin: "zhào",
+        examples: ["照片", "照顾", "照亮"],
+        english: "photo; to take care; to illuminate",
+        sentences: ["这张照片很漂亮。", "护士细心照顾病人。", "路灯照亮了街道。"]
+    },
+    "熊": {
+        pinyin: "xióng",
+        examples: ["熊猫", "熊掌", "狗熊"],
+        english: "bear",
+        sentences: ["熊猫是中国的国宝。", "熊掌是珍贵的食材。", "森林里有狗熊出没。"]
+    },
+    "林": {
+        pinyin: "lín",
+        examples: ["森林", "树林", "林间"],
+        english: "forest; woods",
+        sentences: ["森林里有很多动物。", "树林很安静。", "林间小路很美。"]
+    },
+    "森": {
+        pinyin: "sēn",
+        examples: ["森林", "森严", "森然"],
+        english: "forest; dense; strict",
+        sentences: ["保护森林很重要。", "戒备森严。", "古树森然耸立。"]
+    },
+    "树": {
+        pinyin: "shù",
+        examples: ["树木", "树叶", "树立"],
+        english: "tree; to establish",
+        sentences: ["公园里有很多树木。", "秋天树叶变黄了。", "树立一个好榜样。"]
+    },
+    "枝": {
+        pinyin: "zhī",
+        examples: ["树枝", "枝条", "枝干"],
+        english: "branch; twig",
+        sentences: ["小鸟站在树枝上。", "柳树的枝条很长。", "大树的枝干很粗壮。"]
+    },
+    "根": {
+        pinyin: "gēn",
+        examples: ["树根", "根本", "根据"],
+        english: "root; foundation; basis",
+        sentences: ["树根深入地下。", "这根本不是问题。", "根据调查结果显示。"]
+    },
+    "看": {
+        pinyin: "kàn",
+        examples: ["看书", "看见", "看病"],
+        english: "to look; to see; to visit doctor",
+        sentences: ["我喜欢看书。", "我能看见远处的山。", "他去医院看病。"]
+    },
+    "睛": {
+        pinyin: "jīng",
+        examples: ["眼睛", "定睛", "点睛"],
+        english: "eye",
+        sentences: ["她的眼睛很漂亮。", "定睛一看，原来是他。", "画龙点睛之笔。"]
+    },
+    "眼": {
+        pinyin: "yǎn",
+        examples: ["眼睛", "眼镜", "眼泪"],
+        english: "eye; glasses",
+        sentences: ["我的眼睛有点累。", "他戴着近视眼镜。", "感动得流下了眼泪。"]
+    },
+    "睡": {
+        pinyin: "shuì",
+        examples: ["睡觉", "睡着", "睡衣"],
+        english: "to sleep; asleep",
+        sentences: ["我晚上十点睡觉。", "宝宝已经睡着了。", "穿睡衣睡觉很舒服。"]
+    },
+    "睁": {
+        pinyin: "zhēng",
+        examples: ["睁眼", "睁开", "眼睁睁"],
+        english: "to open eyes",
+        sentences: ["早上六点睁眼起床。", "睁开眼睛看世界。", "眼睁睁看着机会溜走。"]
+    },
+    "你": {
+        pinyin: "nǐ",
+        examples: ["你们", "你的", "你好"],
+        english: "you",
+        sentences: ["你们好！欢迎光临。", "这是你的书吗？", "你好，很高兴认识你。"]
+    },
+    "他": {
+        pinyin: "tā",
+        examples: ["他们", "其他", "他人"],
+        english: "he; him; other",
+        sentences: ["他们来自北京。", "其他人都同意了。", "为他人着想。"]
+    },
+    "们": {
+        pinyin: "men",
+        examples: ["我们", "他们", "朋友们"],
+        english: "plural marker for pronouns",
+        sentences: ["我们都是学生。", "他们是我的同事。", "我和朋友们一起玩。"]
+    },
+    "休": {
+        pinyin: "xiū",
+        examples: ["休息", "休假", "退休"],
+        english: "to rest; vacation; retire",
+        sentences: ["工作累了要休息。", "下周我休假三天。", "爷爷今年退休了。"]
+    },
+    "作": {
+        pinyin: "zuò",
+        examples: ["工作", "作业", "作为"],
+        english: "to work; homework; as",
+        sentences: ["我在公司工作。", "晚上要做作业。", "作为一名学生要努力学习。"]
+    },
+    "轮": {
+        pinyin: "lún",
+        examples: ["车轮", "轮船", "轮流"],
+        english: "wheel; ship; take turns",
+        sentences: ["车轮坏了需要修理。", "轮船在大海上航行。", "我们轮流发言。"]
+    },
+    "转": {
+        pinyin: "zhuǎn",
+        examples: ["转变", "转弯", "转学"],
+        english: "to turn; to change",
+        sentences: ["天气突然转变了。", "前面路口向右转弯。", "他下学期要转学。"]
+    },
+    "轻": {
+        pinyin: "qīng",
+        examples: ["轻松", "年轻", "轻声"],
+        english: "light; easy; young",
+        sentences: ["工作很轻松。", "年轻时要多学习。", "老师轻声说话。"]
+    },
+    "辆": {
+        pinyin: "liàng",
+        examples: ["车辆", "一辆车", "几辆"],
+        english: "measure word for vehicles",
+        sentences: ["道路上车辆很多。", "我家有一辆车。", "停车场有几辆自行车。"]
+    },
+    "军": {
+        pinyin: "jūn",
+        examples: ["军队", "军人", "军事"],
+        english: "army; military",
+        sentences: ["军队保卫国家。", "军人的职责是保卫祖国。", "军事演习正在进行。"]
+    },
+    "铁": {
+        pinyin: "tiě",
+        examples: ["铁路", "铁门", "铁板"],
+        english: "iron; steel",
+        sentences: ["铁路运输很方便。", "铁门很坚固。", "铁板烧很好吃。"]
+    },
+    "铜": {
+        pinyin: "tóng",
+        examples: ["铜钱", "铜像", "铜器"],
+        english: "copper; bronze",
+        sentences: ["古代使用铜钱。", "广场上有英雄铜像。", "博物馆展示古代铜器。"]
+    },
+    "银": {
+        pinyin: "yín",
+        examples: ["银行", "银子", "银白色"],
+        english: "silver; bank",
+        sentences: ["我要去银行取钱。", "古代用银子交易。", "月亮是银白色的。"]
+    },
+    "钢": {
+        pinyin: "gāng",
+        examples: ["钢铁", "钢笔", "钢琴"],
+        english: "steel",
+        sentences: ["钢铁工业很重要。", "我用钢笔写字。", "她会弹钢琴。"]
+    },
+    "钱": {
+        pinyin: "qián",
+        examples: ["钱包", "赚钱", "零钱"],
+        english: "money",
+        sentences: ["我的钱包丢了。", "努力工作赚钱。", "这是找你的零钱。"]
+    },
+    "闭": {
+        pinyin: "bì",
+        examples: ["关闭", "闭眼", "闭幕"],
+        english: "to close; to shut",
+        sentences: ["请关闭门窗。", "闭眼休息一会儿。", "演出圆满闭幕。"]
+    },
+    "闲": {
+        pinyin: "xián",
+        examples: ["休闲", "空闲", "闲聊"],
+        english: "leisure; free; chat",
+        sentences: ["周末是休闲时间。", "我有空闲就看书。", "和老朋友闲聊很愉快。"]
+    },
+    "间": {
+        pinyin: "jiān",
+        examples: ["时间", "房间", "中间"],
+        english: "time; room; between",
+        sentences: ["时间过得真快。", "我的房间很整洁。", "我坐在他们中间。"]
+    },
+    "闹": {
+        pinyin: "nào",
+        examples: ["热闹", "闹钟", "吵闹"],
+        english: "noisy; lively; alarm clock",
+        sentences: ["街上很热闹。", "闹钟六点响了。", "孩子们太吵闹了。"]
+    },
+    "阁": {
+        pinyin: "gé",
+        examples: ["阁楼", "内阁", "空中楼阁"],
+        english: "attic; cabinet; pavilion",
+        sentences: ["阁楼里放杂物。", "内阁召开会议。", "这只是空中楼阁。"]
+    },
+    "起": {
+        pinyin: "qǐ",
+        examples: ["起床", "起来", "起飞"],
+        english: "to get up; to rise; to take off",
+        sentences: ["我早上七点起床。", "请站起来回答问题。", "飞机即将起飞。"]
+    },
+    "赶": {
+        pinyin: "gǎn",
+        examples: ["赶快", "赶路", "赶集"],
+        english: "to hurry; to rush; to catch up",
+        sentences: ["赶快，要迟到了！", "他急着赶路。", "农民去镇上赶集。"]
+    },
+    "超": {
+        pinyin: "chāo",
+        examples: ["超过", "超市", "超车"],
+        english: "to exceed; supermarket; to overtake",
+        sentences: ["他的成绩超过了我。", "我去超市买东西。", "禁止在此路段超车。"]
+    },
+    "越": {
+        pinyin: "yuè",
+        examples: ["越过", "越南", "越来越"],
+        english: "to cross over; Vietnam; more and more",
+        sentences: ["他越过了障碍。", "越南是邻国。", "天气越来越热。"]
+    },
+    "趣": {
+        pinyin: "qù",
+        examples: ["有趣", "兴趣", "趣味"],
+        english: "interesting; interest; fun",
+        sentences: ["这本书很有趣。", "我对音乐有兴趣。", "游戏增加了学习趣味。"]
+    },
+    "过": {
+        pinyin: "guò",
+        examples: ["过去", "过来", "过桥"],
+        english: "to pass; to cross; past",
+        sentences: ["时间过得很快。", "请走过来一点。", "我们要过桥才能到对面。"]
+    },
+    "这": {
+        pinyin: "zhè",
+        examples: ["这里", "这个", "这样"],
+        english: "this; here",
+        sentences: ["这里风景很美。", "这个苹果很甜。", "这样做不对。"]
+    },
+    "还": {
+        pinyin: "hái",
+        examples: ["还是", "还有", "还要"],
+        english: "still; yet; also",
+        sentences: ["你还是学生吗？", "我还有一个问题。", "我还要一杯咖啡。"]
+    },
+    "进": {
+        pinyin: "jìn",
+        examples: ["进来", "进步", "进入"],
+        english: "to enter; progress",
+        sentences: ["请进，门开着。", "学习有很大进步。", "进入教室要安静。"]
+    },
+    "远": {
+        pinyin: "yuǎn",
+        examples: ["远方", "远近", "永远"],
+        english: "far; distant; forever",
+        sentences: ["我向往远方。", "距离远近不重要。", "我们永远是朋友。"]
+    },
+    "峰": {
+        pinyin: "fēng",
+        examples: ["山峰", "高峰", "顶峰"],
+        english: "peak; summit",
+        sentences: ["山峰很高。", "现在是交通高峰时间。", "他登上了事业的顶峰。"]
+    },
+    "岭": {
+        pinyin: "lǐng",
+        examples: ["山岭", "岭南", "翻山越岭"],
+        english: "mountain range; ridge",
+        sentences: ["山岭连绵起伏。", "岭南地区气候温暖。", "他们翻山越岭来到这里。"]
+    },
+    "岩": {
+        pinyin: "yán",
+        examples: ["岩石", "岩洞", "岩浆"],
+        english: "rock; cliff",
+        sentences: ["海边有很多岩石。", "岩洞里有钟乳石。", "火山喷出岩浆。"]
+    },
+    "岸": {
+        pinyin: "àn",
+        examples: ["海岸", "河岸", "岸边"],
+        english: "shore; bank; coast",
+        sentences: ["海岸线很长。", "河岸上有很多树。", "船停在岸边。"]
+    },
+    "岛": {
+        pinyin: "dǎo",
+        examples: ["岛屿", "海岛", "岛国"],
+        english: "island",
+        sentences: ["南海有很多岛屿。", "我们去了一个海岛度假。", "日本是一个岛国。"]
+    },
+    "妈": {
+        pinyin: "mā",
+        examples: ["妈妈", "姨妈", "奶妈"],
+        english: "mother; mom",
+        sentences: ["妈妈很爱我。", "姨妈从北京来了。", "奶妈照顾婴儿。"]
+    },
+    "姐": {
+        pinyin: "jiě",
+        examples: ["姐姐", "姐妹", "空姐"],
+        english: "older sister",
+        sentences: ["我有一个姐姐。", "我们是好姐妹。", "空姐服务很周到。"]
+    },
+    "妹": {
+        pinyin: "mèi",
+        examples: ["妹妹", "姐妹", "表妹"],
+        english: "younger sister",
+        sentences: ["我的妹妹很可爱。", "我们是亲姐妹。", "表妹比我小三岁。"]
+    },
+    "好": {
+        pinyin: "hǎo",
+        examples: ["好吃", "好看", "好人"],
+        english: "good; well; nice",
+        sentences: ["这个菜很好吃。", "这件衣服很好看。", "他是个好人。"]
+    },
+    "她": {
+        pinyin: "tā",
+        examples: ["她们", "她的", "她是"],
+        english: "she; her",
+        sentences: ["她们是好朋友。", "这是她的书包。", "她是我们的老师。"]
+    },
+    "腿": {
+        pinyin: "tuǐ",
+        examples: ["大腿", "小腿", "腿脚"],
+        english: "leg",
+        sentences: ["他大腿受伤了。", "小腿肌肉很发达。", "老人腿脚不方便。"]
+    },
+    "脚": {
+        pinyin: "jiǎo",
+        examples: ["脚步", "脚印", "脚底"],
+        english: "foot",
+        sentences: ["他放轻了脚步。", "沙滩上有脚印。", "脚底按摩很舒服。"]
+    },
+    "膀": {
+        pinyin: "bǎng",
+        examples: ["肩膀", "翅膀", "膀子"],
+        english: "shoulder; wing; arm",
+        sentences: ["他肩膀很宽。", "鸟儿展开翅膀。", "膀子很有力气。"]
+    },
+    "臂": {
+        pinyin: "bì",
+        examples: ["手臂", "臂力", "振臂"],
+        english: "arm",
+        sentences: ["他手臂受伤了。", "臂力很强。", "振臂高呼胜利。"]
+    },
+    "腰": {
+        pinyin: "yāo",
+        examples: ["腰部", "弯腰", "腰围"],
+        english: "waist",
+        sentences: ["腰部有点痛。", "弯腰捡东西。", "我的腰围变粗了。"]
+    },
+    "说": {
+        pinyin: "shuō",
+        examples: ["说话", "说明", "小说"],
+        english: "to speak; to say",
+        sentences: ["请不要说话。", "请说明你的理由。", "我喜欢读小说。"]
+    },
+    "话": {
+        pinyin: "huà",
+        examples: ["电话", "话语", "话题"],
+        english: "words; speech; topic",
+        sentences: ["给我打电话。", "温暖的话语。", "换个话题吧。"]
+    },
+    "讲": {
+        pinyin: "jiǎng",
+        examples: ["讲话", "讲课", "讲故事"],
+        english: "to speak; to lecture",
+        sentences: ["领导正在讲话。", "老师讲课很生动。", "妈妈给孩子讲故事。"]
+    },
+    "谈": {
+        pinyin: "tán",
+        examples: ["谈话", "谈论", "谈判"],
+        english: "to talk; to discuss",
+        sentences: ["进行一次谈话。", "我们谈论这个问题。", "双方进行谈判。"]
+    },
+    "议": {
+        pinyin: "yì",
+        examples: ["会议", "建议", "议论"],
+        english: "to discuss; meeting; suggestion",
+        sentences: ["召开一次会议。", "我有一个建议。", "不要背后议论别人。"]
+    },
+    "割": {
+        pinyin: "gē",
+        examples: ["割草", "收割", "割伤"],
+        english: "to cut; to harvest",
+        sentences: ["农民在割草。", "秋天是收割的季节。", "小心不要割伤手指。"]
+    },
+    "刻": {
+        pinyin: "kè",
+        examples: ["时刻", "刻苦", "立刻"],
+        english: "moment; carve; diligent",
+        sentences: ["关键时刻。", "他学习很刻苦。", "听到消息立刻出发。"]
+    },
+    "划": {
+        pinyin: "huá",
+        examples: ["划船", "划破", "划算"],
+        english: "to row; to scratch; worthwhile",
+        sentences: ["我们在湖上划船。", "玻璃划破了手。", "这个东西很划算。"]
+    },
+    "创": {
+        pinyin: "chuàng",
+        examples: ["创造", "创新", "创业"],
+        english: "to create; innovation",
+        sentences: ["创造美好生活。", "科技创新很重要。", "年轻人积极创业。"]
+    },
+    "削": {
+        pinyin: "xiāo",
+        examples: ["削皮", "削铅笔", "剥削"],
+        english: "to peel; to sharpen",
+        sentences: ["削苹果皮。", "削铅笔写作业。", "反对剥削压迫。"]
+    },
+    "饭": {
+        pinyin: "fàn",
+        examples: ["米饭", "吃饭", "饭店"],
+        english: "rice; meal",
+        sentences: ["米饭很好吃。", "我们一起去吃饭吧。", "那家饭店的菜很好。"]
+    },
+    "饮": {
+        pinyin: "yǐn",
+        examples: ["饮料", "饮食", "饮酒"],
+        english: "to drink; beverage",
+        sentences: ["我喜欢喝饮料。", "注意饮食健康。", "饮酒要适量。"]
+    },
+    "餐": {
+        pinyin: "cān",
+        examples: ["餐厅", "餐具", "早餐"],
+        english: "meal; restaurant",
+        sentences: ["我们在餐厅吃饭。", "这套餐具很漂亮。", "早餐吃面包和牛奶。"]
+    },
+    "饱": {
+        pinyin: "bǎo",
+        examples: ["吃饱", "饱和", "饱满"],
+        english: "full; satiated",
+        sentences: ["我吃饱了。", "市场已经饱和。", "谷粒很饱满。"]
+    },
+    "饿": {
+        pinyin: "è",
+        examples: ["饥饿", "饿肚子", "挨饿"],
+        english: "hungry",
+        sentences: ["我感到很饥饿。", "不要让孩子饿肚子。", "过去人们常常挨饿。"]
+    },
+    "动": {
+        pinyin: "dòng",
+        examples: ["运动", "动作", "动物"],
+        english: "to move; movement",
+        sentences: ["我喜欢运动。", "这个动作很难。", "动物园里有很多动物。"]
+    },
+    "功": {
+        pinyin: "gōng",
+        examples: ["功夫", "成功", "用功"],
+        english: "skill; success; effort",
+        sentences: ["中国功夫很厉害。", "祝你取得成功。", "学习要用功。"]
+    },
+    "加": {
+        pinyin: "jiā",
+        examples: ["增加", "加班", "参加"],
+        english: "to add; to increase",
+        sentences: ["增加产量。", "今晚要加班。", "参加聚会。"]
+    },
+    "助": {
+        pinyin: "zhù",
+        examples: ["帮助", "助手", "助人为乐"],
+        english: "to help; assistant",
+        sentences: ["互相帮助。", "他是我的助手。", "助人为乐是美德。"]
+    },
+    "劲": {
+        pinyin: "jìn",
+        examples: ["使劲", "干劲", "劲头"],
+        english: "strength; energy",
+        sentences: ["使劲推门。", "他工作很有干劲。", "劲头十足。"]
+    },
+    "店": {
+        pinyin: "diàn",
+        examples: ["商店", "书店", "饭店"],
+        english: "shop; store",
+        sentences: ["商店里有很多商品。", "我去书店买书。", "我们在这家饭店吃饭。"]
+    },
+    "府": {
+        pinyin: "fǔ",
+        examples: ["政府", "王府", "府邸"],
+        english: "government; mansion",
+        sentences: ["政府工作报告。", "参观恭王府。", "古代官员的府邸。"]
+    },
+    "庙": {
+        pinyin: "miào",
+        examples: ["寺庙", "庙会", "孔庙"],
+        english: "temple; monastery",
+        sentences: ["山上有座寺庙。", "春节有庙会。", "参观孔庙。"]
+    },
+    "库": {
+        pinyin: "kù",
+        examples: ["仓库", "水库", "库房"],
+        english: "warehouse; reservoir",
+        sentences: ["货物放在仓库。", "修建水库。", "库房需要整理。"]
+    },
+    "庭": {
+        pinyin: "tíng",
+        examples: ["家庭", "法庭", "庭院"],
+        english: "family; court; courtyard",
+        sentences: ["家庭和睦很重要。", "法庭开庭审理。", "庭院里种满了花。"]
+    },
+    "房": {
+        pinyin: "fáng",
+        examples: ["房间", "房子", "厨房"],
+        english: "room; house",
+        sentences: ["我的房间很整洁。", "这座房子很漂亮。", "妈妈在厨房做饭。"]
+    },
+    "扇": {
+        pinyin: "shàn",
+        examples: ["扇子", "风扇", "扇贝"],
+        english: "fan; shellfish",
+        sentences: ["用扇子扇风。", "打开电风扇。", "扇贝很好吃。"]
+    },
+    "扉": {
+        pinyin: "fēi",
+        examples: ["扉页", "心扉", "柴扉"],
+        english: "title page; door",
+        sentences: ["书的扉页有作者签名。", "敞开心扉交流。", "轻轻敲打柴扉。"]
+    },
+    "雇": {
+        pinyin: "gù",
+        examples: ["雇佣", "雇员", "解雇"],
+        english: "to hire; employee",
+        sentences: ["雇佣合同。", "公司有100名雇员。", "他被解雇了。"]
+    },
+    "扈": {
+        pinyin: "hù",
+        examples: ["跋扈", "扈从", "飞扬跋扈"],
+        english: "arrogant; retinue",
+        sentences: ["他为人跋扈。", "皇帝的扈从很多。", "这个人飞扬跋扈。"]
+    },
+    "空": {
+        pinyin: "kōng",
+        examples: ["空气", "天空", "空间"],
+        english: "air; sky; space",
+        sentences: ["这里的空气很新鲜。", "天空很蓝。", "这个房间空间很大。"]
+    },
+    "穿": {
+        pinyin: "chuān",
+        examples: ["穿衣", "穿过", "穿透"],
+        english: "to wear; to pass through",
+        sentences: ["穿衣保暖。", "穿过马路。", "子弹穿透了木板。"]
+    },
+    "突": {
+        pinyin: "tū",
+        examples: ["突然", "突出", "突破"],
+        english: "sudden; prominent; breakthrough",
+        sentences: ["他突然站起来。", "表现很突出。", "突破技术难关。"]
+    },
+    "窗": {
+        pinyin: "chuāng",
+        examples: ["窗户", "窗口", "窗帘"],
+        english: "window",
+        sentences: ["打开窗户通风。", "在窗口排队。", "拉上窗帘睡觉。"]
+    },
+    "窍": {
+        pinyin: "qiào",
+        examples: ["窍门", "七窍", "开窍"],
+        english: "trick; aperture; comprehend",
+        sentences: ["找到学习窍门。", "七窍流血。", "孩子终于开窍了。"]
+    },
+    "厅": {
+        pinyin: "tīng",
+        examples: ["客厅", "餐厅", "大厅"],
+        english: "hall; room",
+        sentences: ["客厅里有一张沙发。", "我们在餐厅吃饭。", "大厅里人很多。"]
+    },
+    "历": {
+        pinyin: "lì",
+        examples: ["历史", "经历", "日历"],
+        english: "history; experience; calendar",
+        sentences: ["学习中国历史。", "丰富的人生经历。", "看日历知道日期。"]
+    },
+    "压": {
+        pinyin: "yā",
+        examples: ["压力", "压迫", "压住"],
+        english: "pressure; to press",
+        sentences: ["工作压力大。", "反对压迫。", "用石头压住纸张。"]
+    },
+    "厚": {
+        pinyin: "hòu",
+        examples: ["厚薄", "厚道", "厚度"],
+        english: "thick; kind",
+        sentences: ["这本书很厚。", "他为人厚道。", "测量木板厚度。"]
+    },
+    "原": {
+        pinyin: "yuán",
+        examples: ["原来", "原因", "草原"],
+        english: "original; reason; plain",
+        sentences: ["原来是你啊。", "找出失败原因。", "辽阔的草原。"]
+    },
+    "国": {
+        pinyin: "guó",
+        examples: ["国家", "中国", "国旗"],
+        english: "country; nation",
+        sentences: ["我爱我的国家。", "中国是一个伟大的国家。", "国旗在风中飘扬。"]
+    },
+    "园": {
+        pinyin: "yuán",
+        examples: ["公园", "花园", "幼儿园"],
+        english: "park; garden; kindergarten",
+        sentences: ["去公园散步。", "花园里有很多花。", "孩子在幼儿园学习。"]
+    },
+    "图": {
+        pinyin: "tú",
+        examples: ["图片", "地图", "图书"],
+        english: "picture; map; book",
+        sentences: ["看图片学习。", "使用地图导航。", "去图书馆借书。"]
+    },
+    "圈": {
+        pinyin: "quān",
+        examples: ["圆圈", "圈子", "圈套"],
+        english: "circle; ring; trap",
+        sentences: ["画一个圆圈。", "进入新的圈子。", "小心圈套。"]
+    },
+    "围": {
+        pinyin: "wéi",
+        examples: ["围绕", "包围", "围巾"],
+        english: "to surround; scarf",
+        sentences: ["围绕主题讨论。", "敌人被包围了。", "冬天戴围巾保暖。"]
+    },
+    "内": {
+        pinyin: "nèi",
+        examples: ["内容", "室内", "国内"],
+        english: "inside; internal",
+        sentences: ["这本书的内容很有趣。", "室内温度很舒适。", "国内新闻很重要。"]
+    },
+    "冉": {
+        pinyin: "rǎn",
+        examples: ["冉冉", "姓冉", "冉冉升起"],
+        english: "gradually; surname Ran",
+        sentences: ["太阳冉冉升起。", "他姓冉。", "国旗冉冉升起。"]
+    },
+    "再": {
+        pinyin: "zài",
+        examples: ["再见", "再次", "再来"],
+        english: "again; once more",
+        sentences: ["再见，明天见！", "希望再次合作。", "欢迎再来。"]
+    },
+    "网": {
+        pinyin: "wǎng",
+        examples: ["网络", "上网", "渔网"],
+        english: "net; network; internet",
+        sentences: ["使用网络学习。", "每天上网一小时。", "渔网捕鱼。"]
+    },
+    "冈": {
+        pinyin: "gāng",
+        examples: ["山冈", "井冈山", "冈峦"],
+        english: "ridge; hill",
+        sentences: ["站在山冈上。", "井冈山革命根据地。", "冈峦起伏。"]
+    },
+    "冠": {
+        pinyin: "guān",
+        examples: ["冠军", "皇冠", "冠冕"],
+        english: "crown; champion",
+        sentences: ["获得比赛冠军。", "国王戴着皇冠。", "冠冕堂皇的话。"]
+    },
+    "冤": {
+        pinyin: "yuān",
+        examples: ["冤枉", "冤屈", "冤家"],
+        english: "wrong; injustice",
+        sentences: ["我被冤枉了。", "洗清冤屈。", "不是冤家不聚头。"]
+    },
+    "冥": {
+        pinyin: "míng",
+        examples: ["冥思", "幽冥", "冥王星"],
+        english: "deep; dark; underworld",
+        sentences: ["冥思苦想。", "幽冥世界。", "冥王星是矮行星。"]
+    },
+    "幂": {
+        pinyin: "mì",
+        examples: ["幂函数", "乘幂", "幂级数"],
+        english: "power; exponent",
+        sentences: ["学习幂函数。", "数学中的乘幂。", "幂级数展开。"]
+    },
+    "包": {
+        pinyin: "bāo",
+        examples: ["书包", "面包", "包装"],
+        english: "bag; bread; to wrap",
+        sentences: ["我的书包很重。", "早餐吃面包。", "这个包装很精美。"]
+    },
+    "勾": {
+        pinyin: "gōu",
+        examples: ["勾画", "勾引", "勾结"],
+        english: "to draw; to hook; collude",
+        sentences: ["勾画未来蓝图。", "禁止勾引他人。", "官员与商人勾结。"]
+    },
+    "句": {
+        pinyin: "jù",
+        examples: ["句子", "句号", "造句"],
+        english: "sentence; period",
+        sentences: ["写一个完整的句子。", "句号表示结束。", "用新词造句。"]
+    },
+    "匆": {
+        pinyin: "cōng",
+        examples: ["匆忙", "匆匆", "匆促"],
+        english: "hasty; hurried",
+        sentences: ["他走得很匆忙。", "匆匆看了一眼。", "准备匆促。"]
+    },
+    "匈": {
+        pinyin: "xiōng",
+        examples: ["匈奴", "匈牙利", "匈人"],
+        english: "Xiongnu; Hungary",
+        sentences: ["古代匈奴民族。", "匈牙利在欧洲。", "匈人迁徙历史。"]
+    },
+    "区": {
+        pinyin: "qū",
+        examples: ["区域", "地区", "区别"],
+        english: "area; district; difference",
+        sentences: ["这是禁止入内的区域。", "这个地区很繁华。", "这两个词有区别。"]
+    },
+    "医": {
+        pinyin: "yī",
+        examples: ["医生", "医院", "医学"],
+        english: "doctor; hospital; medicine",
+        sentences: ["医生治病救人。", "去医院看病。", "学习医学知识。"]
+    },
+    "匹": {
+        pinyin: "pǐ",
+        examples: ["匹配", "匹敌", "一匹马"],
+        english: "to match; measure word for horses",
+        sentences: ["寻找匹配的零件。", "无人能匹敌。", "草原上有一匹马。"]
+    },
+    "匾": {
+        pinyin: "biǎn",
+        examples: ["匾额", "牌匾", "横匾"],
+        english: "plaque; tablet",
+        sentences: ["门上挂着匾额。", "寺庙的牌匾。", "横匾上写着字。"]
+    },
+    "匿": {
+        pinyin: "nì",
+        examples: ["匿名", "隐匿", "藏匿"],
+        english: "to hide; anonymous",
+        sentences: ["匿名举报。", "隐匿证据。", "藏匿罪犯。"]
+    },
+    "凶": {
+        pinyin: "xiōng",
+        examples: ["凶手", "凶器", "凶狠"],
+        english: "fierce; vicious; murderous",
+        sentences: ["警方正在追捕凶手。", "凶器已经找到了。", "他的表情很凶狠。"]
+    },
+    "击": {
+        pinyin: "jī",
+        examples: ["打击", "攻击", "击掌"],
+        english: "to hit; to attack",
+        sentences: ["打击犯罪。", "遭受网络攻击。", "胜利后击掌庆祝。"]
+    },
+    "凸": {
+        pinyin: "tū",
+        examples: ["凸出", "凸起", "凹凸"],
+        english: "convex; protruding",
+        sentences: ["岩石凸出水面。", "地面上有凸起。", "凹凸不平的路面。"]
+    },
+    "凹": {
+        pinyin: "āo",
+        examples: ["凹陷", "凹槽", "凹凸"],
+        english: "concave; sunken",
+        sentences: ["地面凹陷了。", "木板上有凹槽。", "凹凸有致。"]
+    },
+    "函": {
+        pinyin: "hán",
+        examples: ["函授", "信函", "函数"],
+        english: "letter; correspondence; function",
+        sentences: ["参加函授学习。", "收到重要信函。", "数学中的函数。"]
+    }
+};
+        
         // 部首与例字对应关系
         const radicalExamples = {};
         for (const radical in radicalsData) {
@@ -1267,6 +2343,8 @@
             "区": "qū", "医": "yī", "匹": "pǐ", "匾": "biǎn", "匿": "nì",
             "凶": "xiōng", "击": "jī", "凸": "tū", "凹": "āo", "函": "hán"
         };
+
+
         
         // 当前学习的部首
         let currentRadicals = [];
@@ -1293,6 +2371,9 @@
         const progressBar = document.getElementById('progressBar');
         const startLearningBtn = document.getElementById('startLearningBtn');
         const radicalItems = document.querySelectorAll('.radical-item');
+        const exampleModal = document.getElementById('exampleModal');
+        const closeExampleModal = document.getElementById('closeExampleModal');
+        const exampleInfo = document.getElementById('exampleInfo');
         
         // 初始化
         function init() {
@@ -1311,10 +2392,17 @@
                 radicalModal.style.display = 'none';
             });
             
+            closeExampleModal.addEventListener('click', () => {
+                exampleModal.style.display = 'none';
+            });
+            
             // 点击模态框外部关闭
             window.addEventListener('click', (e) => {
                 if (e.target === radicalModal) {
                     radicalModal.style.display = 'none';
+                }
+                if (e.target === exampleModal) {
+                    exampleModal.style.display = 'none';
                 }
             });
             
@@ -1410,8 +2498,9 @@
                     <div class="word-pinyin">${pinyinData[word] || ''}</div>
                 `;
                 
+                // 点击例字显示详细信息
                 wordItem.addEventListener('click', () => {
-                    speak(word);
+                    showExampleInfo(word);
                 });
                 
                 exampleWords.appendChild(wordItem);
@@ -1424,6 +2513,59 @@
                 learnedRadicals.push(radical);
                 updateProgress();
             }
+        }
+        
+        // 显示例字详细信息
+        function showExampleInfo(word) {
+            // 获取例字数据
+            const data = exampleData[word] || {
+                pinyin: pinyinData[word] || "未知",
+                examples: ["例词1", "例词2"],
+                english: "English meaning",
+                sentences: ["这是一个例句。", "这是另一个例句。"]
+            };
+            
+            // 生成例词HTML
+            const exampleWordsHTML = data.examples.map(example => 
+                `<div class="example-word-item" onclick="speak('${example}')">${example}</div>`
+            ).join('');
+            
+            // 生成例句HTML
+            const exampleSentencesHTML = data.sentences.map(sentence => 
+                `<div class="example-sentence-item" onclick="speak('${sentence}')">${sentence}</div>`
+            ).join('');
+            
+            exampleInfo.innerHTML = `
+                <div class="example-big" onclick="speak('${word}')">${word}</div>
+                <div class="example-pinyin">${data.pinyin}</div>
+                
+                <div class="example-info-section">
+                    <div class="example-info-title">
+                        <span>例词</span>
+                        <span class="speak-btn" onclick="speak('${data.examples.join(' ')}')">🔊</span>
+                    </div>
+                    <div class="example-info-content">
+                        ${exampleWordsHTML}
+                    </div>
+                </div>
+                
+                <div class="example-info-section">
+                    <div class="example-info-title">英文释义</div>
+                    <div class="example-info-content">${data.english}</div>
+                </div>
+                
+                <div class="example-info-section">
+                    <div class="example-info-title">
+                        <span>中文例句</span>
+                        <span class="speak-btn" onclick="speak('${data.sentences.join(' ')}')">🔊</span>
+                    </div>
+                    <div class="example-info-content">
+                        ${exampleSentencesHTML}
+                    </div>
+                </div>
+            `;
+            
+            exampleModal.style.display = 'flex';
         }
         
         // 文本转语音
