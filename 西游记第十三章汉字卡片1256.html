@@ -1,0 +1,2643 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>西游记第十三回汉字学习系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+        }
+        
+        /* 左侧汉字卡片区域 */
+        .characters-section {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        /* 右侧正文区域 */
+        .text-section {
+            flex: 1.2;
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 15px;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin: 25px 0 15px;
+            font-size: 1.6rem;
+        }
+        
+        /* 分组控制栏 */
+        .group-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .group-info {
+            font-size: 1.1rem;
+            color: #34495e;
+        }
+        
+        .group-nav button {
+            padding: 8px 20px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 50px;
+            background-color: #3498db;
+            color: white;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .group-nav button:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .group-nav button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        /* 汉字网格布局 */
+        .characters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        .character-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            border: 2px solid transparent;
+            height: 100px;
+        }
+        
+        .character-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            background-color: #e9ecef;
+            border-color: #3498db;
+        }
+        
+        .character-card.highlighted {
+            background-color: #fff3cd;
+            border-color: #ffc107;
+        }
+        
+        .character-card.active {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        
+        .char {
+            font-size: 2.2rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .pinyin {
+            font-size: 0.85rem;
+            color: #6c757d;
+            margin-bottom: 3px;
+        }
+        
+        .meaning {
+            font-size: 0.75rem;
+            color: #495057;
+            text-align: center;
+            line-height: 1.2;
+            max-height: 2.4em;
+            overflow: hidden;
+        }
+        
+        /* 正文样式 - 字号放大一倍 */
+        .text-content {
+            line-height: 1.8;
+            font-size: 2.2rem; /* 放大一倍 */
+            text-align: justify;
+        }
+        
+        .text-content p {
+            margin-bottom: 30px; /* 增加间距适应更大字号 */
+            text-indent: 2em;
+            position: relative;
+            transition: all 0.3s ease;
+            padding: 15px 20px; /* 增加内边距 */
+            border-radius: 8px;
+        }
+        
+        .text-content p:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .text-content p.active {
+            background-color: #e3f2fd;
+            border-left: 4px solid #3498db;
+            padding-left: 28px; /* 调整以适应更大的字号 */
+        }
+        
+        /* 句子容器 */
+        .sentence-container {
+            position: relative;
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .sentence-container:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .sentence-container.active {
+            background-color: #e3f2fd;
+            border-left: 4px solid #3498db;
+            padding-left: 23px;
+        }
+        
+        /* 正文中的汉字样式 */
+        .text-char {
+            cursor: pointer;
+            padding: 0 2px; /* 增加内边距以适应更大字号 */
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+        
+        .text-char:hover {
+            background-color: #e3f2fd;
+            color: #1565c0;
+        }
+        
+        .text-char.highlighted {
+            background-color: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+        }
+        
+        .text-char.active {
+            background-color: #d4edda;
+            color: #155724;
+            font-weight: bold;
+        }
+        
+        /* 句子朗读按钮 */
+        .sentence-voice-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px; /* 增大按钮 */
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem; /* 增大图标 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sentence-voice-btn:hover {
+            opacity: 1;
+            background-color: #2980b9;
+            transform: translateY(-50%) scale(1.1);
+        }
+        
+        .sentence-voice-btn:active {
+            transform: translateY(-50%) scale(1);
+        }
+        
+        /* 进度指示器 */
+        .progress-container {
+            width: 100%;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: #3498db;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        /* 统计信息 */
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        /* 标题样式 */
+        .chapter-title {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        /* 卡片窗口样式 */
+        .card-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .card-modal.active {
+            display: flex;
+        }
+        
+        .card-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            position: relative;
+            animation: cardAppear 0.3s ease-out;
+        }
+        
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .close-card {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .close-card:hover {
+            background-color: #f8f9fa;
+            color: #495057;
+        }
+        
+        .card-char {
+            font-size: 4rem;
+            margin: 20px 0;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .card-pinyin {
+            font-size: 1.5rem;
+            color: #e74c3c;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .card-meaning {
+            font-size: 1.2rem;
+            color: #34495e;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+        
+        .card-footer {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .voice-btn {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .voice-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .voice-btn:active {
+            transform: translateY(0);
+        }
+        
+        .learned-btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .learned-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .learned-btn.active {
+            background-color: #6c757d;
+        }
+        
+        .learned-btn.active:hover {
+            background-color: #5a6268;
+        }
+        
+        /* 语音控制按钮 */
+        .voice-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        .voice-toggle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .voice-toggle:hover {
+            background-color: #2980b9;
+            transform: scale(1.1);
+        }
+        
+        .voice-toggle.muted {
+            background-color: #e74c3c;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1100px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .characters-section, .text-section {
+                max-height: 70vh;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .characters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+            }
+            
+            .char {
+                font-size: 1.8rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .text-content {
+                font-size: 1.8rem; /* 响应式调整 */
+            }
+            
+            .card-content {
+                padding: 20px;
+            }
+            
+            .card-char {
+                font-size: 3rem;
+            }
+            
+            .sentence-voice-btn {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .characters-grid {
+                grid-template-columns: repeat(auto-fill, minmax(65px, 1fr));
+            }
+            
+            .char {
+                font-size: 1.6rem;
+            }
+            
+            .character-card {
+                height: 90px;
+                padding: 10px 3px;
+            }
+            
+            .card-footer {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .text-content {
+                font-size: 1.6rem; /* 响应式调整 */
+            }
+            
+            .sentence-voice-btn {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 卡片窗口 -->
+    <div class="card-modal" id="card-modal">
+        <div class="card-content">
+            <button class="close-card" id="close-card">×</button>
+            <div class="card-char" id="card-char">陷</div>
+            <div class="card-pinyin" id="card-pinyin">xiàn</div>
+            <div class="card-meaning" id="card-meaning">to sink, trap</div>
+            <div class="card-footer">
+                <button class="voice-btn" id="card-voice-btn">
+                    <span>🔊 朗读</span>
+                </button>
+                <button class="learned-btn" id="mark-learned-btn">标记为已学习</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 语音控制 -->
+    <div class="voice-control">
+        <button class="voice-toggle" id="voice-toggle" title="切换语音开关">
+            🔊
+        </button>
+    </div>
+    
+    <div class="container">
+        <!-- 左侧：汉字卡片区域 -->
+        <div class="characters-section">
+            <h1>西游记第十三回汉字学习</h1>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="total-chars">0</div>
+                    <div class="stat-label">总汉字数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="learned-chars">0</div>
+                    <div class="stat-label">已学习</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="current-group-display">1</div>
+                    <div class="stat-label">当前组</div>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            
+            <div class="group-controls">
+                <div class="group-info">
+                    第 <span id="current-group">1</span> 组 / 共 25 组
+                </div>
+                <div class="group-nav">
+                    <button id="prev-group">上一组</button>
+                    <button id="next-group">下一组</button>
+                </div>
+            </div>
+            
+            <div id="characters-container">
+                <!-- 汉字卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+        
+        <!-- 右侧：正文区域 -->
+        <div class="text-section">
+            <div class="chapter-title">
+                第十三回 陷虎穴金星解厄 双叉岭伯钦留僧
+            </div>
+            
+            <div class="text-content" id="text-content">
+                <!-- 正文内容将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 汉字数据（25组）
+        const characterData = {
+            1: [
+                {char: '陷', pinyin: 'xiàn', meaning: 'to sink, trap'},
+                {char: '虎', pinyin: 'hǔ', meaning: 'tiger'},
+                {char: '穴', pinyin: 'xué', meaning: 'cave, den'},
+                {char: '金', pinyin: 'jīn', meaning: 'gold, metal'},
+                {char: '星', pinyin: 'xīng', meaning: 'star'},
+                {char: '解', pinyin: 'jiě', meaning: 'to untie, explain'},
+                {char: '厄', pinyin: 'è', meaning: 'distress, hardship'},
+                {char: '双', pinyin: 'shuāng', meaning: 'pair, double'},
+                {char: '叉', pinyin: 'chā', meaning: 'fork, cross'},
+                {char: '岭', pinyin: 'lǐng', meaning: 'mountain range'},
+                {char: '伯', pinyin: 'bó', meaning: 'uncle, eldest'},
+                {char: '钦', pinyin: 'qīn', meaning: 'to respect, imperial'},
+                {char: '留', pinyin: 'liú', meaning: 'to stay, keep'},
+                {char: '僧', pinyin: 'sēng', meaning: 'monk'},
+                {char: '诗', pinyin: 'shī', meaning: 'poem'},
+                {char: '曰', pinyin: 'yuē', meaning: 'to say'},
+                {char: '大', pinyin: 'dà', meaning: 'big, great'},
+                {char: '唐', pinyin: 'táng', meaning: 'Tang dynasty'},
+                {char: '王', pinyin: 'wáng', meaning: 'king'},
+                {char: '降', pinyin: 'jiàng', meaning: 'to descend, drop'},
+                {char: '敕', pinyin: 'chì', meaning: 'imperial order'},
+                {char: '封', pinyin: 'fēng', meaning: 'to confer, seal'},
+                {char: '差', pinyin: 'chāi', meaning: 'to dispatch, differ'},
+                {char: '玄', pinyin: 'xuán', meaning: 'profound, mysterious'},
+                {char: '奘', pinyin: 'zàng', meaning: 'strong; Xuanzang (monk)'},
+                {char: '问', pinyin: 'wèn', meaning: 'to ask'},
+                {char: '禅', pinyin: 'chán', meaning: 'Zen, meditation'},
+                {char: '宗', pinyin: 'zōng', meaning: 'sect, ancestor'},
+                {char: '坚', pinyin: 'jiān', meaning: 'hard, firm'},
+                {char: '心', pinyin: 'xīn', meaning: 'heart, mind'},
+                {char: '磨', pinyin: 'mó', meaning: 'to grind, polish'},
+                {char: '琢', pinyin: 'zhuó', meaning: 'to carve, polish'},
+                {char: '寻', pinyin: 'xún', meaning: 'to seek, search'},
+                {char: '龙', pinyin: 'lóng', meaning: 'dragon'},
+                {char: '着', pinyin: 'zhe', meaning: 'aspect particle'},
+                {char: '意', pinyin: 'yì', meaning: 'meaning, intention'},
+                {char: '修', pinyin: 'xiū', meaning: 'to cultivate, repair'},
+                {char: '持', pinyin: 'chí', meaning: 'to hold, maintain'},
+                {char: '上', pinyin: 'shàng', meaning: 'up, above'},
+                {char: '鹫', pinyin: 'jiù', meaning: 'vulture'},
+                {char: '峰', pinyin: 'fēng', meaning: 'peak, summit'},
+                {char: '边', pinyin: 'biān', meaning: 'border, edge'},
+                {char: '界', pinyin: 'jiè', meaning: 'boundary, world'},
+                {char: '远', pinyin: 'yuǎn', meaning: 'far, distant'},
+                {char: '游', pinyin: 'yóu', meaning: 'to travel, swim'},
+                {char: '少', pinyin: 'shǎo', meaning: 'few, little'},
+                {char: '国', pinyin: 'guó', meaning: 'country'},
+                {char: '云', pinyin: 'yún', meaning: 'cloud; to say'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '前', pinyin: 'qián', meaning: 'front, before'}
+            ],
+            2: [
+                {char: '度', pinyin: 'dù', meaning: 'degree, to pass'},
+                {char: '千', pinyin: 'qiān', meaning: 'thousand'},
+                {char: '重', pinyin: 'chóng', meaning: 'layer, repeat'},
+                {char: '自', pinyin: 'zì', meaning: 'self, from'},
+                {char: '今', pinyin: 'jīn', meaning: 'now, present'},
+                {char: '别', pinyin: 'bié', meaning: 'to leave, other'},
+                {char: '驾', pinyin: 'jià', meaning: 'carriage, drive'},
+                {char: '投', pinyin: 'tóu', meaning: 'to throw, cast'},
+                {char: '西', pinyin: 'xī', meaning: 'west'},
+                {char: '去', pinyin: 'qù', meaning: 'to go'},
+                {char: '秉', pinyin: 'bǐng', meaning: 'to hold, grasp'},
+                {char: '教', pinyin: 'jiào', meaning: 'religion, teach'},
+                {char: '迦', pinyin: 'jiā', meaning: 'Sanskrit "ka" (in Buddhism)'},
+                {char: '悟', pinyin: 'wù', meaning: 'to comprehend, enlighten'},
+                {char: '大', pinyin: 'dà', meaning: 'big, great'},
+                {char: '空', pinyin: 'kōng', meaning: 'empty, sky'},
+                {char: '却', pinyin: 'què', meaning: 'but, yet, step back'},
+                {char: '说', pinyin: 'shuō', meaning: 'to speak'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '藏', pinyin: 'zàng', meaning: 'tripitaka, storehouse'},
+                {char: '贞', pinyin: 'zhēn', meaning: 'chaste, faithful'},
+                {char: '观', pinyin: 'guān', meaning: 'to observe, view'},
+                {char: '十', pinyin: 'shí', meaning: 'ten'},
+                {char: '年', pinyin: 'nián', meaning: 'year'},
+                {char: '九', pinyin: 'jiǔ', meaning: 'nine'},
+                {char: '月', pinyin: 'yuè', meaning: 'moon, month'},
+                {char: '望', pinyin: 'wàng', meaning: 'to look at, hope'},
+                {char: '后', pinyin: 'hòu', meaning: 'behind, after'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '日', pinyin: 'rì', meaning: 'sun, day'},
+                {char: '蒙', pinyin: 'méng', meaning: 'to receive, cover'},
+                {char: '与', pinyin: 'yǔ', meaning: 'and, with'},
+                {char: '多', pinyin: 'duō', meaning: 'many, much'},
+                {char: '官', pinyin: 'guān', meaning: 'official'},
+                {char: '送', pinyin: 'sòng', meaning: 'to send, accompany'},
+                {char: '出', pinyin: 'chū', meaning: 'to go out'},
+                {char: '长', pinyin: 'cháng', meaning: 'long'},
+                {char: '安', pinyin: 'ān', meaning: 'peace, safe'},
+                {char: '关', pinyin: 'guān', meaning: 'gate, pass'},
+                {char: '外', pinyin: 'wài', meaning: 'outside'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '马', pinyin: 'mǎ', meaning: 'horse'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '停', pinyin: 'tíng', meaning: 'to stop'},
+                {char: '蹄', pinyin: 'tí', meaning: 'hoof'},
+                {char: '早', pinyin: 'zǎo', meaning: 'early'},
+                {char: '至', pinyin: 'zhì', meaning: 'to arrive, extremely'},
+                {char: '法', pinyin: 'fǎ', meaning: 'law, method'},
+                {char: '门', pinyin: 'mén', meaning: 'door, gate'}
+            ],
+            3: [
+                {char: '寺', pinyin: 'sì', meaning: 'temple'},
+                {char: '本', pinyin: 'běn', meaning: 'root, origin'},
+                {char: '住', pinyin: 'zhù', meaning: 'to live, stop'},
+                {char: '持', pinyin: 'chí', meaning: 'to hold, maintain'},
+                {char: '上', pinyin: 'shàng', meaning: 'up, above'},
+                {char: '房', pinyin: 'fáng', meaning: 'house, room'},
+                {char: '长', pinyin: 'zhǎng', meaning: 'elder, chief'},
+                {char: '老', pinyin: 'lǎo', meaning: 'old'},
+                {char: '带', pinyin: 'dài', meaning: 'to lead, bring'},
+                {char: '领', pinyin: 'lǐng', meaning: 'to lead, neck'},
+                {char: '众', pinyin: 'zhòng', meaning: 'crowd, many'},
+                {char: '有', pinyin: 'yǒu', meaning: 'to have'},
+                {char: '五', pinyin: 'wǔ', meaning: 'five'},
+                {char: '百', pinyin: 'bǎi', meaning: 'hundred'},
+                {char: '余', pinyin: 'yú', meaning: 'surplus, remaining'},
+                {char: '人', pinyin: 'rén', meaning: 'person, people'},
+                {char: '两', pinyin: 'liǎng', meaning: 'two, both'},
+                {char: '边', pinyin: 'biān', meaning: 'border, edge'},
+                {char: '罗', pinyin: 'luó', meaning: 'to arrange, net'},
+                {char: '列', pinyin: 'liè', meaning: 'to arrange, row'},
+                {char: '接', pinyin: 'jiē', meaning: 'to connect, receive'},
+                {char: '里', pinyin: 'lǐ', meaning: 'inside, unit of distance'},
+                {char: '面', pinyin: 'miàn', meaning: 'face, surface'},
+                {char: '相', pinyin: 'xiāng', meaning: 'mutually, each other'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '献', pinyin: 'xiàn', meaning: 'to offer'},
+                {char: '茶', pinyin: 'chá', meaning: 'tea'},
+                {char: '罢', pinyin: 'bà', meaning: 'to stop, finish'},
+                {char: '进', pinyin: 'jìn', meaning: 'to advance'},
+                {char: '斋', pinyin: 'zhāi', meaning: 'vegetarian meal, fast'},
+                {char: '后', pinyin: 'hòu', meaning: 'behind, after'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '觉', pinyin: 'jué', meaning: 'to feel, aware'},
+                {char: '天', pinyin: 'tiān', meaning: 'sky, heaven'},
+                {char: '晚', pinyin: 'wǎn', meaning: 'evening, late'},
+                {char: '正', pinyin: 'zhèng', meaning: 'correct, straight'},
+                {char: '是', pinyin: 'shì', meaning: 'is, are'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '影', pinyin: 'yǐng', meaning: 'shadow, image'},
+                {char: '动', pinyin: 'dòng', meaning: 'to move'},
+                {char: '河', pinyin: 'hé', meaning: 'river'},
+                {char: '近', pinyin: 'jìn', meaning: 'near'},
+                {char: '明', pinyin: 'míng', meaning: 'bright, clear'},
+                {char: '无', pinyin: 'wú', meaning: 'without, not have'},
+                {char: '点', pinyin: 'diǎn', meaning: 'dot, point'},
+                {char: '尘', pinyin: 'chén', meaning: 'dust'},
+                {char: '雁', pinyin: 'yàn', meaning: 'wild goose'},
+                {char: '声', pinyin: 'shēng', meaning: 'sound, voice'},
+                {char: '鸣', pinyin: 'míng', meaning: 'to chirp, sound'}
+            ],
+            4: [
+                {char: '远', pinyin: 'yuǎn', meaning: 'far, distant'},
+                {char: '汉', pinyin: 'hàn', meaning: 'Han dynasty/ethnicity'},
+                {char: '砧', pinyin: 'zhēn', meaning: 'anvil, washing stone'},
+                {char: '韵', pinyin: 'yùn', meaning: 'rhyme, charm'},
+                {char: '响', pinyin: 'xiǎng', meaning: 'sound, echo'},
+                {char: '西', pinyin: 'xī', meaning: 'west'},
+                {char: '邻', pinyin: 'lín', meaning: 'neighbor'},
+                {char: '归', pinyin: 'guī', meaning: 'to return'},
+                {char: '鸟', pinyin: 'niǎo', meaning: 'bird'},
+                {char: '栖', pinyin: 'qī', meaning: 'to perch, dwell'},
+                {char: '枯', pinyin: 'kū', meaning: 'withered, dry'},
+                {char: '树', pinyin: 'shù', meaning: 'tree'},
+                {char: '禅', pinyin: 'chán', meaning: 'Zen, meditation'},
+                {char: '讲', pinyin: 'jiǎng', meaning: 'to lecture, speak'},
+                {char: '梵', pinyin: 'fàn', meaning: 'Sanskrit, Buddhist'},
+                {char: '音', pinyin: 'yīn', meaning: 'sound, tone'},
+                {char: '蒲', pinyin: 'pú', meaning: 'cattail'},
+                {char: '团', pinyin: 'tuán', meaning: 'round, group'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '榻', pinyin: 'tà', meaning: 'couch, bed'},
+                {char: '坐', pinyin: 'zuò', meaning: 'to sit'},
+                {char: '到', pinyin: 'dào', meaning: 'to arrive'},
+                {char: '夜', pinyin: 'yè', meaning: 'night'},
+                {char: '将', pinyin: 'jiāng', meaning: 'will, about to; general'},
+                {char: '分', pinyin: 'fēn', meaning: 'to divide, minute'},
+                {char: '们', pinyin: 'men', meaning: 'plural suffix'},
+                {char: '灯', pinyin: 'dēng', meaning: 'lamp, light'},
+                {char: '下', pinyin: 'xià', meaning: 'below, down'},
+                {char: '议', pinyin: 'yì', meaning: 'to discuss, opinion'},
+                {char: '论', pinyin: 'lùn', meaning: 'to discuss, theory'},
+                {char: '佛', pinyin: 'fó', meaning: 'Buddha'},
+                {char: '定', pinyin: 'dìng', meaning: 'to fix, settle'},
+                {char: '旨', pinyin: 'zhǐ', meaning: 'decree, purpose'},
+                {char: '取', pinyin: 'qǔ', meaning: 'to take, get'},
+                {char: '经', pinyin: 'jīng', meaning: 'classic, scripture'},
+                {char: '原', pinyin: 'yuán', meaning: 'origin, plain'},
+                {char: '由', pinyin: 'yóu', meaning: 'from, reason'},
+                {char: '的', pinyin: 'de', meaning: 'possessive particle'},
+                {char: '说', pinyin: 'shuō', meaning: 'to speak'},
+                {char: '水', pinyin: 'shuǐ', meaning: 'water'},
+                {char: '高', pinyin: 'gāo', meaning: 'tall, high'},
+                {char: '路', pinyin: 'lù', meaning: 'road, path'},
+                {char: '豹', pinyin: 'bào', meaning: 'leopard'},
+                {char: '峻', pinyin: 'jùn', meaning: 'steep, lofty'},
+                {char: '陡', pinyin: 'dǒu', meaning: 'steep'},
+                {char: '崖', pinyin: 'yá', meaning: 'cliff, precipice'},
+                {char: '难', pinyin: 'nán', meaning: 'difficult'},
+                {char: '毒', pinyin: 'dú', meaning: 'poison, malicious'},
+                {char: '魔', pinyin: 'mó', meaning: 'demon, evil spirit'}
+            ],
+            5: [
+                {char: '恶', pinyin: 'è', meaning: 'evil'},
+                {char: '怪', pinyin: 'guài', meaning: 'strange, monster'},
+                {char: '降', pinyin: 'xiáng', meaning: 'to surrender, subdue'},
+                {char: '箝', pinyin: 'qián', meaning: 'to clamp, restrain'},
+                {char: '口', pinyin: 'kǒu', meaning: 'mouth'},
+                {char: '言', pinyin: 'yán', meaning: 'speech, word'},
+                {char: '但', pinyin: 'dàn', meaning: 'but, only'},
+                {char: '以', pinyin: 'yǐ', meaning: 'with, by means of'},
+                {char: '手', pinyin: 'shǒu', meaning: 'hand'},
+                {char: '指', pinyin: 'zhǐ', meaning: 'finger, to point'},
+                {char: '几', pinyin: 'jǐ', meaning: 'how many, a few'},
+                {char: '度', pinyin: 'dù', meaning: 'degree, measure'},
+                {char: '莫', pinyin: 'mò', meaning: 'do not, none'},
+                {char: '解', pinyin: 'jiě', meaning: 'to understand, untie'},
+                {char: '其', pinyin: 'qí', meaning: 'his, her, its, their'},
+                {char: '合', pinyin: 'hé', meaning: 'to combine, close'},
+                {char: '掌', pinyin: 'zhǎng', meaning: 'palm'},
+                {char: '请', pinyin: 'qǐng', meaning: 'to request'},
+                {char: '问', pinyin: 'wèn', meaning: 'to ask'},
+                {char: '道', pinyin: 'dào', meaning: 'way, path, say'},
+                {char: '法', pinyin: 'fǎ', meaning: 'law, method'},
+                {char: '师', pinyin: 'shī', meaning: 'teacher, master'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '何', pinyin: 'hé', meaning: 'what, how'},
+                {char: '也', pinyin: 'yě', meaning: 'also, too'},
+                {char: '答', pinyin: 'dá', meaning: 'to answer'},
+                {char: '曰', pinyin: 'yuē', meaning: 'to say'},
+                {char: '生', pinyin: 'shēng', meaning: 'to be born, life'},
+                {char: '种', pinyin: 'zhǒng', meaning: 'seed, kind'},
+                {char: '灭', pinyin: 'miè', meaning: 'to extinguish'},
+                {char: '我', pinyin: 'wǒ', meaning: 'I, me'},
+                {char: '弟', pinyin: 'dì', meaning: 'younger brother'},
+                {char: '子', pinyin: 'zǐ', meaning: 'child'},
+                {char: '曾', pinyin: 'céng', meaning: 'once, already'},
+                {char: '在', pinyin: 'zài', meaning: 'at, in'},
+                {char: '化', pinyin: 'huà', meaning: 'to change, -ize'},
+                {char: '对', pinyin: 'duì', meaning: 'towards, correct'},
+                {char: '下', pinyin: 'xià', meaning: 'below, down'},
+                {char: '洪', pinyin: 'hóng', meaning: 'vast, flood'},
+                {char: '誓', pinyin: 'shì', meaning: 'to swear, oath'},
+                {char: '愿', pinyin: 'yuàn', meaning: 'to wish, be willing'},
+                {char: '由', pinyin: 'yóu', meaning: 'from, reason'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '尽', pinyin: 'jìn', meaning: 'to exhaust, all'},
+                {char: '此', pinyin: 'cǐ', meaning: 'this'},
+                {char: '去', pinyin: 'qù', meaning: 'to go'},
+                {char: '定', pinyin: 'dìng', meaning: 'to fix, settle'},
+                {char: '要', pinyin: 'yào', meaning: 'to want, important'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '求', pinyin: 'qiú', meaning: 'to seek'}
+            ],
+            6: [
+                {char: '使', pinyin: 'shǐ', meaning: 'to cause, envoy'},
+                {char: '们', pinyin: 'men', meaning: 'plural suffix'},
+                {char: '轮', pinyin: 'lún', meaning: 'wheel, turn'},
+                {char: '回', pinyin: 'huí', meaning: 'to return, to turn around'},
+                {char: '转', pinyin: 'zhuǎn', meaning: 'to turn'},
+                {char: '圣', pinyin: 'shèng', meaning: 'holy, sage'},
+                {char: '主', pinyin: 'zhǔ', meaning: 'lord, master'},
+                {char: '皇', pinyin: 'huáng', meaning: 'emperor, royal'},
+                {char: '图', pinyin: 'tú', meaning: 'picture, plan'},
+                {char: '永', pinyin: 'yǒng', meaning: 'forever'},
+                {char: '固', pinyin: 'gù', meaning: 'solid, firm'},
+                {char: '闻', pinyin: 'wén', meaning: 'to hear, smell'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '此', pinyin: 'cǐ', meaning: 'this'},
+                {char: '人', pinyin: 'rén', meaning: 'person, people'},
+                {char: '称', pinyin: 'chēng', meaning: 'to call, name'},
+                {char: '羡', pinyin: 'xiàn', meaning: 'to admire, envy'},
+                {char: '个', pinyin: 'gè', meaning: 'measure word for general objects'},
+                {char: '宣', pinyin: 'xuān', meaning: 'to declare, announce'},
+                {char: '扬', pinyin: 'yáng', meaning: 'to raise, spread'},
+                {char: '都', pinyin: 'dū', meaning: 'capital, all'},
+                {char: '叫', pinyin: 'jiào', meaning: 'to call, shout'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '声', pinyin: 'shēng', meaning: 'sound, voice'},
+                {char: '忠', pinyin: 'zhōng', meaning: 'loyal'},
+                {char: '赤', pinyin: 'chì', meaning: 'red, bare'},
+                {char: '胆', pinyin: 'dǎn', meaning: 'gallbladder, courage'},
+                {char: '大', pinyin: 'dà', meaning: 'big, great'},
+                {char: '阐', pinyin: 'chǎn', meaning: 'to explain, expound'},
+                {char: '夸', pinyin: 'kuā', meaning: 'to praise, boast'},
+                {char: '赞', pinyin: 'zàn', meaning: 'to praise'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '请', pinyin: 'qǐng', meaning: 'to request'},
+                {char: '入', pinyin: 'rù', meaning: 'to enter'},
+                {char: '榻', pinyin: 'tà', meaning: 'couch, bed'},
+                {char: '安', pinyin: 'ān', meaning: 'peace, safe'},
+                {char: '寐', pinyin: 'mèi', meaning: 'to sleep'},
+                {char: '早', pinyin: 'zǎo', meaning: 'early'},
+                {char: '又', pinyin: 'yòu', meaning: 'again, also'},
+                {char: '竹', pinyin: 'zhú', meaning: 'bamboo'},
+                {char: '敲', pinyin: 'qiāo', meaning: 'to knock, beat'},
+                {char: '残', pinyin: 'cán', meaning: 'incomplete, cruel'},
+                {char: '落', pinyin: 'luò', meaning: 'to fall, drop'},
+                {char: '鸡', pinyin: 'jī', meaning: 'chicken'},
+                {char: '唱', pinyin: 'chàng', meaning: 'to sing'},
+                {char: '晓', pinyin: 'xiǎo', meaning: 'dawn, know'},
+                {char: '生', pinyin: 'shēng', meaning: 'to be born, life'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '起', pinyin: 'qǐ', meaning: 'to rise, to start'},
+                {char: '来', pinyin: 'lái', meaning: 'to come'}
+            ],
+            7: [
+                {char: '收', pinyin: 'shōu', meaning: 'to receive, harvest'},
+                {char: '拾', pinyin: 'shí', meaning: 'to tidy, pick up'},
+                {char: '茶', pinyin: 'chá', meaning: 'tea'},
+                {char: '早', pinyin: 'zǎo', meaning: 'early'},
+                {char: '遂', pinyin: 'suì', meaning: 'thereupon, then'},
+                {char: '穿', pinyin: 'chuān', meaning: 'to wear, pass through'},
+                {char: '了', pinyin: 'le', meaning: 'completed action marker'},
+                {char: '袈', pinyin: 'jiā', meaning: 'Buddhist robe (part of 袈裟)'},
+                {char: '裟', pinyin: 'shā', meaning: 'Buddhist robe (part of 袈裟)'},
+                {char: '正', pinyin: 'zhèng', meaning: 'correct, straight'},
+                {char: '殿', pinyin: 'diàn', meaning: 'palace hall'},
+                {char: '佛', pinyin: 'fó', meaning: 'Buddha'},
+                {char: '前', pinyin: 'qián', meaning: 'front, before'},
+                {char: '礼', pinyin: 'lǐ', meaning: 'courtesy, ritual'},
+                {char: '拜', pinyin: 'bài', meaning: 'to bow, worship'},
+                {char: '陈', pinyin: 'chén', meaning: 'to arrange; a surname'},
+                {char: '往', pinyin: 'wǎng', meaning: 'to go towards'},
+                {char: '但', pinyin: 'dàn', meaning: 'but, only'},
+                {char: '肉', pinyin: 'ròu', meaning: 'meat, flesh'},
+                {char: '眼', pinyin: 'yǎn', meaning: 'eye'},
+                {char: '愚', pinyin: 'yú', meaning: 'foolish'},
+                {char: '迷', pinyin: 'mí', meaning: 'lost, confused'},
+                {char: '识', pinyin: 'shí', meaning: 'to know'},
+                {char: '活', pinyin: 'huó', meaning: 'alive, lively'},
+                {char: '真', pinyin: 'zhēn', meaning: 'true, real'},
+                {char: '形', pinyin: 'xíng', meaning: 'shape, form'},
+                {char: '今', pinyin: 'jīn', meaning: 'now, present'},
+                {char: '立', pinyin: 'lì', meaning: 'to stand, establish'},
+                {char: '愿', pinyin: 'yuàn', meaning: 'to wish, be willing'},
+                {char: '逢', pinyin: 'féng', meaning: 'to meet'},
+                {char: '庙', pinyin: 'miào', meaning: 'temple'},
+                {char: '烧', pinyin: 'shāo', meaning: 'to burn'},
+                {char: '香', pinyin: 'xiāng', meaning: 'fragrant, incense'},
+                {char: '遇', pinyin: 'yù', meaning: 'to meet, encounter'},
+                {char: '塔', pinyin: 'tǎ', meaning: 'pagoda, tower'},
+                {char: '扫', pinyin: 'sǎo', meaning: 'to sweep'},
+                {char: '但', pinyin: 'dàn', meaning: 'but, only'},
+                {char: '愿', pinyin: 'yuàn', meaning: 'to wish, be willing'},
+                {char: '我', pinyin: 'wǒ', meaning: 'I, me'},
+                {char: '慈', pinyin: 'cí', meaning: 'compassionate'},
+                {char: '悲', pinyin: 'bēi', meaning: 'sad, compassionate'},
+                {char: '早', pinyin: 'zǎo', meaning: 'early'},
+                {char: '现', pinyin: 'xiàn', meaning: 'to appear, present'},
+                {char: '丈', pinyin: 'zhàng', meaning: 'unit of length (3.3m), elder'},
+                {char: '六', pinyin: 'liù', meaning: 'six'},
+                {char: '金', pinyin: 'jīn', meaning: 'gold, metal'},
+                {char: '身', pinyin: 'shēn', meaning: 'body, self'},
+                {char: '赐', pinyin: 'cì', meaning: 'to grant'},
+                {char: '传', pinyin: 'chuán', meaning: 'to transmit'},
+                {char: '东', pinyin: 'dōng', meaning: 'east'},
+                {char: '土', pinyin: 'tǔ', meaning: 'soil, earth'}
+            ],
+            8: [
+                {char: '祝', pinyin: 'zhù', meaning: 'to wish, celebrate'},
+                {char: '罢', pinyin: 'bà', meaning: 'to stop, finish'},
+                {char: '回', pinyin: 'huí', meaning: 'to return, to turn around'},
+                {char: '方', pinyin: 'fāng', meaning: 'square, direction'},
+                {char: '丈', pinyin: 'zhàng', meaning: 'unit of length (3.3m), elder'},
+                {char: '进', pinyin: 'jìn', meaning: 'to advance'},
+                {char: '斋', pinyin: 'zhāi', meaning: 'vegetarian meal, fast'},
+                {char: '毕', pinyin: 'bì', meaning: 'to finish, all'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '从', pinyin: 'cóng', meaning: 'from, follow'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '整', pinyin: 'zhěng', meaning: 'whole, to arrange'},
+                {char: '顿', pinyin: 'dùn', meaning: 'to pause, stamp'},
+                {char: '了', pinyin: 'le', meaning: 'completed action marker'},
+                {char: '鞍', pinyin: 'ān', meaning: 'saddle'},
+                {char: '促', pinyin: 'cù', meaning: 'to urge, hasten'},
+                {char: '趱', pinyin: 'zǎn', meaning: 'to hurry, press'},
+                {char: '行', pinyin: 'xíng', meaning: 'to walk, do'},
+                {char: '程', pinyin: 'chéng', meaning: 'process, rule, a surname'},
+                {char: '出', pinyin: 'chū', meaning: 'to go out'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '辞', pinyin: 'cí', meaning: 'to resign, diction'},
+                {char: '别', pinyin: 'bié', meaning: 'to leave, other'},
+                {char: '众', pinyin: 'zhòng', meaning: 'crowd, many'},
+                {char: '僧', pinyin: 'sēng', meaning: 'monk'},
+                {char: '们', pinyin: 'men', meaning: 'plural suffix'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '忍', pinyin: 'rěn', meaning: 'to endure, bear'},
+                {char: '分', pinyin: 'fēn', meaning: 'to divide, part'},
+                {char: '直', pinyin: 'zhí', meaning: 'straight, direct'},
+                {char: '送', pinyin: 'sòng', meaning: 'to send, accompany'},
+                {char: '有', pinyin: 'yǒu', meaning: 'to have'},
+                {char: '十', pinyin: 'shí', meaning: 'ten'},
+                {char: '里', pinyin: 'lǐ', meaning: 'inside, unit of distance'},
+                {char: '之', pinyin: 'zhī', meaning: 'of, it (possessive particle)'},
+                {char: '遥', pinyin: 'yáo', meaning: 'distant'},
+                {char: '噙', pinyin: 'qín', meaning: 'to hold in mouth'},
+                {char: '泪', pinyin: 'lèi', meaning: 'tear'},
+                {char: '而', pinyin: 'ér', meaning: 'and, yet, but'},
+                {char: '返', pinyin: 'fǎn', meaning: 'to return'},
+                {char: '遂', pinyin: 'suì', meaning: 'thereupon, then'},
+                {char: '西', pinyin: 'xī', meaning: 'west'},
+                {char: '前', pinyin: 'qián', meaning: 'front, before'},
+                {char: '进', pinyin: 'jìn', meaning: 'to advance'},
+                {char: '正', pinyin: 'zhèng', meaning: 'correct, straight'},
+                {char: '是', pinyin: 'shì', meaning: 'is, are'},
+                {char: '季', pinyin: 'jì', meaning: 'season'},
+                {char: '秋', pinyin: 'qiū', meaning: 'autumn'},
+                {char: '天', pinyin: 'tiān', meaning: 'sky, heaven'},
+                {char: '气', pinyin: 'qì', meaning: 'air, energy, anger'}
+            ],
+            9: [
+                {char: '数', pinyin: 'shù', meaning: 'number, several'},
+                {char: '村', pinyin: 'cūn', meaning: 'village'},
+                {char: '木', pinyin: 'mù', meaning: 'wood, tree'},
+                {char: '落', pinyin: 'luò', meaning: 'to fall, drop'},
+                {char: '芦', pinyin: 'lú', meaning: 'reed, rush'},
+                {char: '花', pinyin: 'huā', meaning: 'flower'},
+                {char: '碎', pinyin: 'suì', meaning: 'broken, to break'},
+                {char: '几', pinyin: 'jǐ', meaning: 'how many, a few'},
+                {char: '枫', pinyin: 'fēng', meaning: 'maple'},
+                {char: '扬', pinyin: 'yáng', meaning: 'to raise, spread'},
+                {char: '红', pinyin: 'hóng', meaning: 'red'},
+                {char: '叶', pinyin: 'yè', meaning: 'leaf'},
+                {char: '坠', pinyin: 'zhuì', meaning: 'to fall, drop'},
+                {char: '途', pinyin: 'tú', meaning: 'road, journey'},
+                {char: '烟', pinyin: 'yān', meaning: 'smoke, mist'},
+                {char: '雨', pinyin: 'yǔ', meaning: 'rain'},
+                {char: '故', pinyin: 'gù', meaning: 'reason, old'},
+                {char: '人', pinyin: 'rén', meaning: 'person, people'},
+                {char: '稀', pinyin: 'xī', meaning: 'rare, sparse'},
+                {char: '黄', pinyin: 'huáng', meaning: 'yellow'},
+                {char: '菊', pinyin: 'jú', meaning: 'chrysanthemum'},
+                {char: '丽', pinyin: 'lì', meaning: 'beautiful'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '骨', pinyin: 'gǔ', meaning: 'bone'},
+                {char: '细', pinyin: 'xì', meaning: 'thin, detailed'},
+                {char: '水', pinyin: 'shuǐ', meaning: 'water'},
+                {char: '寒', pinyin: 'hán', meaning: 'cold'},
+                {char: '荷', pinyin: 'hé', meaning: 'lotus'},
+                {char: '破', pinyin: 'pò', meaning: 'to break, defeat'},
+                {char: '憔', pinyin: 'qiáo', meaning: 'haggard (in 憔悴)'},
+                {char: '悴', pinyin: 'cuì', meaning: 'haggard (in 憔悴)'},
+                {char: '白', pinyin: 'bái', meaning: 'white'},
+                {char: '蓼', pinyin: 'liǎo', meaning: 'polygonum (a plant)'},
+                {char: '霜', pinyin: 'shuāng', meaning: 'frost'},
+                {char: '雪', pinyin: 'xuě', meaning: 'snow'},
+                {char: '霞', pinyin: 'xiá', meaning: 'rosy clouds'},
+                {char: '孤', pinyin: 'gū', meaning: 'orphan, solitary'},
+                {char: '鹜', pinyin: 'wù', meaning: 'duck'},
+                {char: '长', pinyin: 'cháng', meaning: 'long'},
+                {char: '空', pinyin: 'kōng', meaning: 'empty, sky'},
+                {char: '黯', pinyin: 'àn', meaning: 'dim, gloomy'},
+                {char: '淡', pinyin: 'dàn', meaning: 'light, insipid'},
+                {char: '野', pinyin: 'yě', meaning: 'wild, field'},
+                {char: '飞', pinyin: 'fēi', meaning: 'to fly'},
+                {char: '玄', pinyin: 'xuán', meaning: 'profound, mysterious'},
+                {char: '鸟', pinyin: 'niǎo', meaning: 'bird'},
+                {char: '去', pinyin: 'qù', meaning: 'to go'},
+                {char: '宾', pinyin: 'bīn', meaning: 'guest'},
+                {char: '鸿', pinyin: 'hóng', meaning: 'swan goose'},
+                {char: '至', pinyin: 'zhì', meaning: 'to arrive, extremely'},
+                {char: '嘹', pinyin: 'liáo', meaning: 'clear, loud'}
+            ],
+            10: [
+                {char: '呖', pinyin: 'lì', meaning: 'chirping sound'},
+                {char: '声', pinyin: 'shēng', meaning: 'sound, voice'},
+                {char: '宵', pinyin: 'xiāo', meaning: 'night'},
+                {char: '碎', pinyin: 'suì', meaning: 'broken, to break'},
+                {char: '师', pinyin: 'shī', meaning: 'teacher, master'},
+                {char: '徒', pinyin: 'tú', meaning: 'disciple, only'},
+                {char: '们', pinyin: 'men', meaning: 'plural suffix'},
+                {char: '行', pinyin: 'xíng', meaning: 'to walk, do'},
+                {char: '了', pinyin: 'le', meaning: 'completed action marker'},
+                {char: '数', pinyin: 'shù', meaning: 'number, several'},
+                {char: '日', pinyin: 'rì', meaning: 'sun, day'},
+                {char: '到', pinyin: 'dào', meaning: 'to arrive'},
+                {char: '巩', pinyin: 'gǒng', meaning: 'to consolidate; a surname'},
+                {char: '州', pinyin: 'zhōu', meaning: 'province, state'},
+                {char: '城', pinyin: 'chéng', meaning: 'city, wall'},
+                {char: '早', pinyin: 'zǎo', meaning: 'early'},
+                {char: '有', pinyin: 'yǒu', meaning: 'to have'},
+                {char: '合', pinyin: 'hé', meaning: 'to combine, close'},
+                {char: '属', pinyin: 'shǔ', meaning: 'to belong, category'},
+                {char: '吏', pinyin: 'lì', meaning: 'official'},
+                {char: '等', pinyin: 'děng', meaning: 'to wait, rank'},
+                {char: '迎', pinyin: 'yíng', meaning: 'to welcome'},
+                {char: '接', pinyin: 'jiē', meaning: 'to connect, receive'},
+                {char: '入', pinyin: 'rù', meaning: 'to enter'},
+                {char: '中', pinyin: 'zhōng', meaning: 'middle, center'},
+                {char: '安', pinyin: 'ān', meaning: 'peace, safe'},
+                {char: '歇', pinyin: 'xiē', meaning: 'to rest'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '夜', pinyin: 'yè', meaning: 'night'},
+                {char: '次', pinyin: 'cì', meaning: 'next, order'},
+                {char: '早', pinyin: 'zǎo', meaning: 'early'},
+                {char: '出', pinyin: 'chū', meaning: 'to go out'},
+                {char: '城', pinyin: 'chéng', meaning: 'city, wall'},
+                {char: '前', pinyin: 'qián', meaning: 'front, before'},
+                {char: '去', pinyin: 'qù', meaning: 'to go'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '路', pinyin: 'lù', meaning: 'road, path'},
+                {char: '饥', pinyin: 'jī', meaning: 'hungry'},
+                {char: '餐', pinyin: 'cān', meaning: 'meal, to eat'},
+                {char: '渴', pinyin: 'kě', meaning: 'thirsty'},
+                {char: '饮', pinyin: 'yǐn', meaning: 'to drink'},
+                {char: '夜', pinyin: 'yè', meaning: 'night'},
+                {char: '住', pinyin: 'zhù', meaning: 'to live, stop'},
+                {char: '晓', pinyin: 'xiǎo', meaning: 'dawn, know'},
+                {char: '行', pinyin: 'xíng', meaning: 'to walk, do'},
+                {char: '两', pinyin: 'liǎng', meaning: 'two, both'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '日', pinyin: 'rì', meaning: 'sun, day'},
+                {char: '又', pinyin: 'yòu', meaning: 'again, also'},
+                {char: '至', pinyin: 'zhì', meaning: 'to arrive, extremely'},
+                {char: '河', pinyin: 'hé', meaning: 'river'}
+            ],
+            11: [
+                {char: '卫', pinyin: 'wèi', meaning: 'to guard; Wei state'},
+                {char: '此', pinyin: 'cǐ', meaning: 'this'},
+                {char: '乃', pinyin: 'nǎi', meaning: 'then, actually, be'},
+                {char: '是', pinyin: 'shì', meaning: 'is, are'},
+                {char: '大', pinyin: 'dà', meaning: 'big, great'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '边', pinyin: 'biān', meaning: 'border, edge'},
+                {char: '界', pinyin: 'jiè', meaning: 'boundary, world'},
+                {char: '早', pinyin: 'zǎo', meaning: 'early'},
+                {char: '有', pinyin: 'yǒu', meaning: 'to have'},
+                {char: '镇', pinyin: 'zhèn', meaning: 'town, to suppress'},
+                {char: '的', pinyin: 'de', meaning: 'possessive particle'},
+                {char: '总', pinyin: 'zǒng', meaning: 'total, general'},
+                {char: '兵', pinyin: 'bīng', meaning: 'soldier, troops'},
+                {char: '与', pinyin: 'yǔ', meaning: 'and, with'},
+                {char: '本', pinyin: 'běn', meaning: 'root, origin'},
+                {char: '处', pinyin: 'chù', meaning: 'place'},
+                {char: '僧', pinyin: 'sēng', meaning: 'monk'},
+                {char: '道', pinyin: 'dào', meaning: 'way, path, Taoism'},
+                {char: '闻', pinyin: 'wén', meaning: 'to hear, smell'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '钦', pinyin: 'qīn', meaning: 'to respect, imperial'},
+                {char: '差', pinyin: 'chāi', meaning: 'to dispatch, differ'},
+                {char: '御', pinyin: 'yù', meaning: 'to drive, imperial'},
+                {char: '弟', pinyin: 'dì', meaning: 'younger brother'},
+                {char: '法', pinyin: 'fǎ', meaning: 'law, method'},
+                {char: '师', pinyin: 'shī', meaning: 'teacher, master'},
+                {char: '上', pinyin: 'shàng', meaning: 'up, above'},
+                {char: '西', pinyin: 'xī', meaning: 'west'},
+                {char: '方', pinyin: 'fāng', meaning: 'square, direction'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '无', pinyin: 'wú', meaning: 'without, not have'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '恭', pinyin: 'gōng', meaning: 'respectful'},
+                {char: '敬', pinyin: 'jìng', meaning: 'to respect'},
+                {char: '接', pinyin: 'jiē', meaning: 'to connect, receive'},
+                {char: '至', pinyin: 'zhì', meaning: 'to arrive, extremely'},
+                {char: '里', pinyin: 'lǐ', meaning: 'inside, unit of distance'},
+                {char: '面', pinyin: 'miàn', meaning: 'face, surface'},
+                {char: '供', pinyin: 'gōng', meaning: 'to supply'},
+                {char: '给', pinyin: 'jǐ', meaning: 'to supply'},
+                {char: '了', pinyin: 'le', meaning: 'completed action marker'},
+                {char: '着', pinyin: 'zhe', meaning: 'aspect particle'},
+                {char: '纲', pinyin: 'gāng', meaning: 'outline, principle'},
+                {char: '请', pinyin: 'qǐng', meaning: 'to request'},
+                {char: '往', pinyin: 'wǎng', meaning: 'to go towards'},
+                {char: '福', pinyin: 'fú', meaning: 'good fortune, blessing'},
+                {char: '原', pinyin: 'yuán', meaning: 'origin, plain'},
+                {char: '寺', pinyin: 'sì', meaning: 'temple'},
+                {char: '安', pinyin: 'ān', meaning: 'peace, safe'},
+                {char: '歇', pinyin: 'xiē', meaning: 'to rest'}
+            ],
+            12: [
+                {char: '本', pinyin: 'běn', meaning: 'root, origin'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '参', pinyin: 'cān', meaning: 'to join, ginseng'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '安', pinyin: 'ān', meaning: 'peace, safe'},
+                {char: '排', pinyin: 'pái', meaning: 'to arrange, row'},
+                {char: '晚', pinyin: 'wǎn', meaning: 'evening, late'},
+                {char: '斋', pinyin: 'zhāi', meaning: 'vegetarian meal, fast'},
+                {char: '罢', pinyin: 'bà', meaning: 'to stop, finish'},
+                {char: '吩', pinyin: 'fēn', meaning: 'to command (in 吩咐)'},
+                {char: '咐', pinyin: 'fù', meaning: 'to instruct (in 吩咐)'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '从', pinyin: 'cóng', meaning: 'from, follow'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '饱', pinyin: 'bǎo', meaning: 'full, satisfied'},
+                {char: '喂', pinyin: 'wèi', meaning: 'to feed'},
+                {char: '马', pinyin: 'mǎ', meaning: 'horse'},
+                {char: '匹', pinyin: 'pǐ', meaning: 'measure word for horses, etc.'},
+                {char: '天', pinyin: 'tiān', meaning: 'sky, heaven'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '明', pinyin: 'míng', meaning: 'bright, clear'},
+                {char: '就', pinyin: 'jiù', meaning: 'just, then, approach'},
+                {char: '行', pinyin: 'xíng', meaning: 'to walk, do'},
+                {char: '及', pinyin: 'jí', meaning: 'and, reach'},
+                {char: '鸡', pinyin: 'jī', meaning: 'chicken'},
+                {char: '方', pinyin: 'fāng', meaning: 'square, direction'},
+                {char: '鸣', pinyin: 'míng', meaning: 'to chirp, sound'},
+                {char: '随', pinyin: 'suí', meaning: 'to follow, along with'},
+                {char: '唤', pinyin: 'huàn', meaning: 'to call'},
+                {char: '却', pinyin: 'què', meaning: 'but, yet, step back'},
+                {char: '又', pinyin: 'yòu', meaning: 'again, also'},
+                {char: '惊', pinyin: 'jīng', meaning: 'to startle, surprise'},
+                {char: '动', pinyin: 'dòng', meaning: 'to move'},
+                {char: '寺', pinyin: 'sì', meaning: 'temple'},
+                {char: '僧', pinyin: 'sēng', meaning: 'monk'},
+                {char: '整', pinyin: 'zhěng', meaning: 'whole, to arrange'},
+                {char: '治', pinyin: 'zhì', meaning: 'to govern, cure'},
+                {char: '茶', pinyin: 'chá', meaning: 'tea'},
+                {char: '汤', pinyin: 'tāng', meaning: 'soup, hot water'},
+                {char: '斋', pinyin: 'zhāi', meaning: 'vegetarian meal, fast'},
+                {char: '供', pinyin: 'gōng', meaning: 'to supply'},
+                {char: '罢', pinyin: 'bà', meaning: 'to stop, finish'},
+                {char: '出', pinyin: 'chū', meaning: 'to go out'},
+                {char: '离', pinyin: 'lí', meaning: 'to leave, apart'},
+                {char: '边', pinyin: 'biān', meaning: 'border, edge'},
+                {char: '界', pinyin: 'jiè', meaning: 'boundary, world'},
+                {char: '这', pinyin: 'zhè', meaning: 'this'},
+                {char: '长', pinyin: 'zhǎng', meaning: 'elder, chief'},
+                {char: '老', pinyin: 'lǎo', meaning: 'old'},
+                {char: '心', pinyin: 'xīn', meaning: 'heart, mind'},
+                {char: '忙', pinyin: 'máng', meaning: 'busy'}
+            ],
+            13: [
+                {char: '太', pinyin: 'tài', meaning: 'too, very, extreme'},
+                {char: '起', pinyin: 'qǐ', meaning: 'to rise, to start'},
+                {char: '早', pinyin: 'zǎo', meaning: 'early'},
+                {char: '了', pinyin: 'le', meaning: 'completed action marker'},
+                {char: '原', pinyin: 'yuán', meaning: 'origin, plain'},
+                {char: '来', pinyin: 'lái', meaning: 'to come'},
+                {char: '此', pinyin: 'cǐ', meaning: 'this'},
+                {char: '时', pinyin: 'shí', meaning: 'time, era'},
+                {char: '秋', pinyin: 'qiū', meaning: 'autumn'},
+                {char: '深', pinyin: 'shēn', meaning: 'deep'},
+                {char: '节', pinyin: 'jié', meaning: 'festival, joint'},
+                {char: '鸡', pinyin: 'jī', meaning: 'chicken'},
+                {char: '鸣', pinyin: 'míng', meaning: 'to chirp, sound'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '只', pinyin: 'zhǐ', meaning: 'only'},
+                {char: '好', pinyin: 'hǎo', meaning: 'good'},
+                {char: '有', pinyin: 'yǒu', meaning: 'to have'},
+                {char: '四', pinyin: 'sì', meaning: 'four'},
+                {char: '更', pinyin: 'gēng', meaning: 'night watch (2-hour period)'},
+                {char: '天', pinyin: 'tiān', meaning: 'sky, heaven'},
+                {char: '气', pinyin: 'qì', meaning: 'air, energy, anger'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '行', pinyin: 'xíng', meaning: 'to walk, do'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '人', pinyin: 'rén', meaning: 'person, people'},
+                {char: '连', pinyin: 'lián', meaning: 'to connect, even'},
+                {char: '马', pinyin: 'mǎ', meaning: 'horse'},
+                {char: '四', pinyin: 'sì', meaning: 'four'},
+                {char: '口', pinyin: 'kǒu', meaning: 'mouth'},
+                {char: '迎', pinyin: 'yíng', meaning: 'to welcome'},
+                {char: '着', pinyin: 'zhe', meaning: 'aspect particle'},
+                {char: '清', pinyin: 'qīng', meaning: 'clear'},
+                {char: '霜', pinyin: 'shuāng', meaning: 'frost'},
+                {char: '看', pinyin: 'kàn', meaning: 'to look, see'},
+                {char: '月', pinyin: 'yuè', meaning: 'moon, month'},
+                {char: '明', pinyin: 'míng', meaning: 'bright, clear'},
+                {char: '行', pinyin: 'xíng', meaning: 'to walk, do'},
+                {char: '有', pinyin: 'yǒu', meaning: 'to have'},
+                {char: '数', pinyin: 'shù', meaning: 'number, several'},
+                {char: '十', pinyin: 'shí', meaning: 'ten'},
+                {char: '里', pinyin: 'lǐ', meaning: 'inside, unit of distance'},
+                {char: '远', pinyin: 'yuǎn', meaning: 'far, distant'},
+                {char: '近', pinyin: 'jìn', meaning: 'near'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '岭', pinyin: 'lǐng', meaning: 'mountain range'},
+                {char: '只', pinyin: 'zhǐ', meaning: 'only'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '拨', pinyin: 'bō', meaning: 'to dial, push aside'}
+            ],
+            14: [
+                {char: '草', pinyin: 'cǎo', meaning: 'grass'},
+                {char: '寻', pinyin: 'xún', meaning: 'to seek, search'},
+                {char: '路', pinyin: 'lù', meaning: 'road, path'},
+                {char: '说', pinyin: 'shuō', meaning: 'to speak'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '尽', pinyin: 'jìn', meaning: 'to exhaust, all'},
+                {char: '崎', pinyin: 'qí', meaning: 'rugged (in 崎岖)'},
+                {char: '岖', pinyin: 'qū', meaning: 'rugged (in 崎岖)'},
+                {char: '难', pinyin: 'nán', meaning: 'difficult'},
+                {char: '走', pinyin: 'zǒu', meaning: 'to walk, leave'},
+                {char: '又', pinyin: 'yòu', meaning: 'again, also'},
+                {char: '恐', pinyin: 'kǒng', meaning: 'to fear'},
+                {char: '错', pinyin: 'cuò', meaning: 'wrong, mistake'},
+                {char: '了', pinyin: 'le', meaning: 'completed action marker'},
+                {char: '径', pinyin: 'jìng', meaning: 'path, directly'},
+                {char: '正', pinyin: 'zhèng', meaning: 'correct, straight'},
+                {char: '疑', pinyin: 'yí', meaning: 'to doubt, suspect'},
+                {char: '思', pinyin: 'sī', meaning: 'to think'},
+                {char: '之', pinyin: 'zhī', meaning: 'of, it (possessive particle)'},
+                {char: '间', pinyin: 'jiān', meaning: 'between, space'},
+                {char: '忽', pinyin: 'hū', meaning: 'suddenly'},
+                {char: '然', pinyin: 'rán', meaning: 'however, right'},
+                {char: '失', pinyin: 'shī', meaning: 'to lose'},
+                {char: '足', pinyin: 'zú', meaning: 'foot, sufficient'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '连', pinyin: 'lián', meaning: 'to connect, even'},
+                {char: '都', pinyin: 'dū', meaning: 'capital, all'},
+                {char: '跌', pinyin: 'diē', meaning: 'to fall'},
+                {char: '落', pinyin: 'luò', meaning: 'to fall, drop'},
+                {char: '坑', pinyin: 'kēng', meaning: 'pit, hole'},
+                {char: '坎', pinyin: 'kǎn', meaning: 'pit, threshold'},
+                {char: '中', pinyin: 'zhōng', meaning: 'middle, center'},
+                {char: '心', pinyin: 'xīn', meaning: 'heart, mind'},
+                {char: '慌', pinyin: 'huāng', meaning: 'flustered'},
+                {char: '从', pinyin: 'cóng', meaning: 'from, follow'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '胆', pinyin: 'dǎn', meaning: 'gallbladder, courage'},
+                {char: '战', pinyin: 'zhàn', meaning: 'war, battle'},
+                {char: '却', pinyin: 'què', meaning: 'but, yet, step back'},
+                {char: '才', pinyin: 'cái', meaning: 'talent, just now'},
+                {char: '悚', pinyin: 'sǒng', meaning: 'terrified'},
+                {char: '惧', pinyin: 'jù', meaning: 'to fear'},
+                {char: '又', pinyin: 'yòu', meaning: 'again, also'},
+                {char: '闻', pinyin: 'wén', meaning: 'to hear, smell'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '里', pinyin: 'lǐ', meaning: 'inside, unit of distance'},
+                {char: '面', pinyin: 'miàn', meaning: 'face, surface'},
+                {char: '哮', pinyin: 'xiāo', meaning: 'to roar, asthma'},
+                {char: '吼', pinyin: 'hǒu', meaning: 'to roar'},
+                {char: '高', pinyin: 'gāo', meaning: 'tall, high'}
+            ],
+            15: [
+                {char: '呼', pinyin: 'hū', meaning: 'to call, exhale'},
+                {char: '叫', pinyin: 'jiào', meaning: 'to call, shout'},
+                {char: '拿', pinyin: 'ná', meaning: 'to take, hold'},
+                {char: '将', pinyin: 'jiāng', meaning: 'will, about to; general'},
+                {char: '来', pinyin: 'lái', meaning: 'to come'},
+                {char: '只', pinyin: 'zhǐ', meaning: 'only'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '狂', pinyin: 'kuáng', meaning: 'crazy, wild'},
+                {char: '风', pinyin: 'fēng', meaning: 'wind'},
+                {char: '滚', pinyin: 'gǔn', meaning: 'to roll, boil'},
+                {char: '拥', pinyin: 'yōng', meaning: 'to embrace, have'},
+                {char: '出', pinyin: 'chū', meaning: 'to go out'},
+                {char: '五', pinyin: 'wǔ', meaning: 'five'},
+                {char: '六', pinyin: 'liù', meaning: 'six'},
+                {char: '十', pinyin: 'shí', meaning: 'ten'},
+                {char: '个', pinyin: 'gè', meaning: 'measure word for general objects'},
+                {char: '妖', pinyin: 'yāo', meaning: 'monster, bewitching'},
+                {char: '邪', pinyin: 'xié', meaning: 'evil, heretical'},
+                {char: '将', pinyin: 'jiāng', meaning: 'will, about to; general'},
+                {char: '揪', pinyin: 'jiū', meaning: 'to seize, pull'},
+                {char: '了', pinyin: 'le', meaning: 'completed action marker'},
+                {char: '上', pinyin: 'shàng', meaning: 'up, above'},
+                {char: '去', pinyin: 'qù', meaning: 'to go'},
+                {char: '这', pinyin: 'zhè', meaning: 'this'},
+                {char: '法', pinyin: 'fǎ', meaning: 'law, method'},
+                {char: '师', pinyin: 'shī', meaning: 'teacher, master'},
+                {char: '战', pinyin: 'zhàn', meaning: 'war, battle'},
+                {char: '兢', pinyin: 'jīng', meaning: 'cautious (in 战战兢兢)'},
+                {char: '的', pinyin: 'de', meaning: 'possessive particle'},
+                {char: '偷', pinyin: 'tōu', meaning: 'to steal, secretly'},
+                {char: '眼', pinyin: 'yǎn', meaning: 'eye'},
+                {char: '观', pinyin: 'guān', meaning: 'to observe, view'},
+                {char: '看', pinyin: 'kàn', meaning: 'to look, see'},
+                {char: '上', pinyin: 'shàng', meaning: 'up, above'},
+                {char: '面', pinyin: 'miàn', meaning: 'face, surface'},
+                {char: '坐', pinyin: 'zuò', meaning: 'to sit'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '魔', pinyin: 'mó', meaning: 'demon, evil spirit'},
+                {char: '王', pinyin: 'wáng', meaning: 'king, to rule'},
+                {char: '十', pinyin: 'shí', meaning: 'ten'},
+                {char: '分', pinyin: 'fēn', meaning: 'to divide, part'},
+                {char: '凶', pinyin: 'xiōng', meaning: 'fierce, ominous'},
+                {char: '恶', pinyin: 'è', meaning: 'evil'},
+                {char: '真', pinyin: 'zhēn', meaning: 'true, real'},
+                {char: '个', pinyin: 'gè', meaning: 'measure word for general objects'},
+                {char: '是', pinyin: 'shì', meaning: 'is, are'},
+                {char: '雄', pinyin: 'xióng', meaning: 'male, hero'},
+                {char: '威', pinyin: 'wēi', meaning: 'power, prestige'},
+                {char: '身', pinyin: 'shēn', meaning: 'body, self'},
+                {char: '凛', pinyin: 'lǐn', meaning: 'cold, stern'}
+            ],
+            16: [
+                {char: '猛', pinyin: 'měng', meaning: 'fierce, vigorous'},
+                {char: '气', pinyin: 'qì', meaning: 'air, energy, anger'},
+                {char: '貌', pinyin: 'mào', meaning: 'appearance'},
+                {char: '堂', pinyin: 'táng', meaning: 'hall, main room'},
+                {char: '电', pinyin: 'diàn', meaning: 'electricity, lightning'},
+                {char: '目', pinyin: 'mù', meaning: 'eye'},
+                {char: '飞', pinyin: 'fēi', meaning: 'to fly'},
+                {char: '光', pinyin: 'guāng', meaning: 'light'},
+                {char: '艳', pinyin: 'yàn', meaning: 'gorgeous'},
+                {char: '雷', pinyin: 'léi', meaning: 'thunder'},
+                {char: '声', pinyin: 'shēng', meaning: 'sound, voice'},
+                {char: '振', pinyin: 'zhèn', meaning: 'to shake, excite'},
+                {char: '四', pinyin: 'sì', meaning: 'four'},
+                {char: '方', pinyin: 'fāng', meaning: 'square, direction'},
+                {char: '锯', pinyin: 'jù', meaning: 'saw'},
+                {char: '牙', pinyin: 'yá', meaning: 'tooth'},
+                {char: '舒', pinyin: 'shū', meaning: 'to stretch, comfortable'},
+                {char: '口', pinyin: 'kǒu', meaning: 'mouth'},
+                {char: '外', pinyin: 'wài', meaning: 'outside'},
+                {char: '凿', pinyin: 'záo', meaning: 'to chisel,凿子 chisel'},
+                {char: '齿', pinyin: 'chǐ', meaning: 'tooth'},
+                {char: '露', pinyin: 'lù', meaning: 'dew, to reveal'},
+                {char: '腮', pinyin: 'sāi', meaning: 'cheek'},
+                {char: '旁', pinyin: 'páng', meaning: 'side, beside'},
+                {char: '锦', pinyin: 'jǐn', meaning: 'brocade, gorgeous'},
+                {char: '绣', pinyin: 'xiù', meaning: 'to embroider, embroidery'},
+                {char: '围', pinyin: 'wéi', meaning: 'to surround, siege'},
+                {char: '体', pinyin: 'tǐ', meaning: 'body, form'},
+                {char: '文', pinyin: 'wén', meaning: 'writing, language'},
+                {char: '斑', pinyin: 'bān', meaning: 'spot, stripe'},
+                {char: '裹', pinyin: 'guǒ', meaning: 'to wrap'},
+                {char: '脊', pinyin: 'jǐ', meaning: 'spine, back'},
+                {char: '梁', pinyin: 'liáng', meaning: 'beam, a surname'},
+                {char: '钢', pinyin: 'gāng', meaning: 'steel'},
+                {char: '须', pinyin: 'xū', meaning: 'must, beard'},
+                {char: '稀', pinyin: 'xī', meaning: 'rare, sparse'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '肉', pinyin: 'ròu', meaning: 'meat, flesh'},
+                {char: '钩', pinyin: 'gōu', meaning: 'hook'},
+                {char: '爪', pinyin: 'zhǎo', meaning: 'claw, talon'},
+                {char: '利', pinyin: 'lì', meaning: 'sharp, profit'},
+                {char: '如', pinyin: 'rú', meaning: 'like, as if'},
+                {char: '霜', pinyin: 'shuāng', meaning: 'frost'},
+                {char: '东', pinyin: 'dōng', meaning: 'east'},
+                {char: '海', pinyin: 'hǎi', meaning: 'sea'},
+                {char: '黄', pinyin: 'huáng', meaning: 'yellow'},
+                {char: '公', pinyin: 'gōng', meaning: 'public, duke'},
+                {char: '惧', pinyin: 'jù', meaning: 'to fear'},
+                {char: '南', pinyin: 'nán', meaning: 'south'},
+                {char: '白', pinyin: 'bái', meaning: 'white'}
+            ],
+            17: [
+                {char: '额', pinyin: 'é', meaning: 'forehead, quota'},
+                {char: '王', pinyin: 'wáng', meaning: 'king, to rule'},
+                {char: '唬', pinyin: 'hǔ', meaning: 'to scare, frighten'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '个', pinyin: 'gè', meaning: 'measure word for general objects'},
+                {char: '魂', pinyin: 'hún', meaning: 'soul, spirit'},
+                {char: '飞', pinyin: 'fēi', meaning: 'to fly'},
+                {char: '魄', pinyin: 'pò', meaning: 'soul, vigor'},
+                {char: '散', pinyin: 'sàn', meaning: 'to scatter'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '从', pinyin: 'cóng', meaning: 'from, follow'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '骨', pinyin: 'gǔ', meaning: 'bone'},
+                {char: '软', pinyin: 'ruǎn', meaning: 'soft'},
+                {char: '筋', pinyin: 'jīn', meaning: 'muscle, tendon'},
+                {char: '麻', pinyin: 'má', meaning: 'hemp, numb'},
+                {char: '喝', pinyin: 'hè', meaning: 'to shout, drink'},
+                {char: '令', pinyin: 'lìng', meaning: 'to order, command'},
+                {char: '绑', pinyin: 'bǎng', meaning: 'to bind, tie'},
+                {char: '了', pinyin: 'le', meaning: 'completed action marker'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '齐', pinyin: 'qí', meaning: 'even, together'},
+                {char: '将', pinyin: 'jiāng', meaning: 'will, about to; general'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '用', pinyin: 'yòng', meaning: 'to use'},
+                {char: '绳', pinyin: 'shéng', meaning: 'rope'},
+                {char: '索', pinyin: 'suǒ', meaning: 'rope, to search'},
+                {char: '缚', pinyin: 'fù', meaning: 'to tie, bind'},
+                {char: '正', pinyin: 'zhèng', meaning: 'correct, straight'},
+                {char: '要', pinyin: 'yào', meaning: 'to want, important'},
+                {char: '安', pinyin: 'ān', meaning: 'peace, safe'},
+                {char: '排', pinyin: 'pái', meaning: 'to arrange, row'},
+                {char: '吞', pinyin: 'tūn', meaning: 'to swallow'},
+                {char: '食', pinyin: 'shí', meaning: 'to eat, food'},
+                {char: '只', pinyin: 'zhǐ', meaning: 'only'},
+                {char: '听', pinyin: 'tīng', meaning: 'to listen'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '外', pinyin: 'wài', meaning: 'outside'},
+                {char: '面', pinyin: 'miàn', meaning: 'face, surface'},
+                {char: '喧', pinyin: 'xuān', meaning: 'noisy'},
+                {char: '哗', pinyin: 'huá', meaning: 'noisy, clamor'},
+                {char: '有', pinyin: 'yǒu', meaning: 'to have'},
+                {char: '人', pinyin: 'rén', meaning: 'person, people'},
+                {char: '来', pinyin: 'lái', meaning: 'to come'},
+                {char: '报', pinyin: 'bào', meaning: 'to report, newspaper'},
+                {char: '熊', pinyin: 'xióng', meaning: 'bear'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '君', pinyin: 'jūn', meaning: 'lord, gentleman'},
+                {char: '与', pinyin: 'yǔ', meaning: 'and, with'},
+                {char: '特', pinyin: 'tè', meaning: 'special'}
+            ],
+            18: [
+                {char: '处', pinyin: 'chǔ', meaning: 'to handle, be situated'},
+                {char: '士', pinyin: 'shì', meaning: 'scholar, warrior'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '位', pinyin: 'wèi', meaning: 'position, seat'},
+                {char: '来', pinyin: 'lái', meaning: 'to come'},
+                {char: '也', pinyin: 'yě', meaning: 'also, too'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '藏', pinyin: 'zàng', meaning: 'tripitaka, storehouse'},
+                {char: '闻', pinyin: 'wén', meaning: 'to hear, smell'},
+                {char: '言', pinyin: 'yán', meaning: 'speech, word'},
+                {char: '抬', pinyin: 'tái', meaning: 'to lift, raise'},
+                {char: '头', pinyin: 'tóu', meaning: 'head'},
+                {char: '观', pinyin: 'guān', meaning: 'to observe, view'},
+                {char: '看', pinyin: 'kàn', meaning: 'to look, see'},
+                {char: '前', pinyin: 'qián', meaning: 'front, before'},
+                {char: '走', pinyin: 'zǒu', meaning: 'to walk, leave'},
+                {char: '的', pinyin: 'de', meaning: 'possessive particle'},
+                {char: '是', pinyin: 'shì', meaning: 'is, are'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '条', pinyin: 'tiáo', meaning: 'strip, item'},
+                {char: '黑', pinyin: 'hēi', meaning: 'black'},
+                {char: '汉', pinyin: 'hàn', meaning: 'man, Han'},
+                {char: '你', pinyin: 'nǐ', meaning: 'you'},
+                {char: '道', pinyin: 'dào', meaning: 'way, path, say'},
+                {char: '他', pinyin: 'tā', meaning: 'he, him'},
+                {char: '是', pinyin: 'shì', meaning: 'is, are'},
+                {char: '怎', pinyin: 'zěn', meaning: 'how'},
+                {char: '生', pinyin: 'shēng', meaning: 'to be born, life'},
+                {char: '模', pinyin: 'mú', meaning: 'model, pattern'},
+                {char: '样', pinyin: 'yàng', meaning: 'appearance, shape'},
+                {char: '雄', pinyin: 'xióng', meaning: 'male, hero'},
+                {char: '豪', pinyin: 'háo', meaning: 'powerful person, heroic'},
+                {char: '多', pinyin: 'duō', meaning: 'many, much'},
+                {char: '胆', pinyin: 'dǎn', meaning: 'gallbladder, courage'},
+                {char: '量', pinyin: 'liàng', meaning: 'capacity, measure'},
+                {char: '轻', pinyin: 'qīng', meaning: 'light, unimportant'},
+                {char: '健', pinyin: 'jiàn', meaning: 'healthy, robust'},
+                {char: '夯', pinyin: 'hāng', meaning: 'rammer, to ram'},
+                {char: '躯', pinyin: 'qū', meaning: 'body'},
+                {char: '涉', pinyin: 'shè', meaning: 'to wade, involve'},
+                {char: '水', pinyin: 'shuǐ', meaning: 'water'},
+                {char: '惟', pinyin: 'wéi', meaning: 'only, but'},
+                {char: '凶', pinyin: 'xiōng', meaning: 'fierce, ominous'},
+                {char: '力', pinyin: 'lì', meaning: 'strength, power'},
+                {char: '跑', pinyin: 'pǎo', meaning: 'to run'},
+                {char: '林', pinyin: 'lín', meaning: 'forest'},
+                {char: '逞', pinyin: 'chěng', meaning: 'to show off, indulge'},
+                {char: '怒', pinyin: 'nù', meaning: 'angry'},
+                {char: '威', pinyin: 'wēi', meaning: 'power, prestige'},
+                {char: '向', pinyin: 'xiàng', meaning: 'towards, direction'}
+            ],
+            19: [
+                {char: '来', pinyin: 'lái', meaning: 'to come'},
+                {char: '符', pinyin: 'fú', meaning: 'tally, charm'},
+                {char: '吉', pinyin: 'jí', meaning: 'lucky'},
+                {char: '梦', pinyin: 'mèng', meaning: 'dream'},
+                {char: '今', pinyin: 'jīn', meaning: 'now, present'},
+                {char: '独', pinyin: 'dú', meaning: 'alone, only'},
+                {char: '露', pinyin: 'lù', meaning: 'dew, to reveal'},
+                {char: '英', pinyin: 'yīng', meaning: 'hero, outstanding'},
+                {char: '姿', pinyin: 'zī', meaning: 'appearance, posture'},
+                {char: '绿', pinyin: 'lǜ', meaning: 'green'},
+                {char: '树', pinyin: 'shù', meaning: 'tree'},
+                {char: '能', pinyin: 'néng', meaning: 'can, ability'},
+                {char: '攀', pinyin: 'pān', meaning: 'to climb'},
+                {char: '折', pinyin: 'zhé', meaning: 'to break, discount'},
+                {char: '知', pinyin: 'zhī', meaning: 'to know'},
+                {char: '寒', pinyin: 'hán', meaning: 'cold'},
+                {char: '善', pinyin: 'shàn', meaning: 'good, kind'},
+                {char: '谕', pinyin: 'yù', meaning: 'to instruct, explain'},
+                {char: '时', pinyin: 'shí', meaning: 'time, era'},
+                {char: '准', pinyin: 'zhǔn', meaning: 'accurate, to allow'},
+                {char: '灵', pinyin: 'líng', meaning: 'spirit, efficacious'},
+                {char: '惟', pinyin: 'wéi', meaning: 'only, but'},
+                {char: '显', pinyin: 'xiǎn', meaning: 'obvious, to show'},
+                {char: '处', pinyin: 'chù', meaning: 'place'},
+                {char: '故', pinyin: 'gù', meaning: 'reason, old'},
+                {char: '此', pinyin: 'cǐ', meaning: 'this'},
+                {char: '号', pinyin: 'hào', meaning: 'number, name'},
+                {char: '又', pinyin: 'yòu', meaning: 'again, also'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '后', pinyin: 'hòu', meaning: 'behind, after'},
+                {char: '边', pinyin: 'biān', meaning: 'border, edge'},
+                {char: '来', pinyin: 'lái', meaning: 'to come'},
+                {char: '的', pinyin: 'de', meaning: 'possessive particle'},
+                {char: '是', pinyin: 'shì', meaning: 'is, are'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '条', pinyin: 'tiáo', meaning: 'strip, item'},
+                {char: '胖', pinyin: 'pàng', meaning: 'fat'},
+                {char: '汉', pinyin: 'hàn', meaning: 'man, Han'},
+                {char: '你', pinyin: 'nǐ', meaning: 'you'},
+                {char: '道', pinyin: 'dào', meaning: 'way, path, say'},
+                {char: '怎', pinyin: 'zěn', meaning: 'how'},
+                {char: '生', pinyin: 'shēng', meaning: 'to be born, life'},
+                {char: '模', pinyin: 'mú', meaning: 'model, pattern'},
+                {char: '样', pinyin: 'yàng', meaning: 'appearance, shape'},
+                {char: '嵯', pinyin: 'cuó', meaning: 'high (in 嵯峨)'},
+                {char: '峨', pinyin: 'é', meaning: 'high (in 嵯峨)'},
+                {char: '双', pinyin: 'shuāng', meaning: 'pair, double'},
+                {char: '角', pinyin: 'jiǎo', meaning: 'horn, corner'},
+                {char: '冠', pinyin: 'guān', meaning: 'hat, cap'}
+            ],
+            20: [
+                {char: '端', pinyin: 'duān', meaning: 'end, upright'},
+                {char: '肃', pinyin: 'sù', meaning: 'solemn, respectful'},
+                {char: '耸', pinyin: 'sǒng', meaning: 'to耸立 stand tall'},
+                {char: '肩', pinyin: 'jiān', meaning: 'shoulder'},
+                {char: '背', pinyin: 'bèi', meaning: 'back, betray'},
+                {char: '性', pinyin: 'xìng', meaning: 'nature, character'},
+                {char: '服', pinyin: 'fú', meaning: 'clothes, to serve'},
+                {char: '青', pinyin: 'qīng', meaning: 'blue, green'},
+                {char: '衣', pinyin: 'yī', meaning: 'clothes'},
+                {char: '稳', pinyin: 'wěn', meaning: 'stable, steady'},
+                {char: '蹄', pinyin: 'tí', meaning: 'hoof'},
+                {char: '步', pinyin: 'bù', meaning: 'step'},
+                {char: '多', pinyin: 'duō', meaning: 'many, much'},
+                {char: '迟', pinyin: 'chí', meaning: 'late, slow'},
+                {char: '滞', pinyin: 'zhì', meaning: 'stagnant, sluggish'},
+                {char: '宗', pinyin: 'zōng', meaning: 'sect, ancestor'},
+                {char: '名', pinyin: 'míng', meaning: 'name, famous'},
+                {char: '父', pinyin: 'fù', meaning: 'father'},
+                {char: '作', pinyin: 'zuò', meaning: 'to do, work'},
+                {char: '牯', pinyin: 'gǔ', meaning: 'bull'},
+                {char: '原', pinyin: 'yuán', meaning: 'origin, plain'},
+                {char: '号', pinyin: 'hào', meaning: 'number, name'},
+                {char: '母', pinyin: 'mǔ', meaning: 'mother'},
+                {char: '称', pinyin: 'chēng', meaning: 'to call, name'},
+                {char: '牸', pinyin: 'zì', meaning: 'female ox'},
+                {char: '能', pinyin: 'néng', meaning: 'can, ability'},
+                {char: '为', pinyin: 'wéi', meaning: 'to do, to act as'},
+                {char: '田', pinyin: 'tián', meaning: 'field'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '功', pinyin: 'gōng', meaning: 'merit, achievement'},
+                {char: '因', pinyin: 'yīn', meaning: 'because, cause'},
+                {char: '名', pinyin: 'míng', meaning: 'name, famous'},
+                {char: '特', pinyin: 'tè', meaning: 'special'},
+                {char: '处', pinyin: 'chǔ', meaning: 'to handle, be situated'},
+                {char: '士', pinyin: 'shì', meaning: 'scholar, warrior'},
+                {char: '这', pinyin: 'zhè', meaning: 'this'},
+                {char: '两', pinyin: 'liǎng', meaning: 'two, both'},
+                {char: '个', pinyin: 'gè', meaning: 'measure word for general objects'},
+                {char: '摇', pinyin: 'yáo', meaning: 'to shake, rock'},
+                {char: '摆', pinyin: 'bǎi', meaning: 'to摆布 arrange, sway'},
+                {char: '走', pinyin: 'zǒu', meaning: 'to walk, leave'},
+                {char: '入', pinyin: 'rù', meaning: 'to enter'},
+                {char: '里', pinyin: 'lǐ', meaning: 'inside, unit of distance'},
+                {char: '面', pinyin: 'miàn', meaning: 'face, surface'},
+                {char: '慌', pinyin: 'huāng', meaning: 'flustered'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '魔', pinyin: 'mó', meaning: 'demon, evil spirit'},
+                {char: '王', pinyin: 'wáng', meaning: 'king, to rule'},
+                {char: '奔', pinyin: 'bēn', meaning: 'to run'}
+            ],
+            21: [
+                {char: '出', pinyin: 'chū', meaning: 'to go out'},
+                {char: '迎', pinyin: 'yíng', meaning: 'to welcome'},
+                {char: '接', pinyin: 'jiē', meaning: 'to connect, receive'},
+                {char: '熊', pinyin: 'xióng', meaning: 'bear'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '君', pinyin: 'jūn', meaning: 'lord, gentleman'},
+                {char: '道', pinyin: 'dào', meaning: 'way, path, say'},
+                {char: '寅', pinyin: 'yín', meaning: '3rd earthly branch, tiger'},
+                {char: '将', pinyin: 'jiàng', meaning: 'general'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '向', pinyin: 'xiàng', meaning: 'towards, direction'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '意', pinyin: 'yì', meaning: 'meaning, intention'},
+                {char: '可', pinyin: 'kě', meaning: 'can, may'},
+                {char: '贺', pinyin: 'hè', meaning: 'to congratulate'},
+                {char: '特', pinyin: 'tè', meaning: 'special'},
+                {char: '处', pinyin: 'chǔ', meaning: 'to handle, be situated'},
+                {char: '士', pinyin: 'shì', meaning: 'scholar, warrior'},
+                {char: '丰', pinyin: 'fēng', meaning: 'abundant, a surname'},
+                {char: '姿', pinyin: 'zī', meaning: 'appearance, posture'},
+                {char: '胜', pinyin: 'shèng', meaning: 'victory'},
+                {char: '常', pinyin: 'cháng', meaning: 'often, constant'},
+                {char: '真', pinyin: 'zhēn', meaning: 'true, real'},
+                {char: '喜', pinyin: 'xǐ', meaning: 'happy, to like'},
+                {char: '魔', pinyin: 'mó', meaning: 'demon, evil spirit'},
+                {char: '王', pinyin: 'wáng', meaning: 'king, to rule'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '公', pinyin: 'gōng', meaning: 'public, duke'},
+                {char: '连', pinyin: 'lián', meaning: 'to connect, even'},
+                {char: '日', pinyin: 'rì', meaning: 'sun, day'},
+                {char: '如', pinyin: 'rú', meaning: 'like, as if'},
+                {char: '何', pinyin: 'hé', meaning: 'what, how'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '君', pinyin: 'jūn', meaning: 'lord, gentleman'},
+                {char: '惟', pinyin: 'wéi', meaning: 'only, but'},
+                {char: '守', pinyin: 'shǒu', meaning: 'to defend, guard'},
+                {char: '素', pinyin: 'sù', meaning: 'plain, white'},
+                {char: '耳', pinyin: 'ěr', meaning: 'ear'},
+                {char: '处', pinyin: 'chǔ', meaning: 'to handle, be situated'},
+                {char: '士', pinyin: 'shì', meaning: 'scholar, warrior'},
+                {char: '随', pinyin: 'suí', meaning: 'to follow, along with'},
+                {char: '时', pinyin: 'shí', meaning: 'time, era'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '个', pinyin: 'gè', meaning: 'measure word for general objects'},
+                {char: '叙', pinyin: 'xù', meaning: 'to narrate, talk'},
+                {char: '罢', pinyin: 'bà', meaning: 'to stop, finish'},
+                {char: '各', pinyin: 'gè', meaning: 'each'},
+                {char: '坐', pinyin: 'zuò', meaning: 'to sit'},
+                {char: '谈', pinyin: 'tán', meaning: 'to talk'},
+                {char: '笑', pinyin: 'xiào', meaning: 'to laugh'}
+            ],
+            22: [
+                {char: '只', pinyin: 'zhǐ', meaning: 'only'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '从', pinyin: 'cóng', meaning: 'from, follow'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '绑', pinyin: 'bǎng', meaning: 'to bind, tie'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '痛', pinyin: 'tòng', meaning: 'pain, ache'},
+                {char: '切', pinyin: 'qiē', meaning: 'to cut'},
+                {char: '悲', pinyin: 'bēi', meaning: 'sad, compassionate'},
+                {char: '啼', pinyin: 'tí', meaning: 'to cry, crow'},
+                {char: '黑', pinyin: 'hēi', meaning: 'black'},
+                {char: '汉', pinyin: 'hàn', meaning: 'man, Han'},
+                {char: '道', pinyin: 'dào', meaning: 'way, path, say'},
+                {char: '此', pinyin: 'cǐ', meaning: 'this'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '何', pinyin: 'hé', meaning: 'what, how'},
+                {char: '来', pinyin: 'lái', meaning: 'to come'},
+                {char: '魔', pinyin: 'mó', meaning: 'demon, evil spirit'},
+                {char: '王', pinyin: 'wáng', meaning: 'king, to rule'},
+                {char: '自', pinyin: 'zì', meaning: 'self, from'},
+                {char: '送', pinyin: 'sòng', meaning: 'to send, accompany'},
+                {char: '上', pinyin: 'shàng', meaning: 'up, above'},
+                {char: '门', pinyin: 'mén', meaning: 'door, gate'},
+                {char: '来', pinyin: 'lái', meaning: 'to come'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '处', pinyin: 'chǔ', meaning: 'to handle, be situated'},
+                {char: '士', pinyin: 'shì', meaning: 'scholar, warrior'},
+                {char: '笑', pinyin: 'xiào', meaning: 'to laugh'},
+                {char: '云', pinyin: 'yún', meaning: 'cloud; to say'},
+                {char: '可', pinyin: 'kě', meaning: 'can, may'},
+                {char: '能', pinyin: 'néng', meaning: 'can, ability'},
+                {char: '待', pinyin: 'dài', meaning: 'to wait for, treat'},
+                {char: '客', pinyin: 'kè', meaning: 'guest, customer'},
+                {char: '否', pinyin: 'fǒu', meaning: 'no, not'},
+                {char: '魔', pinyin: 'mó', meaning: 'demon, evil spirit'},
+                {char: '王', pinyin: 'wáng', meaning: 'king, to rule'},
+                {char: '奉', pinyin: 'fēng', meaning: 'to present, receive'},
+                {char: '承', pinyin: 'chéng', meaning: 'to inherit, undertake'},
+                {char: '山', pinyin: 'shān', meaning: 'mountain'},
+                {char: '君', pinyin: 'jūn', meaning: 'lord, gentleman'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '可', pinyin: 'kě', meaning: 'can, may'},
+                {char: '尽', pinyin: 'jìn', meaning: 'to exhaust, all'},
+                {char: '用', pinyin: 'yòng', meaning: 'to use'},
+                {char: '食', pinyin: 'shí', meaning: 'to eat, food'},
+                {char: '其', pinyin: 'qí', meaning: 'his, her, its, their'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '留', pinyin: 'liú', meaning: 'to stay, keep'}
+            ],
+            23: [
+                {char: '其', pinyin: 'qí', meaning: 'his, her, its, their'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '可', pinyin: 'kě', meaning: 'can, may'},
+                {char: '也', pinyin: 'yě', meaning: 'also, too'},
+                {char: '魔', pinyin: 'mó', meaning: 'demon, evil spirit'},
+                {char: '王', pinyin: 'wáng', meaning: 'king, to rule'},
+                {char: '领', pinyin: 'lǐng', meaning: 'to lead, neck'},
+                {char: '诺', pinyin: 'nuò', meaning: 'to promise, yes'},
+                {char: '即', pinyin: 'jí', meaning: 'immediately, namely'},
+                {char: '呼', pinyin: 'hū', meaning: 'to call, exhale'},
+                {char: '左', pinyin: 'zuǒ', meaning: 'left'},
+                {char: '右', pinyin: 'yòu', meaning: 'right'},
+                {char: '将', pinyin: 'jiāng', meaning: 'will, about to; general'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '从', pinyin: 'cóng', meaning: 'from, follow'},
+                {char: '者', pinyin: 'zhě', meaning: 'one who, that which'},
+                {char: '剖', pinyin: 'pōu', meaning: 'to cut open'},
+                {char: '腹', pinyin: 'fù', meaning: 'abdomen'},
+                {char: '剜', pinyin: 'wān', meaning: 'to gouge out'},
+                {char: '心', pinyin: 'xīn', meaning: 'heart, mind'},
+                {char: '剁', pinyin: 'duò', meaning: 'to chop'},
+                {char: '碎', pinyin: 'suì', meaning: 'broken, to break'},
+                {char: '其', pinyin: 'qí', meaning: 'his, her, its, their'},
+                {char: '尸', pinyin: 'shī', meaning: 'corpse'},
+                {char: '将', pinyin: 'jiāng', meaning: 'will, about to; general'},
+                {char: '首', pinyin: 'shǒu', meaning: 'head, first'},
+                {char: '级', pinyin: 'jí', meaning: 'level, rank'},
+                {char: '与', pinyin: 'yǔ', meaning: 'and, with'},
+                {char: '心', pinyin: 'xīn', meaning: 'heart, mind'},
+                {char: '肝', pinyin: 'gān', meaning: 'liver'},
+                {char: '奉', pinyin: 'fēng', meaning: 'to present, receive'},
+                {char: '献', pinyin: 'xiàn', meaning: 'to offer'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '客', pinyin: 'kè', meaning: 'guest, customer'},
+                {char: '将', pinyin: 'jiāng', meaning: 'will, about to; general'},
+                {char: '四', pinyin: 'sì', meaning: 'four'},
+                {char: '肢', pinyin: 'zhī', meaning: 'limb'},
+                {char: '自', pinyin: 'zì', meaning: 'self, from'},
+                {char: '食', pinyin: 'shí', meaning: 'to eat, food'},
+                {char: '其', pinyin: 'qí', meaning: 'his, her, its, their'},
+                {char: '余', pinyin: 'yú', meaning: 'surplus, remaining'},
+                {char: '骨', pinyin: 'gǔ', meaning: 'bone'},
+                {char: '肉', pinyin: 'ròu', meaning: 'meat, flesh'},
+                {char: '分', pinyin: 'fēn', meaning: 'to divide, part'},
+                {char: '给', pinyin: 'gěi', meaning: 'to give'},
+                {char: '各', pinyin: 'gè', meaning: 'each'},
+                {char: '妖', pinyin: 'yāo', meaning: 'monster, bewitching'},
+                {char: '只', pinyin: 'zhǐ', meaning: 'only'},
+                {char: '听', pinyin: 'tīng', meaning: 'to listen'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '啯', pinyin: 'guō', meaning: 'sound of gobbling'}
+            ],
+            24: [
+                {char: '啅', pinyin: 'zhuó', meaning: 'pecking sound'},
+                {char: '之', pinyin: 'zhī', meaning: 'of, it (possessive particle)'},
+                {char: '声', pinyin: 'shēng', meaning: 'sound, voice'},
+                {char: '真', pinyin: 'zhēn', meaning: 'true, real'},
+                {char: '似', pinyin: 'sì', meaning: 'to resemble'},
+                {char: '虎', pinyin: 'hǔ', meaning: 'tiger'},
+                {char: '啖', pinyin: 'dàn', meaning: 'to eat'},
+                {char: '羔', pinyin: 'gāo', meaning: 'lamb'},
+                {char: '霎', pinyin: 'shà', meaning: 'moment, instant'},
+                {char: '时', pinyin: 'shí', meaning: 'time, era'},
+                {char: '食', pinyin: 'shí', meaning: 'to eat, food'},
+                {char: '尽', pinyin: 'jìn', meaning: 'to exhaust, all'},
+                {char: '把', pinyin: 'bǎ', meaning: 'to hold, measure word'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '个', pinyin: 'gè', meaning: 'measure word for general objects'},
+                {char: '长', pinyin: 'zhǎng', meaning: 'elder, chief'},
+                {char: '老', pinyin: 'lǎo', meaning: 'old'},
+                {char: '几', pinyin: 'jǐ', meaning: 'how many, a few'},
+                {char: '乎', pinyin: 'hū', meaning: 'classical question particle'},
+                {char: '唬', pinyin: 'hǔ', meaning: 'to scare, frighten'},
+                {char: '死', pinyin: 'sǐ', meaning: 'to die'},
+                {char: '这', pinyin: 'zhè', meaning: 'this'},
+                {char: '才', pinyin: 'cái', meaning: 'talent, just now'},
+                {char: '是', pinyin: 'shì', meaning: 'is, are'},
+                {char: '初', pinyin: 'chū', meaning: 'beginning'},
+                {char: '出', pinyin: 'chū', meaning: 'to go out'},
+                {char: '长', pinyin: 'cháng', meaning: 'long'},
+                {char: '安', pinyin: 'ān', meaning: 'peace, safe'},
+                {char: '第', pinyin: 'dì', meaning: 'prefix for ordinal numbers, residence'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '场', pinyin: 'chǎng', meaning: 'field, scene'},
+                {char: '苦', pinyin: 'kǔ', meaning: 'bitter, hardship'},
+                {char: '难', pinyin: 'nàn', meaning: 'disaster, hardship'},
+                {char: '正', pinyin: 'zhèng', meaning: 'correct, straight'},
+                {char: '怆', pinyin: 'chuàng', meaning: 'sorrowful'},
+                {char: '慌', pinyin: 'huāng', meaning: 'flustered'},
+                {char: '之', pinyin: 'zhī', meaning: 'of, it (possessive particle)'},
+                {char: '间', pinyin: 'jiān', meaning: 'between, space'},
+                {char: '渐', pinyin: 'jiàn', meaning: 'gradually'},
+                {char: '的', pinyin: 'de', meaning: 'possessive particle'},
+                {char: '东', pinyin: 'dōng', meaning: 'east'},
+                {char: '方', pinyin: 'fāng', meaning: 'square, direction'},
+                {char: '发', pinyin: 'fā', meaning: 'to send out, issue'},
+                {char: '白', pinyin: 'bái', meaning: 'white'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '二', pinyin: 'èr', meaning: 'two'},
+                {char: '怪', pinyin: 'guài', meaning: 'strange, monster'},
+                {char: '至', pinyin: 'zhì', meaning: 'to arrive, extremely'},
+                {char: '天', pinyin: 'tiān', meaning: 'sky, heaven'},
+                {char: '晓', pinyin: 'xiǎo', meaning: 'dawn, know'},
+                {char: '方', pinyin: 'fāng', meaning: 'square, direction'}
+            ],
+            25: [
+                {char: '散', pinyin: 'sàn', meaning: 'to scatter'},
+                {char: '俱', pinyin: 'jù', meaning: 'all, together'},
+                {char: '道', pinyin: 'dào', meaning: 'way, path, say'},
+                {char: '今', pinyin: 'jīn', meaning: 'now, present'},
+                {char: '日', pinyin: 'rì', meaning: 'sun, day'},
+                {char: '厚', pinyin: 'hòu', meaning: 'thick, generous'},
+                {char: '扰', pinyin: 'rǎo', meaning: 'to disturb'},
+                {char: '容', pinyin: 'róng', meaning: 'to contain, appearance'},
+                {char: '日', pinyin: 'rì', meaning: 'sun, day'},
+                {char: '竭', pinyin: 'jié', meaning: 'to exhaust'},
+                {char: '诚', pinyin: 'chéng', meaning: 'sincere'},
+                {char: '奉', pinyin: 'fēng', meaning: 'to present, receive'},
+                {char: '酬', pinyin: 'chóu', meaning: 'to reward, repay'},
+                {char: '方', pinyin: 'fāng', meaning: 'square, direction'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '拥', pinyin: 'yōng', meaning: 'to embrace, have'},
+                {char: '而', pinyin: 'ér', meaning: 'and, yet, but'},
+                {char: '退', pinyin: 'tuì', meaning: 'to retreat'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '时', pinyin: 'shí', meaning: 'time, era'},
+                {char: '红', pinyin: 'hóng', meaning: 'red'},
+                {char: '日', pinyin: 'rì', meaning: 'sun, day'},
+                {char: '高', pinyin: 'gāo', meaning: 'tall, high'},
+                {char: '升', pinyin: 'shēng', meaning: 'to rise, litre'},
+                {char: '三', pinyin: 'sān', meaning: 'three'},
+                {char: '藏', pinyin: 'zàng', meaning: 'tripitaka, storehouse'},
+                {char: '昏', pinyin: 'hūn', meaning: 'dusk, faint'},
+                {char: '沉', pinyin: 'chén', meaning: 'sink, heavy'},
+                {char: '也', pinyin: 'yě', meaning: 'also, too'},
+                {char: '辨', pinyin: 'biàn', meaning: 'to distinguish'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '东', pinyin: 'dōng', meaning: 'east'},
+                {char: '西', pinyin: 'xī', meaning: 'west'},
+                {char: '南', pinyin: 'nán', meaning: 'south'},
+                {char: '北', pinyin: 'běi', meaning: 'north'},
+                {char: '正', pinyin: 'zhèng', meaning: 'correct, straight'},
+                {char: '在', pinyin: 'zài', meaning: 'at, in'},
+                {char: '那', pinyin: 'nà', meaning: 'that'},
+                {char: '不', pinyin: 'bù', meaning: 'not, no'},
+                {char: '得', pinyin: 'dé', meaning: 'to obtain, get'},
+                {char: '命', pinyin: 'mìng', meaning: 'life, order'},
+                {char: '处', pinyin: 'chù', meaning: 'place'},
+                {char: '忽', pinyin: 'hū', meaning: 'suddenly'},
+                {char: '然', pinyin: 'rán', meaning: 'however, right'},
+                {char: '见', pinyin: 'jiàn', meaning: 'to see'},
+                {char: '一', pinyin: 'yī', meaning: 'one'},
+                {char: '老', pinyin: 'lǎo', meaning: 'old'},
+                {char: '叟', pinyin: 'sǒu', meaning: 'old man'}
+            ]
+        };
+
+        // 正文内容（按句子分割）- 第十三回的部分文本
+        const textSentences = [
+            "第十三回 陷虎穴金星解厄 双叉岭伯钦留僧",
+            "诗曰：",
+            "大有唐王降敕封，钦差玄奘问禅宗。",
+            "坚心磨琢寻龙穴，着意修持上鹫峰。",
+            "边界远游多少国，云山前度万千重。",
+            "自今别驾投西去，秉教迦持悟大空。",
+            "却说三藏自贞观十三年九月望前三日，蒙唐王与多官送出长安关外。",
+            "一二日马不停蹄，早至法门寺。",
+            "本寺住持上房长老，带领众僧有五百余人，两边罗列，接至里面，相见献茶。",
+            "茶罢进斋。斋后不觉天晚。正是那：",
+            "影动星河近，月明无点尘。",
+            "雁声鸣远汉，砧韵响西邻。",
+            "归鸟栖枯树，禅僧讲梵音。",
+            "蒲团一榻上，坐到夜将分。",
+            "众僧们灯下议论佛门定旨，上西天取经的原由。",
+            "有的说水远山高，有的说路多虎豹；",
+            "有的说峻岭陡崖难度，有的说毒魔恶怪难降。",
+            "三藏箝口不言，但以手指自心，点头几度。",
+            "众僧们莫解其意，合掌请问道：'法师指心点头者，何也？'",
+            "三藏答曰：'心生，种种魔生；心灭，种种魔灭。'",
+            "'我弟子曾在化生寺对佛说下洪誓大愿，不由我不尽此心。'",
+            "'这一去，定要到西天，见佛求经，使我们法轮回转，愿圣主皇图永固。'",
+            "众僧闻得此言，人人称羡，个个宣扬，都叫一声'忠心赤胆大阐法师！'",
+            "夸赞不尽，请师入榻安寐。",
+            "早又是竹敲残月落，鸡唱晓云生。",
+            "那众僧起来，收拾茶水早斋。",
+            "玄奘遂穿了袈裟，上正殿，佛前礼拜，道：",
+            "'弟子陈玄奘，前往西天取经，但肉眼愚迷，不识活佛真形。'",
+            "'今愿立誓：路中逢庙烧香，遇佛拜佛，遇塔扫塔。'",
+            "'但愿我佛慈悲，早现丈六金身，赐真经，留传东土。'",
+            "祝罢，回方丈进斋。",
+            "斋毕，那二从者整顿了鞍马，促趱行程。",
+            "三藏出了山门，辞别众僧。",
+            "众僧不忍分别，直送有十里之遥，噙泪而返。",
+            "三藏遂直西前进。正是那季秋天气。但见：",
+            "数村木落芦花碎，几树枫扬红叶坠。",
+            "路途烟雨故人稀，黄菊丽，山骨细，水寒荷破人憔悴。",
+            "白红蓼霜天雪，落霞孤鹜长空坠。",
+            "依稀黯淡野云飞，玄鸟去，宾鸿至，嘹嘹呖呖声宵碎。",
+            "师徒们行了数日，到了巩州城。",
+            "早有巩州合属官吏人等，迎接入城中。",
+            "安歇一夜，次早出城前去。",
+            "一路饥餐渴饮，夜住晓行。",
+            "两三日，又至河州卫。",
+            "此乃是大唐的山河边界。",
+            "早有镇边的总兵与本处僧道，闻得是钦差御弟法师，上西方见佛，无不恭敬，",
+            "接至里面供给了，着僧纲请往福原寺安歇。",
+            "本寺僧人，一一参见，安排晚斋。",
+            "斋毕，吩咐二从者饱喂马匹，天不明就行。",
+            "及鸡方鸣，随唤从者，却又惊动寺僧，整治茶汤斋供。",
+            "斋罢，出离边界。",
+            "这长老心忙，太起早了。",
+            "原来此时秋深时节，鸡鸣得早，只好有四更天气。",
+            "一行三人，连马四口，迎着清霜，看着明月，行有数十里远近，",
+            "见一山岭，只得拨草寻路，说不尽崎岖难走，又恐走错了路径。",
+            "正疑思之间，忽然失足，三人连马都跌落坑坎之中。",
+            "三藏心慌，从者胆战。",
+            "却才悚惧，又闻得里面哮吼高呼，叫：'拿将来！拿将来！'",
+            "只见狂风滚滚，拥出五六十个妖邪，将三藏、从者揪了上去。",
+            "这法师战战兢兢的，偷眼观看，上面坐的那魔王，十分凶恶。",
+            "真个是：",
+            "雄威身凛凛，猛气貌堂堂。",
+            "电目飞光艳，雷声振四方。",
+            "锯牙舒口外，凿齿露腮旁。",
+            "锦绣围身体，文斑裹脊梁。",
+            "钢须稀见肉，钩爪利如霜。",
+            "东海黄公惧，南山白额王。",
+            "唬得个三藏魂飞魄散，二从者骨软筋麻。",
+            "魔王喝令绑了，众妖一齐将三人用绳索绑缚。",
+            "正要安排吞食，只听得外面喧哗，有人来报：",
+            "'熊山君与特处士二位来也。'",
+            "三藏闻言，抬头观看，前走的是一条黑汉。",
+            "你道他是怎生模样：",
+            "雄豪多胆量，轻健夯身躯。",
+            "涉水惟凶力，跑林逞怒威。",
+            "向来符吉梦，今独露英姿。",
+            "绿树能攀折，知寒善谕时。",
+            "准灵惟显处，故此号山君。",
+            "又见那后边来的是一条胖汉。你道怎生模样：",
+            "嵯峨双角冠，端肃耸肩背。",
+            "性服青衣稳，蹄步多迟滞。",
+            "宗名父作牯，原号母称牸。",
+            "能为田者功，因名特处士。",
+            "这两个摇摇摆摆，走入里面，慌得那魔王奔出迎接。",
+            "熊山君道：'寅将军，一向得意，可贺！可贺！'",
+            "特处士道：'寅将军丰姿胜常，真可喜！真可喜！'",
+            "魔王道：'二公连日如何？'",
+            "山君道：'惟守素耳。'",
+            "处士道：'惟随时耳。'",
+            "三个叙罢，各坐谈笑。",
+            "只见那从者绑得痛切悲啼。",
+            "那黑汉道：'此三者何来？'",
+            "魔王道：'自送上门来者。'",
+            "处士笑云：'可能待客否？'",
+            "魔王道：'奉承！奉承！'",
+            "山君道：'不可尽用，食其二，留其一可也。'",
+            "魔王领诺，即呼左右，将二从者剖腹剜心，剁碎其尸。",
+            "将首级与心肝奉献二客，将四肢自食，其余骨肉，分给各妖。",
+            "只听得啯啅之声，真似虎啖羊羔。霎时食尽。",
+            "把一个长老，几乎唬死。",
+            "这才是初出长安第一场苦难。",
+            "正怆慌之间，渐渐的东方发白，那二怪至天晓方散。",
+            "俱道：'今日厚扰，容日竭诚奉酬。'方一拥而退。",
+            "不一时，红日高升。三藏昏昏沉沉，也辨不得东西南北。",
+            "正在那不得命处，忽然见一老叟，手持拄杖而来。",
+            "走上前，用手一拂，绳索皆断。",
+            "对面吹了一口气，三藏方苏。",
+            "跪拜于地道：'多谢老公公！搭救贫僧性命！'",
+            "老叟答礼道：'你起来。你可曾疏失了什么东西？'",
+            "三藏道：'贫僧的从人，已是被怪食了；只不知行李、马匹在于何处？'",
+            "老叟用杖指定道：'那厢不是一匹马，两个包袱？'",
+            "三藏回头看时，果是他的物件，并不曾失落，心才略放下些。",
+            "问老叟曰：'老公公，此处是甚所在？公公何由在此？'",
+            "老叟道：'此是双叉岭，乃虎狼巢穴处。你为何堕此？'",
+            "三藏道：'贫僧鸡鸣时，出河州卫界，不料起得早了，冒霜拨露，忽失落此地。'",
+            "'见一魔王，凶顽太甚。将贫僧与二从者绑了。'",
+            "'又见一条黑汉，称是熊山君；一条胖汉，称是特处士；走进来，称那魔王是寅将军。'",
+            "'他三个把我二从者吃了，天光才散。'",
+            "'不想我是那里有这大缘大分，感得老公公来此救我？'",
+            "老叟道：'处士者是个野牛精。山君者是个熊罴精。寅将军者是个老虎精。'",
+            "'左右妖邪，尽都是山精树鬼，怪兽苍狼。'",
+            "'只因你的本性元明，所以吃不得你。你跟我来，引你上路。'",
+            "三藏不胜感激，将包袱捎在马上，牵着缰绳，相随老叟径出了坑坎之中，走上大路。",
+            "却将马拴在道旁草头上，转身拜谢那公公，那公公遂化作一阵清风，跨一只朱顶白鹤，腾空而去。",
+            "只见风飘飘遗下一张简帖，书上四句颂子。颂子云：",
+            "'吾乃西天太白星，特来搭救汝生灵。前行自有神徒助，莫为艰难报怨经。'",
+            "三藏看了，对天礼拜道：'多谢金星，度脱此难。'",
+            "拜毕，牵了马匹，独自个孤孤凄凄，往前苦进。",
+            "这岭上，真个是：",
+            "寒飒飒雨林风，响潺潺涧下水。",
+            "香馥馥野花开，密丛丛乱石磊。",
+            "闹嚷嚷鹿与猿，一队队獐和麂。",
+            "喧杂杂鸟声多，静悄悄人事靡。",
+            "那长老，战兢兢心不宁；这马儿，力怯怯蹄难举。",
+            "三藏舍身拼命。上了那峻岭之间。",
+            "行经半日，更不见个人烟村舍。",
+            "一则腹中饥了，二则路又不平。",
+            "正在危急之际，只见前面有两只猛虎咆哮，后边有几条长蛇盘绕。",
+            "左有毒虫，右有怪兽。",
+            "三藏孤身无策，只得放下身心，听天所命。",
+            "又无奈那马腰软蹄弯，便屎俱下，伏倒在地，打又打不起，牵又牵不动。",
+            "苦得个法师衬身无地，真个有万分凄楚，已自分必死，莫可奈何。",
+            "却说他虽有灾迍，却有救应。",
+            "正在那不得命处，忽然见毒虫奔走，妖兽飞逃，猛虎潜踪，长蛇隐迹。",
+            "三藏抬头看时，只见一人，手执钢叉，腰悬弓箭，自那山坡前转出，果然是一条好汉。",
+            "你看他：",
+            "头上戴一顶，艾叶花斑豹皮帽；",
+            "身上穿一领，羊绒织锦叵罗衣；",
+            "腰间束一条狮蛮带；脚下一对麂皮靴。",
+            "环眼圆睛如吊客，圈须乱扰似河奎。",
+            "悬一囊毒药弓，拿一捍点钢大叉。",
+            "雷声震破山虫胆，勇猛惊残野雉魂。",
+            "三藏见他来得渐近，跪在路旁，合掌高叫道：'大王救命！大王救命！'",
+            "那条汉到边前，放下钢叉，用手搀起道：'长老休怕。'",
+            "'我不是歹人，我是这山中的猎户，姓刘名伯钦，绰号镇山太保。'",
+            "'我才自来，要寻两只山虫食用，不期遇着你，多有冲撞。'",
+            "三藏道：'贫僧是大唐驾下钦差往西天拜佛求经的和尚。'",
+            "'适间来到此处，遇着些狼虎蛇虫，四边围绕，不能前进。'",
+            "'忽见太保来，众兽皆走，救了贫僧性命，多谢！多谢！'",
+            "伯钦道：'我在这里住人，专倚打些狼虎为生，捉些蛇虫过活，故此众兽怕我走了。'",
+            "'你既是唐朝来的，与我都是乡里。'",
+            "'此间还是大唐的地界，我也是唐朝的百姓，我和你同食皇王的水土，诚然是一国之人。'",
+            "'你休怕，跟我来。到我舍下歇马，明朝我送你上路。'",
+            "三藏闻言，满心欢喜。谢了伯钦，牵马随行。",
+            "过了山坡，又听得呼呼风响。",
+            "伯钦道：'长老休走，坐在此间。风响处，是个山猫来了，等我拿他家去管待你。'",
+            "三藏见说，又胆战心惊，不敢举步。",
+            "那太保执了钢叉，拽开步，迎将上去。",
+            "只见一只斑斓虎，对面撞见。",
+            "他看见伯钦，急回头就走。",
+            "这太保霹雳一声，咄道：'那业畜！那里走！'",
+            "那虎见赶得急，转身轮爪扑来。",
+            "这太保三股叉举手迎敌，唬得个三藏软瘫在草地。",
+            "这和尚自出娘肚皮，那曾见这样凶险的勾当？",
+            "太保与那虎在那山坡下，人虎相持，果是一场好斗。但见：",
+            "怒气纷纷，狂风滚滚。",
+            "怒气纷纷，太保冲冠多膂力；狂风滚滚，斑彪逞势喷红尘。",
+            "那一个张牙舞爪，这一个转步回身。",
+            "三股叉擎天幌日，千花尾扰雾飞云。",
+            "这一个当胸乱刺，那一个劈面来吞。",
+            "闪过的再生人道，撞着的定见阎君。",
+            "只听得那斑彪哮吼，太保声哏。",
+            "斑彪哮吼，振裂山川惊鸟兽；太保声哏，喝开天府现星辰。",
+            "那一个金睛怒出，这一个壮胆生嗔。",
+            "可爱镇山刘太保，堪夸据地兽之君。",
+            "人虎贪生争胜负，些儿有慢丧三魂。",
+            "他两个斗了有一个时辰，只见那虎爪慢腰松，被太保举叉平胸刺倒，可怜呵，钢叉尖穿透心肝，霎时间血流满地。",
+            "揪着耳朵，拖上路来，好男子！气不连喘，面不改色，对三藏道：'造化！造化！这只山猫，够长老食用几日。'",
+            "三藏夸赞不尽，道：'太保真山神也！'",
+            "伯钦道：'有何本事，敢劳过奖？这个是长老的洪福。去来！赶早儿剥了皮，煮些肉，管待你也。'",
+            "他一只手执着叉，一只手拖着虎，在前引路。三藏牵着马，随后而行。",
+            "迤逦行过山坡，忽见一座山庄。",
+            "那门前真个是：",
+            "参天古树，漫路荒藤。",
+            "万壑风尘冷，千崖气象奇。",
+            "一径野花香袭体，数竿幽竹绿依依。",
+            "草门楼，篱笆院，堪描堪画；石板桥，白土壁，真乐真稀。",
+            "秋容萧索，爽气孤高。",
+            "道傍黄叶落，岭上白云飘。",
+            "疏林内山禽聒聒，庄门外细犬嘹嘹。",
+            "伯钦到了门首，将死虎掷下，叫：'小的们何在？'",
+            "只见走出三四个家僮，都是怪形恶相之类，上前拖拖拉拉，把只虎扛将进去。",
+            "伯钦吩咐教：'赶早剥了皮，安排将来待客。'",
+            "复回头迎接三藏进内，彼此相见。",
+            "三藏又拜谢伯钦厚恩怜悯救命。",
+            "伯钦道：'同乡之人，何劳致谢。'",
+            "坐定茶罢，有一老妪，领着一个媳妇，对三藏进礼。",
+            "伯钦道：'此是家母、山妻。'",
+            "三藏道：'请令堂上坐，贫僧奉拜。'",
+            "老妪道：'长老远客，各请自珍，不劳拜罢。'",
+            "伯钦道：'母亲呵，他是唐王驾下，差往西天见佛求经者。'",
+            "'适间在岭头上遇着孩儿，孩儿念一国之人，请他来家歇马，明日送他上路。'",
+            "老妪闻言，十分欢喜道：'好！好！好！就是请他，不得这般。'",
+            "'恰好明日你父亲周忌，就浼长老做些好事，念卷经文，到后日送他去罢。'",
+            "这刘伯钦，虽是一个杀虎手，镇山的太保，他却有些孝顺之心。",
+            "闻得母言，就要安排香纸，留住三藏。",
+            "说话间，不觉的天色将晚。",
+            "小的们排开桌凳，拿几盘烂熟虎肉，热腾腾的放在上面。",
+            "伯钦请三藏权用，再另办饭。",
+            "三藏合掌当胸道：'善哉！贫僧不瞒太保说，自出娘胎，就做和尚，更不晓得吃荤。'",
+            "伯钦闻得此说，沉吟了半晌道：'长老，寒家历代以来，不晓得吃素；'",
+            "'就是有些竹笋，采些木耳，寻些干菜，做些豆腐，也都是獐鹿虎豹的油煎，却无甚素处。'",
+            "'有两眼锅灶，也都是油腻透了，这等奈何？反是我请长老的不是。'",
+            "三藏道：'太保不必多心，请自受用。我贫僧就是三五日不吃饭，也可忍饿，只是不敢破了斋戒。'",
+            "伯钦道：'倘或饿死，却如之何？'",
+            "三藏道：'感得太保天恩，搭救出虎狼丛里，就是饿死，也强如喂虎。'",
+            "伯钦的母亲闻说，叫道：'孩儿不要与长老闲讲，我自有素物，可以管待。'",
+            "伯钦道：'素物何来？'",
+            "母亲道：'你莫管我，我自有素的。'",
+            "叫媳妇：'将小锅取下，着火烧了油腻，刷了又刷，洗了又洗，却仍安在灶上。'",
+            "'先放半锅滚水，别用；却又将些山地榆叶子，着水煎作茶汤，'",
+            "'然后将些黄粮粟米，煮起饭来，又把些干菜煮熟，盛了两碗，拿出来铺在桌上。'",
+            "老母对着三藏道：'长老请斋。这是老身与儿妇，亲自动手整理的些极洁极净的茶饭。'",
+            "三藏下来谢了，方才上坐。",
+            "那伯钦另设一处，铺排些没盐没酱的老虎肉、香獐肉、蟒蛇肉、狐狸肉、兔肉，点剁鹿肉干巴，满盘满碗的，陪着三藏吃斋。",
+            "方坐下，心欲举箸，只见三藏合掌诵经，唬得个伯钦不敢动箸，急起身立在旁边。",
+            "三藏念不数句，却教'请斋'。",
+            "伯钦道：'你是个念短头经的和尚？'",
+            "三藏道：'此非是经，乃是一卷揭斋之咒。'",
+            "伯钦道：'你们出家人，偏有许多计较，吃饭便也念诵念诵。'",
+            "吃了斋饭，收了盘碗，渐渐天晚，伯钦引着三藏出中宅，到后边走走。",
+            "穿过夹道，有一座草亭。",
+            "推开门，入到里面，只见那四壁上挂几张强弓硬弩，插几壶箭，",
+            "过梁上搭两块血腥的虎皮，墙根头插着许多枪刀叉棒，正中间设两张坐器。",
+            "伯钦请三藏坐坐。",
+            "三藏见这般凶险腌脏，不敢久坐，遂出了草亭。",
+            "又往后再行，是一座大园子，却看不尽那丛丛菊蕊堆黄，树树枫杨挂赤。",
+            "又见呼的一声，跑出十来只肥鹿，一大阵黄獐，见了人，呢呢痴痴，更不恐惧。",
+            "三藏道：'这獐鹿想是太保养家了的？'",
+            "伯钦道：'似你那长安城中人家，有钱的集财宝，有庄的集聚稻粮，'",
+            "'似我们这打猎的，只得聚养些野兽，备天阴耳。'",
+            "他两个说话闲行，不觉黄昏，复转前宅安歇。",
+            "次早，那合家老小都起来，就整素斋，管待长老，请开启念经。",
+            "这长老净了手，同太保家堂前拈了香，拜了家堂，",
+            "三藏方敲响木鱼，先念了净口业的真言，又念了净身心的神咒，然后开《度亡经》一卷。",
+            "诵毕，伯钦又请写荐亡疏一道，再开念《金刚经》、《观音经》。一一朗音高诵。",
+            "诵毕，吃了午斋。又念《法华经》、《弥陀经》，各诵几卷。",
+            "又念一卷《孔雀经》，及谈苾蒭洗业的故事。",
+            "早又天晚，献过了种种香火，化了众神纸马，烧了荐亡文疏，佛事已毕，又各安寝。",
+            "却说那伯钦的父亲之灵，超荐得脱沉沦，鬼魂儿早来到东家宅内，托一梦与合宅长幼道：",
+            "'我在阴司里苦难难脱，日久不得超生。'",
+            "'今幸得圣僧，念了经卷，消了我的罪业，阎王差人送我上中华富地，长者人家托生去了。'",
+            "'你们可好生谢送长老，不要怠慢，不要怠慢。我去也。'",
+            "这才是：万法庄严端有意，荐亡离苦出沉沦。",
+            "那合家儿梦醒，又早太阳东上。",
+            "伯钦的娘子道：'太保，我今夜梦见公公来家，'",
+            "'说他在阴司苦难难脱，日久不得超生。'",
+            "'今幸得圣僧念了经卷，消了他的罪业，阎王差人送他上中华富地，长者人家托生去，'",
+            "'教我们好生谢那长老，不得怠慢。他说罢，径出门，徉徜去了。'",
+            "'我们叫他不应，留他不住，醒来却是一梦。'",
+            "伯钦道：'我也是那等一梦，与你一般。我们起去对母亲说去。'",
+            "他两口子正欲去说，只见老母叫道：'伯钦孩儿，你来，我与你说话。'",
+            "二人至前，老母坐在床上道：'儿呵，我今夜得了个喜梦，'",
+            "'梦见你父亲来家，说多亏了长老超度，已消了罪业，上中华富地，长者家去托生。'",
+            "夫妻们俱呵呵大笑道：'我与媳妇皆有此梦，正来告禀，不期母亲呼唤，也是此梦。'",
+            "遂叫一家大小起来，安排谢意，替他收拾马匹，都至前拜谢道：",
+            "'多谢长老超荐我亡父脱难超生，报答不尽！'",
+            "三藏道：'贫僧有何能处，敢劳致谢？'",
+            "伯钦把三口儿的梦话，对三藏陈诉一遍，三藏也喜。",
+            "早供给了素斋，又具白银一两为谢。三藏分文不受。",
+            "一家儿又恳恳拜央，三藏毕竟分文未受。",
+            "但道：'是你肯发慈悲送我一程，足感至爱。'",
+            "伯钦与母妻无奈，急做了些粗面烧饼干粮，叫伯钦远送。",
+            "三藏欢喜收纳。",
+            "太保领了母命，又唤两三个家僮，各带捕猎的器械，同上大路。",
+            "看不尽那山中野景，岭上风光。",
+            "行经半日，只见对面处，有一座大山，真个是高接青霄，崔巍险峻。",
+            "三藏不一时，到了边前。",
+            "那太保登此山如行平地。",
+            "正走到半山之中，伯钦回身，立于路下道：'长老，你自前进，我却告回。'",
+            "三藏闻言，滚鞍下马道：'千万敢劳太保再送一程！'",
+            "伯钦道：'长老不知。此山唤做两界山。东半边属我大唐所管，西半边乃是鞑靼的地界。'",
+            "'那厢狼虎，不伏我降，我却也不能过界，你自去罢。'",
+            "三藏心惊，轮开手，牵衣执袂，滴泪难分。",
+            "正在那叮咛拜别之际，只听得山脚下叫喊如雷道：'我师父来也！我师父来也！'",
+            "唬得个三藏痴呆，伯钦打挣。",
+            "毕竟不知是甚人叫喊，且听下回分解。"
+        ];
+
+        // 应用状态
+        let currentGroup = 1;
+        let learnedChars = new Set();
+        let activeChar = null;
+        let charPositions = {};
+        let currentCardChar = null;
+        let speechEnabled = true;
+        
+        // DOM元素
+        const charactersContainer = document.getElementById('characters-container');
+        const textContentElement = document.getElementById('text-content');
+        const currentGroupElement = document.getElementById('current-group');
+        const currentGroupDisplayElement = document.getElementById('current-group-display');
+        const prevGroupButton = document.getElementById('prev-group');
+        const nextGroupButton = document.getElementById('next-group');
+        const progressBar = document.getElementById('progress-bar');
+        const totalCharsElement = document.getElementById('total-chars');
+        const learnedCharsElement = document.getElementById('learned-chars');
+        const cardModal = document.getElementById('card-modal');
+        const closeCardButton = document.getElementById('close-card');
+        const cardCharElement = document.getElementById('card-char');
+        const cardPinyinElement = document.getElementById('card-pinyin');
+        const cardMeaningElement = document.getElementById('card-meaning');
+        const cardVoiceButton = document.getElementById('card-voice-btn');
+        const markLearnedButton = document.getElementById('mark-learned-btn');
+        const voiceToggle = document.getElementById('voice-toggle');
+        
+        // 语音合成函数
+        function speakText(text, lang = 'zh-CN') {
+            if (!speechEnabled) return;
+            
+            // 停止当前语音
+            window.speechSynthesis.cancel();
+            
+            // 创建语音实例
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            utterance.rate = 0.8; // 稍微慢一点，便于学习
+            
+            // 开始朗读
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // 显示卡片窗口
+        function showCard(char) {
+            currentCardChar = char;
+            
+            // 查找汉字数据
+            let charData = null;
+            for (let group in characterData) {
+                const found = characterData[group].find(item => item.char === char);
+                if (found) {
+                    charData = found;
+                    break;
+                }
+            }
+            
+            if (charData) {
+                cardCharElement.textContent = charData.char;
+                cardPinyinElement.textContent = charData.pinyin;
+                cardMeaningElement.textContent = charData.meaning;
+                
+                // 更新标记按钮状态
+                if (learnedChars.has(char)) {
+                    markLearnedButton.textContent = '已学习 ✓';
+                    markLearnedButton.classList.add('active');
+                } else {
+                    markLearnedButton.textContent = '标记为已学习';
+                    markLearnedButton.classList.remove('active');
+                }
+                
+                // 显示卡片
+                cardModal.classList.add('active');
+                
+                // 朗读汉字
+                speakText(char);
+            }
+        }
+        
+        // 关闭卡片窗口
+        function closeCard() {
+            cardModal.classList.remove('active');
+            currentCardChar = null;
+        }
+        
+        // 计算总汉字数
+        function calculateTotalChars() {
+            let total = 0;
+            for (let group in characterData) {
+                total += characterData[group].length;
+            }
+            return total;
+        }
+        
+        // 更新统计信息
+        function updateStats() {
+            const totalChars = calculateTotalChars();
+            totalCharsElement.textContent = totalChars;
+            learnedCharsElement.textContent = learnedChars.size;
+            
+            // 更新进度条
+            const progress = (learnedChars.size / totalChars) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        // 渲染汉字卡片
+        function renderCharacterCards() {
+            charactersContainer.innerHTML = '';
+            currentGroupElement.textContent = currentGroup;
+            currentGroupDisplayElement.textContent = currentGroup;
+            
+            const groupData = characterData[currentGroup] || [];
+            
+            // 创建网格容器
+            const grid = document.createElement('div');
+            grid.className = 'characters-grid';
+            
+            groupData.forEach(charData => {
+                const card = document.createElement('div');
+                card.className = 'character-card';
+                if (learnedChars.has(charData.char)) {
+                    card.classList.add('active');
+                }
+                if (activeChar === charData.char) {
+                    card.classList.add('highlighted');
+                }
+                
+                card.dataset.char = charData.char;
+                
+                // 只显示汉字，不显示拼音和释义
+                card.innerHTML = `
+                    <div class="char">${charData.char}</div>
+                `;
+                
+                // 点击卡片事件
+                card.addEventListener('click', () => {
+                    handleCharacterClick(charData.char);
+                });
+                
+                grid.appendChild(card);
+            });
+            
+            charactersContainer.appendChild(grid);
+            
+            // 更新按钮状态
+            prevGroupButton.disabled = currentGroup <= 1;
+            nextGroupButton.disabled = currentGroup >= 25;
+            
+            updateStats();
+        }
+        
+        // 处理汉字卡片点击
+        function handleCharacterClick(char) {
+            activeChar = char;
+            renderCharacterCards();
+            highlightTextChars(char);
+            showCard(char);
+            
+            // 滚动到正文中该汉字的第一个位置
+            if (charPositions[char] && charPositions[char].length > 0) {
+                const firstPosition = charPositions[char][0];
+                const textCharElement = document.querySelector(`[data-char-index="${firstPosition}"]`);
+                if (textCharElement) {
+                    textCharElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        // 渲染正文内容
+        function renderTextContent() {
+            textContentElement.innerHTML = '';
+            charPositions = {};
+            
+            // 按句子渲染
+            textSentences.forEach((sentence, sentenceIndex) => {
+                const sentenceContainer = document.createElement('div');
+                sentenceContainer.className = 'sentence-container';
+                sentenceContainer.dataset.sentenceIndex = sentenceIndex;
+                
+                // 处理句子中的每个字符
+                for (let i = 0; i < sentence.length; i++) {
+                    const char = sentence[i];
+                    const span = document.createElement('span');
+                    span.className = 'text-char';
+                    span.textContent = char;
+                    span.dataset.char = char;
+                    span.dataset.charIndex = `${sentenceIndex}-${i}`;
+                    
+                    // 存储汉字位置
+                    if (!charPositions[char]) {
+                        charPositions[char] = [];
+                    }
+                    charPositions[char].push(`${sentenceIndex}-${i}`);
+                    
+                    // 点击正文汉字事件
+                    span.addEventListener('click', () => {
+                        handleTextCharClick(char);
+                    });
+                    
+                    sentenceContainer.appendChild(span);
+                }
+                
+                // 添加朗读按钮
+                const voiceButton = document.createElement('button');
+                voiceButton.className = 'sentence-voice-btn';
+                voiceButton.innerHTML = '🔊';
+                voiceButton.title = '朗读此句';
+                voiceButton.dataset.sentenceIndex = sentenceIndex;
+                
+                voiceButton.addEventListener('click', (e) => {
+                    e.stopPropagation(); // 防止触发容器点击事件
+                    handleSentenceVoiceClick(sentence);
+                });
+                
+                sentenceContainer.appendChild(voiceButton);
+                
+                // 点击句子容器高亮
+                sentenceContainer.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('text-char') && !e.target.classList.contains('sentence-voice-btn')) {
+                        // 高亮当前句子
+                        const allSentences = document.querySelectorAll('.sentence-container');
+                        allSentences.forEach(s => s.classList.remove('active'));
+                        sentenceContainer.classList.add('active');
+                    }
+                });
+                
+                textContentElement.appendChild(sentenceContainer);
+            });
+            
+            // 如果有活动的汉字，高亮显示
+            if (activeChar) {
+                highlightTextChars(activeChar);
+            }
+        }
+        
+        // 处理句子朗读按钮点击
+        function handleSentenceVoiceClick(sentence) {
+            speakText(sentence);
+        }
+        
+        // 处理正文汉字点击
+        function handleTextCharClick(char) {
+            activeChar = char;
+            renderCharacterCards();
+            highlightTextChars(char);
+            showCard(char);
+        }
+        
+        // 高亮正文中的汉字
+        function highlightTextChars(char) {
+            // 移除所有高亮
+            const allTextChars = document.querySelectorAll('.text-char');
+            allTextChars.forEach(el => {
+                el.classList.remove('highlighted', 'active');
+            });
+            
+            // 高亮当前汉字的所有出现位置
+            if (charPositions[char]) {
+                charPositions[char].forEach(index => {
+                    const element = document.querySelector(`[data-char-index="${index}"]`);
+                    if (element) {
+                        element.classList.add('highlighted');
+                    }
+                });
+            }
+            
+            // 高亮活动汉字卡片
+            const charCard = document.querySelector(`.character-card[data-char="${char}"]`);
+            if (charCard) {
+                charCard.classList.add('highlighted');
+            }
+        }
+        
+        // 切换到上一组
+        function goToPrevGroup() {
+            if (currentGroup > 1) {
+                currentGroup--;
+                activeChar = null;
+                renderCharacterCards();
+                // 移除正文高亮
+                const allTextChars = document.querySelectorAll('.text-char');
+                allTextChars.forEach(el => {
+                    el.classList.remove('highlighted', 'active');
+                });
+                // 移除句子高亮
+                const allSentences = document.querySelectorAll('.sentence-container');
+                allSentences.forEach(s => s.classList.remove('active'));
+            }
+        }
+        
+        // 切换到下一组
+        function goToNextGroup() {
+            if (currentGroup < 25) {
+                currentGroup++;
+                activeChar = null;
+                renderCharacterCards();
+                // 移除正文高亮
+                const allTextChars = document.querySelectorAll('.text-char');
+                allTextChars.forEach(el => {
+                    el.classList.remove('highlighted', 'active');
+                });
+                // 移除句子高亮
+                const allSentences = document.querySelectorAll('.sentence-container');
+                allSentences.forEach(s => s.classList.remove('active'));
+            }
+        }
+        
+        // 标记汉字为已学习
+        function markCharAsLearned() {
+            if (currentCardChar) {
+                if (learnedChars.has(currentCardChar)) {
+                    learnedChars.delete(currentCardChar);
+                    markLearnedButton.textContent = '标记为已学习';
+                    markLearnedButton.classList.remove('active');
+                } else {
+                    learnedChars.add(currentCardChar);
+                    markLearnedButton.textContent = '已学习 ✓';
+                    markLearnedButton.classList.add('active');
+                }
+                updateStats();
+                renderCharacterCards();
+            }
+        }
+        
+        // 切换语音开关
+        function toggleVoice() {
+            speechEnabled = !speechEnabled;
+            if (speechEnabled) {
+                voiceToggle.classList.remove('muted');
+                voiceToggle.textContent = '🔊';
+                voiceToggle.title = '关闭语音';
+            } else {
+                voiceToggle.classList.add('muted');
+                voiceToggle.textContent = '🔇';
+                voiceToggle.title = '开启语音';
+                // 停止当前语音
+                window.speechSynthesis.cancel();
+            }
+        }
+        
+        // 初始化事件监听器
+        function initEventListeners() {
+            prevGroupButton.addEventListener('click', goToPrevGroup);
+            nextGroupButton.addEventListener('click', goToNextGroup);
+            closeCardButton.addEventListener('click', closeCard);
+            cardVoiceButton.addEventListener('click', () => {
+                if (currentCardChar) {
+                    speakText(currentCardChar);
+                }
+            });
+            markLearnedButton.addEventListener('click', markCharAsLearned);
+            voiceToggle.addEventListener('click', toggleVoice);
+            
+            // 点击卡片外部关闭卡片
+            cardModal.addEventListener('click', (e) => {
+                if (e.target === cardModal) {
+                    closeCard();
+                }
+            });
+            
+            // 键盘导航
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeCard();
+                } else if (e.key === 'ArrowLeft') {
+                    goToPrevGroup();
+                } else if (e.key === 'ArrowRight') {
+                    goToNextGroup();
+                }
+            });
+        }
+        
+        // 初始化应用
+        function init() {
+            updateStats();
+            renderCharacterCards();
+            renderTextContent();
+            initEventListeners();
+            
+            // 检查浏览器是否支持语音合成
+            if (!('speechSynthesis' in window)) {
+                alert('您的浏览器不支持语音合成功能，部分功能可能无法正常使用。');
+                voiceToggle.style.display = 'none';
+                speechEnabled = false;
+            }
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
