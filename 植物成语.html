@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>植物成语互动图卡</title>
+  <style>
+  body {
+    font-family: "KaiTi", "Noto Serif SC", serif;
+    background-color: #f0f8e8;
+    margin: 0;
+    color: #2d5016;
+  }
+  header {
+    text-align: center;
+    background: rgba(240,248,232,0.9);
+    border-bottom: 3px double #6b8e23;
+    padding: 10px 0;
+  }
+  header h1 {
+    font-size: 3em;
+    margin: 0;
+    color: #228b22;
+  }
+  header p { font-size: 1.4em; margin: 4px 0; }
+  .container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    padding: 20px 5%;
+  }
+  .card {
+    background: #fafff5;
+    border: 2px solid #90ee90;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+    padding: 22px 0;
+    cursor: pointer;
+    font-size: 3em;
+    transition: transform 0.3s, background 0.3s;
+  }
+  .card:hover { transform: translateY(-5px); background: #f0fff0; }
+  footer { text-align: center; padding: 20px 0 40px; }
+  .pagination button {
+    background: #6b8e23; border: none; padding: 10px 18px;
+    color: white; font-size: 1.4em; cursor: pointer;
+    border-radius: 6px; margin: 0 8px;
+  }
+  .pagination button:hover { background: #556b2f; }
+  .pagination button:disabled { background: #ccc; cursor: not-allowed; }
+  .modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex; justify-content: center; align-items: center;
+    visibility: hidden; opacity: 0; transition: all 0.3s ease;
+  }
+  .modal.active { visibility: visible; opacity: 1; }
+  .modal-content {
+    background: #fafff5;
+    border: 4px ridge #6b8e23;
+    border-radius: 14px;
+    text-align: center;
+    width: 90%;
+    max-width: 700px;
+    padding: 30px 40px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.3);
+  }
+  .modal-content h2 { color: #228b22; font-size: 3em; margin: 0; }
+  .modal-content h3 {
+    font-size: 1.8em; color: #333;
+    font-family: "Noto Sans", Arial, sans-serif;
+    margin: 8px 0;
+  }
+  .modal-content p {
+    font-size: 1.6em; line-height: 1.6; margin-top: 10px;
+  }
+  .modal-content .example, .modal-content .english {
+    font-size: 1.6em; color: #555; margin-top: 10px;
+    font-family: "Noto Sans", Arial, sans-serif;
+  }
+  .close-btn, .read-btn {
+    margin-top: 20px; background: #6b8e23; color: white;
+    border: none; padding: 8px 14px; border-radius: 6px;
+    cursor: pointer; font-size: 1.4em; margin-right: 8px;
+  }
+  .close-btn:hover, .read-btn:hover { background: #556b2f; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🌿 植物成语互动图卡 🌺</h1>
+    <p>点击成语，查看拼音、释义、例句与英文翻译</p>
+  </header>
+
+  <main>
+    <div class="container" id="idiomContainer"></div>
+  </main>
+
+  <footer>
+    <div class="pagination">
+      <button id="prevBtn">上一页</button>
+      <span id="pageInfo"></span>
+      <button id="nextBtn">下一页</button>
+    </div>
+  </footer>
+
+  <div class="modal" id="idiomModal">
+    <div class="modal-content">
+      <h2 id="modalTitle"></h2>
+      <h3 id="modalPinyin"></h3>
+      <p id="modalMeaning"></p>
+      <p class="example" id="modalExample"></p>
+      <p class="example" id="modalExampleEn"></p>
+      <p class="english" id="modalEnglish"></p>
+      <button class="read-btn" id="readBtn">📢 朗读</button>
+      <button class="close-btn" id="closeBtn">关闭</button>
+    </div>
+  </div>
+
+  <script>
+  const plantIdioms = [
+    {
+      name: "雨后春笋",
+      pinyin: "yǔ hòu chūn sǔn",
+      meaning: "比喻事物大量出现，发展迅速。",
+      example: "改革开放后，新企业如雨后春笋般涌现。",
+      example_en: "After reform, new enterprises sprouted like bamboo shoots after rain.",
+      english: "Things appearing rapidly and abundantly, like bamboo shoots after rain."
+    },
+    {
+      name: "柳暗花明",
+      pinyin: "liǔ àn huā míng",
+      meaning: "比喻在困境中看到希望。",
+      example: "经过努力，项目终于柳暗花明。",
+      example_en: "After hard work, the project finally showed promise.",
+      english: "Finding hope and a way forward in difficult circumstances."
+    },
+    {
+      name: "花好月圆",
+      pinyin: "huā hǎo yuè yuán",
+      meaning: "形容美好圆满的景象，多用于祝贺。",
+      example: "祝愿新人花好月圆，幸福美满。",
+      example_en: "Wishing the couple a perfect and happy union.",
+      english: "A perfect and beautiful scene; used to wish happiness."
+    },
+    {
+      name: "枯木逢春",
+      pinyin: "kū mù féng chūn",
+      meaning: "比喻重获生机或绝处逢生。",
+      example: "他的事业如枯木逢春，重新焕发活力。",
+      example_en: "His career came back to life like dead wood meeting spring.",
+      english: "Revival or renewal after a period of decline."
+    },
+    {
+      name: "草长莺飞",
+      pinyin: "cǎo zhǎng yīng fēi",
+      meaning: "形容春天生机勃勃的景象。",
+      example: "三月江南，正是草长莺飞时节。",
+      example_en: "In March in Jiangnan, grass grows and orioles fly.",
+      english: "The vibrant scene of spring with lush growth."
+    },
+    {
+      name: "松柏长青",
+      pinyin: "sōng bǎi cháng qīng",
+      meaning: "比喻意志坚定，节操不变。",
+      example: "革命先烈的精神如松柏长青，永不凋零。",
+      example_en: "The revolutionary spirit remains evergreen like pine and cypress.",
+      english: "Unwavering integrity and perseverance like evergreen trees."
+    },
+    {
+      name: "百花齐放",
+      pinyin: "bǎi huā qí fàng",
+      meaning: "比喻各种艺术风格和流派自由发展。",
+      example: "文艺界应该百花齐放，百家争鸣。",
+      example_en: "The arts should bloom in diversity and competition.",
+      english: "Free development of various artistic styles and schools."
+    },
+    {
+      name: "落花流水",
+      pinyin: "luò huā liú shuǐ",
+      meaning: "形容零落凋敝的景象，也比喻被打败。",
+      example: "敌军被打得落花流水。",
+      example_en: "The enemy was defeated utterly and fled in disorder.",
+      english: "Complete defeat or a scene of desolation."
+    },
+    {
+      name: "花枝招展",
+      pinyin: "huā zhī zhāo zhǎn",
+      meaning: "形容女子打扮得十分艳丽。",
+      example: "她花枝招展地参加了晚会。",
+      example_en: "She attended the party dressed beautifully and elegantly.",
+      english: "Dressed up splendidly and attractively, usually of women."
+    },
+    {
+      name: "花团锦簇",
+      pinyin: "huā tuán jǐn cù",
+      meaning: "形容繁华艳丽的景象。",
+      example: "节日的广场花团锦簇，十分热闹。",
+      example_en: "The festival square was decorated magnificently.",
+      english: "A splendid and colorful scene of prosperity."
+    },
+    {
+      name: "桃红柳绿",
+      pinyin: "táo hóng liǔ lǜ",
+      meaning: "形容春天花木繁茂的景色。",
+      example: "公园里桃红柳绿，春意盎然。",
+      example_en: "The park is full of spring colors with peach blossoms and green willows.",
+      english: "The beautiful colors of spring with blooming flowers and green trees."
+    },
+    {
+      name: "花前月下",
+      pinyin: "huā qián yuè xià",
+      meaning: "指男女约会的浪漫场所。",
+      example: "年轻恋人喜欢花前月下的浪漫。",
+      example_en: "Young lovers enjoy romantic moments under flowers and moonlight.",
+      english: "Romantic setting for lovers, typically under flowers and moonlight."
+    },
+    {
+      name: "青梅竹马",
+      pinyin: "qīng méi zhú mǎ",
+      meaning: "形容男女儿时亲密，长大后成为情侣。",
+      example: "他们是青梅竹马的恋人。",
+      example_en: "They are childhood sweethearts who grew up together.",
+      english: "Childhood sweethearts; friends since childhood who become lovers."
+    },
+    {
+      name: "芳草萋萋",
+      pinyin: "fāng cǎo qī qī",
+      meaning: "形容草木茂盛的样子。",
+      example: "春天到了，郊外芳草萋萋。",
+      example_en: "Spring arrives with lush grass growing in the countryside.",
+      english: "Luxuriant growth of fragrant grass and plants."
+    },
+    {
+      name: "万紫千红",
+      pinyin: "wàn zǐ qiān hóng",
+      meaning: "形容百花齐放，色彩繁多。",
+      example: "花园里万紫千红，美不胜收。",
+      example_en: "The garden blooms in countless colors, a feast for the eyes.",
+      english: "A multitude of colors; diverse and colorful scene."
+    },
+    {
+      name: "枝繁叶茂",
+      pinyin: "zhī fán yè mào",
+      meaning: "形容树木生长旺盛。",
+      example: "这棵大树枝繁叶茂，生机勃勃。",
+      example_en: "This big tree has luxuriant branches and leaves, full of vitality.",
+      english: "Flourishing growth with abundant branches and leaves."
+    },
+    {
+      name: "秋风落叶",
+      pinyin: "qiū fēng luò yè",
+      meaning: "比喻事物衰败凋零。",
+      example: "他的势力如秋风落叶，迅速衰落。",
+      example_en: "His power declined rapidly like leaves falling in autumn wind.",
+      english: "Decline and decay, like leaves falling in autumn."
+    },
+    {
+      name: "鸟语花香",
+      pinyin: "niǎo yǔ huā xiāng",
+      meaning: "形容春天美好的景象。",
+      example: "山谷里鸟语花香，景色迷人。",
+      example_en: "Birds sing and flowers bloom fragrantly in the valley.",
+      english: "The delightful scene of spring with birds singing and flowers blooming."
+    },
+    {
+      name: "春兰秋菊",
+      pinyin: "chūn lán qiū jú",
+      meaning: "比喻各有其美，各有所长。",
+      example: "两位艺术家风格不同，春兰秋菊，各有千秋。",
+      example_en: "The two artists have different styles, each with their own merits.",
+      english: "Each has its own beauty and excellence in different seasons."
+    },
+    {
+      name: "叶落归根",
+      pinyin: "yè luò guī gēn",
+      meaning: "比喻事物有其归宿，多指客居他乡的人最终回到故乡。",
+      example: "游子在外多年，终要叶落归根。",
+      example_en: "After years abroad, wanderers eventually return to their roots.",
+      english: "Everything returns to its origin; people return to their homeland."
+    },
+    {
+      name: "百花争艳",
+      pinyin: "bǎi huā zhēng yàn",
+      meaning: "形容繁花似锦，竞相开放。",
+      example: "春天到了，花园里百花争艳。",
+      example_en: "Spring has come, and flowers compete in beauty in the garden.",
+      english: "Flowers blooming in competition, vying for beauty."
+    },
+    {
+      name: "芳草如茵",
+      pinyin: "fāng cǎo rú yīn",
+      meaning: "形容绿草茂密如地毯。",
+      example: "草原上芳草如茵，美丽如画。",
+      example_en: "The grassland is covered with grass like a green carpet.",
+      english: "Thick, lush grass covering the ground like a carpet."
+    },
+    {
+      name: "瓜田李下",
+      pinyin: "guā tián lǐ xià",
+      meaning: "比喻容易引起嫌疑的场合。",
+      example: "为避免瓜田李下之嫌，他拒绝了那份工作。",
+      example_en: "To avoid suspicion, he declined the job offer.",
+      english: "A situation that may arouse suspicion or misunderstanding."
+    },
+    {
+      name: "草木皆兵",
+      pinyin: "cǎo mù jiē bīng",
+      meaning: "形容极度惊恐，疑神疑鬼。",
+      example: "他被吓得草木皆兵，处处小心。",
+      example_en: "He was so frightened that he saw enemies everywhere.",
+      english: "Extreme nervousness, seeing danger in every shadow."
+    },
+    {
+      name: "藕断丝连",
+      pinyin: "ǒu duàn sī lián",
+      meaning: "比喻关系虽断，情意仍存。",
+      example: "他们虽已分手，但仍藕断丝连。",
+      example_en: "Though they broke up, lingering feelings remain.",
+      english: "Relationships that seem ended but still have emotional connections."
+    },
+    {
+      name: "桃之夭夭",
+      pinyin: "táo zhī yāo yāo",
+      meaning: "形容桃花盛开的美丽景象，也比喻女子出嫁。",
+      example: "桃花盛开，桃之夭夭，灼灼其华。",
+      example_en: "Peach blossoms bloom brilliantly in their full glory.",
+      english: "Flourishing peach blossoms; also refers to a woman's wedding."
+    },
+    {
+      name: "绿树成荫",
+      pinyin: "lǜ shù chéng yīn",
+      meaning: "形容树木枝叶茂盛，遮蔽阳光。",
+      example: "公园里绿树成荫，是避暑的好地方。",
+      example_en: "The park is shaded by green trees, perfect for escaping the heat.",
+      english: "Trees growing so thickly that they provide shade."
+    },
+    {
+      name: "松风水月",
+      pinyin: "sōng fēng shuǐ yuè",
+      meaning: "比喻清雅淡泊的自然美景。",
+      example: "隐居山中，享受松风水月的宁静。",
+      example_en: "Living in seclusion, enjoying the tranquility of nature.",
+      english: "Elegant natural scenery representing a peaceful, refined lifestyle."
+    },
+    {
+      name: "梅兰竹菊",
+      pinyin: "méi lán zhú jú",
+      meaning: "指四种高雅植物，比喻品格高尚。",
+      example: "君子应如梅兰竹菊，品格高洁。",
+      example_en: "A gentleman should be like these four plants: noble and pure.",
+      english: "The 'Four Gentlemen' plants symbolizing noble character."
+    },
+    {
+      name: "春华秋实",
+      pinyin: "chūn huá qiū shí",
+      meaning: "比喻学问、品德的成就。",
+      example: "老师培育学生，期待春华秋实的收获。",
+      example_en: "Teachers nurture students, hoping for fruitful results.",
+      english: "The process from flowering to fruiting; achievements in learning."
+    },
+    {
+      name: "杏花春雨",
+      pinyin: "xìng huā chūn yǔ",
+      meaning: "形容江南春天的美景。",
+      example: "江南三月，杏花春雨，诗情画意。",
+      example_en: "In March in Jiangnan, apricot blossoms bloom in spring rain.",
+      english: "The poetic beauty of spring in southern China."
+    },
+    {
+      name: "兰心蕙质",
+      pinyin: "lán xīn huì zhì",
+      meaning: "比喻女子心地纯洁，品质高雅。",
+      example: "她兰心蕙质，深受大家喜爱。",
+      example_en: "Her pure heart and elegant nature are beloved by all.",
+      english: "Pure heart and refined character, typically of women."
+    },
+    {
+      name: "梧桐夜雨",
+      pinyin: "wú tóng yè yǔ",
+      meaning: "形容凄凉的秋夜景象。",
+      example: "梧桐夜雨，听来格外凄清。",
+      example_en: "Rain on plane trees at night sounds particularly melancholy.",
+      english: "A melancholy autumn night scene evoking sadness."
+    },
+    {
+      name: "杨柳依依",
+      pinyin: "yáng liǔ yī yī",
+      meaning: "形容柳条轻摆，依恋不舍的样子。",
+      example: "春风中杨柳依依，别有一番情致。",
+      example_en: "Willows sway gently in spring breeze, creating a tender scene.",
+      english: "Gentle swaying willows expressing reluctance to part."
+    },
+    {
+      name: "芙蓉出水",
+      pinyin: "fú róng chū shuǐ",
+      meaning: "比喻美人的美丽清纯。",
+      example: "她美如芙蓉出水，清丽脱俗。",
+      example_en: "She is beautiful like a lotus emerging from water.",
+      english: "Pure and fresh beauty, like a lotus rising from water."
+    },
+    {
+      name: "梅花三弄",
+      pinyin: "méi huā sān nòng",
+      meaning: "古曲名，比喻高雅的艺术作品。",
+      example: "他的诗如梅花三弄，清雅脱俗。",
+      example_en: "His poetry is as elegant as the melody 'Three Variations of Plum Blossoms'.",
+      english: "An elegant artistic work, named after a classical musical piece."
+    },
+    {
+      name: "桃李满天下",
+      pinyin: "táo lǐ mǎn tiān xià",
+      meaning: "比喻老师的学生很多，各地都有。",
+      example: "老教授桃李满天下，弟子遍布各行各业。",
+      example_en: "The professor has students all over the world.",
+      english: "A teacher's students spread throughout the world."
+    },
+    {
+      name: "岁寒三友",
+      pinyin: "suì hán sān yǒu",
+      meaning: "指松、竹、梅三种植物，比喻忠贞不渝的友谊。",
+      example: "松竹梅被称为岁寒三友，象征坚韧品格。",
+      example_en: "Pine, bamboo, and plum are called 'Three Friends of Winter'.",
+      english: "Three plants that stay green in winter, symbolizing steadfast friendship."
+    },
+    {
+      name: "树大根深",
+      pinyin: "shù dà gēn shēn",
+      meaning: "比喻基础稳固，根基深厚。",
+      example: "这家企业树大根深，经营稳健。",
+      example_en: "This company has deep roots and stable operations.",
+      english: "Strong foundation and deep roots; well-established."
+    },
+    {
+      name: "水木清华",
+      pinyin: "shuǐ mù qīng huá",
+      meaning: "形容园林景色清秀美丽。",
+      example: "校园内水木清华，环境优美。",
+      example_en: "The campus has beautiful gardens with clear waters and elegant trees.",
+      english: "Beautiful landscape with clear water and elegant vegetation."
+    },
+    {
+      name: "竹报平安",
+      pinyin: "zhú bào píng ān",
+      meaning: "指平安的信息，常用作祝福语。",
+      example: "新年来临，祝您竹报平安。",
+      example_en: "As the New Year approaches, wishing you peace and safety.",
+      english: "News of safety and peace; used as a blessing."
+    },
+    {
+      name: "荷塘月色",
+      pinyin: "hé táng yuè sè",
+      meaning: "形容月光下荷塘的美丽景色。",
+      example: "夏夜的荷塘月色，美得让人陶醉。",
+      example_en: "The moonlit lotus pond on summer nights is enchantingly beautiful.",
+      english: "Beautiful scene of a lotus pond under moonlight."
+    },
+    {
+      name: "一叶知秋",
+      pinyin: "yī yè zhī qiū",
+      meaning: "从一片叶子的凋落知道秋天的到来，比喻通过小事预见大势。",
+      example: "经济指标下滑，真是一叶知秋。",
+      example_en: "Declining economic indicators are like seeing autumn in a single falling leaf.",
+      english: "Seeing the big picture from small signs; prophetic observation."
+    },
+    {
+      name: "梨花带雨",
+      pinyin: "lí huā dài yǔ",
+      meaning: "形容女子哭泣时的美丽姿态。",
+      example: "她梨花带雨的样子令人怜爱。",
+      example_en: "Her tearful appearance is as touching as pear blossoms in rain.",
+      english: "A woman's beautiful appearance while crying, like rain-wet pear blossoms."
+    },
+    {
+      name: "竹林清幽",
+      pinyin: "zhú lín qīng yōu",
+      meaning: "形容竹林环境的安静清雅。",
+      example: "寺庙后面竹林清幽，是修养身心的好地方。",
+      example_en: "The quiet bamboo grove behind the temple is perfect for meditation.",
+      english: "Peaceful and elegant bamboo forest environment."
+    },
+    {
+      name: "桂花飘香",
+      pinyin: "guì huā piāo xiāng",
+      meaning: "形容桂花开放时香气四溢。",
+      example: "中秋时节，院里桂花飘香。",
+      example_en: "During Mid-Autumn Festival, osmanthus flowers fill the yard with fragrance.",
+      english: "The sweet fragrance of blooming osmanthus flowers."
+    },
+    {
+      name: "苍松翠柏",
+      pinyin: "cāng sōng cuì bǎi",
+      meaning: "形容松柏常青，生命力顽强。",
+      example: "烈士陵园中苍松翠柏，庄严肃穆。",
+      example_en: "The martyr cemetery is solemn with evergreen pines and cypresses.",
+      english: "Evergreen pines and cypresses symbolizing enduring life."
+    },
+    {
+      name: "植树造林",
+      pinyin: "zhí shù zào lín",
+      meaning: "种植树木，营造森林，改善环境。",
+      example: "我们要积极参与植树造林，保护环境。",
+      example_en: "We should actively participate in tree planting to protect the environment.",
+      english: "Planting trees and creating forests for environmental protection."
+    },
+
+  {
+    name: "柳絮飞扬",
+    pinyin: "liǔ xù fēi yáng",
+    meaning: "形容柳絮随风飞舞的景象。",
+    example: "春天到了，河边柳絮飞扬，煞是好看。",
+    exampleen: "Spring has arrived, and willow catkins fly along the river beautifully.",
+    english: "Willow catkins dancing in the wind, a sign of spring."
+  },
+  {
+    name: "桃花流水",
+    pinyin: "táo huā liú shuǐ",
+    meaning: "形容春日的美好景色，也比喻爱情的美好。",
+    example: "桃花流水的春日，正是踏青好时光。",
+    exampleen: "Days of peach blossoms and flowing water are perfect for spring outings.",
+    english: "Beautiful spring scenery with peach blossoms and flowing streams."
+  },
+  {
+    name: "草木葱茏",
+    pinyin: "cǎo mù cōng lóng",
+    meaning: "形容草木茂盛，绿意盎然。",
+    example: "雨后的山林草木葱茏，生机勃勃。",
+    exampleen: "After rain, the forest is lush and full of vitality.",
+    english: "Luxuriant and verdant vegetation."
+  },
+  {
+    name: "枯木朽株",
+    pinyin: "kū mù xiǔ zhū",
+    meaning: "比喻已经衰败的事物。",
+    example: "这家公司如今已是枯木朽株，难以挽回。",
+    exampleen: "The company is now like dead wood, beyond recovery.",
+    english: "Something that has decayed and become useless."
+  },
+  {
+    name: "梅雪争春",
+    pinyin: "méi xuě zhēng chūn",
+    meaning: "梅花和雪花都想表现春天，比喻各有千秋。",
+    example: "两位诗人文笔精湛，如梅雪争春，各有特色。",
+    exampleen: "Both poets write brilliantly, each with their own merits.",
+    english: "Competition for excellence, each having unique qualities."
+  },
+  {
+    name: "兰芳草远",
+    pinyin: "lán fāng cǎo yuǎn",
+    meaning: "形容香草的芳香传播很远。",
+    example: "君子之德如兰芳草远，影响深远。",
+    exampleen: "A gentleman's virtue spreads far like fragrant orchids.",
+    english: "Virtue or influence spreading far and wide."
+  },
+  {
+    name: "柳丝飘荡",
+    pinyin: "liǔ sī piāo dàng",
+    meaning: "形容柳条在风中轻摆。",
+    example: "春风中柳丝飘荡，别有诗意。",
+    exampleen: "Willow branches sway poetically in the spring breeze.",
+    english: "Gentle swaying of willow branches in the wind."
+  },
+  {
+    name: "枝叶扶疏",
+    pinyin: "zhī yè fú shū",
+    meaning: "形容枝叶繁茂而疏密有致。",
+    example: "这棵古树枝叶扶疏，形态优美。",
+    exampleen: "This ancient tree has well-arranged branches and leaves.",
+    english: "Well-arranged and flourishing branches and foliage."
+  },
+  {
+    name: "花香鸟语",
+    pinyin: "huā xiāng niǎo yǔ",
+    meaning: "形容春天美好的自然景象。",
+    example: "山谷中花香鸟语，令人心旷神怡。",
+    exampleen: "Fragrant flowers and bird songs in the valley lift one's spirits.",
+    english: "Delightful spring scene with fragrant flowers and singing birds."
+  },
+  {
+    name: "翠竹黄花",
+    pinyin: "cuì zhú huáng huā",
+    meaning: "形容秋天的美丽景色。",
+    example: "山间翠竹黄花，秋色宜人。",
+    exampleen: "Green bamboo and yellow flowers make autumn scenery charming.",
+    english: "Beautiful autumn scene with bamboo and chrysanthemums."
+  },
+  {
+    name: "迎春花开",
+    pinyin: "yíng chūn huā kāi",
+    meaning: "指迎春花开放，表示春天来临。",
+    example: "迎春花开了，春天真的到了。",
+    exampleen: "The forsythia blooms—spring has truly arrived.",
+    english: "Forsythia blooming as a herald of spring's arrival."
+  },
+  {
+    name: "月下花前",
+    pinyin: "yuè xià huā qián",
+    meaning: "指在花前月下的美好环境中。",
+    example: "月下花前，诗人吟咏不绝。",
+    exampleen: "Under the moon and before flowers, poets compose endlessly.",
+    english: "Romantic setting under moonlight among flowers."
+  },
+  {
+    name: "芳草鲜美",
+    pinyin: "fāng cǎo xiān měi",
+    meaning: "形容草木的鲜艳美丽。",
+    example: "桃花源中芳草鲜美，如诗如画。",
+    exampleen: "In the peach blossom paradise, grass is fresh and beautiful.",
+    english: "Fresh and beautiful grass and vegetation."
+  },
+  {
+    name: "杏雨梨云",
+    pinyin: "xìng yǔ lí yún",
+    meaning: "形容杏花梨花盛开的美景。",
+    example: "春日园中杏雨梨云，美不胜收。",
+    exampleen: "Spring garden with apricot and pear blossoms is breathtakingly beautiful.",
+    english: "Beautiful scene of blooming apricot and pear trees."
+  },
+  {
+    name: "桃李争辉",
+    pinyin: "táo lǐ zhēng huī",
+    meaning: "形容春花竞相开放的美景。",
+    example: "校园里桃李争辉，春意盎然。",
+    exampleen: "Peach and plum blossoms compete in beauty on campus.",
+    english: "Spring flowers competing in their splendor."
+  },
+  {
+    name: "碧桃花开",
+    pinyin: "bì táo huā kāi",
+    meaning: "形容桃花盛开的美丽景象。",
+    example: "园中碧桃花开，游客如织。",
+    exampleen: "Pink peach blossoms bloom in the garden, attracting many visitors.",
+    english: "Beautiful scene of blooming peach blossoms."
+  },
+  {
+    name: "兰桂齐芳",
+    pinyin: "lán guì qí fāng",
+    meaning: "比喻德才兼备，品格高尚。",
+    example: "这对夫妇兰桂齐芳，令人敬佩。",
+    exampleen: "This couple both possess virtue and talent admirably.",
+    english: "Both parties having noble character and talent."
+  },
+  {
+    name: "桂子飘香",
+    pinyin: "guì zǐ piāo xiāng",
+    meaning: "形容桂花香气四溢。",
+    example: "秋夜里桂子飘香，沁人心脾。",
+    exampleen: "Osmanthus fragrance fills the autumn night refreshingly.",
+    english: "The sweet fragrance of osmanthus flowers spreading."
+  },
+  {
+    name: "翠竹绕庭",
+    pinyin: "cuì zhú rào tíng",
+    meaning: "形容庭院被绿竹环绕。",
+    example: "古宅翠竹绕庭，环境清幽。",
+    exampleen: "The old house is surrounded by green bamboo, creating a serene environment.",
+    english: "Courtyard surrounded by green bamboo."
+  },
+  {
+    name: "荷叶罗裙",
+    pinyin: "hé yè luó qún",
+    meaning: "形容荷叶如裙般美丽。",
+    example: "池中荷叶罗裙，如美人舞姿。",
+    exampleen: "Lotus leaves in the pond spread like beautiful skirts.",
+    english: "Lotus leaves arranged beautifully like flowing skirts."
+  },
+  {
+    name: "花影重叠",
+    pinyin: "huā yǐng chóng dié",
+    meaning: "形容花朵在光影下层层叠叠。",
+    example: "月光下花影重叠，如梦如幻。",
+    exampleen: "Flower shadows overlap under moonlight like a dream.",
+    english: "Overlapping shadows of flowers creating beautiful patterns."
+  },
+  {
+    name: "桂花香远",
+    pinyin: "guì huā xiāng yuǎn",
+    meaning: "形容桂花香气传播很远。",
+    example: "院外桂花香远，路人皆闻。",
+    exampleen: "The osmanthus fragrance spreads far beyond the courtyard.",
+    english: "Far-reaching fragrance of osmanthus flowers."
+  },
+  {
+    name: "兰叶舟轻",
+    pinyin: "lán yè zhōu qīng",
+    meaning: "比喻轻快优雅的意境。",
+    example: "诗人笔下兰叶舟轻，意境悠远。",
+    exampleen: "The poet writes of light boats among orchid leaves with distant meaning.",
+    english: "Elegant and light imagery, often in poetry."
+  },
+  {
+    name: "桂树芬芳",
+    pinyin: "guì shù fēn fāng",
+    meaning: "形容桂树散发芳香。",
+    example: "庭院中桂树芬芳，香气袭人。",
+    exampleen: "The osmanthus tree in the courtyard spreads its fragrance.",
+    english: "Fragrant osmanthus trees releasing sweet scent."
+  },
+  {
+    name: "梅开三度",
+    pinyin: "méi kāi sān dù",
+    meaning: "比喻好事多次发生。",
+    example: "他的事业如梅开三度，一次比一次成功。",
+    exampleen: "His career succeeds repeatedly like plum blossoms blooming thrice.",
+    english: "Good things happening multiple times."
+  },
+  {
+    name: "梅花映雪",
+    pinyin: "méi huā yìng xuě",
+    meaning: "形容梅花在雪中开放的美景。",
+    example: "冬日梅花映雪，别有一番韵味。",
+    exampleen: "Plum blossoms against snow in winter have special charm.",
+    english: "Beautiful scene of plum blossoms blooming in snow."
+  },
+  {
+    name: "枯木发荣",
+    pinyin: "kū mù fā róng",
+    meaning: "比喻绝处逢生或重获新机。",
+    example: "公司在他的经营下枯木发荣。",
+    exampleen: "The company revived under his management like dead wood sprouting.",
+    english: "Revival and flourishing after a period of decline."
+  },
+  {
+    name: "青松不老",
+    pinyin: "qīng sōng bù lǎo",
+    meaning: "比喻人的精神不衰，品格坚定。",
+    example: "老英雄虽年逾古稀，精神如青松不老。",
+    exampleen: "Though over seventy, the old hero's spirit remains evergreen.",
+    english: "Enduring spirit and character like evergreen pines."
+  },
+  {
+    name: "菊花怒放",
+    pinyin: "jú huā nù fàng",
+    meaning: "形容菊花盛开的壮观景象。",
+    example: "深秋时节菊花怒放，满园金辉。",
+    exampleen: "Chrysanthemums bloom magnificently in late autumn.",
+    english: "Chrysanthemums blooming in their full glory."
+  },
+  {
+    name: "桃夭李艳",
+    pinyin: "táo yāo lǐ yàn",
+    meaning: "形容桃花李花的美丽。",
+    example: "春园中桃夭李艳，争奇斗艳。",
+    exampleen: "Peach and plum blossoms compete in beauty in the spring garden.",
+    english: "Beautiful and vibrant peach and plum blossoms."
+  },
+  {
+    name: "柳浪闻莺",
+    pinyin: "liǔ làng wén yīng",
+    meaning: "形容春天柳树成荫，莺声婉转。",
+    example: "西湖边柳浪闻莺，春色宜人。",
+    exampleen: "By West Lake, orioles sing among swaying willows.",
+    english: "Spring scene with willows swaying and orioles singing."
+  },
+  {
+    name: "兰芝常开",
+    pinyin: "lán zhī cháng kāi",
+    meaning: "比喻友谊或美好事物常存。",
+    example: "愿我们的友谊如兰芝常开，永不凋零。",
+    exampleen: "May our friendship bloom eternally like ever-blooming orchids.",
+    english: "Enduring beauty or friendship that never fades."
+  },
+  {
+    name: "松柏凌霜",
+    pinyin: "sōng bǎi líng shuāng",
+    meaning: "比喻在艰难环境中坚韧不屈。",
+    example: "革命志士如松柏凌霜，傲视严寒。",
+    exampleen: "Revolutionary martyrs stand firm like pines defying frost.",
+    english: "Perseverance in harsh conditions like frost-resistant evergreens."
+  },
+  {
+    name: "柳绿花红",
+    pinyin: "liǔ lǜ huā hóng",
+    meaning: "形容春天美丽的景色。",
+    example: "公园里柳绿花红，游人如织。",
+    exampleen: "Green willows and red flowers in the park attract many visitors.",
+    english: "Beautiful spring colors with green willows and red flowers."
+  },
+  {
+    name: "荷塘清风",
+    pinyin: "hé táng qīng fēng",
+    meaning: "形容荷塘边的清凉微风。",
+    example: "夏夜荷塘清风，驱散了白日的炎热。",
+    exampleen: "Cool breeze by the lotus pond dispels the day's heat.",
+    english: "Refreshing breeze by a lotus pond."
+  },
+  {
+    name: "松枝翠影",
+    pinyin: "sōng zhī cuì yǐng",
+    meaning: "形容松树枝叶的翠绿倒影。",
+    example: "山泉边松枝翠影，清幽宁静。",
+    exampleen: "Green shadows of pine branches by the mountain spring create tranquility.",
+    english: "Green shadows cast by pine branches."
+  },
+  {
+    name: "荷叶田田",
+    pinyin: "hé yè tián tián",
+    meaning: "形容荷叶密布水面的样子。",
+    example: "池塘中荷叶田田，绿意盎然。",
+    exampleen: "Lotus leaves spread thickly across the pond surface.",
+    english: "Dense lotus leaves covering the water surface."
+  },
+  {
+    name: "柳拂春风",
+    pinyin: "liǔ fú chūn fēng",
+    meaning: "形容柳条在春风中轻拂。",
+    example: "堤岸上柳拂春风，诗意盎然。",
+    exampleen: "Willows brush against spring breeze along the embankment poetically.",
+    english: "Willow branches swaying gently in spring breeze."
+  },
+  {
+    name: "兰亭雅聚",
+    pinyin: "lán tíng yǎ jù",
+    meaning: "指文人雅士的聚会。",
+    example: "今日兰亭雅聚，诗友满堂。",
+    exampleen: "Today's elegant gathering brings together many poetry friends.",
+    english: "Refined gathering of scholars and artists."
+  },
+  {
+    name: "桃花灼灼",
+    pinyin: "táo huā zhuó zhuó",
+    meaning: "形容桃花开得鲜艳美丽。",
+    example: "三月春光里桃花灼灼，如火如霞。",
+    exampleen: "Peach blossoms bloom brilliantly in March like fire and sunset.",
+    english: "Brilliantly blooming peach blossoms."
+  },
+  {
+    name: "芳草斜阳",
+    pinyin: "fāng cǎo xié yáng",
+    meaning: "形容夕阳斜照下的芳草地。",
+    example: "原野上芳草斜阳，景色如画。",
+    exampleen: "Fragrant grass under slanting sunset creates a picturesque scene.",
+    english: "Beautiful evening scene with grass in slanting sunlight."
+  },
+  {
+    name: "松下问童",
+    pinyin: "sōng xià wèn tóng",
+    meaning: "指在松树下询问童子，常用于诗词中。",
+    example: "诗人松下问童，寻访隐士。",
+    exampleen: "The poet asks a child under the pine tree, seeking a hermit.",
+    english: "Classical scene of asking a child under pine trees."
+  },
+  {
+    name: "桃李争妍",
+    pinyin: "táo lǐ zhēng yán",
+    meaning: "形容桃花李花竞相美丽。",
+    example: "春园中桃李争妍，美不胜收。",
+    exampleen: "Peach and plum blossoms compete in beauty in the spring garden.",
+    english: "Peach and plum flowers competing in their beauty."
+  },
+  {
+    name: "春花秋月",
+    pinyin: "chūn huā qiū yuè",
+    meaning: "指春天的花朵和秋天的月亮，泛指美好的时光。",
+    example: "春花秋月何时了，往事知多少。",
+    exampleen: "When will spring flowers and autumn moon end? How much of the past remains?",
+    english: "Beautiful times represented by spring flowers and autumn moon."
+  },
+  {
+    name: "百草萋萋",
+    pinyin: "bǎi cǎo qī qī",
+    meaning: "形容草木繁盛的样子。",
+    example: "原野上百草萋萋，生机勃勃。",
+    exampleen: "The wilderness is lush with thriving vegetation.",
+    english: "Luxuriant growth of various grasses and plants."
+  },
+  {
+    name: "梧桐叶落",
+    pinyin: "wú tóng yè luò",
+    meaning: "比喻秋天的来临或事物的衰落。",
+    example: "梧桐叶落知秋至，岁月催人老。",
+    exampleen: "Falling plane tree leaves herald autumn's arrival and time's passage.",
+    english: "Falling leaves signaling autumn or decline."
+  },
+  {
+    name: "柳绿桃红",
+    pinyin: "liǔ lǜ táo hóng",
+    meaning: "形容春天的美丽景色。",
+    example: "江南三月柳绿桃红，如诗如画。",
+    exampleen: "March in Jiangnan with green willows and red peach blossoms is poetic.",
+    english: "Beautiful spring scene with green willows and red peach blossoms."
+  },
+  {
+    name: "芙蓉如面",
+    pinyin: "fú róng rú miàn",
+    meaning: "形容女子容貌美丽如荷花。",
+    example: "她芙蓉如面，倾国倾城。",
+    exampleen: "Her face is beautiful like a lotus, captivating all who see her.",
+    english: "A woman's beauty compared to a lotus flower."
+  },
+  {
+    name: "花开并蒂",
+    pinyin: "huā kāi bìng dì",
+    meaning: "比喻夫妻恩爱或好事成双。",
+    example: "新人花开并蒂，白头偕老。",
+    exampleen: "The newlyweds are like twin flowers on one stem, destined for lifelong love.",
+    english: "Symbolizing conjugal love or paired good fortune."
+  },
+  {
+    name: "袅袅青烟",
+    pinyin: "niǎo niǎo qīng yān",
+    meaning: "形容轻柔上升的青烟。",
+    example: "炊烟袅袅青烟，家的温馨。",
+    exampleen: "Wisps of cooking smoke create the warmth of home.",
+    english: "Gently rising wisps of smoke."
+  },
+  {
+    name: "翠竹青青",
+    pinyin: "cuì zhú qīng qīng",
+    meaning: "形容竹子的翠绿色泽。",
+    example: "山谷中翠竹青青，清风徐来。",
+    exampleen: "Green bamboo in the valley sways in the gentle breeze.",
+    english: "Fresh green color of bamboo."
+  },
+  {
+    name: "荷风送香",
+    pinyin: "hé fēng sòng xiāng",
+    meaning: "指荷花的香气随风传送。",
+    example: "湖边荷风送香，令人陶醉。",
+    exampleen: "The breeze carries lotus fragrance by the lake intoxicatingly.",
+    english: "Breeze carrying the fragrance of lotus flowers."
+  },
+  {
+    name: "杨柳含烟",
+    pinyin: "yáng liǔ hán yān",
+    meaning: "形容柳树在雾气中朦胧的样子。",
+    example: "江边杨柳含烟，如梦似幻。",
+    exampleen: "Willows by the river appear misty and dreamlike.",
+    english: "Willows appearing hazy in mist or fog."
+  },
+  {
+    name: "杏花疏影",
+    pinyin: "xìng huā shū yǐng",
+    meaning: "形容杏花稀疏的影子。",
+    example: "墙头杏花疏影，春意初现。",
+    exampleen: "Sparse shadows of apricot blossoms on the wall hint at spring's arrival.",
+    english: "Scattered shadows of apricot blossoms."
+  },
+  {
+    name: "桂影婆娑",
+    pinyin: "guì yǐng pó suō",
+    meaning: "形容桂树影子摇摆的样子。",
+    example: "月夜里桂影婆娑，如舞如梦。",
+    exampleen: "Osmanthus shadows sway like dancers in the moonlight.",
+    english: "Swaying shadows of osmanthus trees."
+  },
+  {
+    name: "绿叶成荫",
+    pinyin: "lǜ yè chéng yīn",
+    meaning: "形容树叶茂盛，遮蔽阳光。",
+    example: "大树绿叶成荫，是避暑的好地方。",
+    exampleen: "The big tree provides cool shade with its thick green leaves.",
+    english: "Dense green leaves providing shade."
+  },
+  {
+    name: "碧树临风",
+    pinyin: "bì shù lín fēng",
+    meaning: "形容绿树在风中的姿态。",
+    example: "湖边碧树临风，景色优美。",
+    exampleen: "Green trees by the lake sway gracefully in the wind.",
+    english: "Green trees standing majestically in the wind."
+  },
+  {
+    name: "兰香满室",
+    pinyin: "lán xiāng mǎn shì",
+    meaning: "指兰花的香气充满房间。",
+    example: "书房中兰香满室，清雅宜人。",
+    exampleen: "The study is filled with orchid fragrance, elegant and pleasant.",
+    english: "Room filled with the fragrance of orchids."
+  },
+  {
+    name: "荷花满塘",
+    pinyin: "hé huā mǎn táng",
+    meaning: "形容荷花开满池塘。",
+    example: "夏日荷花满塘，粉红娇艳。",
+    exampleen: "Summer pond is full of pink lotus blossoms.",
+    english: "Pond completely covered with blooming lotus flowers."
+  },
+  {
+    name: "松竹常青",
+    pinyin: "sōng zhú cháng qīng",
+    meaning: "比喻坚贞不渝的品格。",
+    example: "君子之交如松竹常青，历久不变。",
+    exampleen: "Gentleman's friendship remains constant like evergreen pine and bamboo.",
+    english: "Enduring character like ever-green pine and bamboo."
+  },
+  {
+    name: "桂枝飘香",
+    pinyin: "guì zhī piāo xiāng",
+    meaning: "指桂花枝条散发香气。",
+    example: "院中桂枝飘香，沁人心脾。",
+    exampleen: "Osmanthus branches in the yard spread their refreshing fragrance.",
+    english: "Fragrant osmanthus branches releasing sweet scent."
+  },
+  {
+    name: "梅花傲雪",
+    pinyin: "méi huā ào xuě",
+    meaning: "比喻在困难中坚强不屈。",
+    example: "英雄如梅花傲雪，越挫越勇。",
+    exampleen: "Heroes are like plum blossoms defying snow, growing stronger through adversity.",
+    english: "Resilience and defiance in the face of hardship."
+  },
+  {
+    name: "菊花飘香",
+    pinyin: "jú huā piāo xiāng",
+    meaning: "指菊花散发的香气。",
+    example: "秋园中菊花飘香，清雅怡人。",
+    exampleen: "Chrysanthemum fragrance in the autumn garden is elegant and pleasant.",
+    english: "The fragrance of blooming chrysanthemums."
+  },
+  {
+    name: "柳荫细道",
+    pinyin: "liǔ yīn xì dào",
+    meaning: "指柳树遮荫的小径。",
+    example: "公园里柳荫细道，曲径通幽。",
+    exampleen: "Shaded paths under willows in the park lead to quiet corners.",
+    english: "Narrow paths shaded by willow trees."
+  },
+  {
+    name: "兰生幽谷",
+    pinyin: "lán shēng yōu gǔ",
+    meaning: "比喻品德高洁的人在僻静之处。",
+    example: "贤士兰生幽谷，不为世俗所染。",
+    exampleen: "Virtuous people are like orchids in secluded valleys, untainted by worldliness.",
+    english: "Noble character remaining pure in seclusion."
+  },
+  {
+    name: "碧水青山",
+    pinyin: "bì shuǐ qīng shān",
+    meaning: "形容山水环境优美。",
+    example: "故乡碧水青山，是我心中的桃花源。",
+    exampleen: "My hometown with its green waters and blue mountains is my paradise.",
+    english: "Beautiful scenery with clear water and green mountains."
+  },
+  {
+    name: "杨柳岸晓风残月",
+    pinyin: "yáng liǔ àn xiǎo fēng cán yuè",
+    meaning: "形容离别时的凄美景象。",
+    example: "离别在即，杨柳岸晓风残月，情何以堪。",
+    exampleen: "At parting, willows by the shore, morning breeze and waning moon—how sorrowful!",
+    english: "Melancholy parting scene with willows, breeze, and moon."
+  },
+  {
+    name: "梅花飘香",
+    pinyin: "méi huā piāo xiāng",
+    meaning: "指梅花散发的清香。",
+    example: "冬日梅花飘香，暗香浮动。",
+    exampleen: "Plum blossoms spread their subtle fragrance in winter.",
+    english: "The delicate fragrance of plum blossoms."
+  },
+  {
+    name: "翠绿成荫",
+    pinyin: "cuì lǜ chéng yīn",
+    meaning: "形容绿叶浓密，形成阴凉。",
+    example: "夏日大树翠绿成荫，凉爽宜人。",
+    exampleen: "In summer, big trees provide cool shade with their dense green foliage.",
+    english: "Dense green foliage creating cool shade."
+  },
+  {
+    name: "绿意盎然",
+    pinyin: "lǜ yì àng rán",
+    meaning: "形容绿色植物充满生机。",
+    example: "春天到了，园中绿意盎然。",
+    exampleen: "Spring has arrived, and the garden is full of vibrant green life.",
+    english: "Abundant and vibrant greenery full of life."
+  },
+  {
+    name: "杏花微雨",
+    pinyin: "xìng huā wēi yǔ",
+    meaning: "形容春雨中杏花的美景。",
+    example: "江南春日，杏花微雨，诗意满怀。",
+    exampleen: "Spring in Jiangnan with apricot blossoms in gentle rain is deeply poetic.",
+    english: "Beautiful scene of apricot blossoms in light spring rain."
+  },
+  {
+    name: "梧桐一叶",
+    pinyin: "wú tóng yī yè",
+    meaning: "指梧桐落叶，比喻秋天来临。",
+    example: "梧桐一叶落，天下尽知秋。",
+    exampleen: "When one plane tree leaf falls, the whole world knows autumn has come.",
+    english: "A single falling leaf heralding autumn's arrival."
+  },
+  {
+    name: "兰馨桂馥",
+    pinyin: "lán xīn guì fù",
+    meaning: "比喻德行美好，声誉远播。",
+    example: "先生兰馨桂馥，德高望重。",
+    exampleen: "The gentleman's virtue is as fragrant as orchids and osmanthus.",
+    english: "Beautiful virtue and far-reaching reputation."
+  },
+  {
+    name: "松柏挺立",
+    pinyin: "sōng bǎi tǐng lì",
+    meaning: "形容松柏树直立挺拔。",
+    example: "山顶松柏挺立，不畏风霜。",
+    exampleen: "Pines and cypresses stand straight on the mountaintop, unafraid of wind and frost.",
+    english: "Tall, straight-standing pine and cypress trees."
+  },
+  {
+    name: "柳絮飞舞",
+    pinyin: "liǔ xù fēi wǔ",
+    meaning: "形容柳絮在空中飞舞。",
+    example: "春风中柳絮飞舞，如雪花飘洒。",
+    exampleen: "Willow catkins dance in spring breeze like falling snow.",
+    english: "Willow catkins floating and dancing in the air."
+  },
+  {
+    name: "桃花依旧",
+    pinyin: "táo huā yī jiù",
+    meaning: "比喻景物依然，而人事已非。",
+    example: "去年今日此门中，人面桃花相映红。人面不知何处去，桃花依旧笑春风。",
+    exampleen: "The same door, same season—but the beautiful face is gone, only peach blossoms remain.",
+    english: "Things remain the same while people have changed."
+  },
+  {
+    name: "荷花亭亭",
+    pinyin: "hé huā tíng tíng",
+    meaning: "形容荷花挺立的美姿。",
+    example: "池中荷花亭亭，如美人凌波。",
+    exampleen: "Lotus flowers stand gracefully in the pond like beautiful women walking on water.",
+    english: "Gracefully standing lotus flowers."
+  },
+  {
+    name: "梅开二度",
+    pinyin: "méi kāi èr dù",
+    meaning: "比喻重新得到机会或好事再次发生。",
+    example: "他的事业梅开二度，重获成功。",
+    exampleen: "His career bloomed again like plum blossoms blooming twice.",
+    english: "Getting a second chance or good fortune repeating."
+  },
+  {
+    name: "青松不凋",
+    pinyin: "qīng sōng bù diāo",
+    meaning: "比喻意志坚定，品格不变。",
+    example: "革命者的信念如青松不凋。",
+    exampleen: "The revolutionary's faith remains unwavering like an evergreen pine.",
+    english: "Unwavering character and determination."
+  },
+  {
+    name: "兰花吐芳",
+    pinyin: "lán huā tǔ fāng",
+    meaning: "指兰花散发香气。",
+    example: "山谷中兰花吐芳，清香阵阵。",
+    exampleen: "Orchids in the valley release their fragrance in waves.",
+    english: "Orchids releasing their sweet fragrance."
+  },
+  {
+    name: "桃红柳翠",
+    pinyin: "táo hóng liǔ cuì",
+    meaning: "形容春天花草树木的美丽。",
+    example: "园中桃红柳翠，春意正浓。",
+    exampleen: "Red peach blossoms and green willows in the garden show spring's peak.",
+    english: "Beautiful spring colors of red peach blossoms and green willows."
+  },
+  {
+    name: "柳枝拂水",
+    pinyin: "liǔ zhī fú shuǐ",
+    meaning: "形容柳条轻拂水面。",
+    example: "湖边柳枝拂水，波光粼粼。",
+    exampleen: "Willow branches brush the water by the lake, creating ripples.",
+    english: "Willow branches gently touching the water surface."
+  },
+  {
+    name: "兰草萋萋",
+    pinyin: "lán cǎo qī qī",
+    meaning: "形容兰草茂盛的样子。",
+    example: "山间兰草萋萋，香气袭人。",
+    exampleen: "Luxuriant orchid grass in the mountains spreads its fragrance.",
+    english: "Flourishing orchid grass growing abundantly."
+  },
+  {
+    name: "桃花夭夭",
+    pinyin: "táo huā yāo yāo",
+    meaning: "形容桃花盛开繁茂。",
+    example: "三月桃花夭夭，灼灼其华。",
+    exampleen: "Peach blossoms bloom luxuriantly in March, brilliant in their beauty.",
+    english: "Lush and brilliant blooming of peach blossoms."
+  },
+  {
+    name: "翠竹摇曳",
+    pinyin: "cuì zhú yáo yè",
+    meaning: "形容绿竹在风中摆动。",
+    example: "微风中翠竹摇曳，竹影斑驳。",
+    exampleen: "Green bamboo sways in the breeze, casting dappled shadows.",
+    english: "Green bamboo swaying gracefully in the wind."
+  },
+  {
+    name: "荷香满湖",
+    pinyin: "hé xiāng mǎn hú",
+    meaning: "指荷花的香气弥漫整个湖面。",
+    example: "夏夜荷香满湖，令人陶醉。",
+    exampleen: "Summer night with lotus fragrance filling the entire lake is intoxicating.",
+    english: "Lotus fragrance spreading across the entire lake."
+  },
+  {
+    name: "兰叶飘香",
+    pinyin: "lán yè piāo xiāng",
+    meaning: "指兰花叶子散发香气。",
+    example: "室中兰叶飘香，清雅怡人。",
+    exampleen: "Orchid leaves in the room spread their fragrance elegantly.",
+    english: "Orchid leaves releasing their subtle fragrance."
+  },
+  {
+    name: "梧桐秋雨",
+    pinyin: "wú tóng qiū yǔ",
+    meaning: "形容秋雨打梧桐的凄清景象。",
+    example: "夜听梧桐秋雨，别有一番愁绪。",
+    exampleen: "Listening to autumn rain on plane trees at night evokes special melancholy.",
+    english: "Melancholy scene of autumn rain on plane trees."
+  },
+  {
+    name: "桂花开遍",
+    pinyin: "guì huā kāi biàn",
+    meaning: "形容桂花盛开满树。",
+    example: "八月桂花开遍，满树金辉。",
+    exampleen: "Osmanthus blossoms cover the tree in August like golden light.",
+    english: "Osmanthus flowers blooming all over the tree."
+  },
+
+
+  {
+    name: "杨柳丝长",
+    pinyin: "yáng liǔ sī cháng",
+    meaning: "形容柳条长而柔软。",
+    example: "春江边杨柳丝长，如少女的秀发。",
+    exampleen: "Long willow branches by the spring river are like a maiden's hair.",
+    english: "Long, soft willow branches swaying gracefully."
+  },
+  {
+    name: "荷花映月",
+    pinyin: "hé huā yìng yuè",
+    meaning: "形容荷花在月光下的美景。",
+    example: "中秋夜荷花映月，如诗如画。",
+    exampleen: "Lotus flowers under the Mid-Autumn moon create a poetic scene.",
+    english: "Beautiful scene of lotus flowers reflected in moonlight."
+  },
+  {
+    name: "梅兰飘香",
+    pinyin: "méi lán piāo xiāng",
+    meaning: "指梅花和兰花散发的香气。",
+    example: "雅室中梅兰飘香，书香阵阵。",
+    exampleen: "The elegant room is filled with the fragrance of plum and orchid.",
+    english: "Fragrance of plum blossoms and orchids spreading."
+  },
+  {
+    name: "兰叶青青",
+    pinyin: "lán yè qīng qīng",
+    meaning: "形容兰花叶子的翠绿。",
+    example: "花盆中兰叶青青，生机勃勃。",
+    exampleen: "Green orchid leaves in the pot are full of vitality.",
+    english: "Fresh green orchid leaves full of life."
+  },
+  {
+    name: "松柏参天",
+    pinyin: "sōng bǎi cān tiān",
+    meaning: "形容松柏树高耸入云。",
+    example: "古刹旁松柏参天，庄严肃穆。",
+    exampleen: "Towering pines and cypresses by the ancient temple create a solemn atmosphere.",
+    english: "Tall pine and cypress trees reaching toward the sky."
+  },
+  {
+    name: "梨花雪舞",
+    pinyin: "lí huā xuě wǔ",
+    meaning: "形容梨花盛开如雪花飞舞。",
+    example: "春风中梨花雪舞，满树银装。",
+    exampleen: "Pear blossoms dance like snow in spring breeze, adorning the tree in silver.",
+    english: "Pear blossoms blooming abundantly like dancing snow."
+  },
+  {
+    name: "花满天下",
+    pinyin: "huā mǎn tiān xià",
+    meaning: "形容花开遍地，景色美丽。",
+    example: "春回大地花满天下，万物复苏。",
+    exampleen: "Spring returns with flowers blooming everywhere, all things reviving.",
+    english: "Flowers blooming everywhere across the land."
+  },
+  {
+    name: "桃花流红",
+    pinyin: "táo huā liú hóng",
+    meaning: "形容桃花飘落如流水般红色。",
+    example: "风过桃花流红，片片如胭脂。",
+    exampleen: "Wind blows, and red peach petals flow like rouge.",
+    english: "Red peach petals falling and flowing like a stream."
+  },
+  {
+    name: "翠柳摇风",
+    pinyin: "cuì liǔ yáo fēng",
+    meaning: "形容绿柳在风中摆动。",
+    example: "河堤上翠柳摇风，绿影婆娑。",
+    exampleen: "Green willows sway in the wind along the river bank, casting dancing shadows.",
+    english: "Green willows swaying gracefully in the wind."
+  },
+  {
+    name: "荷叶无边",
+    pinyin: "hé yè wú biān",
+    meaning: "形容荷叶铺满水面，望不到边。",
+    example: "西湖上荷叶无边，绿意盎然。",
+    exampleen: "Lotus leaves spread endlessly across West Lake, full of green vitality.",
+    english: "Vast expanse of lotus leaves covering the water."
+  },
+  {
+    name: "兰叶摇曳",
+    pinyin: "lán yè yáo yè",
+    meaning: "形容兰花叶子轻柔摆动。",
+    example: "清风中兰叶摇曳，优雅动人。",
+    exampleen: "Orchid leaves sway elegantly in the gentle breeze.",
+    english: "Orchid leaves swaying gently and gracefully."
+  },
+  {
+    name: "枝头春意",
+    pinyin: "zhī tóu chūn yì",
+    meaning: "指枝头显现的春天气息。",
+    example: "二月枝头春意浓，花苞初绽。",
+    exampleen: "Strong spring spirit shows on branches in February with budding flowers.",
+    english: "Spring atmosphere appearing on tree branches."
+  },
+  {
+    name: "花落花开",
+    pinyin: "huā luò huā kāi",
+    meaning: "比喻自然循环，兴衰更替。",
+    example: "人生如花落花开，盛衰有时。",
+    exampleen: "Life is like flowers falling and blooming—prosperity and decline have their seasons.",
+    english: "Natural cycle of things declining and reviving."
+  },
+  {
+    name: "柳色新绿",
+    pinyin: "liǔ sè xīn lǜ",
+    meaning: "形容柳树刚发芽时的嫩绿色。",
+    example: "早春时节柳色新绿，生机萌发。",
+    exampleen: "Early spring brings fresh green to willow trees with emerging life.",
+    english: "Fresh new green color of willow trees in early spring."
+  },
+  {
+    name: "松柏高洁",
+    pinyin: "sōng bǎi gāo jié",
+    meaning: "比喻品格高尚纯洁。",
+    example: "君子品格如松柏高洁，令人敬佩。",
+    exampleen: "A gentleman's character is as noble as pine and cypress.",
+    english: "High and pure character like evergreen trees."
+  },
+  {
+    name: "杏花春意",
+    pinyin: "xìng huā chūn yì",
+    meaning: "指杏花盛开带来的春天气息。",
+    example: "村头杏花春意闹，农家忙碌。",
+    exampleen: "Apricot blossoms bring bustling spring spirit to the village.",
+    english: "Spring atmosphere brought by blooming apricot flowers."
+  },
+  {
+    name: "桃红满树",
+    pinyin: "táo hóng mǎn shù",
+    meaning: "形容桃花开满整棵树。",
+    example: "阳春三月桃红满树，如霞似火。",
+    exampleen: "In sunny March, red peach blossoms fill the tree like sunset clouds.",
+    english: "Peach tree completely covered with red blossoms."
+  },
+  {
+    name: "荷风送香",
+    pinyin: "hé fēng sòng xiāng",
+    meaning: "指荷花香气随风传送。",
+    example: "夏夜荷风送香，沁人心脾。",
+    exampleen: "Summer evening breeze carries lotus fragrance refreshingly.",
+    english: "Breeze carrying the sweet fragrance of lotus."
+  },
+  {
+    name: "兰草遍地",
+    pinyin: "lán cǎo biàn dì",
+    meaning: "形容兰草到处生长。",
+    example: "山谷中兰草遍地，香气阵阵。",
+    exampleen: "Orchid grass grows everywhere in the valley, spreading fragrance.",
+    english: "Orchid grass growing abundantly across the land."
+  },
+  {
+    name: "梅花傲骨",
+    pinyin: "méi huā ào gǔ",
+    meaning: "比喻坚强不屈的品格。",
+    example: "志士如梅花傲骨，不畏严寒。",
+    exampleen: "Patriots have proud character like plum blossoms, unafraid of harsh.",
+    },
+
+  {
+    name: "杨柳丝长",
+    pinyin: "yáng liǔ sī cháng",
+    meaning: "形容柳条长而柔软。",
+    example: "春江边杨柳丝长，如少女的秀发。",
+    exampleen: "Long willow branches by the spring river are like a maiden's hair.",
+    english: "Long, soft willow branches swaying gracefully."
+  },
+  {
+    name: "荷花映月",
+    pinyin: "hé huā yìng yuè",
+    meaning: "形容荷花在月光下的美景。",
+    example: "中秋夜荷花映月，如诗如画。",
+    exampleen: "Lotus flowers under the Mid-Autumn moon create a poetic scene.",
+    english: "Beautiful scene of lotus flowers reflected in moonlight."
+  },
+  {
+    name: "梅兰飘香",
+    pinyin: "méi lán piāo xiāng",
+    meaning: "指梅花和兰花散发的香气。",
+    example: "雅室中梅兰飘香，书香阵阵。",
+    exampleen: "The elegant room is filled with the fragrance of plum and orchid.",
+    english: "Fragrance of plum blossoms and orchids spreading."
+  },
+  {
+    name: "兰叶青青",
+    pinyin: "lán yè qīng qīng",
+    meaning: "形容兰花叶子的翠绿。",
+    example: "花盆中兰叶青青，生机勃勃。",
+    exampleen: "Green orchid leaves in the pot are full of vitality.",
+    english: "Fresh green orchid leaves full of life."
+  },
+  {
+    name: "松柏参天",
+    pinyin: "sōng bǎi cān tiān",
+    meaning: "形容松柏树高耸入云。",
+    example: "古刹旁松柏参天，庄严肃穆。",
+    exampleen: "Towering pines and cypresses by the ancient temple create a solemn atmosphere.",
+    english: "Tall pine and cypress trees reaching toward the sky."
+  },
+  {
+    name: "梨花雪舞",
+    pinyin: "lí huā xuě wǔ",
+    meaning: "形容梨花盛开如雪花飞舞。",
+    example: "春风中梨花雪舞，满树银装。",
+    exampleen: "Pear blossoms dance like snow in spring breeze, adorning the tree in silver.",
+    english: "Pear blossoms blooming abundantly like dancing snow."
+  },
+  {
+    name: "花满天下",
+    pinyin: "huā mǎn tiān xià",
+    meaning: "形容花开遍地，景色美丽。",
+    example: "春回大地花满天下，万物复苏。",
+    exampleen: "Spring returns with flowers blooming everywhere, all things reviving.",
+    english: "Flowers blooming everywhere across the land."
+  },
+  {
+    name: "桃花流红",
+    pinyin: "táo huā liú hóng",
+    meaning: "形容桃花飘落如流水般红色。",
+    example: "风过桃花流红，片片如胭脂。",
+    exampleen: "Wind blows, and red peach petals flow like rouge.",
+    english: "Red peach petals falling and flowing like a stream."
+  },
+  {
+    name: "翠柳摇风",
+    pinyin: "cuì liǔ yáo fēng",
+    meaning: "形容绿柳在风中摆动。",
+    example: "河堤上翠柳摇风，绿影婆娑。",
+    exampleen: "Green willows sway in the wind along the river bank, casting dancing shadows.",
+    english: "Green willows swaying gracefully in the wind."
+  },
+  {
+    name: "荷叶无边",
+    pinyin: "hé yè wú biān",
+    meaning: "形容荷叶铺满水面，望不到边。",
+    example: "西湖上荷叶无边，绿意盎然。",
+    exampleen: "Lotus leaves spread endlessly across West Lake, full of green vitality.",
+    english: "Vast expanse of lotus leaves covering the water."
+  },
+  {
+    name: "兰叶摇曳",
+    pinyin: "lán yè yáo yè",
+    meaning: "形容兰花叶子轻柔摆动。",
+    example: "清风中兰叶摇曳，优雅动人。",
+    exampleen: "Orchid leaves sway elegantly in the gentle breeze.",
+    english: "Orchid leaves swaying gently and gracefully."
+  },
+  {
+    name: "枝头春意",
+    pinyin: "zhī tóu chūn yì",
+    meaning: "指枝头显现的春天气息。",
+    example: "二月枝头春意浓，花苞初绽。",
+    exampleen: "Strong spring spirit shows on branches in February with budding flowers.",
+    english: "Spring atmosphere appearing on tree branches."
+  },
+  {
+    name: "花落花开",
+    pinyin: "huā luò huā kāi",
+    meaning: "比喻自然循环，兴衰更替。",
+    example: "人生如花落花开，盛衰有时。",
+    exampleen: "Life is like flowers falling and blooming—prosperity and decline have their seasons.",
+    english: "Natural cycle of things declining and reviving."
+  },
+  {
+    name: "柳色新绿",
+    pinyin: "liǔ sè xīn lǜ",
+    meaning: "形容柳树刚发芽时的嫩绿色。",
+    example: "早春时节柳色新绿，生机萌发。",
+    exampleen: "Early spring brings fresh green to willow trees with emerging life.",
+    english: "Fresh new green color of willow trees in early spring."
+  },
+  {
+    name: "松柏高洁",
+    pinyin: "sōng bǎi gāo jié",
+    meaning: "比喻品格高尚纯洁。",
+    example: "君子品格如松柏高洁，令人敬佩。",
+    exampleen: "A gentleman's character is as noble as pine and cypress.",
+    english: "High and pure character like evergreen trees."
+  },
+  {
+    name: "杏花春意",
+    pinyin: "xìng huā chūn yì",
+    meaning: "指杏花盛开带来的春天气息。",
+    example: "村头杏花春意闹，农家忙碌。",
+    exampleen: "Apricot blossoms bring bustling spring spirit to the village.",
+    english: "Spring atmosphere brought by blooming apricot flowers."
+  },
+  {
+    name: "桃红满树",
+    pinyin: "táo hóng mǎn shù",
+    meaning: "形容桃花开满整棵树。",
+    example: "阳春三月桃红满树，如霞似火。",
+    exampleen: "In sunny March, red peach blossoms fill the tree like sunset clouds.",
+    english: "Peach tree completely covered with red blossoms."
+  },
+  {
+    name: "荷风送香",
+    pinyin: "hé fēng sòng xiāng",
+    meaning: "指荷花香气随风传送。",
+    example: "夏夜荷风送香，沁人心脾。",
+    exampleen: "Summer evening breeze carries lotus fragrance refreshingly.",
+    english: "Breeze carrying the sweet fragrance of lotus."
+  },
+  {
+    name: "兰草遍地",
+    pinyin: "lán cǎo biàn dì",
+    meaning: "形容兰草到处生长。",
+    example: "山谷中兰草遍地，香气阵阵。",
+    exampleen: "Orchid grass grows everywhere in the valley, spreading fragrance.",
+    english: "Orchid grass growing abundantly across the land."
+  },
+  {
+    name: "梅花傲骨",
+    pinyin: "méi huā ào gǔ",
+    meaning: "比喻坚强不屈的品格。",
+    example: "志士如梅花傲骨，不畏严寒。",
+    exampleen: "Patriots have proud character like plum blossoms, unafraid of harsh cold.",
+    english: "Proud and unyielding character like plum blossoms."
+  },
+  {
+    name: "荷叶田田",
+    pinyin: "hé yè tián tián",
+    meaning: "形容荷叶密布如田地。",
+    example: "池塘里荷叶田田，翠色满目。",
+    exampleen: "Lotus leaves spread like fields in the pond, green everywhere.",
+    english: "Dense lotus leaves spreading like cultivated fields."
+  },
+  {
+    name: "兰馨满园",
+    pinyin: "lán xīn mǎn yuán",
+    meaning: "指兰花香气充满整个花园。",
+    example: "春日兰馨满园，令人陶醉。",
+    exampleen: "Spring garden filled with orchid fragrance is intoxicating.",
+    english: "Garden filled with the fragrance of orchids."
+  },
+  {
+    name: "桂花绽放",
+    pinyin: "guì huā zhàn fàng",
+    meaning: "指桂花盛开。",
+    example: "金秋时节桂花绽放，香飘十里。",
+    exampleen: "Osmanthus blooms in golden autumn, fragrance spreading for miles.",
+    english: "Osmanthus flowers blooming in their full glory."
+  },
+  {
+    name: "杏林春暖",
+    pinyin: "xìng lín chūn nuǎn",
+    meaning: "比喻医德高尚，也指春天的美景。",
+    example: "名医杏林春暖，医者仁心。",
+    exampleen: "Famous doctors bring warmth like spring in apricot groves—benevolent healers.",
+    english: "Noble medical virtue, or warm spring scene in apricot grove."
+  },
+  {
+    name: "松下清风",
+    pinyin: "sōng xià qīng fēng",
+    meaning: "形容松树下清爽的风。",
+    example: "夏日松下清风，是避暑的好地方。",
+    exampleen: "Cool breeze under pine trees in summer is perfect for escaping heat.",
+    english: "Cool, refreshing breeze under pine trees."
+  },
+  {
+    name: "柳絮漫天",
+    pinyin: "liǔ xù màn tiān",
+    meaning: "形容柳絮飞舞满天。",
+    example: "四月柳絮漫天，如雪花纷飞。",
+    exampleen: "Willow catkins fill the sky in April like flying snow.",
+    english: "Sky filled with floating willow catkins."
+  },
+  {
+    name: "桃李芬芳",
+    pinyin: "táo lǐ fēn fāng",
+    meaning: "比喻学生成才，也指花香宜人。",
+    example: "老师桃李芬芳，满门俊才。",
+    exampleen: "The teacher's students are accomplished like fragrant peach and plum.",
+    english: "Students achieving success, or fragrant peach and plum blossoms."
+  },
+  {
+    name: "兰花指秀",
+    pinyin: "lán huā zhǐ xiù",
+    meaning: "比喻手指纤美如兰花。",
+    example: "舞者兰花指秀，姿态优雅。",
+    exampleen: "The dancer's fingers are elegant like orchid blossoms.",
+    english: "Elegant, graceful fingers resembling orchid flowers."
+  },
+  {
+    name: "梅花凌寒",
+    pinyin: "méi huā líng hán",
+    meaning: "形容梅花在寒冬中开放。",
+    example: "梅花凌寒独自开，香自苦寒来。",
+    exampleen: "Plum blossoms bloom alone in cold, fragrance comes from bitter frost.",
+    english: "Plum blossoms courageously blooming in winter cold."
+  },
+  {
+    name: "竹影扶疏",
+    pinyin: "zhú yǐng fú shū",
+    meaning: "形容竹子影子疏密有致。",
+    example: "月夜竹影扶疏，诗意盎然。",
+    exampleen: "Bamboo shadows are artistically arranged on moonlit nights.",
+    english: "Well-arranged bamboo shadows creating artistic patterns."
+  },
+  {
+    name: "松风水韵",
+    pinyin: "sōng fēng shuǐ yùn",
+    meaning: "形容松林水边的自然韵味。",
+    example: "山居松风水韵，超然物外。",
+    exampleen: "Living in mountains with pine breeze and water charm, transcending worldly affairs.",
+    english: "Natural charm of pine forests and flowing water."
+  },
+  {
+    name: "荷塘月影",
+    pinyin: "hé táng yuè yǐng",
+    meaning: "指月光照射下的荷塘景色。",
+    example: "夏夜荷塘月影，美轮美奂。",
+    exampleen: "Lotus pond under moonlight on summer nights is magnificently beautiful.",
+    english: "Beautiful scene of lotus pond illuminated by moonlight."
+  },
+  {
+    name: "柳丝飘扬",
+    pinyin: "liǔ sī piāo yáng",
+    meaning: "形容柳条在风中飘动。",
+    example: "春风中柳丝飘扬，如绿色的帘幕。",
+    exampleen: "Willow branches flutter in spring breeze like green curtains.",
+    english: "Willow branches floating and swaying in the breeze."
+  },
+  {
+    name: "桃花笑春风",
+    pinyin: "táo huā xiào chūn fēng",
+    meaning: "形容桃花在春风中开得灿烂。",
+    example: "三月桃花笑春风，满园春色。",
+    exampleen: "Peach blossoms smile in spring breeze in March, filling the garden with spring colors.",
+    english: "Peach blossoms blooming brilliantly in spring breeze."
+  },
+  {
+    name: "桂花香浓",
+    pinyin: "guì huā xiāng nóng",
+    meaning: "形容桂花香气浓郁。",
+    example: "中秋桂花香浓，令人陶醉。",
+    exampleen: "Rich osmanthus fragrance during Mid-Autumn is intoxicating.",
+    english: "Rich, intense fragrance of osmanthus flowers."
+  },
+  {
+    name: "荷花幽香",
+    pinyin: "hé huā yōu xiāng",
+    meaning: "指荷花淡雅的香气。",
+    example: "池中荷花幽香，清雅脱俗。",
+    exampleen: "Lotus flowers in the pond have subtle fragrance, elegant and refined.",
+    english: "Subtle, elegant fragrance of lotus flowers."
+  },
+  {
+    name: "兰草依依",
+    pinyin: "lán cǎo yī yī",
+    meaning: "形容兰草柔美依恋的样子。",
+    example: "山谷兰草依依，如诗如画。",
+    exampleen: "Orchid grass in the valley sways gently like a poem or painting.",
+    english: "Orchid grass swaying gently with graceful attachment."
+  },
+  {
+    name: "松影摇曳",
+    pinyin: "sōng yǐng yáo yè",
+    meaning: "形容松树影子摇摆。",
+    example: "微风中松影摇曳，光影斑驳。",
+    exampleen: "Pine shadows sway in gentle breeze, creating dappled light patterns.",
+    english: "Swaying shadows of pine trees."
+  },
+  {
+    name: "杨柳依旧",
+    pinyin: "yáng liǔ yī jiù",
+    meaning: "比喻景物依然，而人事已非。",
+    example: "故地重游，杨柳依旧，物是人非。",
+    exampleen: "Revisiting old places, willows remain the same but people have changed.",
+    english: "Things remaining unchanged while people have changed."
+  },
+  {
+    name: "桃李不言",
+    pinyin: "táo lǐ bù yán",
+    meaning: "比喻有德者不言自明。",
+    example: "桃李不言，下自成蹊。",
+    exampleen: "Peach and plum trees don't speak, yet paths form beneath them naturally.",
+    english: "Virtue speaks for itself without words."
+  },
+  {
+    name: "梅花暗香",
+    pinyin: "méi huā àn xiāng",
+    meaning: "指梅花的淡雅香气。",
+    example: "疏影横斜水清浅，暗香浮动月黄昏。",
+    exampleen: "Sparse shadows slant across clear shallow water, subtle fragrance floats in evening moonlight.",
+    english: "Subtle, elegant fragrance of plum blossoms."
+  },
+  {
+    name: "桂树繁花",
+    pinyin: "guì shù fán huā",
+    meaning: "形容桂树花开繁茂。",
+    example: "秋日桂树繁花，香飘四溢。",
+    exampleen: "Osmanthus tree blooms abundantly in autumn, spreading fragrance everywhere.",
+    english: "Osmanthus tree blooming with abundant flowers."
+  },
+  {
+    name: "兰花玉立",
+    pinyin: "lán huā yù lì",
+    meaning: "形容兰花如玉般挺立。",
+    example: "盆中兰花玉立，清雅脱俗。",
+    exampleen: "Orchids in the pot stand like jade, elegant and refined.",
+    english: "Orchids standing gracefully like precious jade."
+  },
+  {
+    name: "竹林翠影",
+    pinyin: "zhú lín cuì yǐng",
+    meaning: "指竹林的绿色影子。",
+    example: "小径旁竹林翠影，清幽宁静。",
+    exampleen: "Green bamboo shadows by the path create tranquil serenity.",
+    english: "Green shadows cast by bamboo groves."
+  },
+  {
+    name: "柳堤春晓",
+    pinyin: "liǔ dī chūn xiǎo",
+    meaning: "指春天早晨柳树成行的堤岸。",
+    example: "西湖柳堤春晓，景色如画。",
+    exampleen: "Spring dawn on West Lake's willow-lined causeway is picturesque.",
+    english: "Spring dawn scene along willow-lined embankment."
+  },
+  {
+    name: "荷花醉人",
+    pinyin: "hé huā zuì rén",
+    meaning: "形容荷花美丽得令人陶醉。",
+    example: "夏日荷花醉人，游人流连忘返。",
+    exampleen: "Summer lotus flowers are so enchanting that visitors linger and forget to leave.",
+    english: "Lotus flowers so beautiful they intoxicate viewers."
+  },
+  {
+    name: "松柏不老",
+    pinyin: "sōng bǎi bù lǎo",
+    meaning: "比喻精神永远年轻。",
+    example: "英雄虽逝，精神松柏不老。",
+    exampleen: "Though heroes pass away, their spirit remains evergreen.",
+    english: "Eternal youth and vitality like evergreen trees."
+  },
+  {
+    name: "兰桂竞芳",
+    pinyin: "lán guì jìng fāng",
+    meaning: "比喻品德高尚的人互相媲美。",
+    example: "两位学者兰桂竞芳，学界佳话。",
+    exampleen: "The two scholars compete in virtue like orchids and osmanthus—an academic legend.",
+    english: "Virtuous people competing in excellence."
+  },
+  {
+    name: "梧桐深秋",
+    pinyin: "wú tóng shēn qiū",
+    meaning: "形容深秋梧桐叶落的景象。",
+    example: "梧桐深秋叶渐黄，萧瑟秋风起。",
+    exampleen: "Plane tree leaves turn yellow in deep autumn, bleak autumn wind rises.",
+    english: "Late autumn scene with yellowing plane tree leaves."
+  },
+  {
+    name: "桃花灼灼",
+    pinyin: "táo huā zhuó zhuó",
+    meaning: "形容桃花开得鲜艳夺目。",
+    example: "桃之夭夭，灼灼其华。",
+    exampleen: "Peach trees flourish luxuriantly, brilliant in their splendor.",
+    english: "Brilliantly bright and beautiful peach blossoms."
+  },
+  {
+    name: "竹柏长青",
+    pinyin: "zhú bǎi cháng qīng",
+    meaning: "比喻品格坚贞，友谊长存。",
+    example: "君子之交如竹柏长青，历久弥坚。",
+    exampleen: "Gentleman's friendship is like evergreen bamboo and cypress, growing stronger over time.",
+    english: "Enduring character and friendship like evergreen plants."
+  },
+  {
+    name: "柳暗花深",
+    pinyin: "liǔ àn huā shēn",
+    meaning: "形容春色浓郁，花木茂盛。",
+    example: "园中柳暗花深，春意正浓。",
+    exampleen: "Dense willows and deep flowers in the garden show spring's peak.",
+    english: "Dense spring foliage with thick willows and abundant flowers."
+  },
+  {
+    name: "荷风细细",
+    pinyin: "hé fēng xì xì",
+    meaning: "形容荷花边微风轻柔。",
+    example: "池边荷风细细，送来阵阵清香。",
+    exampleen: "Gentle breeze by the lotus pond carries waves of fragrance.",
+    english: "Gentle, soft breeze near lotus flowers."
+  },
+  {
+    name: "兰叶芬芳",
+    pinyin: "lán yè fēn fāng",
+    meaning: "指兰花叶子散发香气。",
+    example: "花架上兰叶芬芳，满室生香。",
+    exampleen: "Fragrant orchid leaves on the flower stand fill the room with scent.",
+    english: "Orchid leaves releasing their sweet fragrance."
+  },
+  {
+    name: "枝繁叶密",
+    pinyin: "zhī fán yè mì",
+    meaning: "形容树木枝叶茂盛密集。",
+    example: "古槐枝繁叶密，绿荫如盖。",
+    exampleen: "The old scholar tree has dense branches and leaves like a green canopy.",
+    english: "Abundant branches and dense foliage."
+  },
+  {
+    name: "梅花疏影",
+    pinyin: "méi huā shū yǐng",
+    meaning: "形容梅花稀疏的影子。",
+    example: "月下梅花疏影，清香阵阵。",
+    exampleen: "Sparse plum blossom shadows under moonlight spread gentle fragrance.",
+    english: "Scattered, delicate shadows of plum blossoms."
+  },
+  {
+    name: "桂花遍地",
+    pinyin: "guì huā biàn dì",
+    meaning: "形容桂花飘落满地。",
+    example: "秋风过后桂花遍地，香满径。",
+    exampleen: "After autumn wind, osmanthus petals cover the ground, fragrance fills the path.",
+    english: "Osmanthus flowers scattered all over the ground."
+  },
+  {
+    name: "兰花摇曳",
+    pinyin: "lán huā yáo yè",
+    meaning: "形容兰花在风中轻摆。",
+    example: "清风中兰花摇曳，姿态优雅。",
+    exampleen: "Orchids sway gracefully in gentle breeze.",
+    english: "Orchids swaying gently and elegantly."
+  },
+  {
+    name: "桃红梨白",
+    pinyin: "táo hóng lí bái",
+    meaning: "形容春天桃花和梨花的美景。",
+    example: "春园中桃红梨白，争奇斗艳。",
+    exampleen: "Red peach and white pear blossoms compete in beauty in the spring garden.",
+    english: "Beautiful contrast of red peach and white pear blossoms."
+  },
+  {
+    name: "梅枝疏影",
+    pinyin: "méi zhī shū yǐng",
+    meaning: "形容梅花枝条的疏淡影子。",
+    example: "窗前梅枝疏影，淡雅怡人。",
+    exampleen: "Sparse shadows of plum branches outside the window are elegant and pleasant.",
+    english: "Delicate, sparse shadows of plum tree branches."
+  },
+  {
+    name: "荷叶飘香",
+    pinyin: "hé yè piāo xiāng",
+    meaning: "指荷叶散发的清香。",
+    example: "池中荷叶飘香，清新宜人。",
+    exampleen: "Lotus leaves in the pond spread refreshing fragrance.",
+    english: "Fresh fragrance emanating from lotus leaves."
+  },
+  {
+    name: "兰草淡雅",
+    pinyin: "lán cǎo dàn yǎ",
+    meaning: "形容兰草的清淡雅致。",
+    example: "室中兰草淡雅，幽香阵阵。",
+    exampleen: "Elegant orchid grass in the room spreads subtle fragrance.",
+    english: "Subtle elegance and refinement of orchid grass."
+  },
+  {
+    name: "松涛涌动",
+    pinyin: "sōng tāo yǒng dòng",
+    meaning: "形容松林中风声如波涛。",
+    example: "山上松涛涌动，声若雷鸣。",
+    exampleen: "Pine waves surge on the mountain, sounding like thunder.",
+    english: "Sound of wind through pine forest like surging waves."
+  },
+  {
+    name: "桂花满城",
+    pinyin: "guì huā mǎn chéng",
+    meaning: "形容桂花盛开，香满全城。",
+    example: "金桂飘香时节，桂花满城。",
+    exampleen: "When golden osmanthus blooms, fragrance fills the entire city.",
+    english: "City filled with the fragrance of blooming osmanthus."
+  },
+  {
+    name: "桃李天下",
+    pinyin: "táo lǐ tiān xià",
+    meaning: "比喻学生遍布天下。",
+    example: "名师桃李天下，德泽深远。",
+    exampleen: "Famous teacher's students spread worldwide, virtue reaches far.",
+    english: "Students spread throughout the world."
+  },
+  {
+    name: "杏花吹满头",
+    pinyin: "xìng huā chuī mǎn tóu",
+    meaning: "形容杏花飞舞的美景。",
+    example: "春风杏花吹满头，醉人心田。",
+    exampleen: "Spring wind blows apricot petals everywhere, intoxicating the heart.",
+    english: "Apricot petals blown by wind creating beautiful scene."
+  },
+  {
+    name: "梅开五福",
+    pinyin: "méi kāi wǔ fú",
+    meaning: "比喻五种福气一起来临。",
+    example: "新年梅开五福，万事如意。",
+    exampleen: "New Year brings five blessings like plum blossoms—everything goes smoothly.",
+    english: "Five kinds of good fortune arriving together."
+  },
+  {
+    name: "兰花满室",
+    pinyin: "lán huā mǎn shì",
+    meaning: "形容兰花香气充满房间。",
+    example: "书斋兰花满室，书香与花香并存。",
+    exampleen: "Study filled with orchid fragrance, book fragrance and flower scent coexist.",
+    english: "Room completely filled with orchid flowers and fragrance."
+  },
+  {
+    name: "荷叶无声",
+    pinyin: "hé yè wú shēng",
+    meaning: "形容荷叶静静飘浮的样子。",
+    example: "池中荷叶无声，静谧安详。",
+    exampleen: "Lotus leaves float silently in the pond, peaceful and serene.",
+    english: "Lotus leaves floating silently and peacefully."
+  },
+  {
+    name: "桂树香溢",
+    pinyin: "guì shù xiāng yì",
+    meaning: "形容桂树香气四溢。",
+    example: "庭院桂树香溢，秋意正浓。",
+    exampleen: "Osmanthus tree in the courtyard overflows with fragrance, autumn spirit is strong.",
+    english: "Osmanthus tree spreading abundant fragrance."
+  },
+  {
+    name: "柳绿桃红",
+    pinyin: "liǔ lǜ táo hóng",
+    meaning: "形容春天的美丽景色。",
+    example: "三月柳绿桃红，春光明媚。",
+    exampleen: "March brings green willows and red peaches, bright spring sunshine.",
+    english: "Beautiful spring scene with green willows and red peach blossoms."
+  },
+  {
+    name: "桃李争艳",
+    pinyin: "táo lǐ zhēng yàn",
+    meaning: "形容桃花李花竞相美丽。",
+    example: "春园桃李争艳，游人如织。",
+    exampleen: "Peach and plum compete in beauty in spring garden, visitors stream in.",
+    english: "Peach and plum blossoms competing in their splendor."
+  },
+  {
+    name: "荷花开满池",
+    pinyin: "hé huā kāi mǎn chí",
+    meaning: "形容荷花盛开满池塘。",
+    example: "夏日荷花开满池，红白相映。",
+    exampleen: "Summer lotus flowers bloom throughout the pond, red and white complementing each other.",
+    english: "Lotus flowers blooming abundantly across the entire pond."
+  },
+  {
+    name: "兰香扑鼻",
+    pinyin: "lán xiāng pū bí",
+    meaning: "形容兰花香气浓郁袭人。",
+    example: "进入兰室，兰香扑鼻而来。",
+    exampleen: "Entering the orchid room, fragrance immediately greets the nose.",
+    english: "Strong orchid fragrance directly hitting one's senses."
+  },
+  {
+    name: "松柏常在",
+    pinyin: "sōng bǎi cháng zài",
+    meaning: "比喻坚贞品格永存。",
+    example: "英雄精神如松柏常在，永不磨灭。",
+    exampleen: "Heroic spirit remains forever like evergreen pines and cypresses.",
+    english: "Enduring presence like evergreen trees."
+  },
+  {
+    name: "梅花斗雪",
+    pinyin: "méi huā dòu xuě",
+    meaning: "形容梅花与雪花竞美。",
+    example: "寒冬梅花斗雪，傲然挺立。",
+    exampleen: "Plum blossoms compete with snow in cold winter, standing proudly erect.",
+    english: "Plum blossoms courageously competing with snow."
+  },
+  {
+    name: "柳丝柔软",
+    pinyin: "liǔ sī róu ruǎn",
+    meaning: "形容柳条柔软如丝。",
+    example: "春风中柳丝柔软，如美人秀发。",
+    exampleen: "Willow branches soft as silk in spring breeze, like a beauty's hair.",
+    english: "Willow branches as soft and flexible as silk."
+  },
+  {
+    name: "兰草摇风",
+    pinyin: "lán cǎo yáo fēng",
+    meaning: "形容兰草在风中摆动。",
+    example: "山谷兰草摇风，幽香阵阵。",
+    exampleen: "Orchid grass sways in mountain valley breeze, spreading subtle fragrance.",
+    english: "Orchid grass swaying gracefully in the wind."
+  },
+  {
+    name: "桂花如金",
+    pinyin: "guì huā rú jīn",
+    meaning: "形容金桂花色如金。",
+    example: "八月桂花如金，满树辉煌。",
+    exampleen: "August osmanthus flowers are golden like gold, brilliant on the tree.",
+    english: "Golden osmanthus flowers shining like precious metal."
+  },
+  {
+    name: "杏花初开",
+    pinyin: "xìng huā chū kāi",
+    meaning: "指杏花刚开始绽放。",
+    example: "二月杏花初开，春意萌动。",
+    exampleen: "Apricot flowers begin to bloom in February, spring spirit awakens.",
+    english: "Apricot flowers just beginning to bloom."
+  },
+  {
+    name: "桃李同春",
+    pinyin: "táo lǐ tóng chūn",
+    meaning: "比喻同时得到好运。",
+    example: "兄弟同榜，桃李同春。",
+    exampleen: "Brothers both pass exams, sharing spring fortune like peach and plum.",
+    english: "Sharing good fortune simultaneously."
+  },
+  {
+    name: "荷叶铺翠",
+    pinyin: "hé yè pū cuì",
+    meaning: "形容荷叶铺满水面呈现翠绿。",
+    example: "湖面荷叶铺翠，如绿毯一般。",
+    exampleen: "Lotus leaves spread green across the lake surface like a verdant carpet.",
+    english: "Lotus leaves spreading green across the water surface."
+  },
+  {
+    name: "兰花点点",
+    pinyin: "lán huā diǎn diǎn",
+    meaning: "形容兰花零星开放。",
+    example: "石缝中兰花点点，清雅脱俗。",
+    exampleen: "Scattered orchids bloom in rock crevices, elegant and refined.",
+    english: "Orchids blooming sparsely here and there."
+  },
+  {
+    name: "松树挺拔",
+    pinyin: "sōng shù tǐng bá",
+    meaning: "形容松树直立高耸。",
+    example: "山巅松树挺拔，傲视群峰。",
+    exampleen: "Pine trees stand tall on mountain peaks, proudly overlooking other peaks.",
+    english: "Pine trees standing tall and straight."
+  },
+  {
+    name: "梅花傲霜",
+    pinyin: "méi huā ào shuāng",
+    meaning: "形容梅花不畏严寒。",
+    example: "寒冬梅花傲霜，精神可嘉。",
+    exampleen: "Plum blossoms defy frost in cold winter, their spirit is admirable.",
+    english: "Plum blossoms proudly resisting frost and cold."
+  },
+  {
+    name: "柳色清新",
+    pinyin: "liǔ sè qīng xīn",
+    meaning: "形容柳树颜色清新悦目。",
+    example: "早春柳色清新，生机盎然。",
+    exampleen: "Fresh green willow color in early spring is full of vitality.",
+    english: "Fresh, pleasing green color of willow trees."
+  },
+  {
+    name: "荷香四溢",
+    pinyin: "hé xiāng sì yì",
+    meaning: "形容荷花香气四处飘散。",
+    example: "夏夜荷香四溢，沁人心脾。",
+    exampleen: "Lotus fragrance spreads everywhere on summer nights, refreshing hearts.",
+    english: "Lotus fragrance spreading in all directions."
+  },
+  {
+    name: "桂花遍野",
+    pinyin: "guì huā biàn yě",
+    meaning: "形容桂花开满原野。",
+    example: "秋日桂花遍野，香飘万里。",
+    exampleen: "Autumn fields are covered with osmanthus, fragrance spreads for miles.",
+    english: "Osmanthus flowers blooming across the entire countryside."
+  },
+  {
+    name: "桃花秀美",
+    pinyin: "táo huā xiù měi",
+    meaning: "形容桃花美丽秀雅。",
+    example: "山中桃花秀美，如画一般。",
+    exampleen: "Peach blossoms in the mountains are beautiful and elegant like a painting.",
+    english: "Beautiful, elegant, and graceful peach blossoms."
+  },
+  {
+    name: "兰草长青",
+    pinyin: "lán cǎo cháng qīng",
+    meaning: "比喻品德高洁持久。",
+    example: "君子品德如兰草长青，历久弥香。",
+    exampleen: "A gentleman's virtue is like evergreen orchid grass, growing more fragrant over time.",
+    english: "Enduring noble character like ever-fresh orchid grass."
+  },
+  {
+    name: "柳枝细舞",
+    pinyin: "liǔ zhī xì wǔ",
+    meaning: "形容柳枝轻盈摆动如舞蹈。",
+    example: "春风中柳枝细舞，姿态优美。",
+    exampleen: "Willow branches dance gracefully in spring breeze with beautiful posture.",
+    english: "Willow branches swaying delicately like dancing."
+  },
+  {
+    name: "荷塘清风",
+    pinyin: "hé táng qīng fēng",
+    meaning: "形容荷塘边的清凉微风。",
+    example: "夏夜荷塘清风，带走一日暑热。",
+    exampleen: "Cool breeze by lotus pond on summer night takes away the day's heat.",
+    english: "Cool, refreshing breeze by the lotus pond."
+  }
+];
+
+
+  const pageSize = 20;
+  let currentPage = 1;
+  let totalPages = Math.ceil(plantIdioms.length / pageSize);
+
+  function renderPage() {
+    const container = document.getElementById("idiomContainer");
+    container.innerHTML = "";
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, plantIdioms.length);
+    plantIdioms.slice(start, end).forEach(i => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.textContent = i.name;
+      card.onclick = () => openModal(i);
+      container.appendChild(card);
+    });
+    document.getElementById("pageInfo").textContent = `${currentPage} / ${totalPages}`;
+    document.getElementById("prevBtn").disabled = currentPage === 1;
+    document.getElementById("nextBtn").disabled = currentPage === totalPages;
+  }
+
+  function openModal(idiom) {
+    document.getElementById("modalTitle").textContent = idiom.name;
+    document.getElementById("modalPinyin").textContent = idiom.pinyin;
+    document.getElementById("modalMeaning").textContent = "释义：" + idiom.meaning;
+    document.getElementById("modalExample").textContent = "例句：" + idiom.example;
+    document.getElementById("modalExampleEn").textContent = idiom.example_en;
+    document.getElementById("modalEnglish").textContent = "English: " + idiom.english;
+    document.getElementById("idiomModal").classList.add("active");
+
+    // 朗读：仅读成语和中文释义
+    document.getElementById("readBtn").onclick = () => {
+      const text = `${idiom.name}，${idiom.meaning}`;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "zh-CN";
+      u.rate = 0.95;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    };
+  }
+
+  document.getElementById("closeBtn").onclick = () => {
+    document.getElementById("idiomModal").classList.remove("active");
+    speechSynthesis.cancel();
+  };
+  document.getElementById("prevBtn").onclick = () => { if(currentPage>1){ currentPage--; renderPage(); } };
+  document.getElementById("nextBtn").onclick = () => { if(currentPage<totalPages){ currentPage++; renderPage(); } };
+
+  renderPage();
+  </script>
+</body>
+</html>
