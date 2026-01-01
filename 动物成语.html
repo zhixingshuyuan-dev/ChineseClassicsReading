@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>动物成语互动图卡 · 中英双语版</title>
+
+  <style>
+  body {
+    font-family: "KaiTi", serif;
+    background-color: #f8f4e3;
+    margin: 0;
+    color: #432;
+  }
+
+  header {
+    text-align: center;
+    background: rgba(252,247,230,0.9);
+    border-bottom: 3px double #a67c52;
+    padding: 12px 0;
+  }
+  header h1 {
+    font-size: 3em;
+    margin: 0;
+    color: #803a09;
+  }
+  header p {
+    font-size: 1.5em;
+    margin: 4px 0;
+  }
+
+  .container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    padding: 20px 5%;
+  }
+  .card {
+    background: #fffaf0;
+    border: 2px solid #c9a66b;
+    border-radius: 8px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    text-align: center;
+    padding: 25px 0;
+    cursor: pointer;
+    font-size: 1.8em;
+    transition: transform 0.3s, background 0.3s;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    background: #fff3cb;
+  }
+
+  footer {
+    text-align: center;
+    padding: 15px 0 30px;
+  }
+  .pagination button {
+    background: #c69c6d;
+    border: none;
+    padding: 10px 18px;
+    cursor: pointer;
+    color: white;
+    font-size: 1.4em;
+    border-radius: 6px;
+    margin: 0 6px;
+  }
+  .pagination button:hover { background: #a67c52; }
+  .pagination button:disabled { background: #ccc; cursor: not-allowed; }
+
+  .modal {
+    position: fixed; top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.5);
+    display: flex; justify-content:center; align-items:center;
+    visibility:hidden; opacity:0; transition: all .3s ease;
+  }
+  .modal.active { visibility:visible; opacity:1; }
+
+  .modal-content {
+    background: #fffaf0;
+    border: 4px ridge #a67c52;
+    border-radius: 14px;
+    text-align: center;
+    width: 85%;
+    max-width: 700px;
+    padding: 30px 40px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.3);
+  }
+  .modal-content h2 {
+    color:#8b4513;
+    font-size:3em;
+    margin:0;
+  }
+  .modal-content h3 {
+    font-size:1.8em;
+    margin:6px 0;
+    color:#333;
+    font-family: "Noto Sans", Arial, sans-serif; /* 拼音清晰字体 */
+  }
+  .modal-content p {
+    font-size:1.6em;
+    line-height:1.6;
+    margin-top:10px;
+  }
+  .modal-content .example {
+    font-size:1.4em;
+    color:#555;
+    margin-top:10px;
+  }
+  .modal-content .english {
+    font-size:1.4em;
+    color:#444;
+    margin-top:8px;
+    font-family: "Noto Sans", sans-serif;
+  }
+  .close-btn, .read-btn {
+    margin-top: 20px;
+    background: #a67c52;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.4em;
+    margin-right: 8px;
+  }
+  .close-btn:hover, .read-btn:hover {
+    background: #8b5a2b;
+  }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🐉 动物成语互动图卡 🐅</h1>
+    <p>点击成语，查看拼音、释义、例句与英文翻译</p>
+  </header>
+
+  <main>
+    <div class="container" id="idiomContainer"></div>
+  </main>
+
+  <footer>
+    <div class="pagination">
+      <button id="prevBtn">上一页</button>
+      <span id="pageInfo"></span>
+      <button id="nextBtn">下一页</button>
+    </div>
+  </footer>
+
+  <!-- 弹窗 -->
+  <div class="modal" id="idiomModal">
+    <div class="modal-content">
+      <h2 id="modalTitle"></h2>
+      <h3 id="modalPinyin"></h3>
+      <p id="modalMeaning"></p>
+      <p class="example" id="modalExample"></p>
+      <p class="english" id="modalEnglish"></p>
+      <button class="read-btn" id="readBtn">📢 朗读</button>
+      <button class="close-btn" id="closeBtn">关闭</button>
+    </div>
+  </div>
+
+  <script>
+  /* ======== 动物成语数据模板，下一步我将生成100条完整内容 ======== */
+ 
+    const idioms = [
+  {
+    name: "狼心狗肺",
+    pinyin: "láng xīn gǒu fèi",
+    meaning: "形容忘恩负义，心地狠毒。",
+    example: "他为了利益不顾亲情，真是狼心狗肺。",
+    english: "Describes someone cruel and ungrateful; a person with a vicious heart."
+  },
+  {
+    name: "画龙点睛",
+    pinyin: "huà lóng diǎn jīng",
+    meaning: "在关键处加上一笔，使内容更生动传神。",
+    example: "他在报告结尾的一句话，真起到了画龙点睛的效果。",
+    english: "To add the finishing touch that brings the whole piece to life."
+  },
+  {
+    name: "狐假虎威",
+    pinyin: "hú jiǎ hǔ wēi",
+    meaning: "比喻依仗别人的权势欺压他人。",
+    example: "他仗着上司的权力横行霸道，简直是狐假虎威。",
+    english: "Used for people who bully others by borrowing someone else's power."
+  },
+  {
+    name: "如鱼得水",
+    pinyin: "rú yú dé shuǐ",
+    meaning: "比喻得到非常适合自己的环境或对象。",
+    example: "他调到新部门后如鱼得水，业绩节节攀升。",
+    english: "Describes feeling at ease in a new environment, like a fish in water."
+  },
+  {
+    name: "鸡鸣狗盗",
+    pinyin: "jī míng gǒu dào",
+    meaning: "比喻微不足道的技能或小偷小摸的人。",
+    example: "他靠那点鸡鸣狗盗的本事混口饭吃。",
+    english: "Refers to trivial skills or people with petty tricks, like thieves or tricksters."
+  },
+  {
+    name: "狼吞虎咽",
+    pinyin: "láng tūn hǔ yàn",
+    meaning: "形容吃得又快又急。",
+    example: "他一天没吃饭，终于开吃时狼吞虎咽。",
+    english: "To eat voraciously and hastily, like a hungry beast."
+  },
+  {
+    name: "羊入虎口",
+    pinyin: "yáng rù hǔ kǒu",
+    meaning: "比喻弱者落入强者手中，处境危险。",
+    example: "那单独外出的商队简直是羊入虎口。",
+    english: "Describes falling into a dangerous situation, like a sheep into a tiger's mouth."
+  },
+  {
+    name: "鱼目混珠",
+    pinyin: "yú mù hùn zhū",
+    meaning: "拿假的冒充真的，以次充好。",
+    example: "市场上鱼目混珠的产品太多了。",
+    english: "To mix the spurious with the genuine and deceive others."
+  },
+  {
+    name: "龙争虎斗",
+    pinyin: "lóng zhēng hǔ dòu",
+    meaning: "比喻势均力敌的激烈竞争。",
+    example: "这场决赛可谓龙争虎斗，胜负难料。",
+    english: "Describes a fierce fight or competition between evenly matched sides."
+  },
+  {
+    name: "狗急跳墙",
+    pinyin: "gǒu jí tiào qiáng",
+    meaning: "比喻走投无路时采取极端行为。",
+    example: "他被逼得狗急跳墙，做出了无法挽回的事。",
+    english: "When one is cornered, they may resort to desperate measures."
+  },
+  {
+    name: "守株待兔",
+    pinyin: "shǒu zhū dài tù",
+    meaning: "比喻死守旧法，不知变通。",
+    example: "光靠好运是行不通的，别总想着守株待兔。",
+    english: "Waiting passively for luck instead of taking initiative."
+  },
+  {
+    name: "鹤立鸡群",
+    pinyin: "hè lì jī qún",
+    meaning: "比喻人的仪态或才能出众。",
+    example: "她在人群中鹤立鸡群，一眼就能被认出。",
+    english: "Stands out among the crowd, like a crane among chickens."
+  },
+  {
+    name: "狡兔三窟",
+    pinyin: "jiǎo tù sān kū",
+    meaning: "比喻多留退路以求安全。",
+    example: "他做事谨慎，总是狡兔三窟，准备好后路。",
+    english: "Describes being cautious and having multiple plans for safety."
+  },
+  {
+    name: "鸟语花香",
+    pinyin: "niǎo yǔ huā xiāng",
+    meaning: "形容春天景色优美。",
+    example: "公园里鸟语花香，令人心情舒畅。",
+    english: "Used to describe the pleasant scenery of spring with birds singing and flowers in bloom."
+  },
+  {
+    name: "狼狈为奸",
+    pinyin: "láng bèi wéi jiān",
+    meaning: "比喻互相勾结干坏事。",
+    example: "那两家公司狼狈为奸，欺骗消费者。",
+    english: "To collude with others in wrongdoing."
+  },
+  {
+    name: "虎头蛇尾",
+    pinyin: "hǔ tóu shé wěi",
+    meaning: "比喻做事有头无尾，开始声势大，后来劲头小。",
+    example: "他的计划一向虎头蛇尾，从不坚持到底。",
+    english: "Starts strong but ends weak; to show initial enthusiasm but lack perseverance."
+  },
+  {
+    name: "兔死狐悲",
+    pinyin: "tù sǐ hú bēi",
+    meaning: "比喻对同类的不幸感到悲伤。",
+    example: "看到朋友被裁员，他也兔死狐悲。",
+    english: "Feeling sorrow for one's kind when they suffer the same fate."
+  },
+  {
+    name: "蛛丝马迹",
+    pinyin: "zhū sī mǎ jì",
+    meaning: "比喻事情留下的线索。",
+    example: "警方通过蛛丝马迹，终于破案。",
+    english: "Tiny clues that lead to the revelation of a bigger issue."
+  },
+  {
+    name: "呆若木鸡",
+    pinyin: "dāi ruò mù jī",
+    meaning: "形容由于惊讶而呆住。",
+    example: "听到这个消息，他当场呆若木鸡。",
+    english: "To be stunned into silence, standing like a wooden chicken."
+  },
+  {
+    name: "骑虎难下",
+    pinyin: "qí hǔ nán xià",
+    meaning: "比喻事情中途难以停止。",
+    example: "现在项目已经全线启动，真是骑虎难下。",
+    english: "To find oneself in a situation that is hard to withdraw from."
+  },
+  {
+    name: "龙马精神",
+    pinyin: "lóng mǎ jīng shén",
+    meaning: "形容精神旺盛，充满活力。",
+    example: "他虽年近七十，却依然龙马精神。",
+    english: "Describes vigor and vitality of a person, regardless of age."
+  },
+  {
+    name: "千军万马",
+    pinyin: "qiān jūn wàn mǎ",
+    meaning: "形容军队浩大，气势磅礴。",
+    example: "那场阅兵式可谓千军万马，震撼人心。",
+    english: "Describes a grand and powerful army or an overwhelming force."
+  },
+  {
+    name: "鱼贯而入",
+    pinyin: "yú guàn ér rù",
+    meaning: "形容一队人或物依次进入。",
+    example: "观众鱼贯而入，安静就座。",
+    english: "To enter one after another in an orderly line."
+  },
+  {
+    name: "龙潭虎穴",
+    pinyin: "lóng tán hǔ xué",
+    meaning: "形容极其危险的地方。",
+    example: "他只身闯入龙潭虎穴，救出同伴。",
+    english: "A situation or place that is extremely dangerous."
+  },
+  {
+    name: "马不停蹄",
+    pinyin: "mǎ bù tíng tí",
+    meaning: "形容不停歇地前进或做事。",
+    example: "他马不停蹄地赶往下一个会场。",
+    english: "Working or traveling continuously without rest."
+  },
+  {
+    name: "鹬蚌相争",
+    pinyin: "yù bàng xiāng zhēng",
+    meaning: "比喻双方争斗，第三者得利。",
+    example: "他们为利益鹬蚌相争，结果被别人占了便宜。",
+    english: "When two sides fight, a third party benefits."
+  },
+  {
+    name: "卧虎藏龙",
+    pinyin: "wò hǔ cáng lóng",
+    meaning: "比喻人才济济而未被发现。",
+    example: "这所大学卧虎藏龙，高手云集。",
+    english: "Describes a place full of hidden talents."
+  },
+  {
+    name: "飞鹰走狗",
+    pinyin: "fēi yīng zǒu gǒu",
+    meaning: "比喻为权贵奔走的人。",
+    example: "他整日飞鹰走狗，讨好上司。",
+    english: "People who flatter or serve the powerful for personal gain."
+  },
+  {
+    name: "蛇蝎心肠",
+    pinyin: "shé xiē xīn cháng",
+    meaning: "形容心肠狠毒。",
+    example: "她外表温柔，其实蛇蝎心肠。",
+    english: "Describes a person with a venomous and cruel heart."
+  },
+  {
+    name: "狮子搏兔",
+    pinyin: "shī zǐ bó tù",
+    meaning: "比喻办事认真，即使是小事也尽全力。",
+    example: "他对工作一向狮子搏兔，绝不懈怠。",
+    english: "To put in full effort even on small matters."
+  },
+
+  {
+    name: "惊弓之鸟",
+    pinyin: "jīng gōng zhī niǎo",
+    meaning: "比喻受过惊吓而容易害怕的人。",
+    example: "他经历那次事故后，变得像惊弓之鸟一样谨慎。",
+    english: "Someone easily frightened after a past trauma; a ‘once‑bitten‑twice‑shy’ person."
+  },
+  {
+    name: "羊肠小道",
+    pinyin: "yáng cháng xiǎo dào",
+    meaning: "比喻狭窄曲折的小路。",
+    example: "我们沿着羊肠小道一步步爬上山顶。",
+    english: "A narrow, winding path; literally ‘a sheep‑gut‑like trail’."
+  },
+  {
+    name: "九牛一毛",
+    pinyin: "jiǔ niú yī máo",
+    meaning: "比喻极大数量中极微小的部分。",
+    example: "这点损失对整个公司来说只是九牛一毛。",
+    english: "A mere trifle compared with a much larger whole."
+  },
+  {
+    name: "蝇营狗苟",
+    pinyin: "yíng yíng gǒu gǒu",
+    meaning: "比喻卑鄙无耻的生活或行为。",
+    example: "我们不要蝇营狗苟地追逐私利。",
+    english: "To live ignobly, scheming for petty gains."
+  },
+  {
+    name: "龙生九子",
+    pinyin: "lóng shēng jiǔ zǐ",
+    meaning: "比喻同类中形式多样，各有特性。",
+    example: "艺术流派如龙生九子，各具风格。",
+    english: "Literally ‘the dragon has nine sons’; used for diverse types within one kind."
+  },
+  {
+    name: "虎踞龙盘",
+    pinyin: "hǔ jù lóng pán",
+    meaning: "形容地势险要。",
+    example: "这座城市虎踞龙盘，易守难攻。",
+    english: "A strategic, naturally fortified location."
+  },
+  {
+    name: "鹰击长空",
+    pinyin: "yīng jī cháng kōng",
+    meaning: "形容志向高远，奋发向上。",
+    example: "年轻人应当如鹰击长空，敢于追梦。",
+    english: "Soar high with determination; used for aspiring individuals."
+  },
+  {
+    name: "马到成功",
+    pinyin: "mǎ dào chéng gōng",
+    meaning: "形容事情顺利，一下子就取得成功。",
+    example: "祝你比赛马到成功！",
+    english: "To achieve instant success; literally ‘succeed as soon as the horse arrives’."
+  },
+  {
+    name: "鱼跃龙门",
+    pinyin: "yú yuè lóng mén",
+    meaning: "比喻人得志或地位提升。",
+    example: "他考上名校，可谓鱼跃龙门。",
+    english: "To leap to success or rise to a higher position."
+  },
+  {
+    name: "狮子大开口",
+    pinyin: "shī zǐ dà kāi kǒu",
+    meaning: "形容要价或要求极高。",
+    example: "对方一开口就要双倍的价钱，真是狮子大开口。",
+    english: "To make an exorbitant demand or ask an unreasonably high price."
+  },
+  {
+    name: "牛头不对马嘴",
+    pinyin: "niú tóu bù duì mǎ zuǐ",
+    meaning: "比喻两件事情或说法不相符。",
+    example: "你的回答牛头不对马嘴，与问题毫无关系。",
+    english: "Irrelevant or mismatched responses; things that don't correspond."
+  },
+  {
+    name: "鼠目寸光",
+    pinyin: "shǔ mù cùn guāng",
+    meaning: "比喻目光短浅，没有长远眼光。",
+    example: "他只图眼前利益，真是鼠目寸光。",
+    english: "Short‑sighted and lacking foresight."
+  },
+  {
+    name: "马失前蹄",
+    pinyin: "mǎ shī qián tí",
+    meaning: "比喻一时疏忽而遭到挫折。",
+    example: "他这次考试失利，只是马失前蹄。",
+    english: "A temporary setback due to carelessness."
+  },
+  {
+    name: "虎视眈眈",
+    pinyin: "hǔ shì dān dān",
+    meaning: "形容凶狠而贪婪地注视着。",
+    example: "敌人虎视眈眈，随时准备出击。",
+    english: "To glare menacingly, coveting something."
+  },
+  {
+    name: "牛鬼蛇神",
+    pinyin: "niú guǐ shé shén",
+    meaning: "比喻邪恶丑陋的人物。",
+    example: "社会上总有些牛鬼蛇神在作祟。",
+    english: "A derogatory term for evil or corrupt figures."
+  },
+  {
+    name: "狗仗人势",
+    pinyin: "gǒu zhàng rén shì",
+    meaning: "依仗他人势力欺压弱者。",
+    example: "他总是狗仗人势，没人敢惹。",
+    english: "To bully others by relying on someone else's power."
+  },
+  {
+    name: "猴年马月",
+    pinyin: "hóu nián mǎ yuè",
+    meaning: "比喻不确定的未来时间。",
+    example: "那件事要等到猴年马月才能实现？",
+    english: "An idiom meaning 'God knows when'—an uncertain time."
+  },
+  {
+    name: "鹰视狼顾",
+    pinyin: "yīng shì láng gù",
+    meaning: "形容目光锐利而四处窥察。",
+    example: "他鹰视狼顾，警觉地观察四周。",
+    english: "Looking around sharply and viciously, like an eagle or wolf."
+  },
+  {
+    name: "鸡犬不宁",
+    pinyin: "jī quǎn bù níng",
+    meaning: "形容骚扰得连鸡狗都不得安宁。",
+    example: "邻居之间天天吵架，弄得鸡犬不宁。",
+    english: "Utter chaos or disturbance affecting everyone."
+  },
+  {
+    name: "猫哭耗子",
+    pinyin: "māo kū hào zi",
+    meaning: "比喻假慈悲。",
+    example: "他表面同情，实则幸灾乐祸，真是猫哭耗子。",
+    english: "Pretending to be compassionate while actually gloating."
+  },
+  {
+    name: "鱼龙混杂",
+    pinyin: "yú lóng hùn zá",
+    meaning: "比喻好人坏人混在一起。",
+    example: "网络世界鱼龙混杂，需要谨慎辨别。",
+    english: "A mix of good and bad people together."
+  },
+  {
+    name: "狼子野心",
+    pinyin: "láng zǐ yě xīn",
+    meaning: "比喻人野心勃勃，不安分守己。",
+    example: "他早有称王称霸的狼子野心。",
+    english: "Describes someone ambitious and ruthless."
+  },
+  {
+    name: "兔起鹘落",
+    pinyin: "tù qǐ gǔ luò",
+    meaning: "形容动作迅速。",
+    example: "他刀法如兔起鹘落，令人眼花缭乱。",
+    english: "Used to describe very swift movements."
+  },
+  {
+    name: "燕雀安知鸿鹄之志",
+    pinyin: "yàn què ān zhī hóng hú zhī zhì",
+    meaning: "比喻平凡之人难以理解志向高远者。",
+    example: "他不理解你的理想，正所谓燕雀安知鸿鹄之志。",
+    english: "The common cannot comprehend the ambitions of the great."
+  },
+  {
+    name: "风马牛不相及",
+    pinyin: "fēng mǎ niú bù xiāng jí",
+    meaning: "比喻事物完全无关。",
+    example: "你的回答和问题风马牛不相及。",
+    english: "Things that are entirely unrelated or irrelevant."
+  },
+  {
+    name: "鸡飞狗跳",
+    pinyin: "jī fēi gǒu tiào",
+    meaning: "形容一片混乱。",
+    example: "孩子们在家闹得鸡飞狗跳。",
+    english: "Complete chaos; everything in turmoil."
+  },
+  {
+    name: "牛刀小试",
+    pinyin: "niú dāo xiǎo shì",
+    meaning: "比喻有大本领的人先在小事上试试手。",
+    example: "这次项目只是他牛刀小试。",
+    english: "To give a small demonstration of great ability."
+  },
+  {
+    name: "马首是瞻",
+    pinyin: "mǎ shǒu shì zhān",
+    meaning: "比喻听从带头者的指挥。",
+    example: "大家都马首是瞻，听队长安排。",
+    english: "To follow the leader or obey orders faithfully."
+  },
+  {
+    name: "龙飞凤舞",
+    pinyin: "lóng fēi fèng wǔ",
+    meaning: "形容书法潇洒飘逸，也形容气势豪放。",
+    example: "他的字笔势奔放，真是龙飞凤舞。",
+    english: "Describes lively, vigorous movement or calligraphy."
+  },
+  {
+    name: "蛇行鼠窜",
+    pinyin: "shé xíng shǔ cuàn",
+    meaning: "比喻潜逃时的狼狈样子。",
+    example: "匪徒被击溃后蛇行鼠窜，四处逃命。",
+    english: "To flee in disorder like snakes and mice."
+  },
+  {
+    name: "狡兔死，走狗烹",
+    pinyin: "jiǎo tù sǐ, zǒu gǒu pēng",
+    meaning: "比喻事情成功后功臣被弃。",
+    example: "他替老板立了大功，结果狡兔死，走狗烹。",
+    english: "Once the goal is reached, those who helped are discarded."
+  },
+  {
+    name: "狼烟四起",
+    pinyin: "láng yān sì qǐ",
+    meaning: "形容战乱频繁。",
+    example: "那时边境狼烟四起，百姓流离失所。",
+    english: "Used to describe times of war and turmoil."
+  },
+  {
+    name: "蛇吞象",
+    pinyin: "shé tūn xiàng",
+    meaning: "比喻贪心过大或野心过度。",
+    example: "他妄想独吞整个公司，简直蛇吞象。",
+    english: "To overreach greedily; to attempt the impossible out of greed."
+  },
+  {
+    name: "鹰犬之才",
+    pinyin: "yīng quǎn zhī cái",
+    meaning: "指善于追随奔走的人才，多含贬义。",
+    example: "他不过是权贵身边的鹰犬之才。",
+    english: "A sycophantic person serving the powerful; literally ‘talent of hawks and dogs’."
+  },
+  {
+    name: "牛头马面",
+    pinyin: "niú tóu mǎ miàn",
+    meaning: "地狱的鬼卒，比喻丑陋凶恶的人。",
+    example: "那两个打手长得牛头马面，凶神恶煞。",
+    english: "Ugly, fierce men; literally ‘ox‑head and horse‑face’, underworld guards."
+  },
+  {
+    name: "鸡犬升天",
+    pinyin: "jī quǎn shēng tiān",
+    meaning: "比喻一个人发达后，连带周围的人也跟着受益。",
+    example: "他升官发财，亲戚们也鸡犬升天。",
+    english: "When one person’s success brings benefits to their associates."
+  },
+  {
+    name: "驴唇不对马嘴",
+    pinyin: "lǘ chún bù duì mǎ zuǐ",
+    meaning: "比喻答非所问，话不相干。",
+    example: "他的话驴唇不对马嘴，让人摸不着头脑。",
+    english: "Irrelevant talk; things that make no logical sense together."
+  },
+  {
+    name: "虎头虎脑",
+    pinyin: "hǔ tóu hǔ nǎo",
+    meaning: "形容小孩壮实可爱。",
+    example: "这孩子虎头虎脑的，真惹人喜欢。",
+    english: "Sturdy and lively, usually describing a healthy child."
+  },
+  {
+    name: "马耳东风",
+    pinyin: "mǎ ěr dōng fēng",
+    meaning: "比喻听了不放在心上。",
+    example: "他把别人的忠告当作马耳东风。",
+    english: "To ignore advice; literally ‘east wind passes a horse’s ears’."
+  },
+  {
+    name: "鱼游釜中",
+    pinyin: "yú yóu fǔ zhōng",
+    meaning: "比喻危险在即。",
+    example: "再不想办法，我们就成了鱼游釜中。",
+    english: "To be in imminent danger, like fish in a pot of boiling water."
+  },
+  {
+    name: "燕语莺声",
+    pinyin: "yàn yǔ yīng shēng",
+    meaning: "形容春日在鸟鸣声中充满生机。",
+    example: "山谷中燕语莺声，万物复苏。",
+    english: "Describes the lively chirping of birds in spring."
+  },
+  {
+    name: "虎口余生",
+    pinyin: "hǔ kǒu yú shēng",
+    meaning: "形容从极大危险中幸存。",
+    example: "他从坍塌的矿井中虎口余生。",
+    english: "To narrowly escape death from extreme danger."
+  },
+  {
+    name: "鹤发童颜",
+    pinyin: "hè fà tóng yán",
+    meaning: "形容年老而精神矍铄。",
+    example: "那位老人鹤发童颜，气色极好。",
+    english: "An old person who looks healthy and spirited."
+  },
+  {
+    name: "龙凤呈祥",
+    pinyin: "lóng fèng chéng xiáng",
+    meaning: "是吉祥的象征，多用于祝贺婚礼。",
+    example: "新婚大喜，龙凤呈祥，百年好合。",
+    english: "Symbol of harmony and prosperity, often used in weddings."
+  },
+  {
+    name: "马失后蹄",
+    pinyin: "mǎ shī hòu tí",
+    meaning: "比喻最后阶段出现失误。",
+    example: "他在签约时马失后蹄，差点失去项目。",
+    english: "A mistake made at the final stage of success."
+  },
+  {
+    name: "虎口拔牙",
+    pinyin: "hǔ kǒu bá yá",
+    meaning: "比喻冒险从危险之地夺取利益。",
+    example: "这笔交易如同虎口拔牙，非常困难。",
+    english: "To risk great danger in order to achieve something."
+  },
+  {
+    name: "鸟尽弓藏",
+    pinyin: "niǎo jìn gōng cáng",
+    meaning: "比喻功成后弃用帮手。",
+    example: "战争结束后，许多老兵成了鸟尽弓藏的牺牲品。",
+    english: "Those who helped are dismissed once their service is done."
+  },
+  {
+    name: "驷马难追",
+    pinyin: "sì mǎ nán zhuī",
+    meaning: "比喻话说出口无法收回。",
+    example: "承诺一旦说出，驷马难追。",
+    english: "Words once spoken cannot be taken back."
+  },
+ 
+  {
+    name: "螳臂当车",
+    pinyin: "táng bì dāng chē",
+    meaning: "比喻自不量力地去抵抗强大的力量。",
+    example: "以一人之力挑战整个集团，无异于螳臂当车。",
+    english: "To overestimate oneself by resisting a much stronger force."
+  },
+  {
+    name: "鼠窃狗偷",
+    pinyin: "shǔ qiè gǒu tōu",
+    meaning: "形容小偷小摸的不法行为。",
+    example: "这种鼠窃狗偷的行径终将受到惩罚。",
+    english: "Petty theft or sneaky misconduct."
+  },
+  {
+    name: "狡兔三窟",
+    pinyin: "jiǎo tù sān kū",
+    meaning: "用以形容留有多处藏身或退路以保安全。",
+    example: "他资产分散，各地都有存款，真是狡兔三窟。",
+    english: "Clever as a rabbit with three burrows—keeping multiple safe options."
+  },
+  {
+    name: "牛骥同槽",
+    pinyin: "niú jì tóng cáo",
+    meaning: "比喻贤淑与庸劣共处不类。",
+    example: "他与那群无赖共事，真是牛骥同槽。",
+    english: "Good and bad people lumped together without distinction."
+  },
+  {
+    name: "鱼水之欢",
+    pinyin: "yú shuǐ zhī huān",
+    meaning: "指夫妻或恋人之间亲密和谐的感情。",
+    example: "他们新婚燕尔，鱼水之欢令人羡慕。",
+    english: "The harmony and intimacy between loving partners."
+  },
+  {
+    name: "猴手猴脚",
+    pinyin: "hóu shǒu hóu jiǎo",
+    meaning: "形容举止毛躁或动手动脚不安分。",
+    example: "他总是猴手猴脚，坐不住片刻。",
+    english: "Restless and fidgety; always meddling with things."
+  },
+  {
+    name: "蝇头小利",
+    pinyin: "yíng tóu xiǎo lì",
+    meaning: "形容微小的利益。",
+    example: "他为蝇头小利争得面红耳赤。",
+    english: "A trivial profit—insignificant gain."
+  },
+  {
+    name: "龙腾虎跃",
+    pinyin: "lóng téng hǔ yuè",
+    meaning: "形容气势奔放，场面热烈。",
+    example: "运动场上龙腾虎跃，一片欢呼声。",
+    english: "Vigorous and full of energy; a scene brimming with vitality."
+  },
+  {
+    name: "蛇鼠一窝",
+    pinyin: "shé shǔ yī wō",
+    meaning: "比喻同类的坏人聚在一起。",
+    example: "这些贪官蛇鼠一窝，互相包庇。",
+    english: "A gang of corrupt people working together."
+  },
+  {
+    name: "鹤立鸡群",
+    pinyin: "hè lì jī qún",
+    meaning: "比喻人出类拔萃。",
+    example: "他的才华在同龄人中鹤立鸡群。",
+    english: "Outstanding among peers; literally ‘a crane standing among chickens’."
+  },
+  {
+    name: "鸡毛蒜皮",
+    pinyin: "jī máo suàn pí",
+    meaning: "比喻无关紧要的小事。",
+    example: "别为这些鸡毛蒜皮的小事争吵。",
+    english: "Trivial matters not worth arguing over."
+  },
+  {
+    name: "虎头蛇尾",
+    pinyin: "hǔ tóu shé wěi",
+    meaning: "事情开始时声势大，后来减弱。",
+    example: "他写作文常虎头蛇尾，开头精彩结尾草率。",
+    english: "To start strong but end weak; lack persistence."
+  },
+  {
+    name: "龙行虎步",
+    pinyin: "lóng xíng hǔ bù",
+    meaning: "形容举止威武有力。",
+    example: "将军龙行虎步，气势逼人。",
+    english: "Describes a person walking with power and authority."
+  },
+  {
+    name: "鱼龙百变",
+    pinyin: "yú lóng bǎi biàn",
+    meaning: "比喻变化多端，难以分辨好坏。",
+    example: "娱乐圈鱼龙百变，真假难辨。",
+    english: "A mix of varied forms; ever‑changing and hard to distinguish."
+  },
+  {
+    name: "狗尾续貂",
+    pinyin: "gǒu wěi xù diāo",
+    meaning: "比喻拿坏的补充好的，令整体变差。",
+    example: "后来加的那一段完全是狗尾续貂。",
+    english: "Adding inferior parts that spoil the original excellence."
+  },
+  {
+    name: "鹰击长空",
+    pinyin: "yīng jī cháng kōng",
+    meaning: "比喻志向远大，奋发进取。",
+    example: "青年应如鹰击长空，不畏艰难。",
+    english: "To soar to great heights with determination."
+  },
+  {
+    name: "虎背熊腰",
+    pinyin: "hǔ bèi xióng yāo",
+    meaning: "形容体格健壮。",
+    example: "那位保镖虎背熊腰，气势十足。",
+    english: "Broad‑shouldered and strong‑waisted; physically powerful."
+  },
+  {
+    name: "羊头狗肉",
+    pinyin: "yáng tóu gǒu ròu",
+    meaning: "比喻表里不一，挂着好名声卖坏东西。",
+    example: "那个商家广告宣传夸大，其实羊头狗肉。",
+    english: "False advertising—showing good looks but selling poor quality."
+  },
+  {
+    name: "龙骧虎步",
+    pinyin: "lóng xiāng hǔ bù",
+    meaning: "形容气宇轩昂，步伐威武。",
+    example: "士兵们龙骧虎步地走过检阅台。",
+    english: "Majestic bearing and vigorous stride."
+  },
+  {
+    name: "鼠肚鸡肠",
+    pinyin: "shǔ dù jī cháng",
+    meaning: "形容心胸狭窄。",
+    example: "他因为一点小事就生气，真是鼠肚鸡肠。",
+    english: "Petty‑minded and narrow‑hearted."
+  },
+  {
+    name: "狗拿耗子",
+    pinyin: "gǒu ná hào zi",
+    meaning: "比喻多管闲事。",
+    example: "这事与你无关，别狗拿耗子。",
+    english: "To meddle in others’ affairs without need."
+  },
+  {
+    name: "燕雀之志",
+    pinyin: "yàn què zhī zhì",
+    meaning: "比喻志向短浅。",
+    example: "缺乏远见的人多有燕雀之志。",
+    english: "Limited ambition; thinking only small."
+  },
+  {
+    name: "如虎添翼",
+    pinyin: "rú hǔ tiān yì",
+    meaning: "比喻强者又得到帮助更加强大。",
+    example: "有了你的支持，我们如虎添翼。",
+    english: "To become more powerful with extra support."
+  },
+  {
+    name: "鱼贯而出",
+    pinyin: "yú guàn ér chū",
+    meaning: "指人或物依次出去。",
+    example: "观众鱼贯而出，秩序井然。",
+    english: "To exit one after another in an orderly line."
+  },
+  {
+    name: "鹰扬虎视",
+    pinyin: "yīng yáng hǔ shì",
+    meaning: "形容威武敏锐的气势。",
+    example: "他鹰扬虎视，显露出将军之风。",
+    english: "Keen‑eyed and awe‑inspiring like eagles and tigers."
+  },
+  {
+    name: "马放南山",
+    pinyin: "mǎ fàng nán shān",
+    meaning: "比喻停止战事，休养生息。",
+    example: "战争结束，天下太平，士兵皆马放南山。",
+    english: "To retire from battle and live peacefully."
+  },
+  {
+    name: "鸡犬不留",
+    pinyin: "jī quǎn bù liú",
+    meaning: "形容杀戮殆尽。",
+    example: "当年那场屠城使百姓鸡犬不留。",
+    english: "Total destruction—nothing and no one spared."
+  },
+  {
+    name: "牛角挂书",
+    pinyin: "niú jiǎo guà shū",
+    meaning: "形容勤奋好学不怕辛苦。",
+    example: "他出差途中还阅读资料，真是牛角挂书。",
+    english: "Studious and diligent even in hardship."
+  },
+  {
+    name: "猫鼠同眠",
+    pinyin: "māo shǔ tóng mián",
+    meaning: "比喻坏人相互勾结，丧失原则。",
+    example: "监管部门与商家猫鼠同眠，问题层出不穷。",
+    english: "When supposed opposites collude; corruption."
+  },
+  {
+    name: "蛇影杯弓",
+    pinyin: "shé yǐng bēi gōng",
+    meaning: "疑神疑鬼，自相惊扰。",
+    example: "他总觉得有人跟踪，真是蛇影杯弓。",
+    english: "Imagining danger and frightening oneself needlessly."
+  },
+  {
+    name: "牛毛细雨",
+    pinyin: "niú máo xì yǔ",
+    meaning: "形容极细的小雨。",
+    example: "窗外牛毛细雨，空气格外清新。",
+    english: "A drizzle so fine like cow’s hair; gentle rain."
+  },
+  {
+    name: "马踏飞燕",
+    pinyin: "mǎ tà fēi yàn",
+    meaning: "原为名马形象，现形容矫健轻捷。",
+    example: "舞者身姿优美，宛如马踏飞燕。",
+    english: "Graceful and swift movements, like a horse treading on a flying swallow."
+  },
+  {
+    name: "龙盘虎踞",
+    pinyin: "lóng pán hǔ jù",
+    meaning: "形容地势险要的地方。",
+    example: "这座城依山傍水，真是龙盘虎踞之地。",
+    english: "A naturally strategic, defensible location."
+  },
+  {
+    name: "雁过留声",
+    pinyin: "yàn guò liú shēng",
+    meaning: "比喻无论做什么事都留下痕迹。",
+    example: "他的人生哲学是雁过留声，事事尽心。",
+    english: "Everything one does leaves a mark or legacy."
+  },
+  {
+    name: "螳螂捕蝉",
+    pinyin: "táng láng bǔ chán",
+    meaning: "比喻只顾眼前利益而忽视后患。",
+    example: "他急功近利，正应了螳螂捕蝉的道理。",
+    english: "Focusing on immediate gain while ignoring hidden danger."
+  },
+  {
+    name: "千里之堤毁于蚁穴",
+    pinyin: "qiān lǐ zhī dī huǐ yú yǐ xué",
+    meaning: "比喻小问题若不重视，会酿成大祸。",
+    example: "质量问题若不控制，千里之堤毁于蚁穴。",
+    english: "A small negligence can cause huge disaster."
+  },
+  {
+    name: "鸡犬相闻",
+    pinyin: "jī quǎn xiāng wén",
+    meaning: "形容邻里接近，生活平和。",
+    example: "乡村静谧，鸡犬相闻。",
+    english: "Simple, peaceful rural life where neighbors are close."
+  },
+  {
+    name: "狼奔豕突",
+    pinyin: "láng bēn shǐ tū",
+    meaning: "形容惊慌奔逃的样子。",
+    example: "敌军被吓得狼奔豕突，丢盔弃甲。",
+    english: "To flee wildly in panic; a chaotic retreat."
+  },
+  {
+    name: "兔死狗烹",
+    pinyin: "tù sǐ gǒu pēng",
+    meaning: "比喻事情成后功臣被弃。",
+    example: "他立功后反遭解雇，真是兔死狗烹。",
+    english: "Those who helped achieve success are discarded afterward."
+  },
+  {
+    name: "马革裹尸",
+    pinyin: "mǎ gé guǒ shī",
+    meaning: "形容为国捐躯的壮志。",
+    example: "他立下马革裹尸的誓言，保卫家园。",
+    english: "To die heroically in battle for one’s country."
+  },
+  {
+    name: "虎啸风生",
+    pinyin: "hǔ xiào fēng shēng",
+    meaning: "形容声势威猛，气势雄壮。",
+    example: "锣鼓声阵阵，如虎啸风生。",
+    english: "Powerful and awe‑inspiring momentum; literally ‘tigers roar and winds arise’."
+  },
+  {
+    name: "凤毛麟角",
+    pinyin: "fèng máo lín jiǎo",
+    meaning: "比喻稀有珍贵的人或事物。",
+    example: "这么好的老师如今凤毛麟角。",
+    english: "Extremely rare and precious; literally ‘phoenix feathers and unicorn horns’."
+  },
+  {
+    name: "蚕食鲸吞",
+    pinyin: "cán shí jīng tūn",
+    meaning: "形容逐步侵占，兼并扩张。",
+    example: "那家公司以蚕食鲸吞之势占领市场。",
+    english: "To annex or expand gradually and massively."
+  },
+  {
+    name: "鸿雁传书",
+    pinyin: "hóng yàn chuán shū",
+    meaning: "比喻书信往来不断。",
+    example: "异地恋人鸿雁传书，心意相通。",
+    english: "Exchange of letters across distances; symbolic of close communication."
+  },
+  {
+    name: "鹏程万里",
+    pinyin: "péng chéng wàn lǐ",
+    meaning: "比喻前程远大。",
+    example: "祝你事业顺利，鹏程万里！",
+    english: "To have a bright and unlimited future."
+  },
+  {
+    name: "猫捉老鼠",
+    pinyin: "māo zhuō lǎo shǔ",
+    meaning: "比喻强者轻易制伏弱者。",
+    example: "他们的比赛就像猫捉老鼠。",
+    english: "A one‑sided contest where the stronger easily defeats the weaker."
+  },
+  {
+    name: "凤鸣朝阳",
+    pinyin: "fèng míng zhāo yáng",
+    meaning: "比喻贤士出现于盛世。",
+    example: "国家盛世，英才辈出，如凤鸣朝阳。",
+    english: "Talents emerging during prosperous times."
+  },
+  {
+    name: "龙精虎猛",
+    pinyin: "lóng jīng hǔ měng",
+    meaning: "形容精神充沛，气势旺盛。",
+    example: "队员们龙精虎猛，斗志昂扬。",
+    english: "Full of vigor and energy; energetic and strong."
+  }
+
+
+
+  ];
+
+  /* ============ 分页与弹窗交互 ============ */
+  const pageSize = 20;
+  let currentPage = 1;
+  const totalPages = Math.ceil(idioms.length / pageSize);
+
+  function renderPage() {
+    const container = document.getElementById("idiomContainer");
+    container.innerHTML = "";
+    const start = (currentPage - 1) * pageSize;
+    const end = Math.min(start + pageSize, idioms.length);
+    idioms.slice(start, end).forEach(i => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.textContent = i.name;
+      card.onclick = () => openModal(i);
+      container.appendChild(card);
+    });
+    document.getElementById("pageInfo").textContent = `${currentPage} / ${totalPages}`;
+    document.getElementById("prevBtn").disabled = currentPage === 1;
+    document.getElementById("nextBtn").disabled = currentPage === totalPages;
+  }
+
+  function openModal(idiom) {
+    document.getElementById("modalTitle").textContent = idiom.name;
+    document.getElementById("modalPinyin").textContent = idiom.pinyin;
+    document.getElementById("modalMeaning").textContent = "释义：" + idiom.meaning;
+    document.getElementById("modalExample").textContent = "例句：" + (idiom.example || "——");
+    document.getElementById("modalEnglish").textContent = "English: " + (idiom.english || "");
+    document.getElementById("idiomModal").classList.add("active");
+
+    // 语音朗读
+    document.getElementById("readBtn").onclick = () => {
+      const text = `${idiom.name}，${idiom.pinyin}，${idiom.meaning}`;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "zh-CN";
+      u.rate = 0.95;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(u);
+    };
+  }
+
+  document.getElementById("closeBtn").onclick = () => {
+    document.getElementById("idiomModal").classList.remove("active");
+    speechSynthesis.cancel();
+  };
+  document.getElementById("prevBtn").onclick = () => { if(currentPage>1){ currentPage--; renderPage(); } };
+  document.getElementById("nextBtn").onclick = () => { if(currentPage<totalPages){ currentPage++; renderPage(); } };
+
+  renderPage();
+  </script>
+</body>
+</html>
