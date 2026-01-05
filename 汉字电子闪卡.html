@@ -11,6 +11,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            user-select: none;
         }
         
         body {
@@ -18,6 +19,7 @@
             color: #333;
             min-height: 100vh;
             padding: 20px;
+            overflow-x: hidden;
         }
         
         .container {
@@ -84,6 +86,7 @@
             width: 100%;
             max-width: 500px;
             height: 320px;
+            position: relative;
         }
         
         .card {
@@ -91,7 +94,7 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.8s;
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
         }
         
@@ -99,28 +102,52 @@
             transform: rotateY(180deg);
         }
         
+        .card.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1000;
+            max-width: 100%;
+            perspective: none;
+            background: rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .card.fullscreen .card-front,
+        .card.fullscreen .card-back {
+            width: 90%;
+            height: 90%;
+            max-width: 600px;
+            max-height: 600px;
+        }
+        
         .card-front, .card-back {
             position: absolute;
             width: 100%;
             height: 100%;
             backface-visibility: hidden;
-            border-radius: 15px;
+            border-radius: 20px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 30px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
         }
         
         .card-front {
-            background: linear-gradient(to bottom right, #3498db, #2c3e50);
+            background: linear-gradient(135deg, #3498db, #2c3e50);
             color: white;
         }
         
         .card-back {
-            background: linear-gradient(to bottom right, #2ecc71, #27ae60);
-            color: rgb(11, 1, 1);
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
             transform: rotateY(180deg);
             text-align: center;
         }
@@ -129,42 +156,123 @@
             font-size: 8rem;
             font-weight: bold;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .card.clicked .character {
+            transform: scale(1.05);
         }
         
         .pinyin {
-            font-size: 1.8rem;
-            margin-bottom: 5px;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .pinyin.show {
             opacity: 0.9;
         }
         
         .meaning {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.4;
+        }
+        
+        .meaning.show {
             opacity: 0.9;
         }
         
         .example {
-            font-size: 6rem;
+            font-size: 3.5rem;
             margin: 15px 0;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
         }
         
         .example-pinyin {
-            font-size: 2rem;
-            margin-bottom: 10px;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
             opacity: 0.9;
         }
         
         .example-meaning {
-            font-size: 2rem;
+            font-size: 1.4rem;
             opacity: 0.9;
+            max-width: 80%;
+            line-height: 1.4;
         }
         
         .hint {
             position: absolute;
-            bottom: 15px;
+            bottom: 20px;
             font-size: 0.9rem;
             opacity: 0.7;
+            text-align: center;
+            width: 100%;
+            padding: 0 20px;
+        }
+        
+        .click-count {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+        
+        .navigation {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            transform: translateY(-50%);
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .nav-btn {
+            pointer-events: all;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin: 0 10px;
+        }
+        
+        .nav-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+        
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .card.fullscreen .nav-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
         }
         
         .controls {
@@ -172,6 +280,8 @@
             justify-content: center;
             gap: 20px;
             flex-wrap: wrap;
+            width: 100%;
+            max-width: 500px;
         }
         
         .btn {
@@ -286,11 +396,16 @@
             }
             
             .example {
-                font-size: 1.8rem;
+                font-size: 2.5rem;
             }
             
             .btn {
                 padding: 12px 20px;
+            }
+            
+            .nav-btn {
+                width: 45px;
+                height: 45px;
             }
         }
         
@@ -303,6 +418,10 @@
                 font-size: 5rem;
             }
             
+            .example {
+                font-size: 2rem;
+            }
+            
             .controls {
                 flex-direction: column;
                 align-items: center;
@@ -312,6 +431,32 @@
                 width: 100%;
                 max-width: 250px;
                 justify-content: center;
+            }
+            
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+            
+            .hint {
+                font-size: 0.8rem;
+                bottom: 15px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            .card.fullscreen .card-front,
+            .card.fullscreen .card-back {
+                height: 85%;
+            }
+            
+            .character {
+                font-size: 5rem;
+            }
+            
+            .example {
+                font-size: 2.5rem;
             }
         }
     </style>
@@ -344,18 +489,28 @@
         
         <div class="main-content">
             <div class="card-container">
+                <div class="navigation">
+                    <button class="nav-btn" id="prev-btn">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="nav-btn" id="next-btn">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
                 <div class="card" id="flashcard">
+                    <div class="click-count" id="click-count">0</div>
                     <div class="card-front">
                         <div class="character" id="hanzi">字</div>
                         <div class="pinyin" id="pinyin">zì</div>
                         <div class="meaning" id="meaning">character, letter</div>
-                        <div class="hint">点击卡片查看例词</div>
+                        <div class="hint">点击卡片：1.朗读 2.拼音 3.释义 4.例词</div>
                     </div>
                     <div class="card-back">
                         <div class="example" id="example">汉字</div>
                         <div class="example-pinyin" id="example-pinyin">hàn zì</div>
                         <div class="example-meaning" id="example-meaning">Chinese character</div>
-                        <div class="hint">点击卡片返回</div>
+                        <div class="hint">点击卡片返回或继续点击切换汉字</div>
                     </div>
                 </div>
             </div>
@@ -370,8 +525,8 @@
                 <button class="btn btn-success" id="easy-btn">
                     <i class="fas fa-check-circle"></i> 容易
                 </button>
-                <button class="btn" id="next-btn" style="background-color: #9b59b6; color: white;">
-                    <i class="fas fa-forward"></i> 下一个
+                <button class="btn" id="skip-btn" style="background-color: #9b59b6; color: white;">
+                    <i class="fas fa-forward"></i> 跳过
                 </button>
             </div>
             
@@ -389,24 +544,19 @@
                 <h3>学习设置</h3>
                 <div class="settings-options">
                     <div class="setting-option">
-                        <input type="checkbox" id="auto-flip" checked>
-                        <label for="auto-flip">自动翻面 (3秒)</label>
+                        <input type="checkbox" id="auto-speak" checked>
+                        <label for="auto-speak">点击自动朗读</label>
                     </div>
                     <div class="setting-option">
-                        <input type="checkbox" id="show-pinyin" checked>
-                        <label for="show-pinyin">显示拼音</label>
+                        <input type="checkbox" id="auto-flip">
+                        <label for="auto-flip">自动翻面</label>
                     </div>
                     <div class="setting-option">
-                        <input type="checkbox" id="show-meaning" checked>
-                        <label for="show-meaning">显示释义</label>
-                    </div>
-                    <div class="setting-option">
-                        <label for="cards-per-day">每日新卡：</label>
-                        <select id="cards-per-day">
-                            <option value="10">10</option>
-                            <option value="20" selected>20</option>
-                            <option value="30">30</option>
-                            <option value="50">50</option>
+                        <label for="voice-speed">语速：</label>
+                        <select id="voice-speed">
+                            <option value="0.7">慢速</option>
+                            <option value="1" selected>正常</option>
+                            <option value="1.3">快速</option>
                         </select>
                     </div>
                 </div>
@@ -422,7 +572,8 @@
     <script>
         // 1000个汉字数据
         const hanziData = [
-            { hanzi: "案", pinyin: "àn", meaning: "case, record, file", example: "案件", examplePinyin: "àn jiàn", exampleMeaning: "case, lawsuit" },
+     
+ { hanzi: "案", pinyin: "àn", meaning: "case, record, file", example: "案件", examplePinyin: "àn jiàn", exampleMeaning: "case, lawsuit" },
             { hanzi: "版", pinyin: "bǎn", meaning: "edition, printing plate", example: "出版", examplePinyin: "chū bǎn", exampleMeaning: "to publish" },
             { hanzi: "胞", pinyin: "bāo", meaning: "cell, compatriot", example: "细胞", examplePinyin: "xì bāo", exampleMeaning: "cell (biology)" },
             { hanzi: "暴", pinyin: "bào", meaning: "violent, sudden", example: "暴力", examplePinyin: "bào lì", exampleMeaning: "violence" },
@@ -1480,6 +1631,9 @@
             { hanzi: "唾", pinyin: "tuò", meaning: "spit, saliva", example: "唾沫", examplePinyin: "tuò mo", exampleMeaning: "saliva, spittle" }
         ];
 
+
+
+
         // 应用状态
         const appState = {
             currentIndex: 0,
@@ -1489,8 +1643,11 @@
             streak: 5,
             mastery: 0,
             sessionCards: [],
-            autoFlipTimer: null,
-            autoFlipEnabled: true
+            clickCount: 0,
+            isFullscreen: false,
+            autoSpeak: true,
+            autoFlip: false,
+            voiceSpeed: 1
         };
 
         // DOM元素
@@ -1501,6 +1658,7 @@
         const exampleElement = document.getElementById('example');
         const examplePinyinElement = document.getElementById('example-pinyin');
         const exampleMeaningElement = document.getElementById('example-meaning');
+        const clickCountElement = document.getElementById('click-count');
         const cardsTodayElement = document.getElementById('cards-today');
         const totalCardsElement = document.getElementById('total-cards');
         const streakElement = document.getElementById('streak');
@@ -1510,11 +1668,18 @@
         const againBtn = document.getElementById('again-btn');
         const hardBtn = document.getElementById('hard-btn');
         const easyBtn = document.getElementById('easy-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const prevBtn = document.getElementById('prev-btn');
         const nextBtn = document.getElementById('next-btn');
+        const autoSpeakCheckbox = document.getElementById('auto-speak');
         const autoFlipCheckbox = document.getElementById('auto-flip');
-        const showPinyinCheckbox = document.getElementById('show-pinyin');
-        const showMeaningCheckbox = document.getElementById('show-meaning');
-        const cardsPerDaySelect = document.getElementById('cards-per-day');
+        const voiceSpeedSelect = document.getElementById('voice-speed');
+
+        // 语音合成
+        let speech = null;
+        if ('speechSynthesis' in window) {
+            speech = window.speechSynthesis;
+        }
 
         // 初始化应用
         function initApp() {
@@ -1525,6 +1690,11 @@
                 Object.assign(appState, parsedState);
             }
             
+            // 更新设置控件
+            autoSpeakCheckbox.checked = appState.autoSpeak;
+            autoFlipCheckbox.checked = appState.autoFlip;
+            voiceSpeedSelect.value = appState.voiceSpeed;
+            
             // 更新统计显示
             updateStats();
             
@@ -1533,27 +1703,36 @@
             
             // 设置事件监听器
             setupEventListeners();
-            
-            // 启动自动翻面计时器
-            startAutoFlipTimer();
         }
 
         // 设置事件监听器
         function setupEventListeners() {
-            // 卡片点击翻面
-            flashcard.addEventListener('click', flipCard);
+            // 卡片点击事件
+            flashcard.addEventListener('click', handleCardClick);
+            
+            // 导航按钮
+            prevBtn.addEventListener('click', showPrevCard);
+            nextBtn.addEventListener('click', showNextCard);
             
             // 控制按钮
             againBtn.addEventListener('click', () => rateCard('again'));
             hardBtn.addEventListener('click', () => rateCard('hard'));
             easyBtn.addEventListener('click', () => rateCard('easy'));
-            nextBtn.addEventListener('click', showNextCard);
+            skipBtn.addEventListener('click', showNextCard);
             
             // 设置变化
+            autoSpeakCheckbox.addEventListener('change', toggleAutoSpeak);
             autoFlipCheckbox.addEventListener('change', toggleAutoFlip);
-            showPinyinCheckbox.addEventListener('change', togglePinyin);
-            showMeaningCheckbox.addEventListener('change', toggleMeaning);
-            cardsPerDaySelect.addEventListener('change', updateCardsPerDay);
+            voiceSpeedSelect.addEventListener('change', updateVoiceSpeed);
+            
+            // 键盘快捷键
+            document.addEventListener('keydown', handleKeydown);
+            
+            // 全屏变化
+            document.addEventListener('fullscreenchange', handleFullscreenChange);
+            document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.addEventListener('MSFullscreenChange', handleFullscreenChange);
         }
 
         // 显示当前汉字
@@ -1566,6 +1745,9 @@
             exampleElement.textContent = currentHanzi.example;
             examplePinyinElement.textContent = currentHanzi.examplePinyin;
             exampleMeaningElement.textContent = currentHanzi.exampleMeaning;
+            
+            // 重置点击状态
+            resetClickState();
             
             // 确保卡片显示正面
             flashcard.classList.remove('flipped');
@@ -1580,41 +1762,99 @@
                 updateStats();
             }
             
-            // 重新启动自动翻面计时器
-            startAutoFlipTimer();
-        }
-
-        // 翻转卡片
-        function flipCard() {
-            flashcard.classList.toggle('flipped');
-            
-            // 如果卡片翻到背面，清除自动翻面计时器
-            if (flashcard.classList.contains('flipped')) {
-                clearAutoFlipTimer();
-            } else {
-                startAutoFlipTimer();
+            // 自动朗读
+            if (appState.autoSpeak) {
+                setTimeout(() => speakHanzi(currentHanzi.hanzi), 300);
             }
         }
 
-        // 开始自动翻面计时器
-        function startAutoFlipTimer() {
-            if (!appState.autoFlipEnabled) return;
+        // 处理卡片点击
+        function handleCardClick(e) {
+            // 防止导航按钮触发卡片点击
+            if (e.target.closest('.nav-btn')) return;
             
-            clearAutoFlipTimer();
+            // 增加点击计数
+            appState.clickCount++;
+            clickCountElement.textContent = appState.clickCount;
             
-            appState.autoFlipTimer = setTimeout(() => {
-                if (!flashcard.classList.contains('flipped')) {
+            // 添加点击动画
+            flashcard.classList.add('clicked');
+            setTimeout(() => flashcard.classList.remove('clicked'), 300);
+            
+            // 根据点击次数执行不同操作
+            switch(appState.clickCount) {
+                case 1:
+                    // 第一次点击：朗读汉字
+                    speakHanzi(hanziData[appState.currentIndex].hanzi);
+                    break;
+                case 2:
+                    // 第二次点击：显示拼音
+                    pinyinElement.classList.add('show');
+                    break;
+                case 3:
+                    // 第三次点击：显示释义
+                    meaningElement.classList.add('show');
+                    break;
+                case 4:
+                    // 第四次点击：翻面显示例词
                     flashcard.classList.add('flipped');
-                }
-            }, 3000);
+                    // 朗读例词
+                    if (appState.autoSpeak) {
+                        setTimeout(() => speakHanzi(hanziData[appState.currentIndex].example), 300);
+                    }
+                    break;
+                default:
+                    // 超过四次：切换到下一个汉字
+                    showNextCard();
+            }
         }
 
-        // 清除自动翻面计时器
-        function clearAutoFlipTimer() {
-            if (appState.autoFlipTimer) {
-                clearTimeout(appState.autoFlipTimer);
-                appState.autoFlipTimer = null;
-            }
+        // 重置点击状态
+        function resetClickState() {
+            appState.clickCount = 0;
+            clickCountElement.textContent = '0';
+            pinyinElement.classList.remove('show');
+            meaningElement.classList.remove('show');
+        }
+
+        // 朗读文字
+        function speakHanzi(text) {
+            if (!speech) return;
+            
+            // 停止当前语音
+            speech.cancel();
+            
+            // 创建新的语音实例
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = appState.voiceSpeed;
+            
+            // 播放语音
+            speech.speak(utterance);
+        }
+
+        // 显示上一个汉字
+        function showPrevCard() {
+            // 确保卡片翻回正面
+            flashcard.classList.remove('flipped');
+            
+            // 移动到上一个汉字
+            appState.currentIndex = (appState.currentIndex - 1 + hanziData.length) % hanziData.length;
+            
+            // 显示新汉字
+            displayCurrentHanzi();
+        }
+
+        // 显示下一个汉字
+        function showNextCard() {
+            // 确保卡片翻回正面
+            flashcard.classList.remove('flipped');
+            
+            // 移动到下一个汉字
+            appState.currentIndex = (appState.currentIndex + 1) % hanziData.length;
+            
+            // 显示新汉字
+            displayCurrentHanzi();
         }
 
         // 评价卡片难度
@@ -1641,18 +1881,6 @@
             showNextCard();
         }
 
-        // 显示下一个汉字
-        function showNextCard() {
-            // 确保卡片翻回正面
-            flashcard.classList.remove('flipped');
-            
-            // 移动到下一个汉字
-            appState.currentIndex = (appState.currentIndex + 1) % hanziData.length;
-            
-            // 显示新汉字
-            displayCurrentHanzi();
-        }
-
         // 更新统计显示
         function updateStats() {
             cardsTodayElement.textContent = appState.cardsToday;
@@ -1668,36 +1896,92 @@
             progressFillElement.style.width = `${progress}%`;
         }
 
+        // 切换自动朗读
+        function toggleAutoSpeak() {
+            appState.autoSpeak = autoSpeakCheckbox.checked;
+        }
+
         // 切换自动翻面
         function toggleAutoFlip() {
-            appState.autoFlipEnabled = autoFlipCheckbox.checked;
-            
-            if (appState.autoFlipEnabled && !flashcard.classList.contains('flipped')) {
-                startAutoFlipTimer();
-            } else {
-                clearAutoFlipTimer();
+            appState.autoFlip = autoFlipCheckbox.checked;
+        }
+
+        // 更新语音速度
+        function updateVoiceSpeed() {
+            appState.voiceSpeed = parseFloat(voiceSpeedSelect.value);
+        }
+
+        // 处理键盘快捷键
+        function handleKeydown(e) {
+            switch(e.key) {
+                case 'ArrowLeft':
+                    showPrevCard();
+                    break;
+                case 'ArrowRight':
+                case ' ':
+                    showNextCard();
+                    break;
+                case 'ArrowUp':
+                    // 切换到上一个汉字
+                    showPrevCard();
+                    break;
+                case 'ArrowDown':
+                    // 切换到下一个汉字
+                    showNextCard();
+                    break;
+                case 'Enter':
+                    // 翻转卡片
+                    flashcard.classList.toggle('flipped');
+                    break;
+                case 'Escape':
+                    // 退出全屏
+                    if (appState.isFullscreen) {
+                        exitFullscreen();
+                    }
+                    break;
             }
         }
 
-        // 切换拼音显示
-        function togglePinyin() {
-            const show = showPinyinCheckbox.checked;
-            pinyinElement.style.visibility = show ? 'visible' : 'hidden';
-            examplePinyinElement.style.visibility = show ? 'visible' : 'hidden';
+        // 处理全屏变化
+        function handleFullscreenChange() {
+            appState.isFullscreen = !!(document.fullscreenElement || 
+                                      document.webkitFullscreenElement || 
+                                      document.mozFullScreenElement || 
+                                      document.msFullscreenElement);
+            
+            if (appState.isFullscreen) {
+                flashcard.classList.add('fullscreen');
+            } else {
+                flashcard.classList.remove('fullscreen');
+            }
         }
 
-        // 切换释义显示
-        function toggleMeaning() {
-            const show = showMeaningCheckbox.checked;
-            meaningElement.style.visibility = show ? 'visible' : 'hidden';
-            exampleMeaningElement.style.visibility = show ? 'visible' : 'hidden';
+        // 进入全屏
+        function enterFullscreen() {
+            const elem = flashcard;
+            
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
         }
 
-        // 更新每日学习卡片数
-        function updateCardsPerDay() {
-            const cardsPerDay = parseInt(cardsPerDaySelect.value);
-            // 在实际应用中，这里会更新学习计划
-            console.log(`每日新卡片数更新为: ${cardsPerDay}`);
+        // 退出全屏
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
         }
 
         // 保存状态到本地存储
@@ -1710,6 +1994,15 @@
         
         // 页面关闭前保存状态
         window.addEventListener('beforeunload', saveState);
+        
+        // 双击卡片进入/退出全屏
+        flashcard.addEventListener('dblclick', function() {
+            if (!appState.isFullscreen) {
+                enterFullscreen();
+            } else {
+                exitFullscreen();
+            }
+        });
     </script>
 </body>
 </html>
