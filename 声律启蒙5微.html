@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -61,7 +62,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 70vh;
+            height: 40vh;
             width: 100%;
             transition: all 0.5s ease;
         }
@@ -89,6 +90,38 @@
             color: #6a1b9a;
             font-weight: normal;
             opacity: 0.8;
+        }
+        
+        .sentence-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 25vh;
+            width: 90%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-size: 5.4rem; /* 放大3倍：1.8rem * 3 = 5.4rem */
+            color: #4a148c;
+            text-align: center;
+            line-height: 1.6;
+            transition: all 0.5s ease;
+            opacity: 0;
+            transform: translateY(20px);
+            font-family: 'STXihei', 'Microsoft YaHei', 'SimHei', sans-serif;
+            font-weight: bold;
+        }
+        
+        .sentence-display.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .sentence-display.highlight {
+            background-color: rgba(234, 218, 255, 0.9);
+            box-shadow: 0 5px 20px rgba(106, 27, 154, 0.2);
         }
         
         .controls {
@@ -374,10 +407,54 @@
             cursor: pointer;
         }
         
+        .display-mode {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .display-mode label {
+            color: #4a148c;
+            font-weight: bold;
+        }
+        
+        .display-mode select {
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #ce93d8;
+            background-color: white;
+            color: #4a148c;
+        }
+        
+        .repeat-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(74, 20, 140, 0.9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            animation: fadeIn 0.5s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+        
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.7; }
             100% { opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
         
         @media (max-width: 768px) {
@@ -419,6 +496,22 @@
             .explanation h3 {
                 font-size: 1.2rem;
             }
+            
+            .sentence-display {
+                font-size: 3.6rem; /* 移动端也放大3倍：1.2rem * 3 = 3.6rem */
+                height: 20vh;
+            }
+            
+            .char-display {
+                height: 35vh;
+            }
+            
+            .repeat-status {
+                top: 5px;
+                right: 5px;
+                font-size: 0.8rem;
+                padding: 6px 10px;
+            }
         }
     </style>
 </head>
@@ -426,7 +519,7 @@
     <div class="container">
         <header class="header">
             <h1>《声律启蒙》五 微</h1>
-            <p>系统依次显示每个汉字，点击汉字查看详细解释。</p>
+            <p>单字显示 → 朗读汉字 → 整句显示 → 朗读全句(三遍) → 下一句</p>
         </header>
         
         <main class="content">
@@ -436,6 +529,10 @@
                 </div>
             </div>
             
+            <div class="sentence-display" id="sentence-display">
+                <!-- 句子将在这里显示 -->
+            </div>
+            
             <div class="settings-panel" id="settings-panel">
                 <div class="speed-control">
                     <label for="speed-slider">播放速度：</label>
@@ -443,9 +540,16 @@
                     <span id="speed-value">中速</span>
                 </div>
                 <div class="speed-control">
-                    <label for="font-size-slider">字体大小：</label>
+                    <label for="font-size-slider">单字大小：</label>
                     <input type="range" id="font-size-slider" min="10" max="30" value="15" step="1">
                     <span id="font-size-value">15vw</span>
+                </div>
+                <div class="display-mode">
+                    <label for="display-mode">显示模式：</label>
+                    <select id="display-mode">
+                        <option value="auto">自动播放</option>
+                        <option value="manual">手动控制</option>
+                    </select>
                 </div>
             </div>
             
@@ -475,7 +579,7 @@
                 </button>
                 
                 <div class="counter">
-                    <span id="current-index">1</span> / <span id="total-chars">0</span>
+                    <span id="current-position">第 <span id="current-sentence">1</span> 句</span>
                 </div>
                 
                 <div class="progress-container">
@@ -503,19 +607,27 @@
     </div>
 
     <script>
-        // 诗词数据
-        const poemText = `來對往，密對稀，燕舞對鶯飛。風清對月朗，露重對煙微。
-霜菊瘦，雨梅肥，客路對魚磯。晚霞舒錦繡，朝露綴珠璣。
-夏暑客思欹石枕，秋寒婦念寄邊衣。
-春水才深清草岸邊漁父去；夕陽半落綠莎原上牧童歸。
-寬對猛，是對非，服美對乘肥。珊瑚對玳瑁，錦繡對珠璣。
-桃灼灼，柳依依，綠暗對紅稀。窗前鶯並語，簾外燕雙飛。
-漢致太平三尺劍，周臻大定一戎衣。
-吟成賞月之詩只愁月墮；斟滿送春之酒惟憾春歸。
-聲對色，飽對飢，虎節對龍旗。楊花對桂葉，白簡對朱衣。
-尨也吠，燕于非，蕩蕩對巍巍。春暄資日氣，秋吟借霜威。
-出使振威馮奉世，治民異等尹翁歸。
-燕我弟兄載詠棣棠韡韡；命伊將帥為歌楊柳依依。`;
+        // 诗词数据 - 按句子分割
+        const poemSentences = [
+            "來對往，密對稀，燕舞對鶯飛。",
+            "風清對月朗，露重對煙微。",
+            "霜菊瘦，雨梅肥，客路對魚磯。",
+            "晚霞舒錦繡，朝露綴珠璣。",
+            "夏暑客思欹石枕，秋寒婦念寄邊衣。",
+            "春水才深清草岸邊漁父去；夕陽半落綠莎原上牧童歸。",
+            "寬對猛，是對非，服美對乘肥。",
+            "珊瑚對玳瑁，錦繡對珠璣。",
+            "桃灼灼，柳依依，綠暗對紅稀。",
+            "窗前鶯並語，簾外燕雙飛。",
+            "漢致太平三尺劍，周臻大定一戎衣。",
+            "吟成賞月之詩只愁月墮；斟滿送春之酒惟憾春歸。",
+            "聲對色，飽對飢，虎節對龍旗。",
+            "楊花對桂葉，白簡對朱衣。",
+            "尨也吠，燕于非，蕩蕩對巍巍。",
+            "春暄資日氣，秋吟借霜威。",
+            "出使振威馮奉世，治民異等尹翁歸。",
+            "燕我弟兄載詠棣棠韡韡；命伊將帥為歌楊柳依依。"
+        ];
 
         // 非典故用词释义数据
         const commonWordsDefinitions = {
@@ -896,34 +1008,63 @@
             return text.split('').map(char => traditionalToSimplified[char] || char).join('');
         }
 
-        // 过滤出汉字（去除标点、数字、空格和所有非汉字字符）
-        const originalChars = poemText.split('').filter(char => {
-            const code = char.charCodeAt(0);
-            return code >= 0x4E00 && code <= 0x9FFF;
-        });
-
         // 状态变量
-        let currentIndex = 0;
+        let currentSentenceIndex = 0;
+        let currentCharIndex = 0;
         let isPlaying = true;
         let isMuted = false;
         let isTraditional = true;
         let timer = null;
-        let charTimeout = null;
         let speechSynthesis = window.speechSynthesis;
         let utterance = null;
         let isSpeechSupported = false;
-        let allChars = [...originalChars];
         let playSpeed = 3; // 1-5 对应不同速度
         let fontSize = 15; // 默认字体大小
         let settingsVisible = false;
+        let displayMode = "auto"; // "auto" 或 "manual"
+        let isShowingFullSentence = false;
+        let charDisplayTimeout = null;
+        let sentenceDisplayTimeout = null;
+        let currentSentenceChars = [];
+        let isRepeatingSentence = false; // 标记是否正在朗读整句三遍
 
-        // 播放速度映射
+        // 播放速度映射 - 增加停顿时间
         const speedMap = {
-            1: { interval: 5000, label: "慢速" },
-            2: { interval: 3000, label: "较慢" },
-            3: { interval: 2000, label: "中速" },
-            4: { interval: 1500, label: "较快" },
-            5: { interval: 1000, label: "快速" }
+            1: { 
+                charInterval: 1800, // 单字显示后停顿时间
+                charPause: 800,     // 单字朗读后停顿
+                sentenceDelay: 3500, // 整句显示后停顿时间
+                sentencePause: 1000, // 整句朗读后停顿
+                label: "慢速" 
+            },
+            2: { 
+                charInterval: 1500, 
+                charPause: 600,
+                sentenceDelay: 3000,
+                sentencePause: 800,
+                label: "较慢" 
+            },
+            3: { 
+                charInterval: 1200, 
+                charPause: 500,
+                sentenceDelay: 2500,
+                sentencePause: 700,
+                label: "中速" 
+            },
+            4: { 
+                charInterval: 1000, 
+                charPause: 400,
+                sentenceDelay: 2000,
+                sentencePause: 600,
+                label: "较快" 
+            },
+            5: { 
+                charInterval: 800, 
+                charPause: 300,
+                sentenceDelay: 1500,
+                sentencePause: 500,
+                label: "快速" 
+            }
         };
 
         // 检测浏览器是否支持语音合成
@@ -936,8 +1077,8 @@
 
         // DOM元素
         const charElement = document.getElementById('char');
-        const currentIndexElement = document.getElementById('current-index');
-        const totalCharsElement = document.getElementById('total-chars');
+        const sentenceDisplayElement = document.getElementById('sentence-display');
+        const currentSentenceElement = document.getElementById('current-sentence');
         const progressBarElement = document.getElementById('progress-bar');
         const playPauseBtn = document.getElementById('play-pause-btn');
         const prevBtn = document.getElementById('prev-btn');
@@ -954,10 +1095,11 @@
         const fontSizeSlider = document.getElementById('font-size-slider');
         const fontSizeValue = document.getElementById('font-size-value');
         const settingsPanel = document.getElementById('settings-panel');
+        const displayModeSelect = document.getElementById('display-mode');
 
         // 初始化
         function init() {
-            totalCharsElement.textContent = allChars.length;
+            loadCurrentSentence();
             updateDisplay();
             updateSpeedDisplay();
             updateFontSizeDisplay();
@@ -967,32 +1109,79 @@
             updateButtonStates();
         }
 
-        // 更新显示
-        function updateDisplay() {
-            const currentChar = allChars[currentIndex];
-            charElement.textContent = currentChar;
-            currentIndexElement.textContent = currentIndex + 1;
+        // 加载当前句子
+        function loadCurrentSentence() {
+            let currentSentence = poemSentences[currentSentenceIndex];
             
-            const progress = ((currentIndex + 1) / allChars.length) * 100;
-            progressBarElement.style.width = `${progress}%`;
-            
-            if (!isPlaying) {
-                charElement.classList.add('paused');
-            } else {
-                charElement.classList.remove('paused');
+            if (!isTraditional) {
+                currentSentence = convertToSimplified(currentSentence);
             }
             
-            applyRandomEffects();
-            updateButtonStates();
+            // 过滤出汉字（去除标点、数字、空格和所有非汉字字符）
+            currentSentenceChars = currentSentence.split('').filter(char => {
+                const code = char.charCodeAt(0);
+                return code >= 0x4E00 && code <= 0x9FFF;
+            });
+            
+            currentCharIndex = 0;
+            isShowingFullSentence = false;
+            isRepeatingSentence = false;
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            if (currentCharIndex < currentSentenceChars.length && !isShowingFullSentence) {
+                // 显示单个汉字
+                const currentChar = currentSentenceChars[currentCharIndex];
+                charElement.textContent = currentChar;
+                charElement.style.display = 'block';
+                
+                // 隐藏完整句子
+                sentenceDisplayElement.textContent = "";
+                sentenceDisplayElement.classList.remove('show', 'highlight');
+                
+                // 更新进度
+                const progress = ((currentSentenceIndex + 1) / poemSentences.length) * 100;
+                progressBarElement.style.width = `${progress}%`;
+                
+                currentSentenceElement.textContent = currentSentenceIndex + 1;
+                
+                if (!isPlaying) {
+                    charElement.classList.add('paused');
+                } else {
+                    charElement.classList.remove('paused');
+                }
+                
+                applyRandomEffects();
+                updateButtonStates();
+            } else if (isShowingFullSentence) {
+                // 显示完整句子
+                let currentSentence = poemSentences[currentSentenceIndex];
+                
+                if (!isTraditional) {
+                    currentSentence = convertToSimplified(currentSentence);
+                }
+                
+                sentenceDisplayElement.textContent = currentSentence;
+                sentenceDisplayElement.classList.add('show', 'highlight');
+                
+                // 隐藏单个汉字
+                charElement.style.display = 'none';
+                
+                applyRandomEffects();
+                updateButtonStates();
+            }
         }
 
         // 更新按钮状态
         function updateButtonStates() {
-            prevBtn.disabled = currentIndex === 0;
-            prevBtn.title = currentIndex === 0 ? "已经是第一个汉字" : "上一个汉字";
+            prevBtn.disabled = currentSentenceIndex === 0 && currentCharIndex === 0;
+            prevBtn.title = prevBtn.disabled ? "已经是第一句第一个汉字" : "上一个";
             
-            nextBtn.disabled = currentIndex === allChars.length - 1;
-            nextBtn.title = currentIndex === allChars.length - 1 ? "已经是最后一个汉字" : "下一个汉字";
+            const isLastSentence = currentSentenceIndex === poemSentences.length - 1;
+            const isLastChar = currentCharIndex === currentSentenceChars.length - 1;
+            nextBtn.disabled = isLastSentence && isLastChar && isShowingFullSentence && isRepeatingSentence;
+            nextBtn.title = nextBtn.disabled ? "已经是最后一句" : "下一个";
         }
 
         // 应用随机效果
@@ -1023,42 +1212,135 @@
         // 开始自动播放
         function startAutoPlay() {
             if (timer) clearInterval(timer);
+            if (displayMode === "manual") return;
             
             const speedConfig = speedMap[playSpeed];
-            timer = setInterval(() => {
-                if (isPlaying) {
-                    nextChar();
+            
+            // 使用递归函数控制播放流程
+            function playNextStep() {
+                if (!isPlaying) return;
+                
+                if (!isShowingFullSentence) {
+                    // 播放单个汉字
+                    if (currentCharIndex < currentSentenceChars.length) {
+                        updateDisplay();
+                        
+                        // 汉字显示后立即朗读
+                        setTimeout(() => {
+                            speakCurrentChar();
+                            
+                            // 单字朗读后停顿一下
+                            setTimeout(() => {
+                                currentCharIndex++;
+                                
+                                if (currentCharIndex >= currentSentenceChars.length) {
+                                    // 所有字显示完毕，停顿一下后显示完整句子
+                                    setTimeout(() => {
+                                        isShowingFullSentence = true;
+                                        updateDisplay();
+                                        
+                                        // 整句显示后停顿一下，然后朗读整句（三遍）
+                                        setTimeout(() => {
+                                            speakCurrentSentenceThreeTimes();
+                                        }, 500);
+                                    }, speedConfig.charPause);
+                                } else {
+                                    // 继续显示下一个字
+                                    setTimeout(playNextStep, speedConfig.charInterval);
+                                }
+                            }, speedConfig.charPause);
+                        }, 100);
+                    }
                 }
-            }, speedConfig.interval);
-        }
-
-        // 播放下一个字符
-        function nextChar() {
-            if (speechSynthesis.speaking) {
-                speechSynthesis.cancel();
             }
             
-            if (currentIndex < allChars.length - 1) {
-                currentIndex++;
-                updateDisplay();
-                speakCurrentChar();
+            // 开始播放
+            playNextStep();
+        }
+
+        // 播放下一个步骤（手动模式下使用）
+        function nextStep() {
+            if (!isShowingFullSentence) {
+                // 显示单个汉字
+                if (currentCharIndex < currentSentenceChars.length) {
+                    updateDisplay();
+                    
+                    // 汉字显示后立即朗读
+                    setTimeout(() => {
+                        speakCurrentChar();
+                        
+                        currentCharIndex++;
+                        
+                        if (currentCharIndex >= currentSentenceChars.length) {
+                            // 所有字显示完毕，停顿一下后显示完整句子
+                            setTimeout(() => {
+                                isShowingFullSentence = true;
+                                updateDisplay();
+                                
+                                // 整句显示后停顿一下，然后朗读整句（三遍）
+                                setTimeout(() => {
+                                    speakCurrentSentenceThreeTimes();
+                                }, 500);
+                            }, 500);
+                        }
+                    }, 100);
+                }
+            } else {
+                // 已经显示完整句子，进入下一句
+                goToNextSentence();
             }
         }
 
-        // 朗读当前字符
-        function speakCurrentChar() {
+        // 朗读整句三遍
+        function speakCurrentSentenceThreeTimes() {
             if (!isSpeechSupported || !isPlaying || isMuted) return;
             
-            const currentChar = allChars[currentIndex];
+            isRepeatingSentence = true;
             
-            if (charTimeout) clearTimeout(charTimeout);
+            // 添加朗读状态提示
+            const statusElement = document.createElement('div');
+            statusElement.className = 'repeat-status';
+            statusElement.id = 'repeat-status';
+            statusElement.textContent = '整句朗读: 第1遍';
+            document.querySelector('.content').appendChild(statusElement);
             
-            charTimeout = setTimeout(() => {
-                if (utterance) speechSynthesis.cancel();
+            let currentSentence = poemSentences[currentSentenceIndex];
+            
+            if (!isTraditional) {
+                currentSentence = convertToSimplified(currentSentence);
+            }
+            
+            if (utterance) speechSynthesis.cancel();
+            
+            let repeatCount = 0;
+            
+            function speakWithRepeat() {
+                if (repeatCount >= 3 || !isPlaying || isMuted) {
+                    // 朗读完成，移除状态提示
+                    const status = document.getElementById('repeat-status');
+                    if (status) status.remove();
+                    isRepeatingSentence = false;
+                    
+                    // 如果是自动模式，继续下一句
+                    if (displayMode === "auto") {
+                        setTimeout(() => {
+                            goToNextSentence();
+                            // 继续播放
+                            if (isPlaying) startAutoPlay();
+                        }, speedMap[playSpeed].sentencePause);
+                    }
+                    return;
+                }
                 
-                utterance = new SpeechSynthesisUtterance(currentChar);
+                // 更新状态提示
+                const status = document.getElementById('repeat-status');
+                if (status) {
+                    status.textContent = `整句朗读: 第${repeatCount + 1}遍`;
+                }
+                
+                utterance = new SpeechSynthesisUtterance(currentSentence);
                 utterance.lang = 'zh-CN';
-                utterance.rate = 1.0; // 正常语速
+                utterance.rate = 0.8; // 整句朗读速度适中（0.8）
                 
                 const voices = speechSynthesis.getVoices();
                 const chineseVoice = voices.find(voice => voice.lang === 'zh-CN' || voice.lang === 'zh-TW');
@@ -1066,24 +1348,126 @@
                     utterance.voice = chineseVoice;
                 }
                 
+                utterance.onend = function() {
+                    repeatCount++;
+                    if (repeatCount < 3) {
+                        // 每遍之间停顿2秒
+                        setTimeout(speakWithRepeat, 2000);
+                    } else {
+                        // 三遍结束后，更新状态并继续
+                        speakWithRepeat();
+                    }
+                };
+                
                 speechSynthesis.speak(utterance);
-            }, 500);
-        }
-
-        // 上一个字符
-        function prevChar() {
-            if (speechSynthesis.speaking) {
-                speechSynthesis.cancel();
             }
             
-            if (currentIndex > 0) {
-                currentIndex--;
+            speakWithRepeat();
+        }
+
+        // 朗读当前字符（旧版本，保留兼容性）
+        function speakCurrentChar() {
+            if (!isSpeechSupported || !isPlaying || isMuted) return;
+            
+            const currentChar = currentSentenceChars[currentCharIndex];
+            
+            if (utterance) speechSynthesis.cancel();
+            
+            utterance = new SpeechSynthesisUtterance(currentChar);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 1.0; // 单字正常语速
+            
+            const voices = speechSynthesis.getVoices();
+            const chineseVoice = voices.find(voice => voice.lang === 'zh-CN' || voice.lang === 'zh-TW');
+            if (chineseVoice) {
+                utterance.voice = chineseVoice;
+            }
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // 朗读当前句子（旧版本，保留兼容性）
+        function speakCurrentSentence() {
+            if (!isSpeechSupported || !isPlaying || isMuted) return;
+            
+            let currentSentence = poemSentences[currentSentenceIndex];
+            
+            if (!isTraditional) {
+                currentSentence = convertToSimplified(currentSentence);
+            }
+            
+            if (utterance) speechSynthesis.cancel();
+            
+            utterance = new SpeechSynthesisUtterance(currentSentence);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.8; // 整句朗读速度适中（0.8）
+            
+            const voices = speechSynthesis.getVoices();
+            const chineseVoice = voices.find(voice => voice.lang === 'zh-CN' || voice.lang === 'zh-TW');
+            if (chineseVoice) {
+                utterance.voice = chineseVoice;
+            }
+            
+            speechSynthesis.speak(utterance);
+        }
+
+        // 进入下一句
+        function goToNextSentence() {
+            if (currentSentenceIndex < poemSentences.length - 1) {
+                currentSentenceIndex++;
+                loadCurrentSentence();
                 updateDisplay();
-                
+            } else {
+                // 已经是最后一句，停止播放
+                isPlaying = false;
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                playPauseBtn.title = "播放";
+                charElement.classList.add('paused');
+            }
+            
+            updateButtonStates();
+        }
+
+        // 进入上一句
+        function prevStep() {
+            if (isRepeatingSentence) {
+                // 如果正在朗读整句三遍，先停止朗读
+                if (speechSynthesis.speaking) {
+                    speechSynthesis.cancel();
+                }
+                const status = document.getElementById('repeat-status');
+                if (status) status.remove();
+                isRepeatingSentence = false;
+            }
+            
+            if (currentCharIndex > 0 && !isShowingFullSentence) {
+                // 回到当前句的上一个字
+                currentCharIndex--;
+                updateDisplay();
                 if (isPlaying && !isMuted) {
                     speakCurrentChar();
                 }
+            } else if (isShowingFullSentence) {
+                // 从完整句子回到单字显示
+                isShowingFullSentence = false;
+                currentCharIndex = currentSentenceChars.length - 1;
+                updateDisplay();
+            } else if (currentSentenceIndex > 0) {
+                // 回到上一句
+                currentSentenceIndex--;
+                loadCurrentSentence();
+                isShowingFullSentence = true; // 显示上一句的完整句子
+                updateDisplay();
+                
+                // 然后回到单字显示
+                setTimeout(() => {
+                    isShowingFullSentence = false;
+                    currentCharIndex = currentSentenceChars.length - 1;
+                    updateDisplay();
+                }, 1000);
             }
+            
+            updateButtonStates();
         }
 
         // 播放/暂停切换
@@ -1095,11 +1479,17 @@
                 playPauseBtn.title = "暂停";
                 charElement.classList.remove('paused');
                 
-                if (!speechSynthesis.speaking && !isMuted) {
-                    speakCurrentChar();
+                if (displayMode === "auto") {
+                    startAutoPlay();
+                } else {
+                    if (!speechSynthesis.speaking && !isMuted) {
+                        if (isShowingFullSentence && !isRepeatingSentence) {
+                            speakCurrentSentenceThreeTimes();
+                        } else if (!isShowingFullSentence) {
+                            speakCurrentChar();
+                        }
+                    }
                 }
-                
-                startAutoPlay();
             } else {
                 playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                 playPauseBtn.title = "播放";
@@ -1110,7 +1500,6 @@
                 }
                 
                 if (timer) clearInterval(timer);
-                if (charTimeout) clearTimeout(charTimeout);
             }
         }
 
@@ -1131,8 +1520,12 @@
                 muteBtn.title = "静音";
                 muteBtn.classList.remove('muted');
                 
-                if (isPlaying) {
-                    speakCurrentChar();
+                if (isPlaying && !speechSynthesis.speaking) {
+                    if (isShowingFullSentence && !isRepeatingSentence) {
+                        speakCurrentSentenceThreeTimes();
+                    } else if (!isShowingFullSentence) {
+                        speakCurrentChar();
+                    }
                 }
             }
         }
@@ -1142,15 +1535,14 @@
             isTraditional = !isTraditional;
             
             if (isTraditional) {
-                allChars = originalChars.map(char => convertToTraditional(char));
                 langBtn.textContent = "繁";
                 langBtn.title = "切换到简体字";
             } else {
-                allChars = originalChars.map(char => convertToSimplified(char));
                 langBtn.textContent = "简";
                 langBtn.title = "切换到繁体字";
             }
             
+            loadCurrentSentence();
             updateDisplay();
             langBtn.classList.toggle('active', isTraditional);
         }
@@ -1170,7 +1562,7 @@
             playSpeed = parseInt(speedSlider.value);
             updateSpeedDisplay();
             
-            if (isPlaying && timer) {
+            if (isPlaying && displayMode === "auto") {
                 startAutoPlay();
             }
         }
@@ -1193,9 +1585,20 @@
             fontSizeValue.textContent = `${fontSize}vw`;
         }
 
+        // 更新显示模式
+        function updateDisplayMode() {
+            displayMode = displayModeSelect.value;
+            
+            if (isPlaying && displayMode === "auto") {
+                startAutoPlay();
+            } else if (displayMode === "manual") {
+                if (timer) clearInterval(timer);
+            }
+        }
+
         // 显示汉字解释
         function showExplanation() {
-            const currentChar = allChars[currentIndex];
+            const currentChar = isShowingFullSentence ? "" : currentSentenceChars[currentCharIndex];
             modalCharElement.textContent = currentChar;
             
             let explanationHTML = "";
@@ -1282,13 +1685,14 @@
 
         // 事件监听
         playPauseBtn.addEventListener('click', togglePlayPause);
-        prevBtn.addEventListener('click', prevChar);
-        nextBtn.addEventListener('click', nextChar);
+        prevBtn.addEventListener('click', prevStep);
+        nextBtn.addEventListener('click', nextStep);
         muteBtn.addEventListener('click', toggleMute);
         langBtn.addEventListener('click', toggleLanguage);
         settingsBtn.addEventListener('click', toggleSettings);
         speedSlider.addEventListener('input', updateSpeed);
         fontSizeSlider.addEventListener('input', updateFontSize);
+        displayModeSelect.addEventListener('change', updateDisplayMode);
         closeModalBtn.addEventListener('click', () => {
             charModal.style.display = 'none';
         });
@@ -1311,11 +1715,11 @@
                     break;
                 case 'ArrowLeft':
                     e.preventDefault();
-                    prevChar();
+                    prevStep();
                     break;
                 case 'ArrowRight':
                     e.preventDefault();
-                    nextChar();
+                    nextStep();
                     break;
                 case 'm':
                 case 'M':
