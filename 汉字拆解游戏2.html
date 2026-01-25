@@ -1,0 +1,753 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>形声字拆解游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", sans-serif;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        /* 游戏主容器 */
+        .game-container {
+            display: flex;
+            width: 90%;
+            max-width: 1200px;
+            height: 70vh;
+            margin-top: 30px;
+            gap: 20px;
+        }
+
+        /* 形旁库/声符库样式 */
+        .radical-lib, .phonetic-lib {
+            width: 20%;
+            height: 100%;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #fff;
+            overflow-y: auto;
+        }
+
+        .lib-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+
+        .char-item {
+            font-size: 24px;
+            margin: 10px 0;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        /* 拆分后的偏旁彩色样式 */
+        .char-item.colored {
+            background: linear-gradient(45deg, #ff9a9e, #fad0c4);
+            color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* 中间汉字展示区 */
+        .char-display {
+            width: 60%;
+            height: 100%;
+            border: 2px solid #333;
+            border-radius: 8px;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-char {
+            font-size: 120px;
+            transition: all 0.5s;
+            position: relative;
+        }
+
+        /* 汉字拼音显示 */
+        .char-pinyin {
+            font-size: 32px;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.3s;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 拆分动画相关 */
+        .radical-part {
+            position: absolute;
+            font-size: 80px;
+            opacity: 0;
+            transition: all 0.8s ease-out;
+        }
+
+        .radical-part.left {
+            left: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .radical-part.right {
+            right: 10%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 拼音弹窗样式 */
+        .pinyin-popup {
+            position: fixed;
+            font-size: 30px;
+            padding: 10px 20px;
+            background-color: rgba(0,0,0,0.8);
+            color: #fff;
+            border-radius: 8px;
+            z-index: 100;
+            display: none;
+        }
+
+        /* 汉字信息展示区域 */
+        .char-info {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .char-meaning {
+            font-size: 18px;
+            color: #333;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
+
+        /* 重置按钮 */
+        .reset-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .reset-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>形声字拆解小游戏</h1>
+    <div class="game-container">
+        <!-- 左侧形旁库 -->
+        <div class="radical-lib">
+            <div class="lib-title">形旁库</div>
+            <div id="radical-list"></div>
+        </div>
+
+        <!-- 中间汉字展示区 -->
+        <div class="char-display" id="char-display">
+            <div class="char-pinyin" id="char-pinyin"></div>
+            <span class="main-char" id="main-char"></span>
+            <span class="radical-part left" id="radical-left"></span>
+            <span class="radical-part right" id="radical-right"></span>
+            <div class="char-info">
+                <div class="char-meaning" id="char-cn-meaning"></div>
+                <div class="char-meaning" id="char-en-meaning"></div>
+            </div>
+        </div>
+
+        <!-- 右侧声符库 -->
+        <div class="phonetic-lib">
+            <div class="lib-title">声符库</div>
+            <div id="phonetic-list"></div>
+        </div>
+    </div>
+
+    <!-- 拼音弹窗 -->
+    <div class="pinyin-popup" id="pinyin-popup"></div>
+    <!-- 重置按钮 -->
+    <button class="reset-btn" id="reset-btn">下一个汉字</button>
+
+    <script>
+        // 1. 模拟常用形声字数据（已扩展）
+        const xingshengChars = [
+            {
+                char: '河',
+                radical: '氵', // 形旁
+                phonetic: '可', // 声符
+                pronounce: 'hé',
+                cnMeaning: '指水道的通称，也特指中国的黄河',
+                enMeaning: 'river; the Yellow River',
+                radicalPronounce: 'shuǐ',
+                radicalCnMeaning: '与水有关的事物',
+                radicalEnMeaning: 'related to water',
+                phoneticPronounce: 'kě'
+            },
+            {
+                char: '湖',
+                radical: '氵',
+                phonetic: '胡',
+                pronounce: 'hú',
+                cnMeaning: '陆地上聚积的大水',
+                enMeaning: 'lake',
+                radicalPronounce: 'shuǐ',
+                radicalCnMeaning: '与水有关的事物',
+                radicalEnMeaning: 'related to water',
+                phoneticPronounce: 'hú'
+            },
+            {
+                char: '桐',
+                radical: '木',
+                phonetic: '同',
+                pronounce: 'tóng',
+                cnMeaning: '落叶乔木，木质轻而坚韧',
+                enMeaning: 'paulownia tree',
+                radicalPronounce: 'mù',
+                radicalCnMeaning: '与树木有关的事物',
+                radicalEnMeaning: 'related to trees',
+                phoneticPronounce: 'tóng'
+            },
+            {
+                char: '枫',
+                radical: '木',
+                phonetic: '风',
+                pronounce: 'fēng',
+                cnMeaning: '落叶乔木，秋季叶变红',
+                enMeaning: 'maple tree',
+                radicalPronounce: 'mù',
+                radicalCnMeaning: '与树木有关的事物',
+                radicalEnMeaning: 'related to trees',
+                phoneticPronounce: 'fēng'
+            },
+            {
+                char: '妈',
+                radical: '女',
+                phonetic: '马',
+                pronounce: 'mā',
+                cnMeaning: '母亲，称呼妈妈',
+                enMeaning: 'mother; mama',
+                radicalPronounce: 'nǚ',
+                radicalCnMeaning: '与女性有关的事物',
+                radicalEnMeaning: 'related to women',
+                phoneticPronounce: 'mǎ'
+            },
+            {
+                char: '姐',
+                radical: '女',
+                phonetic: '且',
+                pronounce: 'jiě',
+                cnMeaning: '同父母（或只同父、只同母）而比自己大的女子',
+                enMeaning: 'elder sister',
+                radicalPronounce: 'nǚ',
+                radicalCnMeaning: '与女性有关的事物',
+                radicalEnMeaning: 'related to women',
+                phoneticPronounce: 'qiě'
+            },
+            {
+                char: '城',
+                radical: '土',
+                phonetic: '成',
+                pronounce: 'chéng',
+                cnMeaning: '都市，城市',
+                enMeaning: 'city; walled town',
+                radicalPronounce: 'tǔ',
+                radicalCnMeaning: '与土地、泥土有关的事物',
+                radicalEnMeaning: 'related to soil/land',
+                phoneticPronounce: 'chéng'
+            },
+            {
+                char: '堆',
+                radical: '土',
+                phonetic: '隹',
+                pronounce: 'duī',
+                cnMeaning: '累积在一起的东西',
+                enMeaning: 'pile; heap',
+                radicalPronounce: 'tǔ',
+                radicalCnMeaning: '与土地、泥土有关的事物',
+                radicalEnMeaning: 'related to soil/land',
+                phoneticPronounce: 'zhuī'
+            },
+            {
+                char: '说',
+                radical: '讠',
+                phonetic: '兑',
+                pronounce: 'shuō',
+                cnMeaning: '用言语表达意思',
+                enMeaning: 'say; speak; talk',
+                radicalPronounce: 'yán',
+                radicalCnMeaning: '与语言、说话有关的事物',
+                radicalEnMeaning: 'related to language/speech',
+                phoneticPronounce: 'duì'
+            },
+            {
+                char: '话',
+                radical: '讠',
+                phonetic: '舌',
+                pronounce: 'huà',
+                cnMeaning: '说出来的能表达思想感情的声音，亦指把这种声音记录下来的文字',
+                enMeaning: 'word; speech; talk',
+                radicalPronounce: 'yán',
+                radicalCnMeaning: '与语言、说话有关的事物',
+                radicalEnMeaning: 'related to language/speech',
+                phoneticPronounce: 'shé'
+            },
+            {
+                char: '江',
+                radical: '氵',
+                phonetic: '工',
+                pronounce: 'jiāng',
+                cnMeaning: '大河的通称',
+                enMeaning: 'river',
+                radicalPronounce: 'shuǐ',
+                radicalCnMeaning: '与水有关的事物',
+                radicalEnMeaning: 'related to water',
+                phoneticPronounce: 'gōng'
+            },
+            {
+                char: '海',
+                radical: '氵',
+                phonetic: '每',
+                pronounce: 'hǎi',
+                cnMeaning: '靠近大陆比洋小的水域',
+                enMeaning: 'sea',
+                radicalPronounce: 'shuǐ',
+                radicalCnMeaning: '与水有关的事物',
+                radicalEnMeaning: 'related to water',
+                phoneticPronounce: 'měi'
+            },
+            {
+                char: '林',
+                radical: '木',
+                phonetic: '林',
+                pronounce: 'lín',
+                cnMeaning: '成片的树木或竹子',
+                enMeaning: 'forest',
+                radicalPronounce: 'mù',
+                radicalCnMeaning: '与树木有关的事物',
+                radicalEnMeaning: 'related to trees',
+                phoneticPronounce: 'lín'
+            },
+            {
+                char: '森',
+                radical: '木',
+                phonetic: '林',
+                pronounce: 'sēn',
+                cnMeaning: '树木众多',
+                enMeaning: 'forest',
+                radicalPronounce: 'mù',
+                radicalCnMeaning: '与树木有关的事物',
+                radicalEnMeaning: 'related to trees',
+                phoneticPronounce: 'lín'
+            },
+            {
+                char: '妹',
+                radical: '女',
+                phonetic: '未',
+                pronounce: 'mèi',
+                cnMeaning: '称同父母（或只同父、只同母）而比自己小的女子',
+                enMeaning: 'younger sister',
+                radicalPronounce: 'nǚ',
+                radicalCnMeaning: '与女性有关的事物',
+                radicalEnMeaning: 'related to women',
+                phoneticPronounce: 'wèi'
+            },
+            {
+                char: '好',
+                radical: '女',
+                phonetic: '子',
+                pronounce: 'hǎo',
+                cnMeaning: '优点多的，使人满意的',
+                enMeaning: 'good',
+                radicalPronounce: 'nǚ',
+                radicalCnMeaning: '与女性有关的事物',
+                radicalEnMeaning: 'related to women',
+                phoneticPronounce: 'zǐ'
+            },
+            {
+                char: '地',
+                radical: '土',
+                phonetic: '也',
+                pronounce: 'dì',
+                cnMeaning: '人类生长活动的所在',
+                enMeaning: 'earth; ground',
+                radicalPronounce: 'tǔ',
+                radicalCnMeaning: '与土地、泥土有关的事物',
+                radicalEnMeaning: 'related to soil/land',
+                phoneticPronounce: 'yě'
+            },
+            {
+                char: '场',
+                radical: '土',
+                phonetic: '昜',
+                pronounce: 'chǎng',
+                cnMeaning: '处所，许多人聚集或活动的地方',
+                enMeaning: 'field; arena',
+                radicalPronounce: 'tǔ',
+                radicalCnMeaning: '与土地、泥土有关的事物',
+                radicalEnMeaning: 'related to soil/land',
+                phoneticPronounce: 'yáng'
+            },
+            {
+                char: '语',
+                radical: '讠',
+                phonetic: '吾',
+                pronounce: 'yǔ',
+                cnMeaning: '话',
+                enMeaning: 'language',
+                radicalPronounce: 'yán',
+                radicalCnMeaning: '与语言、说话有关的事物',
+                radicalEnMeaning: 'related to language/speech',
+                phoneticPronounce: 'wú'
+            },
+            {
+                char: '诗',
+                radical: '讠',
+                phonetic: '寺',
+                pronounce: 'shī',
+                cnMeaning: '文学体裁的一种，通过有节奏和韵律的语言反映生活，抒发情感',
+                enMeaning: 'poem; poetry',
+                radicalPronounce: 'yán',
+                radicalCnMeaning: '与语言、说话有关的事物',
+                radicalEnMeaning: 'related to language/speech',
+                phoneticPronounce: 'sì'
+            },   {
+                char: '河',
+                radical: '氵', // 形旁
+                phonetic: '可', // 声符
+                pronounce: 'hé',
+                cnMeaning: '指水道的通称，也特指中国的黄河',
+                enMeaning: 'river; the Yellow River',
+                radicalPronounce: 'shuǐ',
+                radicalCnMeaning: '与水有关的事物',
+                radicalEnMeaning: 'related to water',
+                phoneticPronounce: 'kě'
+            },
+            {
+                char: '湖',
+                radical: '氵',
+                phonetic: '胡',
+                pronounce: 'hú',
+                cnMeaning: '陆地上聚积的大水',
+                enMeaning: 'lake',
+                radicalPronounce: 'shuǐ',
+                radicalCnMeaning: '与水有关的事物',
+                radicalEnMeaning: 'related to water',
+                phoneticPronounce: 'hú'
+            },
+            {
+                char: '桐',
+                radical: '木',
+                phonetic: '同',
+                pronounce: 'tóng',
+                cnMeaning: '落叶乔木，木质轻而坚韧',
+                enMeaning: 'paulownia tree',
+                radicalPronounce: 'mù',
+                radicalCnMeaning: '与树木有关的事物',
+                radicalEnMeaning: 'related to trees',
+                phoneticPronounce: 'tóng'
+            },
+            {
+                char: '枫',
+                radical: '木',
+                phonetic: '风',
+                pronounce: 'fēng',
+                cnMeaning: '落叶乔木，秋季叶变红',
+                enMeaning: 'maple tree',
+                radicalPronounce: 'mù',
+                radicalCnMeaning: '与树木有关的事物',
+                radicalEnMeaning: 'related to trees',
+                phoneticPronounce: 'fēng'
+            },
+            {
+                char: '妈',
+                radical: '女',
+                phonetic: '马',
+                pronounce: 'mā',
+                cnMeaning: '母亲，称呼妈妈',
+                enMeaning: 'mother; mama',
+                radicalPronounce: 'nǚ',
+                radicalCnMeaning: '与女性有关的事物',
+                radicalEnMeaning: 'related to women',
+                phoneticPronounce: 'mǎ'
+            },
+            {char: '姐', radical: '女', phonetic: '且', pronounce: 'jiě', cnMeaning: '同父母（或只同父、只同母）而比自己大的女子', enMeaning: 'elder sister', radicalPronounce: 'nǚ', radicalCnMeaning: '与女性有关的事物', radicalEnMeaning: 'related to women', phoneticPronounce: 'qiě'},
+            {char: '城', radical: '土', phonetic: '成', pronounce: 'chéng', cnMeaning: '都市，城市', enMeaning: 'city; walled town', radicalPronounce: 'tǔ', radicalCnMeaning: '与土地、泥土有关的事物', radicalEnMeaning: 'related to soil/land', phoneticPronounce: 'chéng'},
+            {char: '堆', radical: '土', phonetic: '隹', pronounce: 'duī', cnMeaning: '累积在一起的东西', enMeaning: 'pile; heap', radicalPronounce: 'tǔ', radicalCnMeaning: '与土地、泥土有关的事物', radicalEnMeaning: 'related to soil/land', phoneticPronounce: 'zhuī'},
+            {char: '说', radical: '讠', phonetic: '兑', pronounce: 'shuō', cnMeaning: '用言语表达意思', enMeaning: 'say; speak; talk', radicalPronounce: 'yán', radicalCnMeaning: '与语言、说话有关的事物', radicalEnMeaning: 'related to language/speech', phoneticPronounce: 'duì'},
+            {char: '话', radical: '讠', phonetic: '舌', pronounce: 'huà', cnMeaning: '说出来的能表达思想感情的声音，亦指把这种声音记录下来的文字', enMeaning: 'word; speech; talk', radicalPronounce: 'yán', radicalCnMeaning: '与语言、说话有关的事物', radicalEnMeaning: 'related to language/speech', phoneticPronounce: 'shé'},
+            // 新增字符数据
+            {char: '江', radical: '氵', phonetic: '工', pronounce: 'jiāng', cnMeaning: '大河的通称', enMeaning: 'river', radicalPronounce: 'shuǐ', radicalCnMeaning: '与水有关的事物', radicalEnMeaning: 'related to water', phoneticPronounce: 'gōng'},
+            {char: '海', radical: '氵', phonetic: '每', pronounce: 'hǎi', cnMeaning: '靠近大陆比洋小的水域', enMeaning: 'sea', radicalPronounce: 'shuǐ', radicalCnMeaning: '与水有关的事物', radicalEnMeaning: 'related to water', phoneticPronounce: 'měi'},
+            {char: '林', radical: '木', phonetic: '林', pronounce: 'lín', cnMeaning: '成片的树木或竹子', enMeaning: 'forest', radicalPronounce: 'mù', radicalCnMeaning: '与树木有关的事物', radicalEnMeaning: 'related to trees', phoneticPronounce: 'lín'},
+            {char: '森', radical: '木', phonetic: '林', pronounce: 'sēn', cnMeaning: '树木众多', enMeaning: 'forest', radicalPronounce: 'mù', radicalCnMeaning: '与树木有关的事物', radicalEnMeaning: 'related to trees', phoneticPronounce: 'lín'},
+            {char: '妹', radical: '女', phonetic: '未', pronounce: 'mèi', cnMeaning: '称同父母（或只同父、只同母）而比自己小的女子', enMeaning: 'younger sister', radicalPronounce: 'nǚ', radicalCnMeaning: '与女性有关的事物', radicalEnMeaning: 'related to women', phoneticPronounce: 'wèi'},
+            {char: '好', radical: '女', phonetic: '子', pronounce: 'hǎo', cnMeaning: '优点多的，使人满意的', enMeaning: 'good', radicalPronounce: 'nǚ', radicalCnMeaning: '与女性有关的事物', radicalEnMeaning: 'related to women', phoneticPronounce: 'zǐ'},
+            {char: '地', radical: '土', phonetic: '也', pronounce: 'dì', cnMeaning: '人类生长活动的所在', enMeaning: 'earth; ground', radicalPronounce: 'tǔ', radicalCnMeaning: '与土地、泥土有关的事物', radicalEnMeaning: 'related to soil/land', phoneticPronounce: 'yě'},
+            {char: '场', radical: '土', phonetic: '昜', pronounce: 'chǎng', cnMeaning: '处所，许多人聚集或活动的地方', enMeaning: 'field; arena', radicalPronounce: 'tǔ', radicalCnMeaning: '与土地、泥土有关的事物', radicalEnMeaning: 'related to soil/land', phoneticPronounce: 'yáng'},
+            {char: '语', radical: '讠', phonetic: '吾', pronounce: 'yǔ', cnMeaning: '话', enMeaning: 'language', radicalPronounce: 'yán', radicalCnMeaning: '与语言、说话有关的事物', radicalEnMeaning: 'related to language/speech', phoneticPronounce: 'wú'},
+            {char: '诗', radical: '讠', phonetic: '寺', pronounce: 'shī', cnMeaning: '文学体裁的一种，通过有节奏和韵律的语言反映生活，抒发情感', enMeaning: 'poem; poetry', radicalPronounce: 'yán', radicalCnMeaning: '与语言、说话有关的事物', radicalEnMeaning: 'related to language/speech', phoneticPronounce: 'sì'},
+            {char: '跑', radical: '足', phonetic: '包', pronounce: 'pǎo', cnMeaning: '两只脚或四条腿迅速前进', enMeaning: 'run', radicalPronounce: 'zú', radicalCnMeaning: '与脚或走路有关的事物', radicalEnMeaning: 'related to feet/walking', phoneticPronounce: 'bāo'},
+            {char: '跳', radical: '足', phonetic: '兆', pronounce: 'tiào', cnMeaning: '两脚离地全身向上或向前的动作', enMeaning: 'jump', radicalPronounce: 'zú', radicalCnMeaning: '与脚或走路有关的事物', radicalEnMeaning: 'related to feet/walking', phoneticPronounce: 'zhào'},
+            {char: '饭', radical: '饣', phonetic: '反', pronounce: 'fàn', cnMeaning: '煮熟的谷类食品', enMeaning: 'food; meal', radicalPronounce: 'shí', radicalCnMeaning: '与食物、饮食有关的事物', radicalEnMeaning: 'related to food/eating', phoneticPronounce: 'fǎn'},
+            {char: '饱', radical: '饣', phonetic: '包', pronounce: 'bǎo', cnMeaning: '吃足了，与"饿"相对', enMeaning: 'full; satisfied', radicalPronounce: 'shí', radicalCnMeaning: '与食物、饮食有关的事物', radicalEnMeaning: 'related to food/eating', phoneticPronounce: 'bāo'},
+            {char: '灯', radical: '火', phonetic: '丁', pronounce: 'dēng', cnMeaning: '照明的器具', enMeaning: 'lamp; light', radicalPronounce: 'huǒ', radicalCnMeaning: '与火有关的事物', radicalEnMeaning: 'related to fire', phoneticPronounce: 'dīng'},
+            {char: '烧', radical: '火', phonetic: '尧', pronounce: 'shāo', cnMeaning: '使东西着火', enMeaning: 'burn', radicalPronounce: 'huǒ', radicalCnMeaning: '与火有关的事物', radicalEnMeaning: 'related to fire', phoneticPronounce: 'yáo'},
+            {char: '钢', radical: '钅', phonetic: '冈', pronounce: 'gāng', cnMeaning: '经过精炼的铁，含碳0.15-1.7%', enMeaning: 'steel', radicalPronounce: 'jīn', radicalCnMeaning: '与金属有关的事物', radicalEnMeaning: 'related to metal', phoneticPronounce: 'gāng'},
+            {char: '铁', radical: '钅', phonetic: '失', pronounce: 'tiě', cnMeaning: '一种金属元素，工业上用途极广', enMeaning: 'iron', radicalPronounce: 'jīn', radicalCnMeaning: '与金属有关的事物', radicalEnMeaning: 'related to metal', phoneticPronounce: 'shī'},
+            {char: '草', radical: '艹', phonetic: '早', pronounce: 'cǎo', cnMeaning: '对高等植物中除了树木、庄稼、蔬菜以外的茎干柔软的植物的统称', enMeaning: 'grass', radicalPronounce: 'cǎo', radicalCnMeaning: '与植物有关的事物', radicalEnMeaning: 'related to plants', phoneticPronounce: 'zǎo'},
+            {char: '花', radical: '艹', phonetic: '化', pronounce: 'huā', cnMeaning: '植物的繁殖器官', enMeaning: 'flower', radicalPronounce: 'cǎo', radicalCnMeaning: '与植物有关的事物', radicalEnMeaning: 'related to plants', phoneticPronounce: 'huà'},
+            {char: '爸', radical: '父', phonetic: '巴', pronounce: 'bà', cnMeaning: '对父亲的称呼', enMeaning: 'father; dad', radicalPronounce: 'fù', radicalCnMeaning: '与父亲、男性长辈有关的事物', radicalEnMeaning: 'related to father/male elder', phoneticPronounce: 'bā'},
+            {char: '爷', radical: '父', phonetic: '卩', pronounce: 'yé', cnMeaning: '对祖父或对长者的尊称', enMeaning: 'grandfather; elderly person', radicalPronounce: 'fù', radicalCnMeaning: '与父亲、男性长辈有关的事物', radicalEnMeaning: 'related to father/male elder', phoneticPronounce: 'jié'},
+            {char: '猫', radical: '犭', phonetic: '苗', pronounce: 'māo', cnMeaning: '哺乳动物，面呈圆形，脚有利爪，行动敏捷，会捉老鼠', enMeaning: 'cat', radicalPronounce: 'quǎn', radicalCnMeaning: '与动物有关的事物', radicalEnMeaning: 'related to animals', phoneticPronounce: 'miáo'},
+            {char: '狗', radical: '犭', phonetic: '句', pronounce: 'gǒu', cnMeaning: '哺乳动物，种类很多，听觉嗅觉都很敏锐，善于看守门户', enMeaning: 'dog', radicalPronounce: 'quǎn', radicalCnMeaning: '与动物有关的事物', radicalEnMeaning: 'related to animals', phoneticPronounce: 'jù'},
+            {char: '鸡', radical: '鸟', phonetic: '又', pronounce: 'jī', cnMeaning: '家禽，品种很多，翅膀短，不能高飞', enMeaning: 'chicken', radicalPronounce: 'niǎo', radicalCnMeaning: '与鸟类有关的事物', radicalEnMeaning: 'related to birds', phoneticPronounce: 'yòu'},
+            {char: '鸭', radical: '鸟', phonetic: '甲', pronounce: 'yā', cnMeaning: '鸟类的一科，嘴扁腿短，趾间有蹼，善游泳', enMeaning: 'duck', radicalPronounce: 'niǎo', radicalCnMeaning: '与鸟类有关的事物', radicalEnMeaning: 'related to birds', phoneticPronounce: 'jiǎ'},
+            {char: '红', radical: '纟', phonetic: '工', pronounce: 'hóng', cnMeaning: '像鲜血的颜色', enMeaning: 'red', radicalPronounce: 'sī', radicalCnMeaning: '与丝线、纺织有关的事物', radicalEnMeaning: 'related to silk/weaving', phoneticPronounce: 'gōng'},
+            {char: '绿', radical: '纟', phonetic: '录', pronounce: 'lǜ', cnMeaning: '蓝和黄混合成的颜色，一般草和树叶呈现这种颜色', enMeaning: 'green', radicalPronounce: 'sī', radicalCnMeaning: '与丝线、纺织有关的事物', radicalEnMeaning: 'related to silk/weaving', phoneticPronounce: 'lù'},
+            {char: '玩', radical: '王', phonetic: '元', pronounce: 'wán', cnMeaning: '游戏', enMeaning: 'play', radicalPronounce: 'yù', radicalCnMeaning: '与玉石有关的事物', radicalEnMeaning: 'related to jade', phoneticPronounce: 'yuán'},
+            {char: '球', radical: '王', phonetic: '求', pronounce: 'qiú', cnMeaning: '圆形的立体物', enMeaning: 'ball', radicalPronounce: 'yù', radicalCnMeaning: '与玉石有关的事物', radicalEnMeaning: 'related to jade', phoneticPronounce: 'qiú'},
+            {char: '园', radical: '囗', phonetic: '元', pronounce: 'yuán', cnMeaning: '种植果蔬花木的地方', enMeaning: 'garden', radicalPronounce: 'wéi', radicalCnMeaning: '与围墙、范围有关的事物', radicalEnMeaning: 'related to enclosure', phoneticPronounce: 'yuán'},
+            {char: '国', radical: '囗', phonetic: '玉', pronounce: 'guó', cnMeaning: '有土地、人民、主权的政体', enMeaning: 'country; nation', radicalPronounce: 'wéi', radicalCnMeaning: '与围墙、范围有关的事物', radicalEnMeaning: 'related to enclosure', phoneticPronounce: 'yù'},
+            {char: '室', radical: '宀', phonetic: '至', pronounce: 'shì', cnMeaning: '屋子，房间', enMeaning: 'room', radicalPronounce: 'mián', radicalCnMeaning: '与房屋有关的事物', radicalEnMeaning: 'related to house', phoneticPronounce: 'zhì'},
+            {char: '安', radical: '宀', phonetic: '女', pronounce: 'ān', cnMeaning: '平静，稳定', enMeaning: 'peaceful; safe', radicalPronounce: 'mián', radicalCnMeaning: '与房屋有关的事物', radicalEnMeaning: 'related to house', phoneticPronounce: 'nǚ'},
+            {char: '病', radical: '疒', phonetic: '丙', pronounce: 'bìng', cnMeaning: '生物体发生不健康的现象', enMeaning: 'illness; disease', radicalPronounce: 'nè', radicalCnMeaning: '与疾病有关的事物', radicalEnMeaning: 'related to illness', phoneticPronounce: 'bǐng'},
+            {char: '痛', radical: '疒', phonetic: '甬', pronounce: 'tòng', cnMeaning: '疾病、创伤等引起的难受的感觉', enMeaning: 'pain', radicalPronounce: 'nè', radicalCnMeaning: '与疾病有关的事物', radicalEnMeaning: 'related to illness', phoneticPronounce: 'yǒng'}
+        ];
+
+        // 2. 核心DOM元素获取
+        const charDisplay = document.getElementById('char-display');
+        const mainChar = document.getElementById('main-char');
+        const charPinyin = document.getElementById('char-pinyin');
+        const charCnMeaning = document.getElementById('char-cn-meaning');
+        const charEnMeaning = document.getElementById('char-en-meaning');
+        const radicalLeft = document.getElementById('radical-left');
+        const radicalRight = document.getElementById('radical-right');
+        const radicalList = document.getElementById('radical-list');
+        const phoneticList = document.getElementById('phonetic-list');
+        const pinyinPopup = document.getElementById('pinyin-popup');
+        const resetBtn = document.getElementById('reset-btn');
+
+        // 当前选中的形声字
+        let currentChar = null;
+        // 点击状态：0-未点击 1-第一次点击（朗读） 2-第二次点击（拆分）
+        let clickState = 0;
+        
+        // 用于记录已添加的形旁和声符，避免重复显示
+        let addedRadicals = new Set();
+        let addedPhonetics = new Set();
+        
+        // 当前已显示的汉字索引，用于循环显示
+        let usedCharIndexes = [];
+
+        // 3. 语音朗读函数 - 语速减慢30%
+        function speakText(text, lang = 'zh-CN') {
+            // 停止之前的朗读
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            utterance.rate = 0.7; // 语速减慢30%（原为0.9，现改为0.7）
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // 4. 获取一个未使用过的形声字
+        function getNextChar() {
+            // 如果所有字都用过了，重置使用记录
+            if (usedCharIndexes.length >= xingshengChars.length) {
+                usedCharIndexes = [];
+            }
+            
+            // 随机选择一个未使用的字符
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * xingshengChars.length);
+            } while (usedCharIndexes.includes(randomIndex) && usedCharIndexes.length < xingshengChars.length);
+            
+            usedCharIndexes.push(randomIndex);
+            return xingshengChars[randomIndex];
+        }
+
+        // 5. 初始化显示下一个汉字
+        function initNextCharDisplay() {
+            // 重置动画状态
+            mainChar.style.opacity = 1;
+            charPinyin.style.opacity = 1;
+            radicalLeft.style.opacity = 0;
+            radicalRight.style.opacity = 0;
+            radicalLeft.textContent = '';
+            radicalRight.textContent = '';
+            
+            // 获取下一个汉字
+            currentChar = getNextChar();
+            mainChar.textContent = currentChar.char;
+            
+            // 显示汉字拼音（拆分前始终显示）
+            charPinyin.textContent = currentChar.pronounce;
+            
+            // 显示汉字的中英文释义
+            charCnMeaning.textContent = currentChar.cnMeaning;
+            charEnMeaning.textContent = currentChar.enMeaning;
+            
+            // 重置点击状态
+            clickState = 0;
+        }
+
+        // 6. 显示拼音弹窗（3秒后隐藏）
+        function showPinyin(text, x, y) {
+            pinyinPopup.textContent = text;
+            pinyinPopup.style.left = `${x}px`;
+            pinyinPopup.style.top = `${y}px`;
+            pinyinPopup.style.display = 'block';
+            
+            setTimeout(() => {
+                pinyinPopup.style.display = 'none';
+            }, 3000);
+        }
+
+        // 7. 添加形旁到形旁库（不重复添加）
+        function addRadicalToLib(radicalData) {
+            const radical = radicalData.radical;
+            
+            // 检查是否已添加过该形旁
+            if (addedRadicals.has(radical)) {
+                return; // 已存在，不重复添加
+            }
+            
+            addedRadicals.add(radical);
+            
+            const radicalItem = document.createElement('div');
+            radicalItem.className = 'char-item colored';
+            radicalItem.textContent = radical;
+            radicalItem.dataset.pronounce = radicalData.radicalPronounce;
+            radicalItem.dataset.cnMeaning = radicalData.radicalCnMeaning;
+            radicalItem.dataset.enMeaning = radicalData.radicalEnMeaning;
+            
+            // 点击形旁触发语音提示和拼音弹窗
+            radicalItem.addEventListener('click', function(e) {
+                const pronounce = this.dataset.pronounce;
+                const cnMeaning = this.dataset.cnMeaning;
+                const enMeaning = this.dataset.enMeaning;
+                
+                // 语音朗读形旁读音+释义
+                speakText(`${this.textContent}，读音${pronounce}，${cnMeaning}，英文：${enMeaning}`);
+                
+                // 显示拼音弹窗
+                showPinyin(pronounce, e.clientX, e.clientY);
+            });
+
+            radicalList.appendChild(radicalItem);
+        }
+
+        // 8. 添加声符到声符库（不重复添加）
+        function addPhoneticToLib(phoneticData) {
+            const phonetic = phoneticData.phonetic;
+            
+            // 检查是否已添加过该声符
+            if (addedPhonetics.has(phonetic)) {
+                return; // 已存在，不重复添加
+            }
+            
+            addedPhonetics.add(phonetic);
+            
+            const phoneticItem = document.createElement('div');
+            phoneticItem.className = 'char-item colored';
+            phoneticItem.textContent = phonetic;
+            phoneticItem.dataset.pronounce = phoneticData.phoneticPronounce;
+            
+            // 点击声符触发语音提示+显示拼音弹窗
+            phoneticItem.addEventListener('click', function(e) {
+                const pronounce = this.dataset.pronounce;
+                // 语音朗读声符读音
+                speakText(`${this.textContent}，读音${pronounce}`);
+                // 显示拼音弹窗
+                showPinyin(pronounce, e.clientX, e.clientY);
+            });
+
+            phoneticList.appendChild(phoneticItem);
+        }
+
+        // 9. 汉字展示区点击事件
+        charDisplay.addEventListener('click', function() {
+            if (!currentChar) return;
+
+            if (clickState === 0) {
+                // 第一次点击：朗读汉字+中英文解释
+                clickState = 1;
+                const speakContent = `${currentChar.char}，读音${currentChar.pronounce}，${currentChar.cnMeaning}，英文：${currentChar.enMeaning}`;
+                speakText(speakContent);
+            } else if (clickState === 1) {
+                // 第二次点击：拆分形旁和声符，播放动画后加入对应库
+                clickState = 2;
+                mainChar.style.opacity = 0;
+                charPinyin.style.opacity = 0; // 拆分后隐藏拼音
+                
+                // 显示形旁并播放动画
+                radicalLeft.textContent = currentChar.radical;
+                radicalLeft.style.opacity = 1;
+                
+                // 显示声符并播放动画
+                radicalRight.textContent = currentChar.phonetic;
+                radicalRight.style.opacity = 1;
+
+                // 动画结束后添加到对应库（延迟1秒）
+                setTimeout(() => {
+                    addRadicalToLib(currentChar);
+                    addPhoneticToLib(currentChar);
+                }, 1000);
+            }
+        });
+
+        // 10. 重置按钮事件（改为"下一个汉字"功能）
+        resetBtn.addEventListener('click', function() {
+            // 不清空库，只显示下一个汉字
+            initNextCharDisplay();
+        });
+
+        // 初始化
+        window.onload = function() {
+            // 初始化已添加的形旁和声符集合
+            addedRadicals.clear();
+            addedPhonetics.clear();
+            usedCharIndexes = [];
+            
+            // 显示第一个汉字
+            initNextCharDisplay();
+        };
+    </script>
+</body>
+</html>
