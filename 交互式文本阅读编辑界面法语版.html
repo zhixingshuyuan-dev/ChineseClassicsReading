@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>法语文本交互阅读编辑界面</title> <!-- 更新标题 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "Times New Roman", serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            background-color: #222;
+            border-radius: 12px;
+            padding: 30px 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            border: 1px solid #3a3a3a;
+        }
+        h1 {
+            color: #d4a017;
+            text-align: center;
+            font-size: 2.4em;
+            margin-bottom: 0.2em;
+            border-bottom: 2px solid #3a3a3a;
+            padding-bottom: 15px;
+        }
+        .sub {
+            text-align: center;
+            color: #b0b0b0;
+            font-style: italic;
+            margin-top: -5px;
+            margin-bottom: 35px;
+            font-size: 1.15em;
+        }
+        .sub i {
+            color: #d4a017;
+            margin: 0 6px;
+        }
+        .editor-panel {
+            background: #2b2b2b;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 35px;
+            border: 1px solid #444;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        textarea {
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            background-color: #1e1e1e;
+            border: 2px solid #3a3a3a;
+            border-radius: 10px;
+            color: #f0f0f0;
+            font-family: "Times New Roman", serif;
+            line-height: 1.7;
+            resize: vertical;
+            transition: 0.2s;
+        }
+        textarea:focus {
+            border-color: #d4a017;
+            outline: none;
+            box-shadow: 0 0 12px rgba(212,160,23,0.4);
+        }
+        .btn-group {
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: transparent;
+            border: 2px solid #d4a017;
+            color: #d4a017;
+            padding: 12px 28px;
+            font-size: 1.2rem;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.25s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn:hover {
+            background: #d4a017;
+            color: #1a1a1a;
+            transform: scale(1.02);
+            box-shadow: 0 6px 14px rgba(212,160,23,0.4);
+        }
+        .btn.secondary {
+            border-color: #888;
+            color: #ccc;
+        }
+        .btn.secondary:hover {
+            background: #666;
+            border-color: #666;
+            color: white;
+        }
+        .output-header {
+            display: flex;
+            align-items: center;
+            margin: 40px 0 20px 0;
+        }
+        .output-header h2 {
+            color: #d4a017;
+            font-size: 1.9em;
+            margin: 0;
+            border-left: 6px solid #d4a017;
+            padding-left: 18px;
+        }
+        .output-header i {
+            margin-left: 20px;
+            color: #5a5a5a;
+            font-size: 1.8rem;
+        }
+        .sample-mark {
+            color: #a0a0a0;
+            margin-left: 30px;
+            font-size: 1rem;
+        }
+        .sample-mark span {
+            background: #333;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #555;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .sample-mark span:hover {
+            background: #444;
+            border-color: #d4a017;
+            color: #d4a017;
+        }
+        /* 结果展示区——仿伏尔泰句子卡片 */
+        .result-container {
+            background-color: #1e1e1e;
+            border-radius: 18px;
+            padding: 25px 25px 10px 25px;
+            border: 1px solid #3d3d3d;
+        }
+        .sentence {
+            margin-bottom: 50px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 30px;
+        }
+        .sentence-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .sentence-number {
+            font-weight: bold;
+            color: #b0b0b0;
+            font-size: 1.3rem;
+            background: #2a2a2a;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #4a4a4a;
+            margin-right: 20px;
+        }
+        .action-buttons button {
+            background: transparent;
+            border: none;
+            color: #d4a017;
+            font-size: 1.4rem;
+            margin-right: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .action-buttons button:hover {
+            color: #f5c542;
+            transform: translateY(-3px);
+        }
+        .line {
+            line-height: 3.0;
+            margin-bottom: 10px;
+        }
+        .word-container {
+            position: relative;
+            display: inline-block;
+            margin-right: 18px;
+            margin-bottom: 40px;
+            vertical-align: top;
+        }
+        .french {
+            font-size: 1.3em;
+            color: #e0e0e0;
+            font-style: italic;
+            padding: 5px 8px;
+            border-radius: 4px;
+            transition: 0.2s;
+            background-color: rgba(40,40,40,0.9);
+            border: 1px solid transparent;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .french:hover {
+            background-color: #3b3b3b;
+            border-color: #d4a017;
+        }
+        .translation {
+            position: absolute;
+            top: 70%;            /* 原为50%，下移20% => 70% */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(45,45,45,0.98);
+            padding: 6px 10px;
+            border-radius: 6px;
+            white-space: nowrap;
+            display: none;
+            font-size: 0.9em;
+            color: #f0f0f0;
+            z-index: 200;
+            border: 1px solid #777;
+            pointer-events: none;
+            box-shadow: 0 6px 14px black;
+        }
+        .grammar-info {
+            position: absolute;
+            bottom: 80%;              
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 51, 102, 0.96);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: #b3d9ff;
+            display: none;
+            z-index: 210;
+            min-width: 150px;
+            text-align: center;
+            border: 1px solid #0055aa;
+            pointer-events: none;
+        }
+        .etymology-info {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(102, 51, 0, 0.96);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            color: #ffd9b3;
+            display: none;
+            z-index: 220;
+            min-width: 260px;
+            text-align: left;
+            border: 1px solid #aa5500;
+            pointer-events: none;
+            line-height: 1.5;
+        }
+        .chinese-def {
+            background-color: #7a5a3a;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+        /* 调整翻译位置，使其下移20% (相对单词容器) */
+        .word-container .translation {
+            margin-top: 0;          /* 取消可能的上边距，由top控制 */
+        }
+        .word-container .grammar-info {
+            margin-top: 55px;
+        }
+        .word-container .etymology-info {
+            margin-top: 115px;
+        }
+        .placeholder-text {
+            color: #666;
+            text-align: center;
+            padding: 70px 20px;
+            font-style: italic;
+            font-size: 1.4rem;
+            border: 2px dashed #3a3a3a;
+            border-radius: 30px;
+        }
+        .loading {
+            display: inline-block;
+            margin-left: 15px;
+            color: #d4a017;
+        }
+        .footer-note {
+            text-align: center;
+            color: #5f5f5f;
+            margin-top: 40px;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>✎ 法语文本交互阅读编辑界面</h1> <!-- 更新标题 -->
+    <div class="sub"><i class="fas fa-quill-alt"></i> 输入文字 · 调用 DeepSeek 生成词源/语法卡片 <i class="fas fa-robot"></i></div>
+
+    <!-- 编辑面板 -->
+    <div class="editor-panel">
+        <textarea id="inputText" rows="5" placeholder="在这里输入任意法文或中文段落……&#10;例如：Il était une fois un jeune homme qui s'appelait Candide.">Il était une fois un jeune homme qui s'appelait Candide. Il croyait que tout est pour le mieux dans le meilleur des mondes.</textarea>
+        <div class="btn-group">
+            <button class="btn secondary" id="sampleBtn"><i class="fas fa-lightbulb"></i> 填入示例</button>
+            <button class="btn" id="processBtn"><i class="fas fa-microchip"></i> 调用 DeepSeek 处理</button>
+        </div>
+        <div style="margin-top: 15px; color:#aaa; font-size:0.9rem;">
+            <i class="fas fa-info-circle"></i> 点击处理将模拟向DeepSeek发送请求，并生成带有词源/语法的高亮卡片（演示模式，实际可替换API秘钥）
+        </div>
+    </div>
+
+    <!-- 处理后输出区（动态追加句子） -->
+    <div class="output-header">
+        <h2><i class="fas fa-scroll" style="margin-right: 15px;"></i> 生成结果 · 词源交互读本</h2>
+        <i class="fas fa-long-arrow-alt-right"></i>
+        <div class="sample-mark" id="clearResult"><span><i class="fas fa-trash-alt"></i> 清空结果</span></div>
+    </div>
+    <div class="result-container" id="resultContainer">
+        <!-- 动态插入 .sentence 卡片 -->
+        <div class="placeholder-text">✨ 处理后的文字将在此处展示为伏尔泰风格卡片</div>
+    </div>
+    <div class="footer-note">
+        ⚡ 点击单词：显示语法 & 词源 (模拟词源) · 点击语言图标切换翻译 · 喇叭朗读句子
+    </div>
+</div>
+
+<script>
+    (function() {
+        // 获取元素
+        const inputText = document.getElementById('inputText');
+        const processBtn = document.getElementById('processBtn');
+        const sampleBtn = document.getElementById('sampleBtn');
+        const resultContainer = document.getElementById('resultContainer');
+        const clearBtn = document.getElementById('clearResult');
+
+        // 辅助: 清空结果区 (保留占位符或清空)
+        function clearResult(showPlaceholder = true) {
+            resultContainer.innerHTML = '';
+            if (showPlaceholder) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder-text';
+                placeholder.innerText = '✨ 处理后的文字将在此处展示为伏尔泰风格卡片';
+                resultContainer.appendChild(placeholder);
+            }
+        }
+
+        // 清空按钮
+        clearBtn.addEventListener('click', function() {
+            clearResult(true);
+        });
+
+        // 填入示例 (法文)
+        sampleBtn.addEventListener('click', function() {
+            inputText.value = `Candide, chassé du paradis terrestre, marcha longtemps sans savoir où. Il pleurait, il espérait, il regardait le ciel. Deux recruteurs le rencontrèrent et l'invitèrent à dîner.`;
+        });
+
+        // ---------- 核心: 模拟调用DeepSeek对输入进行处理 ----------
+        function mockDeepSeekProcess(rawText) {
+            // 1. 简单分句 (按 . 或 ! 或 ? 分割，保留标点)
+            let sentences = rawText.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+            if (sentences.length === 0) sentences = [rawText];
+
+            // 2. 对每个句子生成词级数据 (模拟词源/语法)
+            return sentences.map((sentence, idx) => {
+                const trimmed = sentence.trim();
+                const words = [];
+                const parts = trimmed.match(/(\w+|[,.!?;:]|\s+)/g) || [];
+                for (let p of parts) {
+                    if (p.trim().length === 0) continue;
+                    words.push(p);
+                }
+
+                const wordContainers = words.map(w => {
+                    const clean = w.replace(/^[^\w]+|[^\w]+$/g, '');
+                    const hasPunct = (w.match(/[^\w]/) && !clean) ? w : '';
+
+                    let french = w;
+                    let translation = '';
+                    let grammar = '';
+                    let etymology = '';
+
+                    if (clean.length > 0) {
+                        const lower = clean.toLowerCase();
+                        // 简易词典模拟 (法文常用词)
+                        const mockDict = {
+                            'il': { trans: '他/它', grammar: '代词 阳单', etymology: '源自拉丁语 ille <span class="chinese-def">那个</span>' },
+                            'elle': { trans: '她', grammar: '代词 阴单', etymology: '源自拉丁语 illa <span class="chinese-def">那个</span>' },
+                            'était': { trans: '是', grammar: '动词 未完成过去', etymology: '源自拉丁语 erat <span class="chinese-def">他是</span>' },
+                            'une': { trans: '一个', grammar: '冠词 阴', etymology: '源自拉丁语 ūnam <span class="chinese-def">一</span>' },
+                            'fois': { trans: '次', grammar: '名词 阴', etymology: '源自拉丁语 vices <span class="chinese-def">交替</span>' },
+                            'jeune': { trans: '年轻的', grammar: '形容词', etymology: '源自拉丁语 iuvenis <span class="chinese-def">青年</span>' },
+                            'homme': { trans: '男人/人', grammar: '名词 阳', etymology: '源自拉丁语 hominem <span class="chinese-def">人</span>' },
+                            'qui': { trans: '谁/那个人', grammar: '关系代词', etymology: '源自拉丁语 quī <span class="chinese-def">谁</span>' },
+                            's\'appelait': { trans: '名叫', grammar: '动词 未完成', etymology: '源自拉丁语 appellābat <span class="chinese-def">称呼</span>' },
+                            'candide': { trans: '老实人', grammar: '专有名词', etymology: '源自拉丁语 candidus <span class="chinese-def">纯洁的</span>' },
+                            'croyait': { trans: '相信', grammar: '动词 未完成', etymology: '源自拉丁语 crēdēbat <span class="chinese-def">相信</span>' },
+                            'que': { trans: '那', grammar: '连词', etymology: '源自拉丁语 quod' },
+                            'tout': { trans: '一切', grammar: '代词', etymology: '源自拉丁语 tōtus' },
+                            'est': { trans: '是', grammar: '动词', etymology: '源自拉丁语 est' },
+                            'pour': { trans: '为了', grammar: '介词', etymology: '源自拉丁语 pro' },
+                            'le': { trans: '这个', grammar: '冠词 阳', etymology: '源自拉丁语 illum' },
+                            'mieux': { trans: '更好', grammar: '副词', etymology: '源自拉丁语 melius' },
+                            'dans': { trans: '在…里', grammar: '介词', etymology: '源自拉丁语 de intus' },
+                            'monde': { trans: '世界', grammar: '名词', etymology: '源自拉丁语 mundus' },
+                            'chassé': { trans: '被赶走', grammar: '过去分词', etymology: '源自 captiāre' },
+                            'paradis': { trans: '天堂', grammar: '名词', etymology: '源自 paradīsus' },
+                            'terrestre': { trans: '地上的', grammar: '形容词', etymology: '源自 terrestris' },
+                            'marcha': { trans: '行走', grammar: '动词 简单过去', etymology: '源自 lat. merīcāre' },
+                            'longtemps': { trans: '长久', grammar: '副词', etymology: 'longus+tempus' },
+                            'sans': { trans: '无', grammar: '介词', etymology: '源自 sine' },
+                            'savoir': { trans: '知道', grammar: '动词不定式', etymology: '源自 sapere' },
+                            'pleurait': { trans: '哭泣', grammar: '动词 未完成', etymology: '源自 plōrābat' },
+                            'espérait': { trans: '希望', grammar: '动词 未完成', etymology: '源自 sperābat' },
+                            'regardait': { trans: '看', grammar: '动词 未完成', etymology: '源自 *guardare' },
+                            'ciel': { trans: '天空', grammar: '名词 阳', etymology: '源自 caelum' },
+                            'deux': { trans: '二', grammar: '数词', etymology: '源自 duōs' },
+                            'recruteurs': { trans: '招募者', grammar: '名词 复', etymology: '源自 recrūtātor' },
+                            'rencontrèrent': { trans: '遇见', grammar: '动词 简单过去', etymology: 'recontrāvērunt' },
+                            'l\'invitèrent': { trans: '邀请他', grammar: '动词 简单过去', etymology: 'invītāvērunt' },
+                            'dîner': { trans: '晚餐', grammar: '名词', etymology: 'disjējūnāre' }
+                        };
+                        if (mockDict[lower]) {
+                            translation = mockDict[lower].trans;
+                            grammar = mockDict[lower].grammar;
+                            etymology = mockDict[lower].etymology;
+                        } else {
+                            translation = clean + ' 的释义';
+                            grammar = '未知词性';
+                            etymology = `源自虚构语 *${clean} <span class="chinese-def">示例词源</span>`;
+                        }
+                    } else {
+                        french = w;
+                        translation = '';
+                        grammar = '';
+                        etymology = '';
+                    }
+
+                    return {
+                        french: french,
+                        translation: translation,
+                        grammar: grammar,
+                        etymology: etymology,
+                        isPunct: clean.length === 0
+                    };
+                });
+
+                return { sentence: trimmed, words: wordContainers };
+            });
+        }
+
+        // 构建 sentence DOM
+        function renderProcessedData(dataArray) {
+            clearResult(false);
+
+            if (!dataArray || dataArray.length === 0) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'placeholder-text';
+                placeholder.innerText = '⚠️ 没有生成任何句子';
+                resultContainer.appendChild(placeholder);
+                return;
+            }
+
+            for (let [idx, sentObj] of dataArray.entries()) {
+                const sentDiv = document.createElement('div');
+                sentDiv.className = 'sentence';
+
+                const header = document.createElement('div');
+                header.className = 'sentence-header';
+                const numSpan = document.createElement('div');
+                numSpan.className = 'sentence-number';
+                numSpan.innerText = (idx + 1).toString();
+                header.appendChild(numSpan);
+
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'action-buttons';
+                actionDiv.innerHTML = `
+                    <button class="show-translations" title="显示翻译"><i class="fas fa-language"></i></button>
+                    <button class="play-sentence" title="朗读句子"><i class="fas fa-volume-up"></i></button>
+                `;
+                header.appendChild(actionDiv);
+                sentDiv.appendChild(header);
+
+                const lineDiv = document.createElement('div');
+                lineDiv.className = 'line';
+
+                for (let w of sentObj.words) {
+                    if (w.isPunct) {
+                        const punctSpan = document.createElement('span');
+                        punctSpan.textContent = w.french;
+                        lineDiv.appendChild(punctSpan);
+                        continue;
+                    }
+                    const wc = document.createElement('span');
+                    wc.className = 'word-container';
+
+                    const frenchSpan = document.createElement('span');
+                    frenchSpan.className = 'french';
+                    frenchSpan.textContent = w.french;
+
+                    const transSpan = document.createElement('span');
+                    transSpan.className = 'translation';
+                    transSpan.textContent = w.translation;
+
+                    const gramSpan = document.createElement('span');
+                    gramSpan.className = 'grammar-info';
+                    gramSpan.innerHTML = w.grammar.replace(/\n/g, '<br>');
+
+                    const etySpan = document.createElement('span');
+                    etySpan.className = 'etymology-info';
+                    etySpan.innerHTML = w.etymology;
+
+                    wc.appendChild(frenchSpan);
+                    wc.appendChild(transSpan);
+                    wc.appendChild(gramSpan);
+                    wc.appendChild(etySpan);
+                    lineDiv.appendChild(wc);
+                }
+                sentDiv.appendChild(lineDiv);
+                resultContainer.appendChild(sentDiv);
+            }
+
+            // 重新绑定交互：去掉了第一次点击朗读，改为直接点击显示语法&词源（原第二次点击功能）
+            bindWordInteractions();
+            bindSentenceButtons();
+        }
+
+        // 单词交互: 单击直接显示语法&词源 (移除之前的双击逻辑和朗读)
+        function bindWordInteractions() {
+            document.querySelectorAll('.word-container').forEach(container => {
+                const frenchSpan = container.querySelector('.french');
+                const grammar = container.querySelector('.grammar-info');
+                const etymology = container.querySelector('.etymology-info');
+                if (!frenchSpan) return;
+
+                // 全新逻辑：单击直接显示语法词源，并隐藏其他
+                frenchSpan.addEventListener('click', function(e) {
+                    e.stopPropagation();
+
+                    // 隐藏其他所有语法/词源弹窗
+                    document.querySelectorAll('.grammar-info').forEach(info => {
+                        if (info !== grammar) info.style.display = 'none';
+                    });
+                    document.querySelectorAll('.etymology-info').forEach(info => {
+                        if (info !== etymology) info.style.display = 'none';
+                    });
+
+                    // 切换当前单词的语法词源显示
+                    if (grammar.style.display === 'block') {
+                        grammar.style.display = 'none';
+                        etymology.style.display = 'none';
+                    } else {
+                        grammar.style.display = 'block';
+                        etymology.style.display = 'block';
+                    }
+                });
+
+                // 点击外部关闭弹窗
+                document.addEventListener('click', function(e) {
+                    if (!container.contains(e.target)) {
+                        if (grammar) grammar.style.display = 'none';
+                        if (etymology) etymology.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // 句子内翻译切换 + 朗读
+        function bindSentenceButtons() {
+            // 翻译切换
+            document.querySelectorAll('.show-translations').forEach(button => {
+                button.addEventListener('click', function() {
+                    const sentenceDiv = this.closest('.sentence');
+                    const translations = sentenceDiv.querySelectorAll('.translation');
+                    const isShowing = translations[0]?.style.display === 'block';
+                    translations.forEach(trans => trans.style.display = isShowing ? 'none' : 'block');
+                    this.innerHTML = isShowing ? '<i class="fas fa-language"></i>' : '<i class="fas fa-eye-slash"></i>';
+                });
+            });
+
+            // 句子朗读 (保留)
+            document.querySelectorAll('.play-sentence').forEach(button => {
+                button.addEventListener('click', function() {
+                    const sentenceDiv = this.closest('.sentence');
+                    const frenchWords = Array.from(sentenceDiv.querySelectorAll('.french')).map(el => el.textContent);
+                    const sentence = frenchWords.join(' ');
+                    if (window.speechSynthesis) {
+                        speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(sentence);
+                        utterance.lang = 'fr-FR';
+                        utterance.rate = 0.8;
+                        speechSynthesis.speak(utterance);
+                    } else alert('语音不支持');
+                });
+            });
+        }
+
+        // 处理按钮 —— 模拟调用 deepseek
+        processBtn.addEventListener('click', function() {
+            const raw = inputText.value.trim();
+            if (!raw) {
+                alert('请输入一些文字');
+                return;
+            }
+
+            const originalText = processBtn.innerHTML;
+            processBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> 处理中...';
+            processBtn.disabled = true;
+
+            setTimeout(() => {
+                try {
+                    const processed = mockDeepSeekProcess(raw);
+                    renderProcessedData(processed);
+                } catch (e) {
+                    alert('处理出错: ' + e);
+                } finally {
+                    processBtn.innerHTML = originalText;
+                    processBtn.disabled = false;
+                }
+            }, 600);
+        });
+
+        // 预先填入示例文本
+        setTimeout(() => {
+            inputText.value = `Candide, chassé du paradis terrestre, marcha longtemps sans savoir où. Il pleurait, il espérait, il regardait le ciel.`;
+        }, 100);
+    })();
+</script>
+</body>
+</html>
