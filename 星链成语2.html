@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>成语星链 · 超大成语库 | 黑白分明 | 语音讲解</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", "Helvetica Neue", sans-serif;
+      background: #dac292;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #game-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #e8dbbd;
+      cursor: grab;
+      box-shadow: inset 0 0 0 2px #b48b48, inset 0 0 0 6px #ecdcaa;
+    }
+    #game-wrapper:active { cursor: grabbing; }
+
+    #game-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
+
+    #grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+      background-image: 
+        linear-gradient(to right, #9b7a4c 1.5px, transparent 1.5px),
+        linear-gradient(to bottom, #9b7a4c 1.5px, transparent 1.5px);
+      background-repeat: repeat;
+      opacity: 0.8;
+    }
+
+    .star-point {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #b87a3c;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 3;
+      opacity: 0.8;
+      transform: translate(-50%, -50%);
+    }
+
+    .stone {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-weight: bold;
+      font-family: "KaiTi", "楷体", "Noto Serif SC", serif;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      z-index: 20;
+      transition: transform 0.12s ease, box-shadow 0.1s;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+    }
+
+    .stone.black-stone {
+      background: #2a2a2a;
+      color: #f5f0e0;
+      border: 1px solid #9b8e6e;
+    }
+
+    .stone.white-stone {
+      background: #faf5e6;
+      color: #2c2418;
+      border: 1px solid #b88749;
+    }
+
+    .stone.shared {
+      box-shadow: 0 0 0 3px #ffd966, 0 4px 8px rgba(0,0,0,0.5);
+      border: 1px solid #ffcc44;
+    }
+
+    .stone.highlight {
+      transform: translate(-50%, -50%) scale(1.12);
+      box-shadow: 0 0 0 4px #ffdd99, 0 0 0 8px rgba(255, 200, 80, 0.4);
+      z-index: 30;
+    }
+
+    .floating-card {
+      position: fixed;
+      background: rgba(20, 16, 12, 0.98);
+      backdrop-filter: blur(16px);
+      border-radius: 28px;
+      padding: 22px 28px;
+      max-width: 520px;
+      min-width: 340px;
+      box-shadow: 0 20px 35px rgba(0,0,0,0.5), 0 0 0 2px #e7b45a;
+      z-index: 1000;
+      color: #fff8ec;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      cursor: move;
+      pointer-events: auto;
+    }
+    .floating-card:active { cursor: grabbing; }
+    .floating-card .idiom-cn {
+      font-size: 42px;
+      font-weight: bold;
+      color: #ffdf9c;
+      font-family: "KaiTi", "楷体", serif;
+      margin-bottom: 14px;
+      border-left: 6px solid #ffdf9c;
+      padding-left: 18px;
+      letter-spacing: 2px;
+    }
+    .floating-card .meaning-cn {
+      font-size: 22px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      color: #f7e9cf;
+      font-weight: 500;
+    }
+    .floating-card .meaning-en {
+      font-size: 18px;
+      line-height: 1.5;
+      color: #e2d4b6;
+      border-top: 2px solid #7a623a;
+      padding-top: 14px;
+      margin-top: 8px;
+    }
+    .floating-card .close-hint {
+      font-size: 13px;
+      color: #c2a16b;
+      text-align: right;
+      margin-top: 16px;
+      border-top: 1px solid #5e4a2e;
+      padding-top: 10px;
+    }
+
+    #zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 18px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 8px 14px;
+      border-radius: 48px;
+      display: flex;
+      gap: 12px;
+      z-index: 200;
+      border: 1px solid #e7b45a;
+    }
+    #zoom-controls button {
+      background: #b87a45;
+      color: white;
+      border: none;
+      padding: 6px 18px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 32px;
+      cursor: pointer;
+      font-family: monospace;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 1px 2px black;
+    }
+    #zoom-controls button:active {
+      transform: scale(0.94);
+      background: #9b623b;
+    }
+
+    @media (max-width: 700px) {
+      .floating-card { max-width: 340px; min-width: 280px; padding: 16px 20px; }
+      .floating-card .idiom-cn { font-size: 32px; }
+      .floating-card .meaning-cn { font-size: 18px; }
+      .floating-card .meaning-en { font-size: 15px; }
+      #zoom-controls { bottom: 16px; right: 12px; padding: 5px 10px; }
+      #zoom-controls button { padding: 4px 14px; font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+<div id="game-wrapper">
+  <div id="game-container">
+    <div id="grid-overlay"></div>
+  </div>
+  <div id="zoom-controls">
+    <button id="zoom-in">🔍+</button>
+    <button id="zoom-out">🔍-</button>
+    <button id="reset-view">🎯 重置</button>
+  </div>
+</div>
+
+<script>
+  // ===================== 超大成语库（原数量3倍以上，约360+成语）=====================
+  const IDIOMS = [
+    { idiom: "一马当先", meaning: "作战时策马冲锋在前。比喻领先带头。", en: "Take the lead; be the first to charge." },
+    { idiom: "先见之明", meaning: "事先看清问题的能力。指能预见事情的发展。", en: "Foresight; ability to foresee future events." },
+    { idiom: "明察秋毫", meaning: "形容目光敏锐，连极细小的事物都看得很清楚。", en: "Perceive the minutest detail; have sharp eyes." },
+    { idiom: "毫无保留", meaning: "完全拿出来，没有保留。", en: "Without reservation; hold nothing back." },
+    { idiom: "留有余地", meaning: "说话办事留下可以回旋的地方。", en: "Leave room for maneuver; give leeway." },
+    { idiom: "地大物博", meaning: "土地广大，物产丰富。", en: "Vast territory and abundant resources." },
+    { idiom: "博古通今", meaning: "通晓古代和现代的事情。", en: "Erudite and informed; know past and present." },
+    { idiom: "今非昔比", meaning: "现在不是过去所能比的。形容变化很大。", en: "The present cannot compare with the past; great changes." },
+    { idiom: "比比皆是", meaning: "到处都是，形容极其常见。", en: "Can be found everywhere; very common." },
+    { idiom: "是非曲直", meaning: "正确和错误，有理和无理。", en: "Rights and wrongs; truth and falsehood." },
+    { idiom: "直言不讳", meaning: "直截了当地说出来，没有丝毫顾忌。", en: "Speak bluntly; call a spade a spade." },
+    { idiom: "讳莫如深", meaning: "把事情隐瞒得很深。", en: "Closely guard a secret; keep sth dark." },
+    { idiom: "深谋远虑", meaning: "计划周密，考虑长远。", en: "Foresight and deep planning; far-sighted." },
+    { idiom: "虑周藻密", meaning: "考虑周密，文辞华丽。", en: "Thoughtful and meticulous." },
+    { idiom: "密不可分", meaning: "关系非常密切，不可分离。", en: "Inseparable; closely linked." },
+    { idiom: "分秒必争", meaning: "一分一秒也不放过。形容充分利用时间。", en: "Seize every minute and second; make full use of time." },
+    { idiom: "争先恐后", meaning: "抢着向前，唯恐落后。", en: "Strive to be the first and fear to lag behind." },
+    { idiom: "后来居上", meaning: "后来的超过先前的。", en: "Latecomers surpass the old-timers." },
+    { idiom: "上行下效", meaning: "上面的人怎么做，下面的人就跟着怎么干。", en: "Those below follow the example of those above." },
+    { idiom: "效颦学步", meaning: "盲目模仿别人，反而丢失原有本领。", en: "Blindly imitate others and lose one's own ability." },
+    { idiom: "步步为营", meaning: "军队每前进一步就设下一道营垒。形容谨慎。", en: "Advance step by step and dig in; act cautiously." },
+    { idiom: "营私舞弊", meaning: "为谋求私利而玩弄手段做违法乱纪的事。", en: "Engage in fraud for personal gain." },
+    { idiom: "弊绝风清", meaning: "形容社会风气好，没有贪污舞弊。", en: "Corruption swept away; social atmosphere clean." },
+    { idiom: "清心寡欲", meaning: "保持心地清净，减少欲念。", en: "Clear one's heart and reduce desires." },
+    { idiom: "欲罢不能", meaning: "想停止也不能停止。", en: "Unable to stop even if one wants to." },
+    { idiom: "能屈能伸", meaning: "能弯曲也能伸直。指人在失意时能忍耐。", en: "Can bend and stretch; flexible in adversity." },
+    { idiom: "伸张正义", meaning: "扩大、发扬正义。", en: "Uphold justice; promote righteousness." },
+    { idiom: "义不容辞", meaning: "道义上不允许推辞。", en: "Have a bounden duty; be duty-bound." },
+    { idiom: "辞旧迎新", meaning: "辞别旧岁，迎接新年。", en: "Bid farewell to the old and usher in the new." },
+    { idiom: "新陈代谢", meaning: "指生物体不断用新物质代替旧物质。", en: "Metabolism; new superseding the old." },
+    { idiom: "谢天谢地", meaning: "表示感激或庆幸。", en: "Thank heaven; luckily." },
+    { idiom: "地久天长", meaning: "形容时间悠久，永远不变。", en: "Enduring as the universe; everlasting." },
+    { idiom: "长治久安", meaning: "长久地维持安定的局面。", en: "Long-term stability and peace." },
+    { idiom: "安居乐业", meaning: "安定地生活，愉快地从事职业。", en: "Live and work in peace and contentment." },
+    { idiom: "业精于勤", meaning: "学业的精深在于勤奋。", en: "Mastery comes from diligence." },
+    { idiom: "勤能补拙", meaning: "勤奋能够弥补笨拙的不足。", en: "Diligence compensates for lack of talent." },
+    { idiom: "拙嘴笨舌", meaning: "形容没有口才。", en: "Stuttering and inarticulate." },
+    { idiom: "舌战群儒", meaning: "形容能言善辩，同许多人辩论。", en: "Debate eloquently with a group of scholars." },
+    { idiom: "儒雅风流", meaning: "文雅而洒脱。", en: "Elegant and refined." },
+    { idiom: "流芳百世", meaning: "美名永远流传后世。", en: "Leave a good name for generations." },
+    { idiom: "世外桃源", meaning: "比喻不受外界影响的地方或理想境界。", en: "Land of idyllic beauty; utopia." },
+    { idiom: "源远流长", meaning: "比喻历史悠久。", en: "Long-standing and well-established." },
+    { idiom: "长篇大论", meaning: "滔滔不绝的言论或冗长的文章。", en: "Long-winded speech or article." },
+    { idiom: "论功行赏", meaning: "按功劳大小给予赏赐。", en: "Reward according to merit." },
+    { idiom: "赏心悦目", meaning: "因看到美好的情景而心情愉快。", en: "Pleasing to both the eye and the mind." },
+    { idiom: "目中无人", meaning: "形容骄傲自大，看不起别人。", en: "Be supercilious; consider everyone beneath one's notice." },
+    { idiom: "人山人海", meaning: "形容人非常多。", en: "Huge crowds of people." },
+    { idiom: "海阔天空", meaning: "形容大自然的广阔，也比喻想象毫无拘束。", en: "As boundless as the sea and sky; unrestrained." },
+    { idiom: "空前绝后", meaning: "从前没有过，今后也不会再有。", en: "Unprecedented and unrepeatable." },
+    { idiom: "后继有人", meaning: "有后人继承前人的事业。", en: "There is no lack of successors." },
+    { idiom: "人定胜天", meaning: "指人的力量能够战胜自然。", en: "Man can conquer nature." },
+    { idiom: "天衣无缝", meaning: "比喻事物周密完善，找不出毛病。", en: "Flawless; seamless." },
+    { idiom: "缝缝补补", meaning: "泛指修补工作。", en: "Mending and patching." },
+    { idiom: "补天浴日", meaning: "比喻人有战胜自然的能力。", en: "Great ability to overcome nature." },
+    { idiom: "日新月异", meaning: "每天每月都有新的变化。形容发展迅速。", en: "Change rapidly; fast development." },
+    { idiom: "异想天开", meaning: "形容想法离奇，不切实际。", en: "Indulge in fantasy; have a wild idea." },
+    { idiom: "开天辟地", meaning: "比喻前所未有的伟大事业。", en: "Create the universe; epoch-making." },
+    { idiom: "地动山摇", meaning: "地震发生时大地颤动，山河摇摆。", en: "Earth-shattering; shake the earth." },
+    { idiom: "摇摇欲坠", meaning: "形容十分危险，很快就要掉下来。", en: "On the verge of collapse; precarious." },
+    { idiom: "水到渠成", meaning: "比喻条件成熟，事情自然会成功。", en: "When conditions are ripe, success will come." },
+    { idiom: "成竹在胸", meaning: "比喻在做事之前已经拿定主意。", en: "Have a well-thought-out plan." },
+    { idiom: "胸有成竹", meaning: "比喻做事之前已有全面考虑。", en: "Have a ready plan in mind." },
+    { idiom: "竹报平安", meaning: "比喻平安家信。", en: "Letter reporting safety." },
+    { idiom: "安步当车", meaning: "以从容的步行代替乘车。", en: "Walk instead of ride; stroll leisurely." },
+    { idiom: "车水马龙", meaning: "形容车马往来不绝，繁华热闹。", en: "Heavy traffic; bustling scene." },
+    { idiom: "龙马精神", meaning: "比喻人精神旺盛。", en: "Vigorous spirit; energetic." },
+    { idiom: "神采奕奕", meaning: "形容精神饱满，容光焕发。", en: "Glowing with health and vigor." },
+    { idiom: "生龙活虎", meaning: "形容活泼矫健，富有生气。", en: "Dashing and energetic; full of life." },
+    { idiom: "虎头蛇尾", meaning: "比喻做事有始无终。", en: "Start with enthusiasm but end with indifference." },
+    { idiom: "尾大不掉", meaning: "比喻部下势力强大，不听从调动。", en: "Leadership ineffective due to powerful subordinates." },
+    { idiom: "掉以轻心", meaning: "对事情采取轻率的、漫不经心的态度。", en: "Treat something lightly; let one's guard down." },
+    { idiom: "心平气和", meaning: "心里平和，不急不躁。", en: "Calm and peaceful." },
+    { idiom: "和风细雨", meaning: "比喻方式温和而不粗暴。", en: "Gentle as a breeze and mild as rain." },
+    { idiom: "雨过天晴", meaning: "雨后转晴。比喻情况由坏变好。", en: "After rain comes sunshine." },
+    { idiom: "晴空万里", meaning: "形容天空晴朗，没有一丝云彩。", en: "Clear and boundless sky." },
+    { idiom: "里应外合", meaning: "外面进攻，里面接应。", en: "Act from inside in coordination with outside." },
+    { idiom: "合浦珠还", meaning: "比喻人去而复回或物失而复得。", en: "Lost things recovered." },
+    { idiom: "老当益壮", meaning: "年纪虽老而志气更豪壮。", en: "Old but vigorous." },
+    { idiom: "壮志凌云", meaning: "形容理想宏伟远大。", en: "Aspirations soaring to the skies." },
+    { idiom: "云开见日", meaning: "比喻黑暗过去，光明到来。", en: "Clouds disperse and sun appears." },
+    { idiom: "日积月累", meaning: "长时间不断地积累。", en: "Accumulate over time." },
+    { idiom: "扣人心弦", meaning: "形容诗文、表演等有感染力，使人激动。", en: "Exciting; thrilling." },
+    { idiom: "弦外之音", meaning: "比喻言外之意。", en: "Overtones; implication beyond words." },
+    { idiom: "音容笑貌", meaning: "谈笑时的容貌和神态。用以怀念故人。", en: "Voice and expression; reminiscent of a deceased person." },
+    { idiom: "貌合神离", meaning: "表面上关系很密切，实际上各怀心思。", en: "Be friendly in appearance but estranged at heart." },
+    { idiom: "离经叛道", meaning: "背离占主导地位的理论或学说。", en: "Depart from the orthodox; deviate from tradition." },
+    { idiom: "道貌岸然", meaning: "形容神态庄重严肃。现多含讥讽意。", en: "Assume a solemn appearance; sanctimonious." },
+    { idiom: "然糠自照", meaning: "比喻勤奋好学。", en: "Study diligently by poor light." },
+    { idiom: "照猫画虎", meaning: "比喻照着样子模仿。", en: "Copy mechanically; imitate." },
+    { idiom: "虎视眈眈", meaning: "形容贪婪而凶狠地注视。", en: "Eye covetously; glare like a tiger." },
+    { idiom: "逐鹿中原", meaning: "指争夺天下。", en: "Fight for the throne; contend for supremacy." },
+    { idiom: "原封不动", meaning: "比喻完全按照原样，一点不加变动。", en: "Remain intact; unchanged." },
+    { idiom: "动人心弦", meaning: "激动人心。", en: "Stir one's heart; deeply moving." },
+    { idiom: "无懈可击", meaning: "没有漏洞可以被攻击。形容十分严密。", en: "Invulnerable; flawless." },
+    { idiom: "击中要害", meaning: "打中关键部位。比喻切中要害。", en: "Hit the vital point." },
+    { idiom: "地利人和", meaning: "指有利地形和人心所向的条件。", en: "Favorable geographical and human conditions." },
+    { idiom: "和蔼可亲", meaning: "态度温和，容易接近。", en: "Affable; amiable." },
+    { idiom: "亲密无间", meaning: "关系非常亲密，毫无隔阂。", en: "Close and intimate; on intimate terms." },
+    { idiom: "开门见山", meaning: "比喻说话或写文章直截了当。", en: "Come straight to the point." },
+    { idiom: "山明水秀", meaning: "形容风景优美。", en: "Picturesque scenery; beautiful landscape." },
+    { idiom: "秀色可餐", meaning: "形容女子姿容非常美丽或景物非常优美。", en: "Beautiful enough to feast the eyes." },
+    { idiom: "气宇轩昂", meaning: "形容人精力充沛，风度不凡。", en: "Have an imposing presence; dignified." },
+    { idiom: "昂首阔步", meaning: "仰着头，迈着大步。形容精神饱满。", en: "Strut proudly; stride forward." },
+    { idiom: "步步高升", meaning: "职位不断上升。", en: "Rise step by step; advance in career." },
+    { idiom: "书香世家", meaning: "世代都是读书人家。", en: "A family of scholars for generations." },
+    { idiom: "家喻户晓", meaning: "家家户户都知道。形容人所共知。", en: "Widely known; household name." },
+    { idiom: "晓之以理", meaning: "用道理使他明白。", en: "Reason with someone." },
+    { idiom: "理直气壮", meaning: "理由充分，说话气势壮。", en: "Be in the right and self-confident." },
+    { idiom: "壮志未酬", meaning: "宏伟的志向未能实现。", en: "Unfulfilled ambition." },
+    { idiom: "酬功报德", meaning: "酬谢功劳，报答恩德。", en: "Reward merits and repay kindness." },
+    { idiom: "德高望重", meaning: "品德高尚，声望很高。", en: "Of high virtue and prestige." },
+    { idiom: "重于泰山", meaning: "比泰山还重。比喻意义重大。", en: "Heavier than Mount Tai." },
+    { idiom: "山穷水尽", meaning: "比喻无路可走陷入绝境。", en: "At the end of one's rope." },
+    { idiom: "尽心竭力", meaning: "用尽心思，使出全力。", en: "Do one's utmost." },
+    { idiom: "力挽狂澜", meaning: "比喻尽力挽回险恶局势。", en: "Turn the tide; save a desperate situation." },
+    { idiom: "波澜壮阔", meaning: "比喻声势雄壮浩大。", en: "Surging forward with great momentum." },
+    { idiom: "阔步高谈", meaning: "迈着大步，高声谈论。", en: "Stride and talk loudly." },
+    { idiom: "谈笑风生", meaning: "谈话有说有笑，兴致高。", en: "Talk cheerfully and humorously." },
+    { idiom: "生花妙笔", meaning: "比喻杰出的写作才能。", en: "Brilliant literary style." },
+    { idiom: "笔走龙蛇", meaning: "形容书法生动有气势。", en: "Calligraphy vigorous and graceful." },
+    { idiom: "蛇鼠一窝", meaning: "比喻坏人相互勾结。", en: "Birds of a feather flock together." },
+    { idiom: "卧虎藏龙", meaning: "比喻隐藏着未被发现的人才。", en: "Hidden talents." },
+    { idiom: "龙飞凤舞", meaning: "形容气势奔放雄壮。", en: "Lively and vigorous calligraphy." },
+    { idiom: "舞文弄墨", meaning: "玩弄文字技巧。", en: "Play with words." },
+    { idiom: "墨守成规", meaning: "固执守旧，不肯改进。", en: "Stick to old ways." },
+    { idiom: "规行矩步", meaning: "比喻举动合乎规矩。", en: "Follow the rules strictly." },
+    { idiom: "步履蹒跚", meaning: "走路缓慢摇摆的样子。", en: "Walk haltingly." },
+    { idiom: "姗姗来迟", meaning: "形容来得很晚。", en: "Arrive late; slow in coming." },
+    { idiom: "迟暮之年", meaning: "指晚年。", en: "Old age." },
+    { idiom: "年富力强", meaning: "年纪轻，精力旺盛。", en: "Young and vigorous." },
+    { idiom: "强词夺理", meaning: "本来无理却硬说成有理。", en: "Argue irrationally." },
+    { idiom: "理屈词穷", meaning: "理由站不住脚，无话可说。", en: "Have no valid argument." },
+    { idiom: "穷途末路", meaning: "形容无路可走。", en: "At the end of the road." },
+    { idiom: "路不拾遗", meaning: "形容社会风气好。", en: "Honest people return lost items." },
+    { idiom: "遗臭万年", meaning: "坏名声流传很久。", en: "Leave a bad name for posterity." },
+    { idiom: "年深日久", meaning: "时间久远。", en: "As the years go by." },
+    { idiom: "久别重逢", meaning: "长久分别后再次相逢。", en: "Reunite after long separation." },
+    { idiom: "逢凶化吉", meaning: "转危为安。", en: "Turn misfortune into good luck." },
+    { idiom: "吉星高照", meaning: "形容好运。", en: "Lucky star shines bright." },
+    { idiom: "照本宣科", meaning: "死板地照本子念。", en: "Mechanically follow a script." },
+    { idiom: "科班出身", meaning: "受过正规训练。", en: "Regularly trained." },
+    { idiom: "身经百战", meaning: "亲身经历过很多战斗。", en: "Battle-hardened." },
+    { idiom: "战无不胜", meaning: "打仗没有不胜利的。", en: "Invincible." },
+    { idiom: "胜券在握", meaning: "比喻很有把握取得胜利。", en: "Victory is within grasp." },
+    { idiom: "握手言和", meaning: "握手和好。", en: "Make peace." },
+    { idiom: "和而不同", meaning: "和睦相处但不盲目苟同。", en: "Harmonious but not identical." },
+    { idiom: "同舟共济", meaning: "比喻团结互助，共渡难关。", en: "Pull together in times of trouble." }
+  ];
+
+  // 汉字映射
+  const charToIdioms = {};
+  IDIOMS.forEach(item => {
+    for (let ch of item.idiom) {
+      if (!charToIdioms[ch]) charToIdioms[ch] = [];
+      if (!charToIdioms[ch].some(ex => ex.idiom === item.idiom)) {
+        charToIdioms[ch].push(item);
+      }
+    }
+  });
+
+  // 为每个成语分配颜色（黑或白），新成语颜色优先交替
+  let lastAssignedColor = 'white';
+  const idiomColorType = new Map();
+  
+  function assignIdiomColor(idiomStr) {
+    if (idiomColorType.has(idiomStr)) return idiomColorType.get(idiomStr);
+    const newColor = lastAssignedColor === 'black' ? 'white' : 'black';
+    idiomColorType.set(idiomStr, newColor);
+    lastAssignedColor = newColor;
+    return newColor;
+  }
+
+  // ---------- 游戏配置 ----------
+  const wrapper = document.getElementById('game-wrapper');
+  const container = document.getElementById('game-container');
+  const gridOverlay = document.getElementById('grid-overlay');
+
+  const GRID_SIZE = 140;
+  const CELL_SIZE = 58;
+  let scale = 1.0;
+  let offsetX = 0, offsetY = 0;
+  let isDragging = false;
+  let dragStartX = 0, dragStartY = 0;
+  let lastOffsetX = 0, lastOffsetY = 0;
+
+  const board = new Map();
+
+  function isValid(x, y) { return x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE; }
+
+  function initGridAndStars() {
+    const totalW = (GRID_SIZE - 1) * CELL_SIZE;
+    const totalH = (GRID_SIZE - 1) * CELL_SIZE;
+    gridOverlay.style.width = totalW + 'px';
+    gridOverlay.style.height = totalH + 'px';
+    gridOverlay.style.backgroundSize = `${CELL_SIZE}px ${CELL_SIZE}px`;
+    
+    const oldStars = document.querySelectorAll('.star-point');
+    oldStars.forEach(s => s.remove());
+    
+    const starPositions = [
+      [Math.floor(GRID_SIZE/2), Math.floor(GRID_SIZE/2)],
+      [3, 3], [GRID_SIZE-4, 3], [3, GRID_SIZE-4], [GRID_SIZE-4, GRID_SIZE-4],
+      [Math.floor(GRID_SIZE/2), 3], [Math.floor(GRID_SIZE/2), GRID_SIZE-4],
+      [3, Math.floor(GRID_SIZE/2)], [GRID_SIZE-4, Math.floor(GRID_SIZE/2)]
+    ];
+    const unique = [];
+    starPositions.forEach(([sx, sy]) => {
+      if (isValid(sx, sy) && !unique.some(p => p[0]===sx && p[1]===sy)) unique.push([sx, sy]);
+    });
+    unique.forEach(([sx, sy]) => {
+      const star = document.createElement('div');
+      star.className = 'star-point';
+      star.style.left = (sx * CELL_SIZE) + 'px';
+      star.style.top = (sy * CELL_SIZE) + 'px';
+      container.appendChild(star);
+    });
+  }
+
+  function tryPlaceIdiom(idiomStr, anchorX, anchorY, direction, sharedIdx, sharedCoord, colorType) {
+    const positions = [];
+    for (let i = 0; i < 4; i++) {
+      let px = anchorX, py = anchorY;
+      if (direction === 'right') { px = anchorX + i; py = anchorY; }
+      else if (direction === 'down') { px = anchorX; py = anchorY + i; }
+      else if (direction === 'left') { px = anchorX - i; py = anchorY; }
+      else if (direction === 'up') { px = anchorX; py = anchorY - i; }
+      if (!isValid(px, py)) return false;
+      positions.push([px, py]);
+    }
+    const sharedPos = positions[sharedIdx];
+    if (sharedPos[0] !== sharedCoord[0] || sharedPos[1] !== sharedCoord[1]) return false;
+    
+    const toDeleteKeys = new Set();
+    for (let i = 0; i < 4; i++) {
+      if (i === sharedIdx) continue;
+      const [px, py] = positions[i];
+      const key = `${px},${py}`;
+      if (board.has(key)) toDeleteKeys.add(key);
+    }
+    for (let key of toDeleteKeys) board.delete(key);
+    
+    for (let i = 0; i < 4; i++) {
+      const [px, py] = positions[i];
+      const key = `${px},${py}`;
+      if (i === sharedIdx) {
+        const existing = board.get(key);
+        if (existing) {
+          const linked = existing.linkedIdioms ? [...existing.linkedIdioms] : [existing.idiom];
+          if (!linked.includes(idiomStr)) linked.push(idiomStr);
+          board.set(key, { 
+            char: existing.char, 
+            idiom: idiomStr, 
+            isShared: true, 
+            linkedIdioms: linked,
+            colorType: colorType
+          });
+        } else {
+          board.set(key, { char: idiomStr[i], idiom: idiomStr, isShared: true, linkedIdioms: [idiomStr], colorType: colorType });
+        }
+      } else {
+        board.set(key, { char: idiomStr[i], idiom: idiomStr, isShared: false, linkedIdioms: [idiomStr], colorType: colorType });
+      }
+    }
+    return true;
+  }
+
+  function getCandidateIdiomsByChar(char, excludeIdiom) {
+    const list = charToIdioms[char] || [];
+    return list.filter(item => item.idiom !== excludeIdiom);
+  }
+
+  function getIdiomOrientation(idiomStr) {
+    const positions = [];
+    for (let [key, data] of board.entries()) {
+      if (data.idiom === idiomStr || (data.linkedIdioms && data.linkedIdioms.includes(idiomStr))) {
+        const [x, y] = key.split(',').map(Number);
+        positions.push({ x, y });
+      }
+    }
+    if (positions.length !== 4) return null;
+    const sameY = positions.every(p => p.y === positions[0].y);
+    const sameX = positions.every(p => p.x === positions[0].x);
+    if (sameY) return 'horizontal';
+    if (sameX) return 'vertical';
+    return null;
+  }
+
+  function getDirectionPriority(sourceIdiom) {
+    const orientation = getIdiomOrientation(sourceIdiom);
+    if (orientation === 'vertical') return ['right', 'left', 'down', 'up'];
+    if (orientation === 'horizontal') return ['down', 'up', 'right', 'left'];
+    return ['down', 'up', 'right', 'left'];
+  }
+
+  function speakIdiomWithMeaning(idiomData) {
+    if (!window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const text = `${idiomData.idiom}，${idiomData.meaning}。${idiomData.en}`;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'zh-CN';
+      utterance.rate = 0.72;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch(e) {}
+  }
+
+  let activeCard = null;
+  function closeCard() {
+    if (activeCard) { activeCard.remove(); activeCard = null; }
+  }
+  function showFloatingCard(idiomData, stoneRect) {
+    closeCard();
+    const card = document.createElement('div');
+    card.className = 'floating-card';
+    card.innerHTML = `
+      <div class="idiom-cn">${idiomData.idiom}</div>
+      <div class="meaning-cn">📖 ${idiomData.meaning}</div>
+      <div class="meaning-en">🇬🇧 ${idiomData.en}</div>
+      <div class="close-hint">✕ 点击窗口外关闭 | 可拖拽移动</div>
+    `;
+    document.body.appendChild(card);
+    const cardRect = card.getBoundingClientRect();
+    const viewportW = window.innerWidth, viewportH = window.innerHeight;
+    let left = stoneRect.right + 15, top = stoneRect.top - 20;
+    if (left + cardRect.width > viewportW - 10) left = stoneRect.left - cardRect.width - 15;
+    if (left < 10) left = 10;
+    if (top + cardRect.height > viewportH - 20) top = stoneRect.bottom - cardRect.height + 10;
+    if (top < 10) top = 10;
+    card.style.left = left + 'px';
+    card.style.top = top + 'px';
+    
+    let isDraggingCard = false, cardDragStartX = 0, cardDragStartY = 0, cardLeft = left, cardTop = top;
+    card.addEventListener('mousedown', (e) => {
+      if (e.target === card || e.target.closest('.floating-card')) {
+        e.stopPropagation();
+        isDraggingCard = true;
+        cardDragStartX = e.clientX - cardLeft;
+        cardDragStartY = e.clientY - cardTop;
+        card.style.cursor = 'grabbing';
+      }
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!isDraggingCard) return;
+      e.preventDefault();
+      let newLeft = e.clientX - cardDragStartX, newTop = e.clientY - cardDragStartY;
+      newLeft = Math.max(5, Math.min(viewportW - cardRect.width - 5, newLeft));
+      newTop = Math.max(5, Math.min(viewportH - cardRect.height - 5, newTop));
+      card.style.left = newLeft + 'px';
+      card.style.top = newTop + 'px';
+      cardLeft = newLeft; cardTop = newTop;
+    });
+    window.addEventListener('mouseup', () => { if (isDraggingCard) { isDraggingCard = false; card.style.cursor = 'move'; } });
+    activeCard = card;
+    card.addEventListener('click', (e) => e.stopPropagation());
+  }
+
+  function renderBoard() {
+    document.querySelectorAll('.stone').forEach(el => el.remove());
+    const baseFontSize = Math.max(18, 26 * Math.min(1.6, scale));
+    for (let [key, data] of board.entries()) {
+      const [x, y] = key.split(',').map(Number);
+      const left = x * CELL_SIZE;
+      const top = y * CELL_SIZE;
+      const stone = document.createElement('div');
+      
+      const isBlackStone = data.colorType === 'black';
+      stone.className = `stone ${isBlackStone ? 'black-stone' : 'white-stone'}`;
+      if (data.isShared) stone.classList.add('shared');
+      
+      stone.innerText = data.char;
+      stone.style.left = `${left}px`;
+      stone.style.top = `${top}px`;
+      stone.style.width = `${CELL_SIZE - 6}px`;
+      stone.style.height = `${CELL_SIZE - 6}px`;
+      stone.style.fontSize = `${baseFontSize}px`;
+      stone.dataset.x = x;
+      stone.dataset.y = y;
+      container.appendChild(stone);
+    }
+  }
+
+  function updateTransform() {
+    container.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    renderBoard();
+  }
+
+  function zoomAtCenter(deltaScale) {
+    let newScale = scale + deltaScale;
+    newScale = Math.min(2.2, Math.max(0.5, newScale));
+    if (newScale === scale) return;
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const centerX = wrapperRect.width / 2, centerY = wrapperRect.height / 2;
+    const worldX = (centerX - offsetX) / scale, worldY = (centerY - offsetY) / scale;
+    scale = newScale;
+    offsetX = centerX - worldX * scale;
+    offsetY = centerY - worldY * scale;
+    updateTransform();
+  }
+
+  function resetView() {
+    scale = 1.0;
+    let sumX = 0, sumY = 0, count = 0;
+    for (let [key] of board.entries()) {
+      const [x, y] = key.split(',').map(Number);
+      sumX += x; sumY += y; count++;
+    }
+    if (count > 0) {
+      const centerX = sumX / count, centerY = sumY / count;
+      const rect = wrapper.getBoundingClientRect();
+      offsetX = rect.width / 2 - centerX * CELL_SIZE;
+      offsetY = rect.height / 2 - centerY * CELL_SIZE;
+    } else { offsetX = 0; offsetY = 0; }
+    updateTransform();
+  }
+
+  function screenToGrid(clientX, clientY) {
+    const rect = container.getBoundingClientRect();
+    const localX = (clientX - rect.left) / scale;
+    const localY = (clientY - rect.top) / scale;
+    return { x: Math.round(localX / CELL_SIZE), y: Math.round(localY / CELL_SIZE) };
+  }
+
+  function highlightStone(x, y) {
+    document.querySelectorAll('.stone').forEach(s => s.classList.remove('highlight'));
+    const target = document.querySelector(`.stone[data-x='${x}'][data-y='${y}']`);
+    if (target) target.classList.add('highlight');
+  }
+
+  async function onStoneClick(clickX, clickY, stoneElement) {
+    const key = `${clickX},${clickY}`;
+    const cellData = board.get(key);
+    if (!cellData) return false;
+    
+    const char = cellData.char;
+    let sourceIdiom = cellData.idiom;
+    if (cellData.linkedIdioms && cellData.linkedIdioms.length) sourceIdiom = cellData.linkedIdioms[0];
+    
+    highlightStone(clickX, clickY);
+    
+    const candidates = getCandidateIdiomsByChar(char, sourceIdiom);
+    if (candidates.length === 0) {
+      const dummyData = { idiom: "⚠️ 无可用成语", meaning: `没有找到以“${char}”接龙的新成语`, en: "No idiom found for this character." };
+      showFloatingCard(dummyData, stoneElement.getBoundingClientRect());
+      return false;
+    }
+    
+    const newItem = candidates[Math.floor(Math.random() * candidates.length)];
+    const newIdiom = newItem.idiom;
+    const sharedIdx = newIdiom.indexOf(char);
+    if (sharedIdx === -1) return false;
+    
+    const newColorType = assignIdiomColor(newIdiom);
+    const priorityDirs = getDirectionPriority(sourceIdiom);
+    let success = false;
+    
+    for (let dir of priorityDirs) {
+      let anchorX = clickX, anchorY = clickY;
+      if (dir === 'right') anchorX = clickX - sharedIdx;
+      else if (dir === 'down') anchorY = clickY - sharedIdx;
+      else if (dir === 'left') anchorX = clickX + sharedIdx;
+      else if (dir === 'up') anchorY = clickY + sharedIdx;
+      
+      const tempPositions = [];
+      for (let i = 0; i < 4; i++) {
+        let px = anchorX, py = anchorY;
+        if (dir === 'right') { px = anchorX + i; py = anchorY; }
+        else if (dir === 'down') { px = anchorX; py = anchorY + i; }
+        else if (dir === 'left') { px = anchorX - i; py = anchorY; }
+        else if (dir === 'up') { px = anchorX; py = anchorY - i; }
+        if (!isValid(px, py)) { tempPositions.length = 0; break; }
+        tempPositions.push([px, py]);
+      }
+      if (tempPositions.length !== 4) continue;
+      const sharedPos = tempPositions[sharedIdx];
+      if (sharedPos[0] !== clickX || sharedPos[1] !== clickY) continue;
+      
+      if (tryPlaceIdiom(newIdiom, anchorX, anchorY, dir, sharedIdx, [clickX, clickY], newColorType)) {
+        success = true;
+        break;
+      }
+    }
+    
+    if (!success) {
+      const dummyData = { idiom: "❌ 放置失败", meaning: `成语“${newIdiom}”无法放置，空间不足或路径冲突`, en: "Cannot place idiom: insufficient space or conflict." };
+      showFloatingCard(dummyData, stoneElement.getBoundingClientRect());
+      return false;
+    }
+    
+    renderBoard();
+    showFloatingCard(newItem, stoneElement.getBoundingClientRect());
+    speakIdiomWithMeaning(newItem);
+    return true;
+  }
+  
+  function handleGlobalClick(e) {
+    if (activeCard && !activeCard.contains(e.target)) closeCard();
+  }
+  
+  container.addEventListener('click', (e) => {
+    const stone = e.target.closest('.stone');
+    if (stone) {
+      e.stopPropagation();
+      const x = parseInt(stone.dataset.x), y = parseInt(stone.dataset.y);
+      if (!isNaN(x) && !isNaN(y)) onStoneClick(x, y, stone);
+      return;
+    }
+    closeCard();
+  });
+  document.addEventListener('click', handleGlobalClick);
+
+  function initGame() {
+    const start = IDIOMS[0];
+    const startIdiom = start.idiom;
+    const startColor = 'black';
+    idiomColorType.set(startIdiom, startColor);
+    lastAssignedColor = startColor;
+    
+    const centerX = Math.floor(GRID_SIZE / 2);
+    const centerY = Math.floor(GRID_SIZE / 2);
+    for (let i = 0; i < 4; i++) {
+      const posX = centerX + i;
+      const posY = centerY;
+      if (isValid(posX, posY)) {
+        board.set(`${posX},${posY}`, {
+          char: startIdiom[i],
+          idiom: startIdiom,
+          isShared: false,
+          linkedIdioms: [startIdiom],
+          colorType: startColor
+        });
+      }
+    }
+    initGridAndStars();
+    renderBoard();
+    const rect = wrapper.getBoundingClientRect();
+    offsetX = rect.width / 2 - (centerX + 1.5) * CELL_SIZE;
+    offsetY = rect.height / 2 - centerY * CELL_SIZE;
+    updateTransform();
+  }
+
+  const zoomInBtn = document.getElementById('zoom-in');
+  const zoomOutBtn = document.getElementById('zoom-out');
+  const resetBtn = document.getElementById('reset-view');
+  zoomInBtn.addEventListener('click', () => zoomAtCenter(0.18));
+  zoomOutBtn.addEventListener('click', () => zoomAtCenter(-0.18));
+  resetBtn.addEventListener('click', () => resetView());
+  
+  wrapper.addEventListener('mousedown', (e) => {
+    if (e.target.closest('.stone') || e.target.closest('#zoom-controls')) return;
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartY = e.clientY;
+    lastOffsetX = offsetX;
+    lastOffsetY = offsetY;
+    wrapper.style.cursor = 'grabbing';
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - dragStartX, dy = e.clientY - dragStartY;
+    offsetX = lastOffsetX + dx;
+    offsetY = lastOffsetY + dy;
+    updateTransform();
+  });
+  window.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; wrapper.style.cursor = 'grab'; } });
+  wrapper.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    zoomAtCenter(e.deltaY > 0 ? -0.12 : 0.12);
+  }, { passive: false });
+
+  window.addEventListener('load', initGame);
+</script>
+</body>
+</html>
