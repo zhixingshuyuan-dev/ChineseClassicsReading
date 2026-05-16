@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉语生活口语50句 · 中英/中德双语版 · 字词拆分学习</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Times New Roman", serif;
+            line-height: 1.6;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .container {
+            background-color: #222;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #e69a2e;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 2.8em;
+            border-bottom: 3px solid #333;
+            padding-bottom: 12px;
+        }
+        .sub {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+            font-style: italic;
+        }
+        .lang-bar {
+            text-align: center;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        .lang-btn {
+            background: #2a2a2a;
+            border: 2px solid #e69a2e;
+            color: #e69a2e;
+            padding: 12px 32px;
+            font-size: 1.3em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+        .lang-btn.active {
+            background: #e69a2e;
+            color: #1a1a1a;
+        }
+        .lang-btn:hover {
+            transform: translateY(-3px);
+            opacity: 0.9;
+        }
+        .verb-section {
+            background: rgba(230, 154, 46, 0.1);
+            margin: 40px 0 25px 0;
+            padding: 20px 25px;
+            border-radius: 12px;
+            border-left: 6px solid #e69a2e;
+        }
+        .section-title {
+            color: #e69a2e;
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .sentence {
+            margin-bottom: 70px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 30px;
+        }
+        .sentence-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .line {
+            margin-bottom: 30px;
+            line-height: 2.8;
+            position: relative;
+            min-height: 100px;
+            padding-bottom: 45px;
+            font-size: 1.2em;
+        }
+        .line.hidden-original .chinese-word {
+            filter: blur(5px);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .line.hidden-original .translation {
+            filter: none;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .word-container {
+            position: relative;
+            display: inline-block;
+            margin-right: 18px;
+            margin-bottom: 45px;
+            vertical-align: top;
+            min-width: 60px;
+        }
+        .chinese-word {
+            font-size: 2em;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: inline-block;
+            background-color: rgba(30, 30, 30, 0.8);
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            font-weight: 500;
+        }
+        .chinese-word:hover {
+            background-color: #444;
+            transform: translateY(-3px);
+            border-color: #e69a2e;
+        }
+        .translation {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(45, 45, 45, 0.95);
+            padding: 8px 12px;
+            border-radius: 8px;
+            white-space: nowrap;
+            display: none;
+            font-size: 1em;
+            color: #f0f0f0;
+            z-index: 100;
+            border: 1px solid #666;
+            cursor: pointer;
+            transition: 0.2s;
+            pointer-events: auto;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .translation:hover {
+            background-color: rgba(100, 100, 100, 0.95);
+            border-color: #e69a2e;
+        }
+        .pinyin-info {
+            position: absolute;
+            bottom: 85%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 51, 102, 0.95);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            color: #b3d9ff;
+            display: none;
+            z-index: 100;
+            min-width: 140px;
+            text-align: center;
+            border: 1px solid #0055aa;
+            line-height: 1.6;
+            white-space: nowrap;
+            pointer-events: none;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            font-family: monospace;
+        }
+        .sentence-translation {
+            background-color: #2a2a2a;
+            border-left: 5px solid #e69a2e;
+            padding: 15px 20px;
+            margin-top: 20px;
+            border-radius: 10px;
+            font-size: 1.3em;
+            color: #d4d4d4;
+            display: none;
+            font-style: normal;
+            line-height: 1.8;
+        }
+        .show-translations, .play-sentence, .translate-sentence, .hide-original-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 1.2em;
+            transition: 0.3s;
+        }
+        .show-translations { color: white; }
+        .play-sentence { color: #e69a2e; }
+        .translate-sentence { color: #6ab0f5; }
+        .hide-original-btn { color: #c97e5a; }
+        .show-translations:hover, .play-sentence:hover, .translate-sentence:hover, .hide-original-btn:hover {
+            transform: translateY(-3px);
+            opacity: 0.8;
+        }
+        .sentence-number {
+            font-weight: bold;
+            color: #e69a2e;
+            font-size: 1.3em;
+            margin-right: 20px;
+            background: #2a2a2a;
+            padding: 5px 15px;
+            border-radius: 30px;
+        }
+        .speed-badge {
+            font-size: 0.8em;
+            background-color: #3a2a1a;
+            padding: 3px 8px;
+            border-radius: 16px;
+            margin-left: 10px;
+            color: #e69a2e;
+        }
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            color: #888;
+            font-size: 1rem;
+        }
+        @media (max-width: 800px) {
+            .word-container { margin-right: 12px; }
+            .chinese-word { font-size: 1.5em; }
+            .sentence-header { justify-content: flex-start; }
+            .pinyin-info { font-size: 1em; min-width: 100px; white-space: normal; }
+            .translation { font-size: 0.85em; white-space: normal; min-width: 80px; }
+        }
+        button i { pointer-events: none; }
+        .hidden-word { visibility: hidden; display: inline-block; }
+        .word-container.pinyin-active .pinyin-info {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🇨🇳 汉语生活口语50句 · 字词拆分学习</h1>
+    <div class="sub">
+        🔤 单击字词→朗读 &nbsp;|&nbsp; 🧩 双击字词→显示拼音 &nbsp;|&nbsp; 🌐 整句翻译 &nbsp;|&nbsp; 🔇 隐藏原文 &nbsp;|&nbsp; 🔊 变速朗读 &nbsp;|&nbsp; 🖱️ 点击翻译窗口→隐藏/恢复原字词
+    </div>
+    <div class="lang-bar">
+        <button id="btn-en" class="lang-btn active">🇬🇧 中文 → English</button>
+        <button id="btn-de" class="lang-btn">🇩🇪 中文 → Deutsch</button>
+    </div>
+
+    <div id="sentences-container"></div>
+    <footer>✨ 50个常用汉语生活口语 · 按词汇拆分 · 单击朗读 · 双击拼音 · 整句翻译 · 变速朗读 · 支持中英/中德双语切换</footer>
+</div>
+
+<script>
+    // 例句数据：中文原句（以词为单位拆分后的数组），拼音（对应每个词的拼音），英文翻译（整句），德文翻译（整句），以及每个词对应的逐词翻译（英/德）
+    // 为了完整展示词汇级翻译，每个词的translation_en 和 translation_de 独立
+    const sentencesData = [
+        { words: ["你好"], pinyin: ["Nǐ hǎo"], trans_en: ["Hello"], trans_de: ["Hallo"], whole_en: "Hello", whole_de: "Hallo" },
+        { words: ["早上", "好"], pinyin: ["Zǎo shàng", "hǎo"], trans_en: ["morning", "good"], trans_de: ["Morgen", "gut"], whole_en: "Good morning", whole_de: "Guten Morgen" },
+        { words: ["晚上", "好"], pinyin: ["Wǎn shàng", "hǎo"], trans_en: ["evening", "good"], trans_de: ["Abend", "gut"], whole_en: "Good evening", whole_de: "Guten Abend" },
+        { words: ["晚安"], pinyin: ["Wǎn ān"], trans_en: ["Good night"], trans_de: ["Gute Nacht"], whole_en: "Good night", whole_de: "Gute Nacht" },
+        { words: ["谢谢"], pinyin: ["Xiè xiè"], trans_en: ["Thank you"], trans_de: ["Danke"], whole_en: "Thank you", whole_de: "Danke" },
+        { words: ["非常", "感谢"], pinyin: ["Fēi cháng", "gǎn xiè"], trans_en: ["very", "thankful"], trans_de: ["sehr", "dankbar"], whole_en: "Thank you very much", whole_de: "Vielen Dank" },
+        { words: ["不客气"], pinyin: ["Bú kè qi"], trans_en: ["You're welcome"], trans_de: ["Gern geschehen"], whole_en: "You're welcome", whole_de: "Gern geschehen" },
+        { words: ["对不起"], pinyin: ["Duì bu qǐ"], trans_en: ["Sorry"], trans_de: ["Entschuldigung"], whole_en: "Sorry", whole_de: "Entschuldigung" },
+        { words: ["没关系"], pinyin: ["Méi guān xi"], trans_en: ["No problem"], trans_de: ["Kein Problem"], whole_en: "It's okay / No problem", whole_de: "Kein Problem / Macht nichts" },
+        { words: ["请问"], pinyin: ["Qǐng wèn"], trans_en: ["Excuse me"], trans_de: ["Entschuldigung"], whole_en: "Excuse me / May I ask", whole_de: "Entschuldigung / Darf ich fragen" },
+        { words: ["多少", "钱"], pinyin: ["Duō shǎo", "qián"], trans_en: ["how much", "money"], trans_de: ["wie viel", "Geld"], whole_en: "How much is it?", whole_de: "Wie viel kostet das?" },
+        { words: ["我", "爱", "你"], pinyin: ["Wǒ", "ài", "nǐ"], trans_en: ["I", "love", "you"], trans_de: ["Ich", "liebe", "dich"], whole_en: "I love you", whole_de: "Ich liebe dich" },
+        { words: ["再见"], pinyin: ["Zài jiàn"], trans_en: ["Goodbye"], trans_de: ["Auf Wiedersehen"], whole_en: "Goodbye", whole_de: "Auf Wiedersehen" },
+        { words: ["明天", "见"], pinyin: ["Míng tiān", "jiàn"], trans_en: ["tomorrow", "see"], trans_de: ["morgen", "sehen"], whole_en: "See you tomorrow", whole_de: "Bis morgen" },
+        { words: ["我", "饿", "了"], pinyin: ["Wǒ", "è", "le"], trans_en: ["I", "hungry", "(particle)"], trans_de: ["Ich", "Hunger", "(Partikel)"], whole_en: "I'm hungry", whole_de: "Ich habe Hunger" },
+        { words: ["我", "渴", "了"], pinyin: ["Wǒ", "kě", "le"], trans_en: ["I", "thirsty", "(particle)"], trans_de: ["Ich", "Durst", "(Partikel)"], whole_en: "I'm thirsty", whole_de: "Ich habe Durst" },
+        { words: ["我", "累", "了"], pinyin: ["Wǒ", "lèi", "le"], trans_en: ["I", "tired", "(particle)"], trans_de: ["Ich", "müde", "(Partikel)"], whole_en: "I'm tired", whole_de: "Ich bin müde" },
+        { words: ["你", "叫", "什么", "名字"], pinyin: ["Nǐ", "jiào", "shén me", "míng zi"], trans_en: ["you", "called", "what", "name"], trans_de: ["du", "heißt", "was", "Name"], whole_en: "What's your name?", whole_de: "Wie heißt du?" },
+        { words: ["我", "叫", "张伟"], pinyin: ["Wǒ", "jiào", "Zhāng Wěi"], trans_en: ["I", "called", "Zhang Wei"], trans_de: ["Ich", "heiße", "Zhang Wei"], whole_en: "My name is Zhang Wei", whole_de: "Ich heiße Zhang Wei" },
+        { words: ["很", "高兴", "认识", "你"], pinyin: ["Hěn", "gāo xìng", "rèn shi", "nǐ"], trans_en: ["very", "happy", "meet", "you"], trans_de: ["sehr", "erfreut", "kennenzulernen", "dich"], whole_en: "Nice to meet you", whole_de: "Schön, dich kennenzulernen" },
+        { words: ["你", "好", "吗"], pinyin: ["Nǐ", "hǎo", "ma"], trans_en: ["you", "good", "?"], trans_de: ["du", "gut", "?"], whole_en: "How are you?", whole_de: "Wie geht es dir?" },
+        { words: ["我", "很", "好"], pinyin: ["Wǒ", "hěn", "hǎo"], trans_en: ["I", "very", "good"], trans_de: ["Mir", "sehr", "gut"], whole_en: "I'm fine", whole_de: "Mir geht es gut" },
+        { words: ["多少", "钱", "一个"], pinyin: ["Duō shǎo", "qián", "yí gè"], trans_en: ["how much", "money", "one"], trans_de: ["wie viel", "Geld", "eins"], whole_en: "How much for one?", whole_de: "Wie viel kostet eines?" },
+        { words: ["太", "贵", "了"], pinyin: ["Tài", "guì", "le"], trans_en: ["too", "expensive", "(particle)"], trans_de: ["zu", "teuer", "(Partikel)"], whole_en: "Too expensive", whole_de: "Zu teuer" },
+        { words: ["便宜", "一点"], pinyin: ["Pián yi", "yì diǎn"], trans_en: ["cheap", "a little"], trans_de: ["billig", "ein bisschen"], whole_en: "A little cheaper", whole_de: "Ein bisschen billiger" },
+        { words: ["我", "要", "这个"], pinyin: ["Wǒ", "yào", "zhè ge"], trans_en: ["I", "want", "this"], trans_de: ["Ich", "möchte", "dieses"], whole_en: "I want this one", whole_de: "Ich möchte dieses" },
+        { words: ["厕所", "在", "哪里"], pinyin: ["Cè suǒ", "zài", "nǎ lǐ"], trans_en: ["toilet", "at", "where"], trans_de: ["Toilette", "ist", "wo"], whole_en: "Where is the toilet?", whole_de: "Wo ist die Toilette?" },
+        { words: ["请", "帮", "我"], pinyin: ["Qǐng", "bāng", "wǒ"], trans_en: ["please", "help", "me"], trans_de: ["bitte", "hilf", "mir"], whole_en: "Please help me", whole_de: "Bitte hilf mir" },
+        { words: ["我", "会", "说", "一点", "汉语"], pinyin: ["Wǒ", "huì", "shuō", "yì diǎn", "Hàn yǔ"], trans_en: ["I", "can", "speak", "a little", "Chinese"], trans_de: ["Ich", "kann", "sprechen", "ein bisschen", "Chinesisch"], whole_en: "I can speak a little Chinese", whole_de: "Ich kann ein bisschen Chinesisch sprechen" },
+        { words: ["你", "说", "英语", "吗"], pinyin: ["Nǐ", "shuō", "Yīng yǔ", "ma"], trans_en: ["you", "speak", "English", "?"], trans_de: ["du", "sprichst", "Englisch", "?"], whole_en: "Do you speak English?", whole_de: "Sprichst du Englisch?" },
+        { words: ["我", "听", "不", "懂"], pinyin: ["Wǒ", "tīng", "bù", "dǒng"], trans_en: ["I", "listen", "not", "understand"], trans_de: ["Ich", "höre", "nicht", "verstehen"], whole_en: "I don't understand", whole_de: "Ich verstehe nicht" },
+        { words: ["请", "再", "说", "一遍"], pinyin: ["Qǐng", "zài", "shuō", "yí biàn"], trans_en: ["please", "again", "say", "once"], trans_de: ["bitte", "nochmal", "sagen", "einmal"], whole_en: "Please say it again", whole_de: "Bitte wiederholen Sie" },
+        { words: ["慢", "一点"], pinyin: ["Màn", "yì diǎn"], trans_en: ["slow", "a little"], trans_de: ["langsam", "ein bisschen"], whole_en: "Slower", whole_de: "Langsamer" },
+        { words: ["太", "好", "了"], pinyin: ["Tài", "hǎo", "le"], trans_en: ["very", "good", "(particle)"], trans_de: ["sehr", "gut", "(Partikel)"], whole_en: "Great / Very good", whole_de: "Sehr gut / Wunderbar" },
+        { words: ["糟糕"], pinyin: ["Zāo gāo"], trans_en: ["Too bad"], trans_de: ["Mist"], whole_en: "Too bad / Oh no", whole_de: "Mist / Schade" },
+        { words: ["没", "问题"], pinyin: ["Méi", "wèn tí"], trans_en: ["no", "problem"], trans_de: ["kein", "Problem"], whole_en: "No problem", whole_de: "Kein Problem" },
+        { words: ["祝", "你", "好运"], pinyin: ["Zhù", "nǐ", "hǎo yùn"], trans_en: ["wish", "you", "good luck"], trans_de: ["wünsche", "dir", "viel Glück"], whole_en: "Good luck", whole_de: "Viel Glück" },
+        { words: ["生日", "快乐"], pinyin: ["Shēng rì", "kuài lè"], trans_en: ["birthday", "happy"], trans_de: ["Geburtstag", "alles Gute"], whole_en: "Happy birthday", whole_de: "Alles Gute zum Geburtstag" },
+        { words: ["新年", "快乐"], pinyin: ["Xīn nián", "kuài lè"], trans_en: ["New Year", "happy"], trans_de: ["Neues Jahr", "fröhlich"], whole_en: "Happy New Year", whole_de: "Frohes Neues Jahr" },
+        { words: ["圣诞节", "快乐"], pinyin: ["Shèng dàn jié", "kuài lè"], trans_en: ["Christmas", "happy"], trans_de: ["Weihnachten", "fröhlich"], whole_en: "Merry Christmas", whole_de: "Frohe Weihnachten" },
+        { words: ["保重"], pinyin: ["Bǎo zhòng"], trans_en: ["Take care"], trans_de: ["Pass auf dich auf"], whole_en: "Take care", whole_de: "Pass auf dich auf" },
+        { words: ["周末", "愉快"], pinyin: ["Zhōu mò", "yú kuài"], trans_en: ["weekend", "pleasant"], trans_de: ["Wochenende", "schön"], whole_en: "Have a nice weekend", whole_de: "Schönes Wochenende" },
+        { words: ["干杯"], pinyin: ["Gān bēi"], trans_en: ["Cheers"], trans_de: ["Prost"], whole_en: "Cheers", whole_de: "Prost" },
+        { words: ["你", "吃", "了", "吗"], pinyin: ["Nǐ", "chī", "le", "ma"], trans_en: ["you", "eat", "(particle)", "?"], trans_de: ["du", "gegessen", "hast", "?"], whole_en: "Have you eaten?", whole_de: "Hast du gegessen?" },
+        { words: ["随便"], pinyin: ["Suí biàn"], trans_en: ["Whatever"], trans_de: ["Wie du möchtest"], whole_en: "Whatever / As you like", whole_de: "Wie du möchtest" },
+        { words: ["加油"], pinyin: ["Jiā yóu"], trans_en: ["Come on"], trans_de: ["Gib Gas"], whole_en: "Come on / Keep going", whole_de: "Gib Gas / Mach weiter" },
+        { words: ["真的", "吗"], pinyin: ["Zhēn de", "ma"], trans_en: ["really", "?"], trans_de: ["wirklich", "?"], whole_en: "Really?", whole_de: "Wirklich?" },
+        { words: ["等", "一下"], pinyin: ["Děng", "yí xià"], trans_en: ["wait", "a moment"], trans_de: ["warte", "einen Moment"], whole_en: "Wait a moment", whole_de: "Warte einen Moment" },
+        { words: ["开始"], pinyin: ["Kāi shǐ"], trans_en: ["Start"], trans_de: ["Start"], whole_en: "Start / Begin", whole_de: "Start / Anfang" },
+        { words: ["结束"], pinyin: ["Jié shù"], trans_en: ["End"], trans_de: ["Ende"], whole_en: "Finish / End", whole_de: "Ende" }
+    ];
+
+    let currentLang = "en";
+
+    function buildSentences() {
+        const container = document.getElementById('sentences-container');
+        container.innerHTML = '';
+        sentencesData.forEach((item, idx) => {
+            const sentenceDiv = document.createElement('div');
+            sentenceDiv.className = 'sentence';
+            const header = document.createElement('div');
+            header.className = 'sentence-header';
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'sentence-number';
+            numberSpan.textContent = (idx + 1).toString();
+            header.appendChild(numberSpan);
+            
+            const showTransBtn = document.createElement('button');
+            showTransBtn.className = 'show-translations';
+            showTransBtn.innerHTML = '<i class="fas fa-language"></i>';
+            header.appendChild(showTransBtn);
+            
+            const translateBtn = document.createElement('button');
+            translateBtn.className = 'translate-sentence';
+            translateBtn.innerHTML = '<i class="fas fa-globe"></i> 整句翻译';
+            header.appendChild(translateBtn);
+            
+            const hideBtn = document.createElement('button');
+            hideBtn.className = 'hide-original-btn';
+            hideBtn.innerHTML = '<i class="fas fa-eye-slash"></i> 隐藏原文';
+            header.appendChild(hideBtn);
+            
+            const playBtn = document.createElement('button');
+            playBtn.className = 'play-sentence';
+            playBtn.innerHTML = '<i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span>';
+            header.appendChild(playBtn);
+            
+            sentenceDiv.appendChild(header);
+            
+            const lineDiv = document.createElement('div');
+            lineDiv.className = 'line';
+            
+            // 按词汇创建 word-container
+            item.words.forEach((word, wIdx) => {
+                const wordContainer = document.createElement('span');
+                wordContainer.className = 'word-container';
+                const chnSpan = document.createElement('span');
+                chnSpan.className = 'chinese-word';
+                chnSpan.textContent = word;
+                const transSpan = document.createElement('span');
+                transSpan.className = 'translation';
+                // 设置词对词翻译
+                transSpan.textContent = currentLang === 'en' ? item.trans_en[wIdx] : item.trans_de[wIdx];
+                const pinyinSpan = document.createElement('span');
+                pinyinSpan.className = 'pinyin-info';
+                pinyinSpan.textContent = item.pinyin[wIdx];
+                wordContainer.appendChild(chnSpan);
+                wordContainer.appendChild(transSpan);
+                wordContainer.appendChild(pinyinSpan);
+                lineDiv.appendChild(wordContainer);
+            });
+            // 加句号
+            const dotContainer = document.createElement('span');
+            dotContainer.className = 'word-container';
+            const dotSpan = document.createElement('span');
+            dotSpan.className = 'chinese-word';
+            dotSpan.textContent = '。';
+            const dotTrans = document.createElement('span');
+            dotTrans.className = 'translation';
+            dotTrans.textContent = '.';
+            dotContainer.appendChild(dotSpan);
+            dotContainer.appendChild(dotTrans);
+            lineDiv.appendChild(dotContainer);
+            sentenceDiv.appendChild(lineDiv);
+            
+            const sentenceTransDiv = document.createElement('div');
+            sentenceTransDiv.className = 'sentence-translation';
+            sentenceTransDiv.textContent = currentLang === 'en' ? item.whole_en : item.whole_de;
+            sentenceDiv.appendChild(sentenceTransDiv);
+            
+            container.appendChild(sentenceDiv);
+        });
+        attachAllEvents();
+    }
+    
+    function attachAllEvents() {
+        // 单击汉字朗读
+        document.querySelectorAll('.chinese-word').forEach(word => {
+            word.removeEventListener('click', word._clickHandler);
+            const clickHandler = function(e) {
+                e.stopPropagation();
+                let text = this.textContent.trim();
+                if (text === '。') return;
+                if (text) {
+                    if ('speechSynthesis' in window) {
+                        speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = 'zh-CN';
+                        utterance.rate = 0.85;
+                        speechSynthesis.speak(utterance);
+                    }
+                }
+            };
+            word.addEventListener('click', clickHandler);
+            word._clickHandler = clickHandler;
+            
+            // 双击显示拼音
+            word.removeEventListener('dblclick', word._dblHandler);
+            const dblHandler = function(e) {
+                e.stopPropagation();
+                const container = this.closest('.word-container');
+                if (container) {
+                    const pinyinSpan = container.querySelector('.pinyin-info');
+                    if (pinyinSpan) {
+                        document.querySelectorAll('.pinyin-info').forEach(p => p.style.display = 'none');
+                        pinyinSpan.style.display = 'block';
+                        setTimeout(() => { pinyinSpan.style.display = 'none'; }, 2000);
+                    }
+                }
+            };
+            word.addEventListener('dblclick', dblHandler);
+            word._dblHandler = dblHandler;
+        });
+        
+        // 词对词翻译显示隐藏
+        document.querySelectorAll('.show-translations').forEach(btn => {
+            btn.removeEventListener('click', btn._transHandler);
+            const handler = function() {
+                const sentenceDiv = this.closest('.sentence');
+                const translations = sentenceDiv.querySelectorAll('.translation');
+                const showing = translations[0]?.style.display === 'block';
+                translations.forEach(t => t.style.display = showing ? 'none' : 'block');
+                this.innerHTML = showing ? '<i class="fas fa-language"></i>' : '<i class="fas fa-eye-slash"></i>';
+            };
+            btn.addEventListener('click', handler);
+            btn._transHandler = handler;
+        });
+        
+        // 点击翻译窗口隐藏/恢复原词
+        document.querySelectorAll('.translation').forEach(trans => {
+            trans.removeEventListener('click', trans._clickTrans);
+            const handler = function(e) {
+                e.stopPropagation();
+                const container = this.closest('.word-container');
+                if (container) {
+                    const chnWord = container.querySelector('.chinese-word');
+                    if (chnWord) {
+                        chnWord.classList.toggle('hidden-word');
+                        if (chnWord.classList.contains('hidden-word')) {
+                            this.style.borderColor = '#e69a2e';
+                            this.style.backgroundColor = 'rgba(100, 80, 40, 0.95)';
+                        } else {
+                            this.style.borderColor = '#666';
+                            this.style.backgroundColor = 'rgba(45, 45, 45, 0.95)';
+                        }
+                    }
+                }
+            };
+            trans.addEventListener('click', handler);
+            trans._clickTrans = handler;
+        });
+        
+        // 整句翻译显示隐藏
+        document.querySelectorAll('.translate-sentence').forEach(btn => {
+            btn.removeEventListener('click', btn._translateHandler);
+            const handler = function() {
+                const sentenceDiv = this.closest('.sentence');
+                const translationDiv = sentenceDiv.querySelector('.sentence-translation');
+                if (translationDiv) {
+                    if (translationDiv.style.display === 'none' || !translationDiv.style.display) {
+                        translationDiv.style.display = 'block';
+                        this.innerHTML = '<i class="fas fa-globe"></i> 隐藏翻译';
+                    } else {
+                        translationDiv.style.display = 'none';
+                        this.innerHTML = '<i class="fas fa-globe"></i> 整句翻译';
+                    }
+                }
+            };
+            btn.addEventListener('click', handler);
+            btn._translateHandler = handler;
+        });
+        
+        // 隐藏原文（模糊）
+        document.querySelectorAll('.hide-original-btn').forEach(btn => {
+            btn.removeEventListener('click', btn._hideHandler);
+            const handler = function() {
+                const sentenceDiv = this.closest('.sentence');
+                const lineDiv = sentenceDiv.querySelector('.line');
+                if (lineDiv) {
+                    if (lineDiv.classList.contains('hidden-original')) {
+                        lineDiv.classList.remove('hidden-original');
+                        this.innerHTML = '<i class="fas fa-eye-slash"></i> 隐藏原文';
+                    } else {
+                        lineDiv.classList.add('hidden-original');
+                        this.innerHTML = '<i class="fas fa-eye"></i> 显示原文';
+                    }
+                }
+            };
+            btn.addEventListener('click', handler);
+            btn._hideHandler = handler;
+        });
+        
+        // 变速朗读整句
+        const speedStates = new Map();
+        const hasSpokenBefore = new Map();
+        document.querySelectorAll('.play-sentence').forEach(btn => {
+            if (!speedStates.has(btn)) speedStates.set(btn, 0);
+            if (!hasSpokenBefore.has(btn)) hasSpokenBefore.set(btn, false);
+            const updateBadge = (btn, state) => {
+                const badge = btn.querySelector('.speed-badge');
+                if (badge) {
+                    if (state === 0) badge.textContent = '原速';
+                    else if (state === 1) badge.textContent = '慢30%';
+                    else if (state === 2) badge.textContent = '慢50%';
+                }
+            };
+            const getRate = (state) => {
+                if (state === 0) return 0.85;
+                if (state === 1) return 0.60;
+                return 0.43;
+            };
+            btn.removeEventListener('click', btn._speedHandler);
+            const handler = function() {
+                const sentenceDiv = this.closest('.sentence');
+                const words = sentenceDiv.querySelectorAll('.chinese-word');
+                let fullText = '';
+                words.forEach(w => { let txt = w.textContent.trim(); if (txt !== '。') fullText += txt; });
+                if (fullText && 'speechSynthesis' in window) {
+                    let currentState = speedStates.get(this) || 0;
+                    let hasSpoken = hasSpokenBefore.get(this) || false;
+                    let rate = 0.85;
+                    if (!hasSpoken) {
+                        rate = 0.85;
+                        speedStates.set(this, 1);
+                    } else {
+                        rate = getRate(currentState);
+                        let next = (currentState + 1) % 3;
+                        speedStates.set(this, next);
+                        updateBadge(this, next);
+                    }
+                    speechSynthesis.cancel();
+                    const utterance = new SpeechSynthesisUtterance(fullText);
+                    utterance.lang = 'zh-CN';
+                    utterance.rate = rate;
+                    speechSynthesis.speak(utterance);
+                    hasSpokenBefore.set(this, true);
+                    if (!hasSpoken) updateBadge(this, 1);
+                }
+            };
+            btn.addEventListener('click', handler);
+            btn._speedHandler = handler;
+            updateBadge(btn, 0);
+        });
+        
+        // 点击任意位置关闭拼音
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.chinese-word')) {
+                document.querySelectorAll('.pinyin-info').forEach(p => p.style.display = 'none');
+            }
+        });
+    }
+    
+    function updateAllTranslations() {
+        sentencesData.forEach((item, idx) => {
+            const sentenceDiv = document.querySelectorAll('.sentence')[idx];
+            if (!sentenceDiv) return;
+            const wordContainers = sentenceDiv.querySelectorAll('.word-container');
+            for (let i = 0; i < item.words.length; i++) {
+                if (wordContainers[i]) {
+                    const transSpan = wordContainers[i].querySelector('.translation');
+                    if (transSpan) {
+                        transSpan.textContent = currentLang === 'en' ? item.trans_en[i] : item.trans_de[i];
+                    }
+                }
+            }
+            const sentenceTrans = sentenceDiv.querySelector('.sentence-translation');
+            if (sentenceTrans) {
+                sentenceTrans.textContent = currentLang === 'en' ? item.whole_en : item.whole_de;
+            }
+        });
+    }
+    
+    function setLanguage(lang) {
+        currentLang = lang;
+        document.getElementById('btn-en').classList.remove('active');
+        document.getElementById('btn-de').classList.remove('active');
+        if (lang === 'en') document.getElementById('btn-en').classList.add('active');
+        else document.getElementById('btn-de').classList.add('active');
+        updateAllTranslations();
+    }
+    
+    buildSentences();
+    document.getElementById('btn-en').addEventListener('click', () => setLanguage('en'));
+    document.getElementById('btn-de').addEventListener('click', () => setLanguage('de'));
+</script>
+</body>
+</html>
