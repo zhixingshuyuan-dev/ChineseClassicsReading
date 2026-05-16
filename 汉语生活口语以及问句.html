@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=1.5, minimum-scale=0.5">
+  <title>汉语自我介绍20句 · 多语言学习系统 | 完整朗读+问句功能</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", "PingFang SC", "Times New Roman", serif;
+      line-height: 1.6;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+    }
+    .container {
+      background-color: #222;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    h1 {
+      color: #e69a2e;
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 2em;
+    }
+    .sub {
+      text-align: center;
+      color: #aaa;
+      margin-bottom: 20px;
+      font-style: italic;
+      font-size: 0.95em;
+    }
+    .lang-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 25px;
+      background: #2e2e2e;
+      padding: 12px 20px;
+      border-radius: 50px;
+      border: 1px solid #555;
+    }
+    .lang-btn {
+      background: #3a3a3a;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: #f0f0f0;
+      transition: 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .lang-btn.active {
+      background: #e69a2e;
+      color: #1e1e1e;
+      box-shadow: 0 0 8px rgba(230,154,46,0.5);
+    }
+    .lang-btn:hover {
+      background: #e69a2e;
+      color: #222;
+      transform: translateY(-2px);
+    }
+    .section-category {
+      background: rgba(230, 154, 46, 0.1);
+      margin: 30px 0 20px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      border-left: 5px solid #e69a2e;
+    }
+    .category-title {
+      color: #e69a2e;
+      font-size: 1.8em;
+      font-weight: bold;
+      display: inline-block;
+    }
+    .sentence-block {
+      margin-bottom: 70px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 30px;
+    }
+    .sentence-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .line {
+      font-size: 1.3em;
+      margin: 10px 0;
+    }
+
+    .line.hidden-original .chinese-word, .question-line.hidden-original .chinese-word {
+      filter: blur(5px);
+      opacity: 0.3;
+      pointer-events: none;
+    }
+    .word-container {
+      position: relative;
+      display: inline-block;
+      margin-right: 18px;
+      margin-bottom: 40px;
+      vertical-align: top;
+    }
+    .chinese-word {
+      font-size: 1.35em;
+      color: #e0e0e0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      background-color: rgba(30, 30, 30, 0.8);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+      user-select: none;
+    }
+    .chinese-word:hover {
+      background-color: #444;
+      border-color: #e69a2e;
+      transform: scale(1.05);
+    }
+    .chinese-word:active {
+      transform: scale(0.95);
+    }
+
+    .chinese-word.hidden-word {
+      visibility: hidden;
+    }
+
+    .hover-pinyin-tooltip {
+      position: fixed;
+      background: linear-gradient(135deg, #2a4c6e, #1a3a55);
+      color: #FFE484;
+      font-size: 1.4rem;
+      font-weight: bold;
+      padding: 8px 16px;
+      border-radius: 36px;
+      white-space: nowrap;
+      z-index: 2000;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      border-left: 3px solid #ffb347;
+      pointer-events: none;
+      backdrop-filter: blur(2px);
+    }
+
+    .sentence-translation, .question-sentence-translation {
+      background: #2a2a2a;
+      padding: 12px 18px;
+      margin-top: 15px;
+      border-radius: 6px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .sentence-translation { border-left: 4px solid #e69a2e; }
+    .question-sentence-translation { border-left: 4px solid #9bcd6c; }
+    .sentence-translation span, .question-sentence-translation span {
+      flex: 1; font-size: 1em;
+    }
+    .translation-voice-btn {
+      background: #3a6ea5;
+      border: none;
+      border-radius: 30px;
+      padding: 6px 14px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .translation-voice-btn:hover { background: #e69a2e; transform: scale(1.05); }
+
+    .word-translation-popup {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(45, 45, 45, 0.95);
+      padding: 6px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      display: none;
+      font-size: 0.85em;
+      z-index: 100;
+      border: 1px solid #666;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+    .word-translation-popup:hover { background-color: #555; }
+
+    .action-btn {
+      background: transparent;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1em;
+      color: #ddd;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .action-btn:hover { transform: translateY(-2px); background: rgba(255,255,255,0.08); }
+    .play-sentence { color: #e69a2e; }
+    .sentence-number {
+      font-weight: bold; color: #e69a2e; background: #2a2a2a;
+      padding: 4px 10px; border-radius: 20px; font-size: 0.9em;
+    }
+    .speed-badge {
+      font-size: 0.7em; background-color: #3a2a1a;
+      padding: 2px 8px; border-radius: 12px; margin-left: 4px; color: #e69a2e;
+    }
+
+    .question-wrapper {
+      margin-top: 30px;
+      background: #1e2a1e;
+      border-radius: 16px;
+      padding: 16px;
+      border-left: 4px solid #9bcd6c;
+    }
+    .question-header {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .question-line { font-size: 1.3em; margin: 10px 0; }
+    .question-word-container { position: relative; display: inline-block; margin-right: 14px; margin-bottom: 35px; vertical-align: top; }
+    .question-chinese-char {
+      font-size: 1.35em; color: #e0e0e0; padding: 5px 8px; border-radius: 6px;
+      display: inline-block; background-color: rgba(30,30,30,0.8); border: 1px solid transparent;
+      cursor: pointer; transition: all 0.15s; font-family: "Microsoft YaHei","PingFang SC",sans-serif; user-select: none;
+    }
+    .question-chinese-char:hover { background-color: #444; border-color: #9bcd6c; transform: scale(1.05); }
+    .question-word-translation {
+      position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      background-color: rgba(45,45,45,0.95); padding: 5px 8px; border-radius: 6px;
+      white-space: nowrap; display: none; font-size: 0.8em; z-index: 100; border: 1px solid #666; cursor: pointer; margin-top: 4px;
+    }
+    .question-answer-area { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+    .answer-btn { background: #4a6a8a; border: none; padding: 8px 20px; border-radius: 40px; color: white; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+    .answer-btn:hover { background: #e69a2e; }
+    .answer-text { background: #2d3e2d; padding: 8px 16px; border-radius: 30px; color: #b3ffaa; font-size: 1rem; display: none; align-items: center; gap: 8px; }
+    .answer-play { background: none; border: none; color: #ffb347; font-size: 1.1rem; cursor: pointer; }
+
+    footer { text-align: center; margin-top: 40px; color: #888; font-size: 0.85rem; padding: 20px; }
+    @media (max-width: 700px) {
+      .word-container { margin-right: 10px; } .chinese-word { font-size: 1.2em; } .line { font-size: 1.2em; }
+      .hover-pinyin-tooltip { font-size: 1.1rem; padding: 6px 12px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🇨🇳 汉语自我介绍20句 · 多语言学习系统</h1>
+  <div class="sub">✨ 悬浮拼音 | 单击汉字朗读 | 词译 | 整句翻译 | 隐藏原文 | 问句多语翻译与答案朗读已完整</div>
+  <div class="lang-bar" id="langBar">
+    <button class="lang-btn" data-lang="zh">🇨🇳 中文</button>
+    <button class="lang-btn" data-lang="en">🇬🇧 English</button>
+    <button class="lang-btn" data-lang="de">🇩🇪 Deutsch</button>
+    <button class="lang-btn" data-lang="fr">🇫🇷 Français</button>
+    <button class="lang-btn" data-lang="es">🇪🇸 Español</button>
+    <button class="lang-btn" data-lang="ar">🇸🇦 العربية</button>
+    <button class="lang-btn" data-lang="ru">🇷🇺 Русский</button>
+    <button class="lang-btn" data-lang="ja">🇯🇵 日本語</button>
+    <button class="lang-btn" data-lang="it">🇮🇹 Italiano</button>
+    <button class="lang-btn" data-lang="tr">🇹🇷 Türkçe</button>
+  </div>
+  <div id="dynamic-sentences-root"></div>
+  <footer>💡 鼠标悬浮汉字→大号拼音 | 单击汉字→朗读 | 点击单词下方翻译可隐藏该词 | 问句完全独立功能</footer>
+</div>
+
+<script>
+  (function() {
+    let speechSupported = 'speechSynthesis' in window;
+    let speechReady = false;
+    function initSpeech() {
+      if (!speechSupported || speechReady) return;
+      try { const u = new SpeechSynthesisUtterance(''); u.volume = 0; u.lang = 'zh-CN'; speechSynthesis.speak(u); speechReady = true; } catch(e) { speechSupported = false; }
+    }
+    function speakChinese(text, rate = 0.85) {
+      if (!speechSupported || !text || text.trim() === '') return;
+      initSpeech(); speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text); u.lang = 'zh-CN'; u.rate = rate; u.volume = 1; speechSynthesis.speak(u);
+    }
+    function speakTextInLang(text, langCode) {
+      if (!speechSupported || !text) return;
+      initSpeech(); speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      const langMap = { 'en': 'en-US', 'fr': 'fr-FR', 'de': 'de-DE', 'es': 'es-ES', 'ar': 'ar-EG', 'ru': 'ru-RU', 'ja': 'ja-JP', 'it': 'it-IT', 'tr': 'tr-TR' };
+      u.lang = langMap[langCode] || 'zh-CN'; u.rate = 0.85; u.volume = 1; speechSynthesis.speak(u);
+    }
+
+    let hoverTooltip = null;
+    function hidePinyin() { if (hoverTooltip) { hoverTooltip.remove(); hoverTooltip = null; } }
+    function showPinyin(pinyin, e) {
+      if (!pinyin) return; hidePinyin();
+      const tip = document.createElement('div'); tip.className = 'hover-pinyin-tooltip'; tip.textContent = pinyin;
+      document.body.appendChild(tip); tip.style.left = e.clientX + 'px'; tip.style.top = (e.clientY - 50) + 'px';
+      tip.style.transform = 'translateX(-50%)'; hoverTooltip = tip;
+    }
+
+    let currentLang = 'zh';
+
+    const sentencesData = [
+      { id:1, category:"😊 基础介绍", words:["我","叫","李华"], pinyin:["Wǒ","jiào","Lǐ Huá"],
+        trans_zh:["我","叫","李华"], trans_en:["I","am called","Li Hua"], trans_de:["Ich","heiße","Li Hua"], trans_fr:["Je","m'appelle","Li Hua"], trans_es:["Yo","me llamo","Li Hua"], trans_ar:["أنا","اسمي","لي هوا"], trans_ru:["Я","зовут","Ли Хуа"], trans_ja:["私","は","李華"], trans_it:["Io","mi chiamo","Li Hua"], trans_tr:["Ben","adım","Li Hua"],
+        whole_zh:"我叫李华。", whole_en:"My name is Li Hua.", whole_de:"Ich heiße Li Hua.", whole_fr:"Je m'appelle Li Hua.", whole_es:"Me llamo Li Hua.", whole_ar:"اسمي لي هوا.", whole_ru:"Меня зовут Ли Хуа.", whole_ja:"私は李華と申します。", whole_it:"Mi chiamo Li Hua.", whole_tr:"Benim adım Li Hua." },
+      { id:2, category:"😊 基础介绍", words:["我","今年","25","岁"], pinyin:["Wǒ","jīn nián","èr shí wǔ","suì"],
+        trans_zh:["我","今年","25","岁"], trans_en:["I","this year","25","years old"], trans_de:["Ich","dieses Jahr","25","Jahre alt"], trans_fr:["Je","cette année","25","ans"], trans_es:["Yo","este año","25","años"], trans_ar:["أنا","هذا العام","25","سنة"], trans_ru:["Я","в этом году","25","лет"], trans_ja:["私","今年","25","歳"], trans_it:["Io","quest'anno","25","anni"], trans_tr:["Ben","bu yıl","25","yaş"],
+        whole_zh:"我今年25岁。", whole_en:"I am 25 years old.", whole_de:"Ich bin 25 Jahre alt.", whole_fr:"J'ai 25 ans.", whole_es:"Tengo 25 años.", whole_ar:"عمري 25 عامًا.", whole_ru:"Мне 25 лет.", whole_ja:"私は25歳です。", whole_it:"Ho 25 anni.", whole_tr:"25 yaşındayım." },
+      { id:3, category:"😊 基础介绍", words:["我","来自","北京"], pinyin:["Wǒ","lái zì","Běi jīng"],
+        trans_zh:["我","来自","北京"], trans_en:["I","come from","Beijing"], trans_de:["Ich","komme aus","Peking"], trans_fr:["Je","viens de","Pékin"], trans_es:["Yo","vengo de","Beijing"], trans_ar:["أنا","من","بكين"], trans_ru:["Я","из","Пекина"], trans_ja:["私","出身","北京"], trans_it:["Io","vengo da","Pechino"], trans_tr:["Ben","geliyorum","Pekin"],
+        whole_zh:"我来自北京。", whole_en:"I come from Beijing.", whole_de:"Ich komme aus Peking.", whole_fr:"Je viens de Pékin.", whole_es:"Vengo de Beijing.", whole_ar:"أنا من بكين.", whole_ru:"Я из Пекина.", whole_ja:"私は北京から来ました。", whole_it:"Vengo da Pechino.", whole_tr:"Pekin'den geliyorum." },
+      { id:4, category:"😊 基础介绍", words:["我","是","学生"], pinyin:["Wǒ","shì","xué sheng"],
+        trans_zh:["我","是","学生"], trans_en:["I","am","student"], trans_de:["Ich","bin","Student"], trans_fr:["Je","suis","étudiant"], trans_es:["Yo","soy","estudiante"], trans_ar:["أنا","طالب"," "], trans_ru:["Я","студент"," "], trans_ja:["私","学生","です"], trans_it:["Io","sono","studente"], trans_tr:["Ben","öğrenci","yim"],
+        whole_zh:"我是学生。", whole_en:"I am a student.", whole_de:"Ich bin Student.", whole_fr:"Je suis étudiant.", whole_es:"Soy estudiante.", whole_ar:"أنا طالب.", whole_ru:"Я студент.", whole_ja:"私は学生です。", whole_it:"Sono uno studente.", whole_tr:"Ben bir öğrenciyim." },
+      { id:5, category:"📚 学习与工作", words:["我","学习","计算机"], pinyin:["Wǒ","xué xí","jì suàn jī"],
+        trans_zh:["我","学习","计算机"], trans_en:["I","study","computer"], trans_de:["Ich","studiere","Informatik"], trans_fr:["J'","étudie","informatique"], trans_es:["Yo","estudio","informática"], trans_ar:["أنا","أدرس","حاسوب"], trans_ru:["Я","изучаю","информатику"], trans_ja:["私","勉強","コンピューター"], trans_it:["Io","studio","informatica"], trans_tr:["Ben","okuyorum","bilgisayar"],
+        whole_zh:"我学习计算机。", whole_en:"I study computer science.", whole_de:"Ich studiere Informatik.", whole_fr:"J'étudie l'informatique.", whole_es:"Estudio informática.", whole_ar:"أدرس علوم الحاسوب.", whole_ru:"Я изучаю информатику.", whole_ja:"私はコンピューターを学んでいます。", whole_it:"Studio informatica.", whole_tr:"Bilgisayar okuyorum." },
+      { id:6, category:"📚 学习与工作", words:["我","的","爱好","是","读书"], pinyin:["Wǒ","de","ài hào","shì","dú shū"],
+        trans_zh:["我","的","爱好","是","读书"], trans_en:["My","hobby","is","reading",""], trans_de:["Mein","Hobby","ist","Lesen",""], trans_fr:["Mon","passe-temps","est","la lecture",""], trans_es:["Mi","pasatiempo","es","leer",""], trans_ar:["هوايتي","هي","القراءة","",""], trans_ru:["Моё","хобби","—","чтение",""], trans_ja:["私の","趣味","は","読書","です"], trans_it:["Il mio","hobby","è","leggere",""], trans_tr:["Benim","hobim","kitap","okumak",""],
+        whole_zh:"我的爱好是读书。", whole_en:"My hobby is reading.", whole_de:"Mein Hobby ist Lesen.", whole_fr:"Mon passe-temps est la lecture.", whole_es:"Mi pasatiempo es leer.", whole_ar:"هوايتي هي القراءة.", whole_ru:"Моё хобби — чтение.", whole_ja:"私の趣味は読書です。", whole_it:"Il mio hobby è leggere.", whole_tr:"Hobim kitap okumak." },
+      { id:7, category:"📚 学习与工作", words:["我","在","大学","学习"], pinyin:["Wǒ","zài","dà xué","xué xí"],
+        trans_zh:["我","在","大学","学习"], trans_en:["I","at","university","study"], trans_de:["Ich","an","Universität","studiere"], trans_fr:["J'","à","l'université","étudie"], trans_es:["Yo","en","la universidad","estudio"], trans_ar:["أنا","في","الجامعة","أدرس"], trans_ru:["Я","в","университете","учусь"], trans_ja:["私","大学","で","勉強"], trans_it:["Io","all'","università","studio"], trans_tr:["Ben","üniversitede","okuyorum",""],
+        whole_zh:"我在大学学习。", whole_en:"I study at university.", whole_de:"Ich studiere an der Universität.", whole_fr:"J'étudie à l'université.", whole_es:"Estudio en la universidad.", whole_ar:"أدرس في الجامعة.", whole_ru:"Я учусь в университете.", whole_ja:"私は大学で勉強しています。", whole_it:"Studio all'università.", whole_tr:"Üniversitede okuyorum." },
+      { id:8, category:"📚 学习与工作", words:["我","是","工程师"], pinyin:["Wǒ","shì","gōng chéng shī"],
+        trans_zh:["我","是","工程师"], trans_en:["I","am","engineer"], trans_de:["Ich","bin","Ingenieur"], trans_fr:["Je","suis","ingénieur"], trans_es:["Yo","soy","ingeniero"], trans_ar:["أنا","مهندس",""], trans_ru:["Я","инженер",""], trans_ja:["私","エンジニア","です"], trans_it:["Io","sono","ingegnere"], trans_tr:["Ben","mühendis","im"],
+        whole_zh:"我是工程师。", whole_en:"I am an engineer.", whole_de:"Ich bin Ingenieur.", whole_fr:"Je suis ingénieur.", whole_es:"Soy ingeniero.", whole_ar:"أنا مهندس.", whole_ru:"Я инженер.", whole_ja:"私はエンジニアです。", whole_it:"Sono un ingegnere.", whole_tr:"Ben bir mühendisim." },
+      { id:9, category:"❤️ 兴趣与家庭", words:["我","喜欢","音乐"], pinyin:["Wǒ","xǐ huan","yīn yuè"],
+        trans_zh:["我","喜欢","音乐"], trans_en:["I","like","music"], trans_de:["Ich","mag","Musik"], trans_fr:["J'","aime","la musique"], trans_es:["Me","gusta","la música"], trans_ar:["أنا","أحب","الموسيقى"], trans_ru:["Я","люблю","музыку"], trans_ja:["私","音楽","好き"], trans_it:["Mi","piace","la musica"], trans_tr:["Ben","müzik","severim"],
+        whole_zh:"我喜欢音乐。", whole_en:"I like music.", whole_de:"Ich mag Musik.", whole_fr:"J'aime la musique.", whole_es:"Me gusta la música.", whole_ar:"أحب الموسيقى.", whole_ru:"Я люблю музыку.", whole_ja:"私は音楽が好きです。", whole_it:"Mi piace la musica.", whole_tr:"Müzik severim." },
+      { id:10, category:"❤️ 兴趣与家庭", words:["我","热爱","旅行"], pinyin:["Wǒ","rè ài","lǚ xíng"],
+        trans_zh:["我","热爱","旅行"], trans_en:["I","love","traveling"], trans_de:["Ich","liebe","Reisen"], trans_fr:["J'","adore","voyager"], trans_es:["Me","encanta","viajar"], trans_ar:["أنا","أحب","السفر"], trans_ru:["Я","обожаю","путешествия"], trans_ja:["私","旅行","大好き"], trans_it:["Io","amo","viaggiare"], trans_tr:["Ben","severim","seyahat"],
+        whole_zh:"我热爱旅行。", whole_en:"I love traveling.", whole_de:"Ich liebe es zu reisen.", whole_fr:"J'adore voyager.", whole_es:"Amo viajar.", whole_ar:"أحب السفر.", whole_ru:"Я обожаю путешествовать.", whole_ja:"私は旅行が大好きです。", whole_it:"Amo viaggiare.", whole_tr:"Seyahat etmeyi severim." },
+      { id:11, category:"❤️ 兴趣与家庭", words:["我","的","家庭","有","四口人"], pinyin:["Wǒ","de","jiā tíng","yǒu","sì kǒu rén"],
+        trans_zh:["我","的","家庭","有","四口人"], trans_en:["My","family","has","four","people"], trans_de:["Meine","Familie","hat","vier","Personen"], trans_fr:["Ma","famille","a","quatre","personnes"], trans_es:["Mi","familia","tiene","cuatro","miembros"], trans_ar:["عائلتي","لديها","أربعة","أفراد",""], trans_ru:["Моя","семья","четыре","человека",""], trans_ja:["私の","家族","は","4人","です"], trans_it:["La mia","famiglia","ha","quattro","persone"], trans_tr:["Benim","ailem","dört","kişi","dir"],
+        whole_zh:"我家有四口人。", whole_en:"My family has four people.", whole_de:"Meine Familie hat vier Personen.", whole_fr:"Ma famille a quatre personnes.", whole_es:"Mi familia tiene cuatro miembros.", whole_ar:"عائلتي مكونة من أربعة أفراد.", whole_ru:"В моей семье четыре человека.", whole_ja:"私の家族は4人です。", whole_it:"La mia famiglia ha quattro persone.", whole_tr:"Ailem dört kişidir." },
+      { id:12, category:"❤️ 兴趣与家庭", words:["我","有","一个","哥哥"], pinyin:["Wǒ","yǒu","yí gè","gē ge"],
+        trans_zh:["我","有","一个","哥哥"], trans_en:["I","have","one","elder brother"], trans_de:["Ich","habe","einen","älteren Bruder"], trans_fr:["J'","ai","un","grand frère"], trans_es:["Yo","tengo","un","hermano mayor"], trans_ar:["لدي","أخ","أكبر",""], trans_ru:["У меня","есть","старший","брат"], trans_ja:["私","は","兄","います"], trans_it:["Io","ho","un","fratello maggiore"], trans_tr:["Benim","bir","ağabeyim","var"],
+        whole_zh:"我有一个哥哥。", whole_en:"I have one elder brother.", whole_de:"Ich habe einen älteren Bruder.", whole_fr:"J'ai un grand frère.", whole_es:"Tengo un hermano mayor.", whole_ar:"لدي أخ أكبر.", whole_ru:"У меня есть старший брат.", whole_ja:"私には兄が一人います。", whole_it:"Ho un fratello maggiore.", whole_tr:"Bir ağabeyim var." },
+      { id:13, category:"🎯 梦想与社交", words:["我","的","梦想","是","成为","科学家"], pinyin:["Wǒ","de","mèng xiǎng","shì","chéng wéi","kē xué jiā"],
+        trans_zh:["我","的","梦想","是","成为","科学家"], trans_en:["My","dream","is","to become","scientist",""], trans_de:["Mein","Traum","ist","zu werden","Wissenschaftler",""], trans_fr:["Mon","rêve","est","de devenir","scientifique",""], trans_es:["Mi","sueño","es","convertirme en","científico",""], trans_ar:["حلمي","هو","أن أصبح","عالمًا","",""], trans_ru:["Моя","мечта","стать","ученым","",""], trans_ja:["私の","夢","は","科学者","になる",""], trans_it:["Il mio","sogno","è","diventare","scienziato",""], trans_tr:["Hayalim","olmak","bilim","insanı","",""],
+        whole_zh:"我的梦想是成为科学家。", whole_en:"My dream is to become a scientist.", whole_de:"Mein Traum ist es, Wissenschaftler zu werden.", whole_fr:"Mon rêve est de devenir scientifique.", whole_es:"Mi sueño es convertirme en científico.", whole_ar:"حلمي أن أصبح عالمًا.", whole_ru:"Моя мечта — стать ученым.", whole_ja:"私の夢は科学者になることです。", whole_it:"Il mio sogno è diventare scienziato.", whole_tr:"Hayalim bilim insanı olmaktır." },
+      { id:14, category:"🎯 梦想与社交", words:["很","高兴","认识","你"], pinyin:["Hěn","gāo xìng","rèn shi","nǐ"],
+        trans_zh:["很","高兴","认识","你"], trans_en:["Very","happy","to meet","you"], trans_de:["Sehr","froh","kennenzulernen","dich"], trans_fr:["Très","heureux","de rencontrer","vous"], trans_es:["Mucho","gusto","conocerte",""], trans_ar:["سعيد","جداً","بلقائك",""], trans_ru:["Очень","рад","познакомиться",""], trans_ja:["とても","嬉しい","お会いできて",""], trans_it:["Molto","lieto","conoscerti",""], trans_tr:["Çok","memnun","tanıştığıma",""],
+        whole_zh:"很高兴认识你。", whole_en:"Nice to meet you.", whole_de:"Schön, dich kennenzulernen.", whole_fr:"Ravi de vous rencontrer.", whole_es:"Mucho gusto.", whole_ar:"سررت بلقائك.", whole_ru:"Приятно познакомиться.", whole_ja:"お会いできて嬉しいです。", whole_it:"Piacere di conoscerti.", whole_tr:"Tanıştığımıza memnun oldum." },
+      { id:15, category:"🎯 梦想与社交", words:["请","多多","关照"], pinyin:["Qǐng","duō duō","guān zhào"],
+        trans_zh:["请","多多","关照"], trans_en:["Please","take care","of me"], trans_de:["Bitte","kümmere dich","um mich"], trans_fr:["S'il vous plaît","prenez soin","de moi"], trans_es:["Por favor","cuida","de mí"], trans_ar:["من فضلك","اعتني","بي"], trans_ru:["Пожалуйста","позаботься","обо мне"], trans_ja:["どうぞ","よろしく","お願いします"], trans_it:["Per favore","abbi cura","di me"], trans_tr:["Lütfen","bana","iyi bak"],
+        whole_zh:"请多多关照。", whole_en:"Please take care of me.", whole_de:"Bitte kümmere dich um mich.", whole_fr:"Prenez soin de moi, s'il vous plaît.", whole_es:"Cuida de mí, por favor.", whole_ar:"أرجو منك العناية بي.", whole_ru:"Пожалуйста, позаботьтесь обо мне.", whole_ja:"よろしくお願いします。", whole_it:"Per favore, abbi cura di me.", whole_tr:"Lütfen benimle ilgilenin." }
+    ];
+
+    function getQAData(sid) {
+      const map = {
+        1: { qWords:["你","叫","什么","名字"], qPinyin:["Nǐ","jiào","shénme","míngzi"],
+             qTransZh:["你","叫","什么","名字"], qTransEn:["you","called","what","name"], qTransDe:["du","heißt","was","Name"], qTransFr:["tu","t'appelles","comment","nom"], qTransEs:["tú","te llamas","qué","nombre"], qTransAr:["أنت","اسمك","ما","اسم"], qTransRu:["ты","зовут","как","имя"], qTransJa:["あなた","名前","何","ですか"], qTransIt:["tu","ti chiami","cosa","nome"], qTransTr:["sen","adın","ne","isim"],
+             wholeQZh:"你叫什么名字？", wholeQEn:"What's your name?", wholeQDe:"Wie heißt du?", wholeQFr:"Comment t'appelles-tu ?", wholeQEs:"¿Cómo te llamas?", wholeQAr:"ما اسمك؟", wholeQRu:"Как тебя зовут?", wholeQJa:"あなたの名前は何ですか？", wholeQIt:"Come ti chiami?", wholeQTr:"Adın ne?",
+             a:"我叫李华。" },
+        2: { qWords:["你","今年","多大"], qPinyin:["Nǐ","jīnnián","duōdà"],
+             qTransZh:["你","今年","多大"], qTransEn:["you","this year","how old"], qTransDe:["du","dieses Jahr","wie alt"], qTransFr:["tu","cette année","quel âge"], qTransEs:["tú","este año","cuántos años"], qTransAr:["أنت","هذا العام","كم عمرك"], qTransRu:["ты","в этом году","сколько лет"], qTransJa:["あなた","今年","何歳"], qTransIt:["tu","quest'anno","quanti anni"], qTransTr:["sen","bu yıl","kaç yaşında"],
+             wholeQZh:"你今年多大？", wholeQEn:"How old are you?", wholeQDe:"Wie alt bist du?", wholeQFr:"Quel âge as-tu ?", wholeQEs:"¿Cuántos años tienes?", wholeQAr:"كم عمرك؟", wholeQRu:"Сколько тебе лет?", wholeQJa:"あなたは何歳ですか？", wholeQIt:"Quanti anni hai?", wholeQTr:"Kaç yaşındasın?",
+             a:"我今年25岁。" },
+        3: { qWords:["你","来自","哪里"], qPinyin:["Nǐ","láizì","nǎlǐ"],
+             qTransZh:["你","来自","哪里"], qTransEn:["you","come from","where"], qTransDe:["du","kommst aus","woher"], qTransFr:["tu","viens d'","où"], qTransEs:["tú","eres de","dónde"], qTransAr:["أنت","من أين","أنت"], qTransRu:["ты","откуда","ты"], qTransJa:["あなた","出身","どこ"], qTransIt:["tu","vieni da","dove"], qTransTr:["sen","nerelisin","nereden"],
+             wholeQZh:"你来自哪里？", wholeQEn:"Where are you from?", wholeQDe:"Woher kommst du?", wholeQFr:"D'où viens-tu ?", wholeQEs:"¿De dónde eres?", wholeQAr:"من أين أنت؟", wholeQRu:"Откуда ты?", wholeQJa:"出身はどこですか？", wholeQIt:"Da dove vieni?", wholeQTr:"Nerelisin?",
+             a:"我来自北京。" },
+        4: { qWords:["你","是","学生","吗"], qPinyin:["Nǐ","shì","xuésheng","ma"],
+             qTransZh:["你","是","学生","吗"], qTransEn:["you","are","student","?"], qTransDe:["du","bist","Student","?"], qTransFr:["tu","es","étudiant","?"], qTransEs:["tú","eres","estudiante","?"], qTransAr:["هل","أنت","طالب","؟"], qTransRu:["ты","студент","?",""], qTransJa:["あなた","学生","ですか","？"], qTransIt:["tu","sei","studente","?"], qTransTr:["sen","öğrenci","misin","?"],
+             wholeQZh:"你是学生吗？", wholeQEn:"Are you a student?", wholeQDe:"Bist du Student?", wholeQFr:"Es-tu étudiant ?", wholeQEs:"¿Eres estudiante?", wholeQAr:"هل أنت طالب؟", wholeQRu:"Ты студент?", wholeQJa:"あなたは学生ですか？", wholeQIt:"Sei uno studente?", wholeQTr:"Öğrenci misin?",
+             a:"我是学生。" },
+        5: { qWords:["你","学","什么","专业"], qPinyin:["Nǐ","xué","shénme","zhuānyè"],
+             qTransZh:["你","学","什么","专业"], qTransEn:["you","study","what","major"], qTransDe:["du","studierst","was","Fach"], qTransFr:["tu","étudies","quoi","spécialité"], qTransEs:["tú","estudias","qué","especialidad"], qTransAr:["أنت","تدرس","ماذا","تخصص"], qTransRu:["ты","изучаешь","что","специальность"], qTransJa:["あなた","専攻","何","ですか"], qTransIt:["tu","studi","cosa","materia"], qTransTr:["sen","okuyorsun","ne","bölüm"],
+             wholeQZh:"你学什么专业？", wholeQEn:"What's your major?", wholeQDe:"Was studierst du?", wholeQFr:"Quelle est ta spécialité ?", wholeQEs:"¿Qué estudias?", wholeQAr:"ما تخصصك؟", wholeQRu:"Какая у тебя специальность?", wholeQJa:"専攻は何ですか？", wholeQIt:"Cosa studi?", wholeQTr:"Ne bölüm okuyorsun?",
+             a:"我学习计算机。" },
+        6: { qWords:["你的","爱好","是","什么"], qPinyin:["Nǐde","àihào","shì","shénme"],
+             qTransZh:["你的","爱好","是","什么"], qTransEn:["your","hobby","is","what"], qTransDe:["dein","Hobby","ist","was"], qTransFr:["ton","passe-temps","est","quoi"], qTransEs:["tu","pasatiempo","es","qué"], qTransAr:["هوايتك","هي","ما","هي"], qTransRu:["твоё","хобби","какое",""], qTransJa:["あなたの","趣味","は","何"], qTransIt:["il tuo","hobby","è","cosa"], qTransTr:["senin","hobin","ne",""],
+             wholeQZh:"你的爱好是什么？", wholeQEn:"What's your hobby?", wholeQDe:"Was ist dein Hobby?", wholeQFr:"Quel est ton passe-temps ?", wholeQEs:"¿Cuál es tu pasatiempo?", wholeQAr:"ما هي هوايتك؟", wholeQRu:"Какое у тебя хобби?", wholeQJa:"あなたの趣味は何ですか？", wholeQIt:"Qual è il tuo hobby?", wholeQTr:"Hobin ne?",
+             a:"我的爱好是读书。" },
+        7: { qWords:["你","在","哪里","学习"], qPinyin:["Nǐ","zài","nǎlǐ","xuéxí"],
+             qTransZh:["你","在","哪里","学习"], qTransEn:["you","at","where","study"], qTransDe:["du","an","wo","studierst"], qTransFr:["tu","à","où","étudies"], qTransEs:["tú","en","dónde","estudias"], qTransAr:["أنت","في","أين","تدرس"], qTransRu:["ты","где","учишься",""], qTransJa:["あなた","どこ","で","勉強"], qTransIt:["tu","dove","studi",""], qTransTr:["sen","nerede","okuyorsun",""],
+             wholeQZh:"你在哪里学习？", wholeQEn:"Where do you study?", wholeQDe:"Wo studierst du?", wholeQFr:"Où étudies-tu ?", wholeQEs:"¿Dónde estudias?", wholeQAr:"أين تدرس؟", wholeQRu:"Где ты учишься?", wholeQJa:"どこで勉強していますか？", wholeQIt:"Dove studi?", wholeQTr:"Nerede okuyorsun?",
+             a:"我在大学学习。" },
+        8: { qWords:["你","是","做","什么","工作的"], qPinyin:["Nǐ","shì","zuò","shénme","gōngzuò de"],
+             qTransZh:["你","是","做","什么","工作的"], qTransEn:["you","are","do","what","job"], qTransDe:["du","bist","was","von Beruf",""], qTransFr:["tu","fais","quoi","comme travail",""], qTransEs:["tú","eres","a qué te dedicas","",""], qTransAr:["أنت","تعمل","ماذا","وظيفتك",""], qTransRu:["ты","кем","работаешь","",""], qTransJa:["あなた","仕事","何","ですか",""], qTransIt:["tu","che lavoro fai","","",""], qTransTr:["sen","ne iş yapıyorsun","","",""],
+             wholeQZh:"你是做什么工作的？", wholeQEn:"What's your job?", wholeQDe:"Was bist du von Beruf?", wholeQFr:"Quel est ton travail ?", wholeQEs:"¿A qué te dedicas?", wholeQAr:"ما هي وظيفتك؟", wholeQRu:"Кем ты работаешь?", wholeQJa:"お仕事は何ですか？", wholeQIt:"Che lavoro fai?", wholeQTr:"Ne iş yapıyorsun?",
+             a:"我是工程师。" },
+        9: { qWords:["你","喜欢","音乐","吗"], qPinyin:["Nǐ","xǐhuan","yīnyuè","ma"],
+             qTransZh:["你","喜欢","音乐","吗"], qTransEn:["you","like","music","?"], qTransDe:["du","magst","Musik","?"], qTransFr:["tu","aimes","la musique","?"], qTransEs:["te","gusta","la música","?"], qTransAr:["هل","تحب","الموسيقى","؟"], qTransRu:["ты","любишь","музыку","?"], qTransJa:["あなた","音楽","好き","ですか"], qTransIt:["ti","piace","la musica","?"], qTransTr:["sen","müzik","sever misin","?"],
+             wholeQZh:"你喜欢音乐吗？", wholeQEn:"Do you like music?", wholeQDe:"Magst du Musik?", wholeQFr:"Aimes-tu la musique ?", wholeQEs:"¿Te gusta la música?", wholeQAr:"هل تحب الموسيقى؟", wholeQRu:"Ты любишь музыку?", wholeQJa:"音楽は好きですか？", wholeQIt:"Ti piace la musica?", wholeQTr:"Müzik sever misin?",
+             a:"我喜欢音乐。" },
+        10: { qWords:["你","喜欢","旅行","吗"], qPinyin:["Nǐ","xǐhuan","lǚxíng","ma"],
+             qTransZh:["你","喜欢","旅行","吗"], qTransEn:["you","like","travel","?"], qTransDe:["du","reist","gern","?"], qTransFr:["tu","aimes","voyager","?"], qTransEs:["te","gusta","viajar","?"], qTransAr:["هل","تحب","السفر","؟"], qTransRu:["ты","любишь","путешествовать","?"], qTransJa:["旅行","好き","ですか","？"], qTransIt:["ti","piace","viaggiare","?"], qTransTr:["sen","seyahat","etmeyi sever misin","?"],
+             wholeQZh:"你喜欢旅行吗？", wholeQEn:"Do you like traveling?", wholeQDe:"Reist du gern?", wholeQFr:"Aimes-tu voyager ?", wholeQEs:"¿Te gusta viajar?", wholeQAr:"هل تحب السفر؟", wholeQRu:"Ты любишь путешествовать?", wholeQJa:"旅行は好きですか？", wholeQIt:"Ti piace viaggiare?", wholeQTr:"Seyahat etmeyi sever misin?",
+             a:"我热爱旅行。" },
+        11: { qWords:["你家","有","几口","人"], qPinyin:["Nǐ jiā","yǒu","jǐ kǒu","rén"],
+             qTransZh:["你家","有","几口","人"], qTransEn:["your family","has","how many","people"], qTransDe:["deine Familie","hat","wie viele","Personen"], qTransFr:["ta famille","a","combien de","personnes"], qTransEs:["tu familia","tiene","cuántas","personas"], qTransAr:["عائلتك","لديها","كم","فرداً"], qTransRu:["твоя семья","сколько","человек",""], qTransJa:["家族","は","何人","ですか"], qTransIt:["la tua famiglia","ha","quante","persone"], qTransTr:["ailen","kaç","kişi","dir"],
+             wholeQZh:"你家有几口人？", wholeQEn:"How many people in your family?", wholeQDe:"Wie viele Personen hat deine Familie?", wholeQFr:"Combien de personnes dans ta famille ?", wholeQEs:"¿Cuántas personas hay en tu familia?", wholeQAr:"كم عدد أفراد عائلتك؟", wholeQRu:"Сколько человек в твоей семье?", wholeQJa:"家族は何人ですか？", wholeQIt:"Quante persone ci sono nella tua famiglia?", wholeQTr:"Ailende kaç kişi var?",
+             a:"我家有四口人。" },
+        12: { qWords:["你","有","兄弟","姐妹","吗"], qPinyin:["Nǐ","yǒu","xiōngdì","jiěmèi","ma"],
+             qTransZh:["你","有","兄弟","姐妹","吗"], qTransEn:["you","have","brothers","sisters","?"], qTransDe:["du","hast","Brüder","Schwestern","?"], qTransFr:["tu","as","des frères","des sœurs","?"], qTransEs:["tienes","hermanos","hermanas","?",""], qTransAr:["هل","لديك","إخوة","أخوات","؟"], qTransRu:["у тебя","есть","братья","сёстры","?"], qTransJa:["兄弟","姉妹","いますか","？",""], qTransIt:["hai","fratelli","sorelle","?",""], qTransTr:["senin","kardeşlerin","var mı","?",""],
+             wholeQZh:"你有兄弟姐妹吗？", wholeQEn:"Do you have siblings?", wholeQDe:"Hast du Geschwister?", wholeQFr:"As-tu des frères et sœurs ?", wholeQEs:"¿Tienes hermanos?", wholeQAr:"هل لديك إخوة أو أخوات؟", wholeQRu:"У тебя есть братья или сёстры?", wholeQJa:"兄弟姉妹はいますか？", wholeQIt:"Hai fratelli o sorelle?", wholeQTr:"Kardeşlerin var mı?",
+             a:"我有一个哥哥。" },
+        13: { qWords:["你的","梦想","是","什么"], qPinyin:["Nǐde","mèngxiǎng","shì","shénme"],
+             qTransZh:["你的","梦想","是","什么"], qTransEn:["your","dream","is","what"], qTransDe:["dein","Traum","ist","was"], qTransFr:["ton","rêve","est","quoi"], qTransEs:["tu","sueño","es","qué"], qTransAr:["حلمك","هو","ما","هو"], qTransRu:["твоя","мечта","какая",""], qTransJa:["あなたの","夢","は","何"], qTransIt:["il tuo","sogno","è","cosa"], qTransTr:["senin","hayalin","ne",""],
+             wholeQZh:"你的梦想是什么？", wholeQEn:"What's your dream?", wholeQDe:"Was ist dein Traum?", wholeQFr:"Quel est ton rêve ?", wholeQEs:"¿Cuál es tu sueño?", wholeQAr:"ما هو حلمك؟", wholeQRu:"Какая у тебя мечта?", wholeQJa:"あなたの夢は何ですか？", wholeQIt:"Qual è il tuo sogno?", wholeQTr:"Hayalin ne?",
+             a:"我的梦想是成为科学家。" },
+        14: { qWords:["初次","见面","说","什么"], qPinyin:["Chūcì","jiànmiàn","shuō","shénme"],
+             qTransZh:["初次","见面","说","什么"], qTransEn:["first time","meet","say","what"], qTransDe:["das erste Mal","treffen","sagen","was"], qTransFr:["première fois","rencontrer","dire","quoi"], qTransEs:["primera vez","conocer","decir","qué"], qTransAr:["أول مرة","لقاء","تقول","ماذا"], qTransRu:["первый раз","встреча","говорить","что"], qTransJa:["初めて","会う","言う","何"], qTransIt:["prima volta","incontrare","dire","cosa"], qTransTr:["ilk defa","tanışmak","ne","denir"],
+             wholeQZh:"初次见面说什么？", wholeQEn:"What to say when first meeting?", wholeQDe:"Was sagt man beim ersten Treffen?", wholeQFr:"Que dire lors d'une première rencontre ?", wholeQEs:"¿Qué decir al conocerse?", wholeQAr:"ماذا تقول عند اللقاء الأول؟", wholeQRu:"Что говорить при первой встрече?", wholeQJa:"初めて会う時に何と言いますか？", wholeQIt:"Cosa dire quando ci si incontra per la prima volta?", wholeQTr:"İlk tanışmada ne denir?",
+             a:"很高兴认识你。" },
+        15: { qWords:["结束","介绍","说","什么"], qPinyin:["Jiéshù","jièshào","shuō","shénme"],
+             qTransZh:["结束","介绍","说","什么"], qTransEn:["end","introduction","say","what"], qTransDe:["Ende","Vorstellung","sagen","was"], qTransFr:["fin","présentation","dire","quoi"], qTransEs:["final","presentación","decir","qué"], qTransAr:["نهاية","تقديم","تقول","ماذا"], qTransRu:["конец","представление","говорить","что"], qTransJa:["終わり","紹介","言う","何"], qTransIt:["fine","presentazione","dire","cosa"], qTransTr:["son","tanıştırma","ne","denir"],
+             wholeQZh:"结束介绍说什么？", wholeQEn:"What to say at the end?", wholeQDe:"Was sagt man am Ende?", wholeQFr:"Que dire à la fin ?", wholeQEs:"¿Qué decir al final?", wholeQAr:"ماذا تقول في النهاية؟", wholeQRu:"Что говорить в конце?", wholeQJa:"最後に何と言いますか？", wholeQIt:"Cosa dire alla fine?", wholeQTr:"Sonunda ne denir?",
+             a:"请多多关照。" }
+      };
+      return map[sid] || { qWords:["这个","句子","怎么","用"], qPinyin:["Zhège","jùzi","zěnme","yòng"], qTransZh:["这个","句子","怎么","用"], qTransEn:["this","sentence","how","use"], a:"请看例句练习。" };
+    }
+
+    function getSentenceTranslation(s) { return s[`whole_${currentLang}`] || s.whole_zh; }
+    function getWordTranslation(s, idx) {
+      const trans = s[`trans_${currentLang}`];
+      if (trans && trans[idx]) return trans[idx];
+      return s.trans_zh[idx] || s.words[idx];
+    }
+    function getQuestionWordTranslation(qData, idx) {
+      const key = `qTrans${currentLang.charAt(0).toUpperCase() + currentLang.slice(1)}`;
+      if (qData[key] && qData[key][idx]) return qData[key][idx];
+      return qData.qTransZh[idx] || qData.qWords[idx];
+    }
+    function getQuestionSentenceTranslation(qData) {
+      const key = `wholeQ${currentLang.charAt(0).toUpperCase() + currentLang.slice(1)}`;
+      return qData[key] || qData.wholeQZh || qData.qWords.join('');
+    }
+
+    function renderAll() {
+      const root = document.getElementById('dynamic-sentences-root');
+      root.innerHTML = '';
+      let lastCategory = '';
+      for (let s of sentencesData) {
+        if (s.category !== lastCategory) {
+          lastCategory = s.category;
+          const catDiv = document.createElement('div'); catDiv.className = 'section-category';
+          catDiv.innerHTML = `<span class="category-title">${s.category}</span>`; root.appendChild(catDiv);
+        }
+        const block = document.createElement('div'); block.className = 'sentence-block';
+        const header = document.createElement('div'); header.className = 'sentence-header';
+        header.innerHTML = `<span class="sentence-number">#${s.id}</span>
+          <button class="action-btn show-translations"><i class="fas fa-language"></i> 词译</button>
+          <button class="action-btn translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button>
+          <button class="action-btn hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button>
+          <button class="action-btn play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button>`;
+        const lineDiv = document.createElement('div'); lineDiv.className = 'line';
+        for (let i=0; i<s.words.length; i++) {
+          const w=s.words[i]; const wc=document.createElement('span'); wc.className='word-container';
+          const cn=document.createElement('span'); cn.className='chinese-word'; cn.textContent=w;
+          const tr=document.createElement('span'); tr.className='word-translation-popup'; tr.textContent=getWordTranslation(s,i);
+          wc.appendChild(cn); wc.appendChild(tr); lineDiv.appendChild(wc);
+          cn.addEventListener('mouseenter',(e)=>showPinyin(s.pinyin[i],e)); cn.addEventListener('mouseleave',hidePinyin);
+          cn.addEventListener('click',(e)=>{e.stopPropagation(); speakChinese(w);});
+          tr.addEventListener('click',(e)=>{e.stopPropagation(); cn.classList.toggle('hidden-word');});
+        }
+        const transDiv=document.createElement('div'); transDiv.className='sentence-translation';
+        const transSpan=document.createElement('span'); transSpan.textContent=getSentenceTranslation(s);
+        const voiceBtn=document.createElement('button'); voiceBtn.className='translation-voice-btn'; voiceBtn.innerHTML='<i class="fas fa-head-side-vr"></i> 朗读';
+        voiceBtn.addEventListener('click',(e)=>{e.stopPropagation(); speakTextInLang(getSentenceTranslation(s),currentLang);});
+        transDiv.appendChild(transSpan); transDiv.appendChild(voiceBtn);
+        block.appendChild(header); block.appendChild(lineDiv); block.appendChild(transDiv);
+
+        const qData=getQAData(s.id); const qWrapper=document.createElement('div'); qWrapper.className='question-wrapper';
+        const qHeader=document.createElement('div'); qHeader.className='question-header';
+        qHeader.innerHTML=`<span style="color:#9bcd6c; margin-right:8px;"><i class="fas fa-question-circle"></i> 口语问句</span>
+          <button class="action-btn question-show-translations" style="color:#9bcd6c;"><i class="fas fa-language"></i> 词译</button>
+          <button class="action-btn question-translate-sentence" style="color:#9bcd6c;"><i class="fas fa-globe"></i> 整句翻译</button>
+          <button class="action-btn question-hide-original" style="color:#9bcd6c;"><i class="fas fa-eye-slash"></i> 隐藏原文</button>
+          <button class="action-btn play-sentence" style="color:#9bcd6c;"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button>`;
+        const qLineDiv=document.createElement('div'); qLineDiv.className='question-line';
+        for (let i=0;i<qData.qWords.length;i++) {
+          const w=qData.qWords[i]; const container=document.createElement('span'); container.className='question-word-container';
+          const charSpan=document.createElement('span'); charSpan.className='chinese-word'; charSpan.textContent=w;
+          const qTransSpan=document.createElement('span'); qTransSpan.className='word-translation-popup'; qTransSpan.textContent=getQuestionWordTranslation(qData,i);
+          container.appendChild(charSpan); container.appendChild(qTransSpan); qLineDiv.appendChild(container);
+          charSpan.addEventListener('mouseenter',(e)=>showPinyin(qData.qPinyin[i],e)); charSpan.addEventListener('mouseleave',hidePinyin);
+          charSpan.addEventListener('click',(e)=>{e.stopPropagation(); speakChinese(w);});
+          qTransSpan.addEventListener('click',(e)=>{e.stopPropagation(); charSpan.classList.toggle('hidden-word');});
+        }
+        const qTransDiv=document.createElement('div'); qTransDiv.className='question-sentence-translation';
+        const qTransSpan=document.createElement('span'); qTransSpan.textContent=getQuestionSentenceTranslation(qData);
+        const qVoiceBtn=document.createElement('button'); qVoiceBtn.className='translation-voice-btn'; qVoiceBtn.innerHTML='<i class="fas fa-volume-up"></i> 朗读';
+        qVoiceBtn.addEventListener('click',(e)=>{e.stopPropagation(); speakChinese(qData.qWords.join(''));});
+        qTransDiv.appendChild(qTransSpan); qTransDiv.appendChild(qVoiceBtn);
+        const ansArea=document.createElement('div'); ansArea.className='question-answer-area';
+        const ansBtn=document.createElement('button'); ansBtn.className='answer-btn'; ansBtn.innerHTML='<i class="fas fa-reply"></i> 显示答案';
+        const ansDisplay=document.createElement('div'); ansDisplay.className='answer-text';
+        ansBtn.addEventListener('click',(e)=>{
+          e.stopPropagation();
+          ansDisplay.innerHTML = `<span>🗣️ ${qData.a}</span> <button class="answer-play"><i class="fas fa-play"></i></button>`;
+          ansDisplay.style.display = 'inline-flex';
+          const playBtn = ansDisplay.querySelector('.answer-play');
+          if (playBtn) {
+            playBtn.addEventListener('click', (ev) => {
+              ev.stopPropagation();
+              speakChinese(qData.a);
+            });
+          }
+          speakChinese(qData.a);
+        });
+        ansArea.appendChild(ansBtn); ansArea.appendChild(ansDisplay);
+        qWrapper.appendChild(qHeader); qWrapper.appendChild(qLineDiv); qWrapper.appendChild(qTransDiv); qWrapper.appendChild(ansArea);
+        block.appendChild(qWrapper); root.appendChild(block);
+
+        const mainTransSpans=block.querySelectorAll('.line .word-translation-popup');
+        block.querySelector('.show-translations').addEventListener('click',(e)=>{e.stopPropagation(); const s=mainTransSpans[0]?.style.display==='block'; mainTransSpans.forEach(t=>t.style.display=s?'none':'block');});
+        block.querySelector('.translate-sentence').addEventListener('click',(e)=>{e.stopPropagation(); transDiv.style.display=transDiv.style.display==='flex'?'none':'flex';});
+        block.querySelector('.hide-original-btn').addEventListener('click',(e)=>{e.stopPropagation(); lineDiv.classList.toggle('hidden-original');});
+        const mainPlay=block.querySelector('.play-sentence'); const mainBadge=mainPlay.querySelector('.speed-badge'); let ms=0; const speeds=[0.85,0.6,0.45]; const labels=['原速','慢30%','慢50%'];
+        mainPlay.addEventListener('click',(e)=>{e.stopPropagation(); speakChinese(s.words.join(''),speeds[ms]); mainBadge.textContent=labels[ms]; ms=(ms+1)%3;});
+        const qTransSpans=qWrapper.querySelectorAll('.question-line .word-translation-popup');
+        qWrapper.querySelector('.question-show-translations').addEventListener('click',(e)=>{e.stopPropagation(); const s=qTransSpans[0]?.style.display==='block'; qTransSpans.forEach(t=>t.style.display=s?'none':'block');});
+        qWrapper.querySelector('.question-translate-sentence').addEventListener('click',(e)=>{e.stopPropagation(); qTransDiv.style.display=qTransDiv.style.display==='flex'?'none':'flex';});
+        qWrapper.querySelector('.question-hide-original').addEventListener('click',(e)=>{e.stopPropagation(); qLineDiv.classList.toggle('hidden-original');});
+        const qPlay=qWrapper.querySelector('.play-sentence'); const qBadge=qPlay.querySelector('.speed-badge'); let qs=0;
+        qPlay.addEventListener('click',(e)=>{e.stopPropagation(); speakChinese(qData.qWords.join(''),speeds[qs]); qBadge.textContent=labels[qs]; qs=(qs+1)%3;});
+      }
+    }
+
+    function setLanguage(lang) { currentLang=lang; document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang)); renderAll(); }
+    document.getElementById('langBar').addEventListener('click',(e)=>{const b=e.target.closest('.lang-btn'); if(b) setLanguage(b.dataset.lang);});
+    document.body.addEventListener('click',function init(){initSpeech();},{once:true});
+    document.addEventListener('click',hidePinyin);
+    setLanguage('zh');
+  })();
+</script>
+</body>
+</html>
