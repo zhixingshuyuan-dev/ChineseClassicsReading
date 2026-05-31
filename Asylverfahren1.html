@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asylverfahren - Deutsch-Türkisch · 双语学习版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: "Times New Roman", serif;
+            line-height: 1.6;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+        .container {
+            background-color: #222;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        h1 {
+            color: #e69a2e;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+        }
+        .sub {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 40px;
+            font-style: italic;
+        }
+        .sentence {
+            margin-bottom: 50px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+        }
+        .sentence-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .line.hidden-original .turkish {
+            filter: blur(5px);
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        .line.hidden-original .translation {
+            filter: none;
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .word-container {
+            position: relative;
+            display: inline-block;
+            margin-right: 15px;
+            margin-bottom: 35px;
+            vertical-align: top;
+            min-width: 40px;
+        }
+        .turkish.hidden-word { visibility: hidden; display: inline-block; }
+        .turkish {
+            font-size: 1.25em;
+            color: #e0e0e0;
+            padding: 5px 8px;
+            border-radius: 4px;
+            transition: all 0.3s;
+            display: inline-block;
+            background-color: rgba(30, 30, 30, 0.8);
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .turkish:hover {
+            background-color: #444;
+            transform: translateY(-2px);
+            border-color: #e69a2e;
+        }
+        .translation {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(45, 45, 45, 0.95);
+            padding: 5px 8px;
+            border-radius: 6px;
+            white-space: nowrap;
+            display: none;
+            font-size: 0.85em;
+            color: #f0f0f0;
+            z-index: 100;
+            border: 1px solid #666;
+            cursor: pointer;
+            transition: 0.2s;
+            pointer-events: auto;
+        }
+        .translation:hover {
+            background-color: rgba(100, 100, 100, 0.95);
+            border-color: #e69a2e;
+        }
+        .grammar-info {
+            position: absolute;
+            bottom: 80%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 51, 102, 0.95);
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 1.28em;
+            color: #b3d9ff;
+            display: none;
+            z-index: 100;
+            min-width: 200px;
+            text-align: center;
+            border: 1px solid #0055aa;
+            line-height: 1.5;
+            white-space: normal;
+            pointer-events: none;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .etymology-info {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(102, 51, 0, 0.95);
+            padding: 12px 18px;
+            border-radius: 8px;
+            font-size: 1.28em;
+            color: #ffd9b3;
+            display: none;
+            z-index: 100;
+            min-width: 280px;
+            text-align: left;
+            border: 1px solid #aa5500;
+            line-height: 1.6;
+            max-width: 420px;
+            pointer-events: none;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .sentence-translation {
+            background-color: #2a2a2a;
+            border-left: 4px solid #e69a2e;
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+            font-size: 1em;
+            color: #d4d4d4;
+            display: none;
+            font-style: normal;
+        }
+        .show-translations, .play-sentence, .translate-sentence, .hide-original-btn {
+            background: transparent;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 1.1em;
+            transition: 0.3s;
+        }
+        .show-translations { color: white; }
+        .play-sentence { color: #e69a2e; }
+        .translate-sentence { color: #6ab0f5; }
+        .hide-original-btn { color: #c97e5a; }
+        .show-translations:hover, .play-sentence:hover, .translate-sentence:hover, .hide-original-btn:hover {
+            transform: translateY(-3px);
+            opacity: 0.8;
+        }
+        .sentence-number {
+            font-weight: bold;
+            color: #e69a2e;
+            font-size: 1em;
+            margin-right: 15px;
+            background: #2a2a2a;
+            padding: 0 8px;
+            border-radius: 20px;
+        }
+        .speed-badge {
+            font-size: 0.7em;
+            background-color: #3a2a1a;
+            padding: 2px 6px;
+            border-radius: 12px;
+            margin-left: 8px;
+            color: #e69a2e;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #888;
+            font-size: 0.85rem;
+        }
+        @media (max-width: 700px) {
+            .word-container { margin-right: 8px; }
+            .turkish { font-size: 1em; }
+            .sentence-header { justify-content: flex-start; }
+            .grammar-info, .etymology-info { font-size: 1em; min-width: 160px; padding: 8px 12px; }
+        }
+        button i { pointer-events: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🇩🇪 Asylverfahren · 庇护程序</h1>
+    <div class="sub">
+        📖 单击单词→朗读 &nbsp;|&nbsp; 双击单词→语法+词源 &nbsp;|&nbsp; 🌐 整句翻译 &nbsp;|&nbsp; 🔇 隐藏原文(单词模糊,翻译可见) &nbsp;|&nbsp; 🔊 变速朗读 &nbsp;|&nbsp; 🖱️ 点击翻译窗口→隐藏/恢复原词
+    </div>
+
+    <!-- 句子 1: Informationen zum Asylverfahren -->
+    <div class="sentence">
+        <div class="sentence-header">
+            <div class="sentence-number">1</div>
+            <button class="show-translations"><i class="fas fa-language"></i></button>
+            <button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button>
+            <button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button>
+            <button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button>
+        </div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Informationen</span><span class="translation">信息</span><span class="grammar-info">【词类】名词，复数<br>【语法细节】die Information (单数)，复数加 -en。阴性名词。<br>【用法】Informationen über/zu etwas</span><span class="etymology-info">【词源】拉丁语 "informare" (塑造/告知)，经由法语传入德语。</span></span>
+            <span class="word-container"><span class="turkish">zum</span><span class="translation">关于</span><span class="grammar-info">【词类】介词缩合形式<br>【语法细节】zu + dem 的缩合，表示“关于/对于”。<br>【用法】zu dem Asylverfahren</span><span class="etymology-info">【词源】中古高地德语 "zuo" + "dem"。</span></span>
+            <span class="word-container"><span class="turkish">Asylverfahren</span><span class="translation">庇护程序</span><span class="grammar-info">【词类】中性名词<br>【语法细节】das Asylverfahren，复合词：Asyl (庇护) + Verfahren (程序)。<br>【用法】ein Asylverfahren durchlaufen</span><span class="etymology-info">【词源】"Asyl"来自希腊语 "ásylon" (避难所)；"Verfahren"源自动词 "verfahren" (进行)。</span></span>
+        </div>
+        <div class="sentence-translation">关于庇护程序的信息</div>
+    </div>
+
+    <!-- 句子 2: Ihre Rechte und Pflichten -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">2</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Ihre</span><span class="translation">您的</span><span class="grammar-info">【词类】物主代词，第二人称敬称<br>【语法细节】Ihr (您的) + -e (复数/阴性)，首字母大写表敬意。<br>【用法】Ihre Rechte, Ihr Recht</span><span class="etymology-info">【词源】古高地德语 "ir" (你们的/您的)。</span></span>
+            <span class="word-container"><span class="turkish">Rechte</span><span class="translation">权利</span><span class="grammar-info">【词类】中性名词复数<br>【语法细节】das Recht (单数)，复数 die Rechte。<br>【用法】Rechte haben, Rechte einfordern</span><span class="etymology-info">【词源】古高地德语 "reht" (直的/正当的)，与英语 "right" 同源。</span></span>
+            <span class="word-container"><span class="turkish">und</span><span class="translation">和</span><span class="grammar-info">【词类】连词<br>【语法细节】连接并列成分。<br>【用法】A und B</span><span class="etymology-info">【词源】古高地德语 "unt"。</span></span>
+            <span class="word-container"><span class="turkish">Pflichten</span><span class="translation">义务</span><span class="grammar-info">【词类】阴性名词复数<br>【语法细节】die Pflicht (单数)，复数 -en。<br>【用法】Pflichten erfüllen, seinen Pflichten nachkommen</span><span class="etymology-info">【词源】古高地德语 "Pfliht" (照顾/责任)。</span></span>
+        </div>
+        <div class="sentence-translation">您的权利和义务</div>
+    </div>
+
+    <!-- 句子 3: Sie sind in Deutschland und wollen Asyl beantragen. -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">3</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Sie</span><span class="translation">您</span><span class="grammar-info">【词类】人称代词，第二人称敬称<br>【语法细节】首字母大写，动词用复数形式。<br>【用法】Sie sind, Sie wollen</span><span class="etymology-info">【词源】中古高地德语 "sī" (他们/她们)，后演变为敬称。</span></span>
+            <span class="word-container"><span class="turkish">sind</span><span class="translation">是</span><span class="grammar-info">【词类】动词 sein 的现在时第二人称复数/敬称<br>【语法细节】sein (是/在) 变位形式。<br>【用法】表示存在或状态。</span><span class="etymology-info">【词源】古高地德语 "sīn"，与英语 "be" 不同词根但同为系动词。</span></span>
+            <span class="word-container"><span class="turkish">in</span><span class="translation">在...里</span><span class="grammar-info">【词类】介词（加与格）<br>【语法细节】表示地点，后面跟名词与格。<br>【用法】in Deutschland</span><span class="etymology-info">【词源】古高地德语 "in"。</span></span>
+            <span class="word-container"><span class="turkish">Deutschland</span><span class="translation">德国</span><span class="grammar-info">【词类】中性专有名词<br>【语法细节】无冠词使用。<br>【用法】nach Deutschland, in Deutschland</span><span class="etymology-info">【词源】"Deutsch" (人民的) + "Land" (土地)。</span></span>
+            <span class="word-container"><span class="turkish">und</span><span class="translation">并且</span><span class="grammar-info">连词</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">wollen</span><span class="translation">想要</span><span class="grammar-info">【词类】情态动词，现在时复数/敬称<br>【语法细节】wollen 变位，表达意愿。<br>【用法】etwas tun wollen</span><span class="etymology-info">【词源】古高地德语 "wellen" (想要/愿意)，与英语 "will" 同源。</span></span>
+            <span class="word-container"><span class="turkish">Asyl</span><span class="translation">庇护</span><span class="grammar-info">【词类】中性名词<br>【语法细节】das Asyl，通常无复数。<br>【用法】Asyl beantragen, Asyl erhalten</span><span class="etymology-info">【词源】希腊语 "ásylon"，意为"不可掠夺的避难所"。</span></span>
+            <span class="word-container"><span class="turkish">beantragen</span><span class="translation">申请</span><span class="grammar-info">【词类】动词，不定式<br>【语法细节】可分动词 beantragen (提出申请)。<br>【用法】einen Antrag auf etwas stellen</span><span class="etymology-info">【词源】be- (前缀) + Antrag (申请)，源自 "antragen" (提出)。</span></span>
+            <span class="word-container"><span class="turkish">.</span><span class="translation">。</span><span class="grammar-info">标点</span><span class="etymology-info"></span></span>
+        </div>
+        <div class="sentence-translation">您在德国并且希望申请庇护。</div>
+    </div>
+
+    <!-- 句子 4: Wir informieren Sie, wie das Asylverfahren in Deutschland abläuft ... -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">4</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Wir</span><span class="translation">我们</span><span class="grammar-info">【词类】人称代词第一人称复数<br>【语法细节】主语形式。<br>【用法】wir informieren</span><span class="etymology-info">【词源】古高地德语 "wir"。</span></span>
+            <span class="word-container"><span class="turkish">informieren</span><span class="translation">告知/通知</span><span class="grammar-info">【词类】动词，现在时第一人称复数<br>【语法细节】informieren + Akk. + über (Akk.)<br>【用法】jemanden über etwas informieren</span><span class="etymology-info">【词源】拉丁语 "informare"，经法语传入。</span></span>
+            <span class="word-container"><span class="turkish">Sie</span><span class="translation">您</span><span class="grammar-info">人称代词宾格</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">wie</span><span class="translation">怎样/如何</span><span class="grammar-info">【词类】疑问副词<br>【语法细节】引导从句，表示方式。<br>【用法】wie etwas abläuft</span><span class="etymology-info">【词源】古高地德语 "hwē"。</span></span>
+            <span class="word-container"><span class="turkish">das</span><span class="translation">这个</span><span class="grammar-info">【词类】定冠词，中性主格<br>【语法细节】修饰名词 Asylverfahren。<br>【用法】das Verfahren</span><span class="etymology-info">【词源】古高地德语 "daz"。</span></span>
+            <span class="word-container"><span class="turkish">Asylverfahren</span><span class="translation">庇护程序</span><span class="grammar-info">名词，中性</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">in</span><span class="translation">在</span><span class="grammar-info">介词</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">Deutschland</span><span class="translation">德国</span><span class="grammar-info">专有名词</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">abläuft</span><span class="translation">进行/运行</span><span class="grammar-info">【词类】动词，可分，现在时第三人称单数<br>【语法细节】ab + laufen，表示过程进行。<br>【用法】der Ablauf des Verfahrens</span><span class="etymology-info">【词源】"ab" (离开) + "laufen" (跑)，意为"按序进行"。</span></span>
+        </div>
+        <div class="sentence-translation">我们告知您，德国的庇护程序如何运行。</div>
+    </div>
+
+    <!-- 句子 5: welche Rechte und Pflichten Sie haben. -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">5</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">welche</span><span class="translation">哪些</span><span class="grammar-info">【词类】疑问代形容词<br>【语法细节】引导从句，表示选择。<br>【用法】welche Rechte</span><span class="etymology-info">【词源】古高地德语 "welīh"。</span></span>
+            <span class="word-container"><span class="turkish">Rechte</span><span class="translation">权利</span><span class="grammar-info">名词复数</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">und</span><span class="translation">和</span><span class="grammar-info">连词</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">Pflichten</span><span class="translation">义务</span><span class="grammar-info">名词复数</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">Sie</span><span class="translation">您</span><span class="grammar-info">人称代词主格</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">haben</span><span class="translation">有</span><span class="grammar-info">【词类】动词 haben 现在时敬称/复数<br>【语法细节】表示拥有或存在。<br>【用法】Rechte haben</span><span class="etymology-info">【词源】古高地德语 "habēn"，与英语 "have" 同源。</span></span>
+        </div>
+        <div class="sentence-translation">您拥有哪些权利和义务。</div>
+    </div>
+
+    <!-- 句子 6: Grundsätzlich haben Sie das Recht auf ein Asylverfahren. -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">6</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Grundsätzlich</span><span class="translation">原则上</span><span class="grammar-info">【词类】副词<br>【语法细节】修饰整个句子。<br>【用法】grundsätzlich gilt</span><span class="etymology-info">【词源】"Grund" (基础) + "-sätzlich" (关于...的)。</span></span>
+            <span class="word-container"><span class="turkish">haben</span><span class="translation">有</span><span class="grammar-info">动词</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">Sie</span><span class="translation">您</span><span class="grammar-info">代词</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">das</span><span class="translation">这个</span><span class="grammar-info">定冠词中性</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">Recht</span><span class="translation">权利</span><span class="grammar-info">名词，中性单数</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">auf</span><span class="translation">对于/关于</span><span class="grammar-info">【词类】介词 + 宾格<br>【语法细节】表示指向或关系。<br>【用法】Recht auf etwas</span><span class="etymology-info">【词源】古高地德语 "ūf"。</span></span>
+            <span class="word-container"><span class="turkish">ein</span><span class="translation">一个</span><span class="grammar-info">不定冠词中性</span><span class="etymology-info">【词源】古高地德语 "ein"。</span></span>
+            <span class="word-container"><span class="turkish">Asylverfahren</span><span class="translation">庇护程序</span><span class="grammar-info">名词</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">.</span><span class="translation">。</span></span>
+        </div>
+        <div class="sentence-translation">原则上您有权进行庇护程序。</div>
+    </div>
+
+    <!-- 句子 7: Sie haben aber auch die Pflicht, während des gesamten Verfahrens aktiv mitzuwirken und immer die Wahrheit zu sagen. -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">7</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Sie</span><span class="translation">您</span><span class="grammar-info">代词</span></span>
+            <span class="word-container"><span class="turkish">haben</span><span class="translation">有</span><span class="grammar-info">动词</span></span>
+            <span class="word-container"><span class="turkish">aber</span><span class="translation">但是</span><span class="grammar-info">【词类】副词/连词<br>【语法细节】表示转折。<br>【用法】aber auch</span><span class="etymology-info">【词源】古高地德语 "awer"。</span></span>
+            <span class="word-container"><span class="turkish">auch</span><span class="translation">也</span><span class="grammar-info">【词类】副词<br>【语法细节】强调同样性。<br>【用法】auch die Pflicht</span><span class="etymology-info">【词源】古高地德语 "ouh"。</span></span>
+            <span class="word-container"><span class="turkish">die</span><span class="translation">这个</span><span class="grammar-info">定冠词阴性主格</span></span>
+            <span class="word-container"><span class="turkish">Pflicht</span><span class="translation">义务</span><span class="grammar-info">名词阴性单数</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">während</span><span class="translation">在...期间</span><span class="grammar-info">【词类】介词 + 所有格<br>【语法细节】表示时间伴随。<br>【用法】während des Verfahrens</span><span class="etymology-info">【词源】中古高地德语 "wern" (持续)，与"währen"同源。</span></span>
+            <span class="word-container"><span class="turkish">des</span><span class="translation">这个</span><span class="grammar-info">定冠词中性所有格</span></span>
+            <span class="word-container"><span class="turkish">gesamten</span><span class="translation">整个的</span><span class="grammar-info">【词类】形容词，强变化<br>【语法细节】修饰名词 Verfahren。<br>【用法】das gesamte Verfahren</span><span class="etymology-info">【词源】"gesamt" 来自 "gesammelt" (收集的)，意为"全部的"。</span></span>
+            <span class="word-container"><span class="turkish">Verfahrens</span><span class="translation">程序的</span><span class="grammar-info">名词所有格</span></span>
+            <span class="word-container"><span class="turkish">aktiv</span><span class="translation">积极地</span><span class="grammar-info">【词类】副词<br>【语法细节】修饰动词 mitzuwirken。<br>【用法】aktiv teilnehmen</span><span class="etymology-info">【词源】拉丁语 "activus"。</span></span>
+            <span class="word-container"><span class="turkish">mitzuwirken</span><span class="translation">参与/合作</span><span class="grammar-info">【词类】动词，带zu的不定式<br>【语法细节】可分动词 mitwirken, zu + 不定式。<br>【用法】an etwas mitwirken</span><span class="etymology-info">【词源】"mit" (一起) + "wirken" (起作用)。</span></span>
+            <span class="word-container"><span class="turkish">und</span><span class="translation">和</span></span>
+            <span class="word-container"><span class="turkish">immer</span><span class="translation">总是</span><span class="grammar-info">【词类】频率副词<br>【用法】immer die Wahrheit sagen</span><span class="etymology-info">【词源】中古高地德语 "iemer"。</span></span>
+            <span class="word-container"><span class="turkish">die</span><span class="translation">这个</span><span class="grammar-info">定冠词阴性</span></span>
+            <span class="word-container"><span class="turkish">Wahrheit</span><span class="translation">真相</span><span class="grammar-info">【词类】阴性名词<br>【语法细节】die Wahrheit<br>【用法】die Wahrheit sagen</span><span class="etymology-info">【词源】"wahr" (真实的) + "-heit" (抽象后缀)。</span></span>
+            <span class="word-container"><span class="turkish">zu sagen</span><span class="translation">说</span><span class="grammar-info">带zu不定式</span><span class="etymology-info">"sagen" 源自古高地德语 "sagen"。</span></span>
+            <span class="word-container"><span class="turkish">.</span><span class="translation">。</span></span>
+        </div>
+        <div class="sentence-translation">但您也有义务在整个程序期间积极参与并且始终说实话。</div>
+    </div>
+
+    <!-- 句子 8: Das ist wichtig für Sie, denn sonst gefährden Sie die Durchführung Ihres Asylverfahrens. -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">8</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Das</span><span class="translation">这</span><span class="grammar-info">【词类】指示代词中性<br>【语法细节】代指前面提到的内容。<br>【用法】das ist wichtig</span><span class="etymology-info">【词源】古高地德语 "daz"。</span></span>
+            <span class="word-container"><span class="turkish">ist</span><span class="translation">是</span><span class="grammar-info">动词sein第三人称单数</span></span>
+            <span class="word-container"><span class="turkish">wichtig</span><span class="translation">重要的</span><span class="grammar-info">【词类】形容词<br>【语法细节】作表语。<br>【用法】wichtig für jemanden</span><span class="etymology-info">【词源】"Wicht" (事物) + "-ig" (形容词后缀)。</span></span>
+            <span class="word-container"><span class="turkish">für</span><span class="translation">对于</span><span class="grammar-info">介词 + 宾格</span><span class="etymology-info">古高地德语 "fur"。</span></span>
+            <span class="word-container"><span class="turkish">Sie</span><span class="translation">您</span><span class="grammar-info">代词宾格</span></span>
+            <span class="word-container"><span class="turkish">denn</span><span class="translation">因为</span><span class="grammar-info">【词类】连词<br>【语法细节】表示原因。<br>【用法】denn sonst</span><span class="etymology-info">【词源】古高地德语 "denne"。</span></span>
+            <span class="word-container"><span class="turkish">sonst</span><span class="translation">否则</span><span class="grammar-info">【词类】副词<br>【语法细节】表示相反情况。<br>【用法】sonst passiert etwas</span><span class="etymology-info">【词源】中古高地德语 "sunst"。</span></span>
+            <span class="word-container"><span class="turkish">gefährden</span><span class="translation">危及/危害</span><span class="grammar-info">【词类】动词，现在时第二人称敬称/复数<br>【语法细节】gefährden + 宾格。<br>【用法】etwas gefährden</span><span class="etymology-info">【词源】"Gefahr" (危险) + "-den" (动词后缀)。</span></span>
+            <span class="word-container"><span class="turkish">Sie</span><span class="translation">您</span><span class="grammar-info">代词主格</span></span>
+            <span class="word-container"><span class="turkish">die</span><span class="translation">这个</span><span class="grammar-info">定冠词阴性</span></span>
+            <span class="word-container"><span class="turkish">Durchführung</span><span class="translation">执行/实施</span><span class="grammar-info">【词类】阴性名词<br>【语法细节】动名词，来自 durchführen。<br>【用法】die Durchführung eines Verfahrens</span><span class="etymology-info">【词源】"durch" (通过) + "führen" (引导) + "-ung" (名词化)。</span></span>
+            <span class="word-container"><span class="turkish">Ihres</span><span class="translation">您的</span><span class="grammar-info">物主代词第二人称敬称，所有格<br>【语法细节】Ihr + -es (中性/阳性所有格)。</span></span>
+            <span class="word-container"><span class="turkish">Asylverfahrens</span><span class="translation">庇护程序</span><span class="grammar-info">名词所有格</span></span>
+            <span class="word-container"><span class="turkish">.</span></span>
+        </div>
+        <div class="sentence-translation">这对您很重要，因为否则您会危及您的庇护程序的执行。</div>
+    </div>
+
+    <!-- 句子 9: Wir als Bundesamt nehmen Ihren Asylantrag entgegen ... -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">9</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Wir</span><span class="translation">我们</span></span>
+            <span class="word-container"><span class="turkish">als</span><span class="translation">作为</span><span class="grammar-info">【词类】连词/介词<br>【语法细节】表示身份或角色。<br>【用法】als Bundesamt</span><span class="etymology-info">【词源】古高地德语 "alsō"。</span></span>
+            <span class="word-container"><span class="turkish">Bundesamt</span><span class="translation">联邦局</span><span class="grammar-info">【词类】中性名词<br>【语法细节】复合词：Bund (联邦) + Amt (局)。<br>【用法】das Bundesamt für Migration</span><span class="etymology-info">【词源】"Bund"源自古高地德语"gibunt"(结合)；"Amt"源自拉丁语"officium"。</span></span>
+            <span class="word-container"><span class="turkish">nehmen</span><span class="translation">接收</span><span class="grammar-info">动词，第一人称复数现在时<br>【语法细节】nehmen + 宾格，可分动词 entgegennehmen (接收)。<br>【用法】etwas entgegennehmen</span><span class="etymology-info">【词源】古高地德语 "neman"。</span></span>
+            <span class="word-container"><span class="turkish">Ihren</span><span class="translation">您的</span><span class="grammar-info">物主代词，阳性宾格</span></span>
+            <span class="word-container"><span class="turkish">Asylantrag</span><span class="translation">庇护申请</span><span class="grammar-info">【词类】阳性名词<br>【语法细节】Asyl + Antrag (申请)。<br>【用法】einen Asylantrag stellen</span><span class="etymology-info">【词源】"Antrag"来自"antragen"(提出)。</span></span>
+            <span class="word-container"><span class="turkish">entgegen</span><span class="translation">接收</span><span class="grammar-info">动词前缀（与nehmen分开）<br>【语法细节】entgegennehmen 的可分前缀。</span><span class="etymology-info">【词源】"entgegen" (向着/反对)。</span></span>
+            <span class="word-container"><span class="turkish">,</span><span class="translation">，</span></span>
+        </div>
+        <div class="sentence-translation">我们作为联邦移民局接收您的庇护申请，</div>
+    </div>
+
+    <!-- 句子 10: führen ein faires Asylverfahren durch und entscheiden über Ihren Antrag. -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">10</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">führen</span><span class="translation">进行/执行</span><span class="grammar-info">动词，第一人称复数现在时<br>【语法细节】可分动词 durchführen + 宾格。<br>【用法】ein Verfahren durchführen</span><span class="etymology-info">【词源】古高地德语 "fuoren" (带领)。</span></span>
+            <span class="word-container"><span class="turkish">ein</span><span class="translation">一个</span><span class="grammar-info">不定冠词中性</span></span>
+            <span class="word-container"><span class="turkish">faires</span><span class="translation">公正的</span><span class="grammar-info">形容词，修饰 Verfahren<br>【用法】ein faires Verfahren</span><span class="etymology-info">【词源】拉丁语 "fair" 经由英语 "fair"。</span></span>
+            <span class="word-container"><span class="turkish">Asylverfahren</span><span class="translation">庇护程序</span></span>
+            <span class="word-container"><span class="turkish">durch</span><span class="translation">通过/执行完毕</span><span class="grammar-info">可分动词前缀</span></span>
+            <span class="word-container"><span class="turkish">und</span><span class="translation">和</span></span>
+            <span class="word-container"><span class="turkish">entscheiden</span><span class="translation">决定/裁决</span><span class="grammar-info">动词，第一人称复数现在时<br>【语法细节】entscheiden + über (宾格)。<br>【用法】über einen Antrag entscheiden</span><span class="etymology-info">【词源】古高地德语 "entsceidan" (分隔/裁断)。</span></span>
+            <span class="word-container"><span class="turkish">über</span><span class="translation">关于</span><span class="grammar-info">介词 + 宾格</span></span>
+            <span class="word-container"><span class="turkish">Ihren</span><span class="translation">您的</span><span class="grammar-info">物主代词阳性宾格</span></span>
+            <span class="word-container"><span class="turkish">Antrag</span><span class="translation">申请</span><span class="grammar-info">阳性名词</span></span>
+            <span class="word-container"><span class="turkish">.</span><span class="translation">。</span></span>
+        </div>
+        <div class="sentence-translation">进行一个公正的庇护程序并裁决您的申请。</div>
+    </div>
+
+    <!-- 句子 11: Berücksichtigt werden hierbei Ihr individuelles Schicksal und die Verhältnisse in Ihrem Herkunftsland. -->
+    <div class="sentence">
+        <div class="sentence-header"><div class="sentence-number">11</div><button class="show-translations"><i class="fas fa-language"></i></button><button class="translate-sentence"><i class="fas fa-globe"></i> 整句翻译</button><button class="hide-original-btn"><i class="fas fa-eye-slash"></i> 隐藏原文</button><button class="play-sentence"><i class="fas fa-volume-up"></i> <span class="speed-badge">原速</span></button></div>
+        <div class="line">
+            <span class="word-container"><span class="turkish">Berücksichtigt</span><span class="translation">被考虑</span><span class="grammar-info">【词类】动词过去分词，构成被动态<br>【语法细节】berücksichtigen 的第二分词。<br>【用法】etwas wird berücksichtigt</span><span class="etymology-info">【词源】"berücksichtigen" 来自 "Rücksicht" (顾及/考虑)。</span></span>
+            <span class="word-container"><span class="turkish">werden</span><span class="translation">被</span><span class="grammar-info">助动词，构成被动态<br>【语法细节】werden + 第二分词。</span><span class="etymology-info">同前</span></span>
+            <span class="word-container"><span class="turkish">hierbei</span><span class="translation">在此过程中</span><span class="grammar-info">【词类】副词<br>【语法细节】hier + bei。<br>【用法】hierbei wird ...</span><span class="etymology-info">【词源】"hier" (这里) + "bei" (在旁边)。</span></span>
+            <span class="word-container"><span class="turkish">Ihr</span><span class="translation">您的</span><span class="grammar-info">物主代词中性主格</span></span>
+            <span class="word-container"><span class="turkish">individuelles</span><span class="translation">个人的</span><span class="grammar-info">形容词，中性主格<br>【语法细节】individuell + -es。<br>【用法】individuelles Schicksal</span><span class="etymology-info">【词源】拉丁语 "individuum" (不可分割的)。</span></span>
+            <span class="word-container"><span class="turkish">Schicksal</span><span class="translation">命运</span><span class="grammar-info">【词类】中性名词<br>【用法】das persönliche Schicksal</span><span class="etymology-info">【词源】"schicken" (派遣/安排) + "-sal" (名词后缀)。</span></span>
+            <span class="word-container"><span class="turkish">und</span><span class="translation">和</span></span>
+            <span class="word-container"><span class="turkish">die</span><span class="translation">这个</span><span class="grammar-info">定冠词复数主格</span></span>
+            <span class="word-container"><span class="turkish">Verhältnisse</span><span class="translation">状况/条件</span><span class="grammar-info">【词类】中性名词复数<br>【语法细节】das Verhältnis (单数)，复数 die Verhältnisse。<br>【用法】die Verhältnisse im Herkunftsland</span><span class="etymology-info">【词源】"verhalten" (处于/表现) + "-nis" (名词化)。</span></span>
+            <span class="word-container"><span class="turkish">in</span><span class="translation">在...里</span><span class="grammar-info">介词 + 与格</span></span>
+            <span class="word-container"><span class="turkish">Ihrem</span><span class="translation">您的</span><span class="grammar-info">物主代词，中性/阳性与格</span></span>
+            <span class="word-container"><span class="turkish">Herkunftsland</span><span class="translation">原籍国</span><span class="grammar-info">【词类】中性名词<br>【语法细节】Herkunft (来源) + Land (国家)。<br>【用法】das Herkunftsland eines Flüchtlings</span><span class="etymology-info">【词源】"Herkunft" (来源/出身) 源自 "herkommen" (来自)。</span></span>
+            <span class="word-container"><span class="turkish">.</span><span class="translation">。</span></span>
+        </div>
+        <div class="sentence-translation">在此过程中，您的个人命运以及您原籍国的情况都会被考虑在内。</div>
+    </div>
+
+    <footer>✨ 基于德国联邦移民局官方文本 · 每单词含语法及词源说明 · 功能：单击朗读，双击语法/词源，整句翻译，隐藏原文，变速朗读，点击翻译窗口隐藏原词</footer>
+</div>
+
+<script>
+    // 速度状态管理及所有交互功能 (与模板完全一致)
+    const speedStates = new Map();
+    const hasSpokenBefore = new Map();
+
+    document.querySelectorAll('.word-container').forEach(container => {
+        const turkishSpan = container.querySelector('.turkish');
+        const grammarSpan = container.querySelector('.grammar-info');
+        const etymologySpan = container.querySelector('.etymology-info');
+        let clickCount = 0, timer = null;
+        turkishSpan.addEventListener('click', function(e) {
+            e.stopPropagation();
+            clickCount++;
+            if (timer) clearTimeout(timer);
+            if (clickCount === 1) {
+                const word = turkishSpan.textContent.trim();
+                if (word && word !== '.' && word !== '?' && word !== '！') {
+                    if ('speechSynthesis' in window) {
+                        speechSynthesis.cancel();
+                        const utterance = new SpeechSynthesisUtterance(word);
+                        utterance.lang = 'de-DE';
+                        utterance.rate = 0.85;
+                        speechSynthesis.speak(utterance);
+                    }
+                }
+                timer = setTimeout(() => { clickCount = 0; }, 500);
+            } else if (clickCount === 2) {
+                document.querySelectorAll('.grammar-info').forEach(info => { if (info !== grammarSpan) info.style.display = 'none'; });
+                document.querySelectorAll('.etymology-info').forEach(info => { if (info !== etymologySpan) info.style.display = 'none'; });
+                if (grammarSpan.style.display === 'block') {
+                    grammarSpan.style.display = 'none';
+                    etymologySpan.style.display = 'none';
+                } else {
+                    grammarSpan.style.display = 'block';
+                    etymologySpan.style.display = 'block';
+                }
+                clickCount = 0;
+                if (timer) clearTimeout(timer);
+            }
+        });
+        document.addEventListener('click', function(e) {
+            if (!container.contains(e.target)) {
+                if (grammarSpan) grammarSpan.style.display = 'none';
+                if (etymologySpan) etymologySpan.style.display = 'none';
+            }
+        });
+    });
+
+    document.querySelectorAll('.show-translations').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const sentenceDiv = this.closest('.sentence');
+            const translations = sentenceDiv.querySelectorAll('.translation');
+            const showing = translations[0]?.style.display === 'block';
+            translations.forEach(t => t.style.display = showing ? 'none' : 'block');
+            this.innerHTML = showing ? '<i class="fas fa-language"></i>' : '<i class="fas fa-eye-slash"></i>';
+        });
+    });
+
+    document.body.addEventListener('click', function(e) {
+        const transSpan = e.target.closest('.translation');
+        if (!transSpan) return;
+        e.stopPropagation();
+        const container = transSpan.closest('.word-container');
+        if (container) {
+            const turkishWord = container.querySelector('.turkish');
+            if (turkishWord) {
+                turkishWord.classList.toggle('hidden-word');
+                transSpan.style.borderColor = turkishWord.classList.contains('hidden-word') ? '#e69a2e' : '#666';
+                transSpan.style.backgroundColor = turkishWord.classList.contains('hidden-word') ? 'rgba(100,80,40,0.95)' : 'rgba(45,45,45,0.95)';
+            }
+        }
+    });
+
+    document.querySelectorAll('.translate-sentence').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const sentenceDiv = this.closest('.sentence');
+            const translationDiv = sentenceDiv.querySelector('.sentence-translation');
+            if (translationDiv) {
+                if (translationDiv.style.display === 'none' || !translationDiv.style.display) {
+                    translationDiv.style.display = 'block';
+                    this.innerHTML = '<i class="fas fa-globe"></i> 隐藏翻译';
+                } else {
+                    translationDiv.style.display = 'none';
+                    this.innerHTML = '<i class="fas fa-globe"></i> 整句翻译';
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.hide-original-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const sentenceDiv = this.closest('.sentence');
+            const lineDiv = sentenceDiv.querySelector('.line');
+            if (lineDiv) {
+                if (lineDiv.classList.contains('hidden-original')) {
+                    lineDiv.classList.remove('hidden-original');
+                    this.innerHTML = '<i class="fas fa-eye-slash"></i> 隐藏原文';
+                } else {
+                    lineDiv.classList.add('hidden-original');
+                    this.innerHTML = '<i class="fas fa-eye"></i> 显示原文';
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.play-sentence').forEach(btn => {
+        if (!speedStates.has(btn)) speedStates.set(btn, 0);
+        if (!hasSpokenBefore.has(btn)) hasSpokenBefore.set(btn, false);
+        function updateSpeedBadge(btn, state) {
+            const badge = btn.querySelector('.speed-badge');
+            if (badge) {
+                if (state === 0) badge.textContent = '原速';
+                else if (state === 1) badge.textContent = '慢30%';
+                else if (state === 2) badge.textContent = '慢50%';
+            }
+        }
+        function getRateFromState(state) {
+            if (state === 0) return 0.85;
+            if (state === 1) return 0.60;
+            return 0.43;
+        }
+        btn.addEventListener('click', function() {
+            const sentenceDiv = this.closest('.sentence');
+            const lineDiv = sentenceDiv.querySelector('.line');
+            const words = Array.from(lineDiv.querySelectorAll('.turkish'))
+                .filter(el => el.textContent.trim() !== '.' && el.textContent.trim() !== '?' && el.textContent.trim() !== '！')
+                .map(el => el.textContent);
+            const sentence = words.join(' ');
+            if (sentence && 'speechSynthesis' in window) {
+                let currentState = speedStates.get(this) || 0;
+                let hasSpoken = hasSpokenBefore.get(this) || false;
+                let useRate = 0.85;
+                if (!hasSpoken) {
+                    useRate = 0.85;
+                    speedStates.set(this, 1);
+                } else {
+                    useRate = getRateFromState(currentState);
+                    let nextState = (currentState + 1) % 3;
+                    speedStates.set(this, nextState);
+                    updateSpeedBadge(this, nextState);
+                }
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(sentence);
+                utterance.lang = 'de-DE';
+                utterance.rate = useRate;
+                speechSynthesis.speak(utterance);
+                hasSpokenBefore.set(this, true);
+                if (!hasSpoken) updateSpeedBadge(this, 1);
+            }
+        });
+        updateSpeedBadge(btn, 0);
+    });
+</script>
+</body>
+</html>
