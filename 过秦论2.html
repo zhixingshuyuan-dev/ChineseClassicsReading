@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>秦地互动文本 · 大字版</title>
+    <style>
+        :root {
+            --bg: #f5f0e8;
+            --text: #2c2416;
+            --accent: #8b4513;
+            --hover-bg: #fff8e7;
+            --border: #c4a97d;
+            --sentence-bg: #fdfaf3;
+            --ruby-color: #a0522d;
+            --btn-bg: #8b4513;
+            --btn-hover: #6b3410;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --tooltip-bg: #2c2416;
+            --tooltip-text: #f5efe0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f0e8 0%, #ede4d3 30%, #f3ece0 60%, #e8ddc8 100%);
+            font-family: "Noto Serif SC", "Songti SC", "SimSun", "STSong", "华文宋体", "Georgia", "Times New Roman", serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem 4rem;
+            color: var(--text);
+            line-height: 2.2;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(255, 252, 245, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            box-shadow: var(--card-shadow), 0 0 0 1px rgba(180, 140, 100, 0.15);
+            border: 1px solid rgba(180, 140, 100, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #5c3a1e;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.08em;
+            font-family: "Noto Serif SC", "STSong", serif;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.95rem;
+            color: #8b7355;
+            margin-bottom: 2rem;
+            letter-spacing: 0.05em;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.8rem;
+            font-size: 0.85rem;
+            color: #7a6248;
+        }
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(255, 248, 235, 0.6);
+            padding: 0.35rem 0.9rem;
+            border-radius: 20px;
+            border: 1px solid #dcc8a8;
+        }
+        .legend .icon {
+            font-style: normal;
+            font-size: 1rem;
+        }
+        .legend .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 2px;
+        }
+        .dot.chinese {
+            background: #b87333;
+        }
+        .dot.english {
+            background: #3a6b8c;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px dashed #d4bfa0;
+            margin: 1.5rem 0;
+            opacity: 0.7;
+        }
+        .divider.thin {
+            margin: 1rem 0;
+            border-top-style: dotted;
+            opacity: 0.5;
+        }
+
+        .section-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #8b6914;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, #c4a97d, transparent);
+        }
+
+        /* ---------- 中文段落（带拼音）· 字体放大一倍 ---------- */
+        .chinese-block {
+            background: rgba(255, 250, 240, 0.7);
+            border-radius: 16px;
+            padding: 2rem 1.8rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(180, 140, 100, 0.25);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+            font-size: 2.5rem;          /* 原1.25rem → 放大一倍 (2.5rem) */
+            line-height: 3.6;
+            letter-spacing: 0.03em;
+            text-align: justify;
+        }
+
+        /* ruby 悬停显示拼音：位置提高一倍 (bottom 从默认调高) */
+        .chinese-block ruby {
+            ruby-align: center;
+            cursor: default;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .chinese-block ruby rt {
+            font-size: 0.7rem;           /* 拼音字体适当放大 */
+            font-weight: 400;
+            color: var(--ruby-color);
+            letter-spacing: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            transform: translateY(4px);
+            font-family: "Noto Serif SC", "STKaiti", "KaiTi", "楷体", serif;
+            user-select: none;
+            pointer-events: none;
+            /* 位置提高一倍：原默认在底部，现向上偏移 */
+            position: absolute;
+            bottom: 100%;               /* 从底部向上对齐 */
+            left: 50%;
+            transform: translateX(-50%) translateY(10px); /* 初始隐藏向下偏移 */
+            white-space: nowrap;
+            background: rgba(255, 248, 235, 0.85);
+            padding: 0.1rem 0.4rem;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border: 1px solid #e0cfb8;
+            font-size: 0.75rem;
+        }
+        .chinese-block ruby:hover rt {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);  /* 悬停时上移显示 */
+        }
+        .chinese-block ruby:hover {
+            background: rgba(210, 160, 100, 0.12);
+            border-radius: 4px;
+            padding: 0 2px;
+        }
+
+        /* ---------- 英文段落 · 字体放大50% ---------- */
+        .english-block {
+            background: rgba(245, 248, 252, 0.55);
+            border-radius: 16px;
+            padding: 2rem 1.8rem;
+            border: 1px solid rgba(120, 150, 180, 0.2);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .sentence-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            background: var(--sentence-bg);
+            border: 1px solid rgba(180, 160, 130, 0.15);
+            transition: background 0.3s, box-shadow 0.3s;
+            flex-wrap: wrap;
+        }
+        .sentence-wrapper:hover {
+            background: #fffdf7;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .sentence-wrapper:last-child {
+            margin-bottom: 0;
+        }
+
+        .sentence-text {
+            flex: 1;
+            font-size: 1.575rem;        /* 原1.05rem → 放大50% (1.575rem) */
+            line-height: 2.4;
+            color: #3b3b3b;
+            min-width: 200px;
+        }
+
+        /* 英文单词可点击朗读 + 悬停显示释义 */
+        .en-word {
+            display: inline;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 3px;
+            padding: 1px 3px;
+            margin: 0 1px;
+            color: #2c3e50;
+            position: relative;
+            white-space: nowrap;
+        }
+        .en-word:hover {
+            background: #d4e6f9;
+            color: #1a3a5c;
+            outline: 1px solid #8bb8d6;
+            outline-offset: 1px;
+        }
+        .en-word:active {
+            background: #b8d4f0;
+            transform: scale(0.97);
+        }
+        .en-word::after {
+            content: '🔊';
+            font-size: 0.65rem;
+            opacity: 0;
+            margin-left: 2px;
+            transition: opacity 0.2s;
+            vertical-align: super;
+            pointer-events: none;
+        }
+        .en-word:hover::after {
+            opacity: 0.7;
+        }
+
+        /* 英文单词释义 tooltip */
+        .en-word .word-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--tooltip-bg);
+            color: var(--tooltip-text);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.9rem;          /* 稍大 */
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            transform: translateX(-50%) translateY(4px);
+            z-index: 10;
+            font-family: "Noto Serif SC", "STKaiti", "KaiTi", "楷体", serif;
+            font-weight: 400;
+            letter-spacing: 0.03em;
+        }
+        .en-word .word-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--tooltip-bg) transparent transparent transparent;
+        }
+        .en-word:hover .word-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 句子朗读按钮 */
+        .btn-speak-sentence {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--btn-bg);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            align-self: center;
+            position: relative;
+        }
+        .btn-speak-sentence:hover {
+            background: var(--btn-hover);
+            transform: scale(1.08);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+        }
+        .btn-speak-sentence:active {
+            transform: scale(0.94);
+            transition: transform 0.1s;
+        }
+        .btn-speak-sentence.speaking {
+            animation: pulse 0.6s infinite alternate;
+            background: #c0392b;
+        }
+        @keyframes pulse {
+            from {
+                box-shadow: 0 0 0 0 rgba(180, 60, 40, 0.6);
+            }
+            to {
+                box-shadow: 0 0 0 14px rgba(180, 60, 40, 0);
+            }
+        }
+
+        .tooltip-hint {
+            font-size: 0.85rem;
+            color: #9b8b7a;
+            text-align: center;
+            margin-top: 0.8rem;
+            font-style: italic;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+            .chinese-block {
+                font-size: 1.8rem;      /* 移动端适当缩小，但保持放大比例 */
+                padding: 1.5rem 1rem;
+                line-height: 3.0;
+            }
+            .chinese-block ruby rt {
+                font-size: 0.6rem;
+            }
+            .sentence-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-speak-sentence {
+                align-self: flex-end;
+                margin-top: 0.4rem;
+            }
+            .sentence-text {
+                font-size: 1.2rem;       /* 移动端放大50% */
+            }
+            .en-word .word-tooltip {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chinese-block {
+                font-size: 1.5rem;
+                line-height: 2.6;
+                padding: 1rem 0.8rem;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
+            .sentence-text {
+                font-size: 1.0rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📜 秦地 · 四塞之國</h1>
+        <p class="subtitle">—— 文言原文與英譯對照 ——</p>
+
+        <div class="legend">
+            <span><span class="dot chinese"></span> 懸停漢字顯示拼音</span>
+            <span><span class="dot english"></span> 懸停英文單詞顯示釋義</span>
+            <span><span class="icon">🔊</span> 點擊單詞朗讀</span>
+            <span><span class="icon">▶️</span> 點擊按鈕朗讀整句</span>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section-label">📖 文言原文</div>
+        <div class="chinese-block" id="chineseBlock">
+            <!-- 将由JavaScript动态生成 -->
+        </div>
+
+        <hr class="divider">
+
+        <div class="section-label">🌐 英文翻譯 / English Translation</div>
+        <div class="english-block" id="englishBlock">
+            <!-- 将由JavaScript动态生成 -->
+        </div>
+
+        <p class="tooltip-hint">
+            💡 懸停漢字查看拼音 · 懸停英文單詞查看釋義 · 點擊單詞或 ▶️ 按鈕收聽發音
+        </p>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== 中文数据（新文本：秦并兼诸侯……） ====================
+            const chineseData = [
+                { char: '秦', py: 'qín' }, { char: '并', py: 'bìng' }, { char: '兼', py: 'jiān' },
+                { char: '諸', py: 'zhū' }, { char: '侯', py: 'hóu' }, { char: '山', py: 'shān' },
+                { char: '東', py: 'dōng' }, { char: '三', py: 'sān' }, { char: '十', py: 'shí' },
+                { char: '餘', py: 'yú' }, { char: '郡', py: 'jùn' }, { char: '，', py: '' },
+                { char: '繕', py: 'shàn' }, { char: '津', py: 'jīn' }, { char: '關', py: 'guān' },
+                { char: '，', py: '' }, { char: '據', py: 'jù' }, { char: '險', py: 'xiǎn' },
+                { char: '塞', py: 'sài' }, { char: '，', py: '' }, { char: '修', py: 'xiū' },
+                { char: '甲', py: 'jiǎ' }, { char: '兵', py: 'bīng' }, { char: '而', py: 'ér' },
+                { char: '守', py: 'shǒu' }, { char: '之', py: 'zhī' }, { char: '。', py: '' },
+                { char: '然', py: 'rán' }, { char: '陳', py: 'chén' }, { char: '涉', py: 'shè' },
+                { char: '以', py: 'yǐ' }, { char: '戍', py: 'shù' }, { char: '卒', py: 'zú' },
+                { char: '散', py: 'sàn' }, { char: '亂', py: 'luàn' }, { char: '之', py: 'zhī' },
+                { char: '眾', py: 'zhòng' }, { char: '數', py: 'shù' }, { char: '百', py: 'bǎi' },
+                { char: '，', py: '' }, { char: '奮', py: 'fèn' }, { char: '臂', py: 'bì' },
+                { char: '大', py: 'dà' }, { char: '呼', py: 'hū' }, { char: '，', py: '' },
+                { char: '不', py: 'bù' }, { char: '用', py: 'yòng' }, { char: '弓', py: 'gōng' },
+                { char: '戟', py: 'jǐ' }, { char: '之', py: 'zhī' }, { char: '兵', py: 'bīng' },
+                { char: '，', py: '' }, { char: '鉏', py: 'chú' }, { char: '櫌', py: 'yōu' },
+                { char: '白', py: 'bái' }, { char: '梃', py: 'tǐng' }, { char: '，', py: '' },
+                { char: '望', py: 'wàng' }, { char: '屋', py: 'wū' }, { char: '而', py: 'ér' },
+                { char: '食', py: 'shí' }, { char: '，', py: '' }, { char: '橫', py: 'héng' },
+                { char: '行', py: 'xíng' }, { char: '天', py: 'tiān' }, { char: '下', py: 'xià' },
+                { char: '。', py: '' }, { char: '秦', py: 'qín' }, { char: '人', py: 'rén' },
+                { char: '阻', py: 'zǔ' }, { char: '險', py: 'xiǎn' }, { char: '不', py: 'bù' },
+                { char: '守', py: 'shǒu' }, { char: '，', py: '' }, { char: '關', py: 'guān' },
+                { char: '梁', py: 'liáng' }, { char: '不', py: 'bù' }, { char: '闔', py: 'hé' },
+                { char: '，', py: '' }, { char: '長', py: 'cháng' }, { char: '戟', py: 'jǐ' },
+                { char: '不', py: 'bù' }, { char: '刺', py: 'cì' }, { char: '，', py: '' },
+                { char: '彊', py: 'qiáng' }, { char: '弩', py: 'nǔ' }, { char: '不', py: 'bù' },
+                { char: '射', py: 'shè' }, { char: '。', py: '' }, { char: '楚', py: 'chǔ' },
+                { char: '師', py: 'shī' }, { char: '深', py: 'shēn' }, { char: '入', py: 'rù' },
+                { char: '，', py: '' }, { char: '戰', py: 'zhàn' }, { char: '於', py: 'yú' },
+                { char: '鴻', py: 'hóng' }, { char: '門', py: 'mén' }, { char: '，', py: '' },
+                { char: '曾', py: 'céng' }, { char: '無', py: 'wú' }, { char: '藩', py: 'fān' },
+                { char: '籬', py: 'lí' }, { char: '之', py: 'zhī' }, { char: '艱', py: 'jiān' },
+                { char: '。', py: '' }, { char: '於', py: 'yú' }, { char: '是', py: 'shì' },
+                { char: '山', py: 'shān' }, { char: '東', py: 'dōng' }, { char: '大', py: 'dà' },
+                { char: '擾', py: 'rǎo' }, { char: '，', py: '' }, { char: '諸', py: 'zhū' },
+                { char: '侯', py: 'hóu' }, { char: '并', py: 'bìng' }, { char: '起', py: 'qǐ' },
+                { char: '，', py: '' }, { char: '豪', py: 'háo' }, { char: '俊', py: 'jùn' },
+                { char: '相', py: 'xiāng' }, { char: '立', py: 'lì' }, { char: '。', py: '' },
+                { char: '秦', py: 'qín' }, { char: '使', py: 'shǐ' }, { char: '章', py: 'zhāng' },
+                { char: '邯', py: 'hán' }, { char: '將', py: 'jiāng' }, { char: '而', py: 'ér' },
+                { char: '東', py: 'dōng' }, { char: '征', py: 'zhēng' }, { char: '，', py: '' },
+                { char: '章', py: 'zhāng' }, { char: '邯', py: 'hán' }, { char: '因', py: 'yīn' },
+                { char: '以', py: 'yǐ' }, { char: '三', py: 'sān' }, { char: '軍', py: 'jūn' },
+                { char: '之', py: 'zhī' }, { char: '眾', py: 'zhòng' }, { char: '要', py: 'yāo' },
+                { char: '市', py: 'shì' }, { char: '於', py: 'yú' }, { char: '外', py: 'wài' },
+                { char: '，', py: '' }, { char: '以', py: 'yǐ' }, { char: '謀', py: 'móu' },
+                { char: '其', py: 'qí' }, { char: '上', py: 'shàng' }, { char: '。', py: '' },
+                { char: '群', py: 'qún' }, { char: '臣', py: 'chén' }, { char: '之', py: 'zhī' },
+                { char: '不', py: 'bù' }, { char: '信', py: 'xìn' }, { char: '，', py: '' },
+                { char: '可', py: 'kě' }, { char: '見', py: 'jiàn' }, { char: '於', py: 'yú' },
+                { char: '此', py: 'cǐ' }, { char: '矣', py: 'yǐ' }, { char: '。', py: '' },
+                { char: '子', py: 'zǐ' }, { char: '嬰', py: 'yīng' }, { char: '立', py: 'lì' },
+                { char: '，', py: '' }, { char: '遂', py: 'suì' }, { char: '不', py: 'bù' },
+                { char: '寤', py: 'wù' }, { char: '。', py: '' }, { char: '藉', py: 'jiè' },
+                { char: '使', py: 'shǐ' }, { char: '子', py: 'zǐ' }, { char: '嬰', py: 'yīng' },
+                { char: '有', py: 'yǒu' }, { char: '庸', py: 'yōng' }, { char: '主', py: 'zhǔ' },
+                { char: '之', py: 'zhī' }, { char: '材', py: 'cái' }, { char: '，', py: '' },
+                { char: '僅', py: 'jǐn' }, { char: '得', py: 'dé' }, { char: '中', py: 'zhōng' },
+                { char: '佐', py: 'zuǒ' }, { char: '，', py: '' }, { char: '山', py: 'shān' },
+                { char: '東', py: 'dōng' }, { char: '雖', py: 'suī' }, { char: '亂', py: 'luàn' },
+                { char: '，', py: '' }, { char: '秦', py: 'qín' }, { char: '之', py: 'zhī' },
+                { char: '地', py: 'dì' }, { char: '可', py: 'kě' }, { char: '全', py: 'quán' },
+                { char: '而', py: 'ér' }, { char: '有', py: 'yǒu' }, { char: '，', py: '' },
+                { char: '宗', py: 'zōng' }, { char: '廟', py: 'miào' }, { char: '之', py: 'zhī' },
+                { char: '祀', py: 'sì' }, { char: '未', py: 'wèi' }, { char: '當', py: 'dāng' },
+                { char: '絕', py: 'jué' }, { char: '也', py: 'yě' }, { char: '。', py: '' }
+            ];
+
+            // ==================== 英文数据（新文本） ====================
+            const englishSentences = [{
+                text: "Qin annexed more than thirty commanderies in the region east of Mount Hangu, repaired river crossings and passes, occupied strategic fortresses, maintained military equipment, and defended them.",
+                words: [
+                    { word: "Qin", gloss: "秦國" },
+                    { word: "annexed", gloss: "吞併" },
+                    { word: "more", gloss: "更多" },
+                    { word: "than", gloss: "比" },
+                    { word: "thirty", gloss: "三十" },
+                    { word: "commanderies", gloss: "郡" },
+                    { word: "in", gloss: "在" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "region", gloss: "地區" },
+                    { word: "east", gloss: "東部" },
+                    { word: "of", gloss: "……的" },
+                    { word: "Mount", gloss: "山" },
+                    { word: "Hangu,", gloss: "函谷關" },
+                    { word: "repaired", gloss: "修繕" },
+                    { word: "river", gloss: "河流" },
+                    { word: "crossings", gloss: "渡口" },
+                    { word: "and", gloss: "和" },
+                    { word: "passes,", gloss: "關隘" },
+                    { word: "occupied", gloss: "佔據" },
+                    { word: "strategic", gloss: "戰略的" },
+                    { word: "fortresses,", gloss: "要塞" },
+                    { word: "maintained", gloss: "維持" },
+                    { word: "military", gloss: "軍事" },
+                    { word: "equipment,", gloss: "裝備" },
+                    { word: "and", gloss: "並且" },
+                    { word: "defended", gloss: "防守" },
+                    { word: "them.", gloss: "它們" }
+                ]
+            }, {
+                text: "Yet Chen She, with only a few hundred scattered conscripts and disorderly troops, raised his arm and cried out in defiance.",
+                words: [
+                    { word: "Yet", gloss: "然而" },
+                    { word: "Chen", gloss: "陳" },
+                    { word: "She,", gloss: "涉" },
+                    { word: "with", gloss: "用" },
+                    { word: "only", gloss: "僅僅" },
+                    { word: "a", gloss: "一個" },
+                    { word: "few", gloss: "少數" },
+                    { word: "hundred", gloss: "百" },
+                    { word: "scattered", gloss: "分散的" },
+                    { word: "conscripts", gloss: "戍卒" },
+                    { word: "and", gloss: "和" },
+                    { word: "disorderly", gloss: "混亂的" },
+                    { word: "troops,", gloss: "軍隊" },
+                    { word: "raised", gloss: "舉起" },
+                    { word: "his", gloss: "他的" },
+                    { word: "arm", gloss: "手臂" },
+                    { word: "and", gloss: "並且" },
+                    { word: "cried", gloss: "呼喊" },
+                    { word: "out", gloss: "發出" },
+                    { word: "in", gloss: "以" },
+                    { word: "defiance.", gloss: "反抗" }
+                ]
+            }, {
+                text: "He did not use bows or halberds but wielded hoes and sticks, eating from house to house as he marched across the land at will.",
+                words: [
+                    { word: "He", gloss: "他" },
+                    { word: "did", gloss: "（助動詞）" },
+                    { word: "not", gloss: "不" },
+                    { word: "use", gloss: "使用" },
+                    { word: "bows", gloss: "弓" },
+                    { word: "or", gloss: "或" },
+                    { word: "halberds", gloss: "戟" },
+                    { word: "but", gloss: "而是" },
+                    { word: "wielded", gloss: "揮舞" },
+                    { word: "hoes", gloss: "鉏" },
+                    { word: "and", gloss: "和" },
+                    { word: "sticks,", gloss: "木棍" },
+                    { word: "eating", gloss: "吃" },
+                    { word: "from", gloss: "從" },
+                    { word: "house", gloss: "房屋" },
+                    { word: "to", gloss: "到" },
+                    { word: "house", gloss: "房屋" },
+                    { word: "as", gloss: "當" },
+                    { word: "he", gloss: "他" },
+                    { word: "marched", gloss: "行軍" },
+                    { word: "across", gloss: "穿越" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "land", gloss: "土地" },
+                    { word: "at", gloss: "隨意" },
+                    { word: "will.", gloss: "意願" }
+                ]
+            }, {
+                text: "The people of Qin failed to defend their natural barriers, did not close the passes and bridges, did not raise their long halberds for attack, nor did they fire their powerful crossbows.",
+                words: [
+                    { word: "The", gloss: "定冠詞" },
+                    { word: "people", gloss: "人民" },
+                    { word: "of", gloss: "……的" },
+                    { word: "Qin", gloss: "秦" },
+                    { word: "failed", gloss: "失敗" },
+                    { word: "to", gloss: "去" },
+                    { word: "defend", gloss: "防守" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "natural", gloss: "天然的" },
+                    { word: "barriers,", gloss: "屏障" },
+                    { word: "did", gloss: "（助動詞）" },
+                    { word: "not", gloss: "不" },
+                    { word: "close", gloss: "關閉" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "passes", gloss: "關隘" },
+                    { word: "and", gloss: "和" },
+                    { word: "bridges,", gloss: "橋樑" },
+                    { word: "did", gloss: "（助動詞）" },
+                    { word: "not", gloss: "不" },
+                    { word: "raise", gloss: "舉起" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "long", gloss: "長的" },
+                    { word: "halberds", gloss: "戟" },
+                    { word: "for", gloss: "為了" },
+                    { word: "attack,", gloss: "攻擊" },
+                    { word: "nor", gloss: "也不" },
+                    { word: "did", gloss: "（助動詞）" },
+                    { word: "they", gloss: "他們" },
+                    { word: "fire", gloss: "發射" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "powerful", gloss: "強勁的" },
+                    { word: "crossbows.", gloss: "弩" }
+                ]
+            }, {
+                text: "The Chu forces advanced deep into Qin territory and fought at Hongmen Pass without encountering even the slightest difficulty in crossing defenses.",
+                words: [
+                    { word: "The", gloss: "定冠詞" },
+                    { word: "Chu", gloss: "楚" },
+                    { word: "forces", gloss: "軍隊" },
+                    { word: "advanced", gloss: "前進" },
+                    { word: "deep", gloss: "深入的" },
+                    { word: "into", gloss: "進入" },
+                    { word: "Qin", gloss: "秦" },
+                    { word: "territory", gloss: "領土" },
+                    { word: "and", gloss: "並" },
+                    { word: "fought", gloss: "作戰" },
+                    { word: "at", gloss: "在" },
+                    { word: "Hongmen", gloss: "鴻門" },
+                    { word: "Pass", gloss: "關" },
+                    { word: "without", gloss: "沒有" },
+                    { word: "encountering", gloss: "遭遇" },
+                    { word: "even", gloss: "甚至" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "slightest", gloss: "最小的" },
+                    { word: "difficulty", gloss: "困難" },
+                    { word: "in", gloss: "在" },
+                    { word: "crossing", gloss: "穿越" },
+                    { word: "defenses.", gloss: "防禦" }
+                ]
+            }, {
+                text: "At that time, great turmoil erupted east of Mount Hangu; feudal lords rose up together and ambitious men declared themselves rulers.",
+                words: [
+                    { word: "At", gloss: "在" },
+                    { word: "that", gloss: "那個" },
+                    { word: "time,", gloss: "時候" },
+                    { word: "great", gloss: "巨大的" },
+                    { word: "turmoil", gloss: "動盪" },
+                    { word: "erupted", gloss: "爆發" },
+                    { word: "east", gloss: "東部" },
+                    { word: "of", gloss: "……的" },
+                    { word: "Mount", gloss: "山" },
+                    { word: "Hangu;", gloss: "函谷關" },
+                    { word: "feudal", gloss: "封建的" },
+                    { word: "lords", gloss: "諸侯" },
+                    { word: "rose", gloss: "崛起" },
+                    { word: "up", gloss: "起來" },
+                    { word: "together", gloss: "一起" },
+                    { word: "and", gloss: "並且" },
+                    { word: "ambitious", gloss: "有抱負的" },
+                    { word: "men", gloss: "人" },
+                    { word: "declared", gloss: "宣稱" },
+                    { word: "themselves", gloss: "他們自己" },
+                    { word: "rulers.", gloss: "統治者" }
+                ]
+            }, {
+                text: "Qin sent Zhang Han to lead an eastern campaign, but Zhang Han used his entire army as leverage in negotiations with the enemy outside the capital and plotted against his sovereign.",
+                words: [
+                    { word: "Qin", gloss: "秦" },
+                    { word: "sent", gloss: "派遣" },
+                    { word: "Zhang", gloss: "章" },
+                    { word: "Han", gloss: "邯" },
+                    { word: "to", gloss: "去" },
+                    { word: "lead", gloss: "率領" },
+                    { word: "an", gloss: "一次" },
+                    { word: "eastern", gloss: "東方的" },
+                    { word: "campaign,", gloss: "征戰" },
+                    { word: "but", gloss: "但是" },
+                    { word: "Zhang", gloss: "章" },
+                    { word: "Han", gloss: "邯" },
+                    { word: "used", gloss: "使用" },
+                    { word: "his", gloss: "他的" },
+                    { word: "entire", gloss: "整個" },
+                    { word: "army", gloss: "軍隊" },
+                    { word: "as", gloss: "作為" },
+                    { word: "leverage", gloss: "籌碼" },
+                    { word: "in", gloss: "在" },
+                    { word: "negotiations", gloss: "談判" },
+                    { word: "with", gloss: "與" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "enemy", gloss: "敵人" },
+                    { word: "outside", gloss: "外部" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "capital", gloss: "都城" },
+                    { word: "and", gloss: "並" },
+                    { word: "plotted", gloss: "密謀" },
+                    { word: "against", gloss: "反對" },
+                    { word: "his", gloss: "他的" },
+                    { word: "sovereign.", gloss: "君主" }
+                ]
+            }, {
+                text: "The lack of loyalty among Qin's ministers is clearly evident from this incident.",
+                words: [
+                    { word: "The", gloss: "定冠詞" },
+                    { word: "lack", gloss: "缺乏" },
+                    { word: "of", gloss: "……的" },
+                    { word: "loyalty", gloss: "忠誠" },
+                    { word: "among", gloss: "在……之中" },
+                    { word: "Qin's", gloss: "秦國的" },
+                    { word: "ministers", gloss: "大臣" },
+                    { word: "is", gloss: "是" },
+                    { word: "clearly", gloss: "清楚地" },
+                    { word: "evident", gloss: "明顯的" },
+                    { word: "from", gloss: "從" },
+                    { word: "this", gloss: "這個" },
+                    { word: "incident.", gloss: "事件" }
+                ]
+            }, {
+                text: "When Gongzi Ying took the throne, he still failed to realize the truth.",
+                words: [
+                    { word: "When", gloss: "當" },
+                    { word: "Gongzi", gloss: "公子" },
+                    { word: "Ying", gloss: "嬰" },
+                    { word: "took", gloss: "登上" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "throne,", gloss: "王位" },
+                    { word: "he", gloss: "他" },
+                    { word: "still", gloss: "仍然" },
+                    { word: "failed", gloss: "未能" },
+                    { word: "to", gloss: "去" },
+                    { word: "realize", gloss: "意識到" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "truth.", gloss: "真相" }
+                ]
+            }, {
+                text: "Had Gongzi Ying possessed even mediocre leadership and merely had competent advisors, Qin's territory could have been preserved intact despite the chaos in the east, and the ancestral sacrifices would not have come to an end.",
+                words: [
+                    { word: "Had", gloss: "如果" },
+                    { word: "Gongzi", gloss: "公子" },
+                    { word: "Ying", gloss: "嬰" },
+                    { word: "possessed", gloss: "擁有" },
+                    { word: "even", gloss: "即使" },
+                    { word: "mediocre", gloss: "平庸的" },
+                    { word: "leadership", gloss: "領導能力" },
+                    { word: "and", gloss: "並且" },
+                    { word: "merely", gloss: "僅僅" },
+                    { word: "had", gloss: "有" },
+                    { word: "competent", gloss: "能幹的" },
+                    { word: "advisors,", gloss: "顧問" },
+                    { word: "Qin's", gloss: "秦國的" },
+                    { word: "territory", gloss: "領土" },
+                    { word: "could", gloss: "能夠" },
+                    { word: "have", gloss: "已經" },
+                    { word: "been", gloss: "被" },
+                    { word: "preserved", gloss: "保存" },
+                    { word: "intact", gloss: "完整的" },
+                    { word: "despite", gloss: "儘管" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "chaos", gloss: "混亂" },
+                    { word: "in", gloss: "在" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "east,", gloss: "東方" },
+                    { word: "and", gloss: "並且" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "ancestral", gloss: "祖先的" },
+                    { word: "sacrifices", gloss: "祭祀" },
+                    { word: "would", gloss: "將會" },
+                    { word: "not", gloss: "不" },
+                    { word: "have", gloss: "已經" },
+                    { word: "come", gloss: "到來" },
+                    { word: "to", gloss: "到" },
+                    { word: "an", gloss: "一個" },
+                    { word: "end.", gloss: "終結" }
+                ]
+            }];
+
+            // ==================== 渲染中文 ====================
+            const chineseBlock = document.getElementById('chineseBlock');
+            chineseData.forEach(item => {
+                if (item.py === '') {
+                    const span = document.createElement('span');
+                    span.textContent = item.char;
+                    chineseBlock.appendChild(span);
+                } else {
+                    const ruby = document.createElement('ruby');
+                    ruby.textContent = item.char;
+                    const rt = document.createElement('rt');
+                    rt.textContent = item.py;
+                    ruby.appendChild(rt);
+                    chineseBlock.appendChild(ruby);
+                }
+            });
+
+            // ==================== 渲染英文 ====================
+            const englishBlock = document.getElementById('englishBlock');
+
+            englishSentences.forEach((sentenceObj, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'sentence-wrapper';
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'sentence-text';
+
+                sentenceObj.words.forEach(wordObj => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'en-word';
+                    wordSpan.textContent = wordObj.word;
+
+                    const tooltip = document.createElement('span');
+                    tooltip.className = 'word-tooltip';
+                    tooltip.textContent = wordObj.gloss;
+                    wordSpan.appendChild(tooltip);
+
+                    wordSpan.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        speakWord(wordObj.word);
+                    });
+
+                    textSpan.appendChild(wordSpan);
+                    textSpan.appendChild(document.createTextNode(' '));
+                });
+
+                if (textSpan.lastChild && textSpan.lastChild.nodeType === Node.TEXT_NODE) {
+                    textSpan.lastChild.textContent = textSpan.lastChild.textContent.replace(/\s+$/, ' ');
+                }
+
+                wrapper.appendChild(textSpan);
+
+                const btn = document.createElement('button');
+                btn.className = 'btn-speak-sentence';
+                btn.innerHTML = '▶️';
+                btn.title = '朗讀整句';
+                btn.setAttribute('aria-label', '朗讀句子 ' + (idx + 1));
+
+                btn.addEventListener('click', () => {
+                    speakSentence(sentenceObj.text, btn);
+                });
+
+                wrapper.appendChild(btn);
+                englishBlock.appendChild(wrapper);
+            });
+
+            // ==================== 语音合成函数 ====================
+            function getVoice() {
+                return new Promise((resolve) => {
+                    const voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        const enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) ||
+                            voices.find(v => v.lang.startsWith('en-US')) ||
+                            voices.find(v => v.lang.startsWith('en-GB')) ||
+                            voices.find(v => v.lang.startsWith('en'));
+                        resolve(enVoice || voices[0]);
+                    } else {
+                        speechSynthesis.onvoiceschanged = () => {
+                            const newVoices = speechSynthesis.getVoices();
+                            const enVoice = newVoices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) ||
+                                newVoices.find(v => v.lang.startsWith('en-US')) ||
+                                newVoices.find(v => v.lang.startsWith('en-GB')) ||
+                                newVoices.find(v => v.lang.startsWith('en'));
+                            resolve(enVoice || newVoices[0]);
+                        };
+                    }
+                });
+            }
+
+            async function speakWord(word) {
+                speechSynthesis.cancel();
+                const voice = await getVoice();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.voice = voice;
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                speechSynthesis.speak(utterance);
+            }
+
+            async function speakSentence(text, btnElement) {
+                speechSynthesis.cancel();
+                const voice = await getVoice();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.voice = voice;
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+
+                if (btnElement) {
+                    btnElement.classList.add('speaking');
+                    utterance.onend = () => {
+                        btnElement.classList.remove('speaking');
+                    };
+                    utterance.onerror = () => {
+                        btnElement.classList.remove('speaking');
+                    };
+                }
+
+                speechSynthesis.speak(utterance);
+            }
+
+            speechSynthesis.getVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = () => {
+                    speechSynthesis.getVoices();
+                };
+            }
+
+            console.log('✅ 互动文本已更新：汉字字体放大一倍，英文字体放大50%，拼音悬停位置上移');
+        })();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>秦地互动文本 · 大字版</title>
+    <style>
+        :root {
+            --bg: #f5f0e8;
+            --text: #2c2416;
+            --accent: #8b4513;
+            --hover-bg: #fff8e7;
+            --border: #c4a97d;
+            --sentence-bg: #fdfaf3;
+            --ruby-color: #a0522d;
+            --btn-bg: #8b4513;
+            --btn-hover: #6b3410;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+            --tooltip-bg: #2c2416;
+            --tooltip-text: #f5efe0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f0e8 0%, #ede4d3 30%, #f3ece0 60%, #e8ddc8 100%);
+            font-family: "Noto Serif SC", "Songti SC", "SimSun", "STSong", "华文宋体", "Georgia", "Times New Roman", serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem 4rem;
+            color: var(--text);
+            line-height: 2.2;
+        }
+
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(255, 252, 245, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            box-shadow: var(--card-shadow), 0 0 0 1px rgba(180, 140, 100, 0.15);
+            border: 1px solid rgba(180, 140, 100, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #5c3a1e;
+            margin-bottom: 0.3rem;
+            letter-spacing: 0.08em;
+            font-family: "Noto Serif SC", "STSong", serif;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 0.95rem;
+            color: #8b7355;
+            margin-bottom: 2rem;
+            letter-spacing: 0.05em;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.8rem;
+            font-size: 0.85rem;
+            color: #7a6248;
+        }
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: rgba(255, 248, 235, 0.6);
+            padding: 0.35rem 0.9rem;
+            border-radius: 20px;
+            border: 1px solid #dcc8a8;
+        }
+        .legend .icon {
+            font-style: normal;
+            font-size: 1rem;
+        }
+        .legend .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 2px;
+        }
+        .dot.chinese {
+            background: #b87333;
+        }
+        .dot.english {
+            background: #3a6b8c;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px dashed #d4bfa0;
+            margin: 1.5rem 0;
+            opacity: 0.7;
+        }
+        .divider.thin {
+            margin: 1rem 0;
+            border-top-style: dotted;
+            opacity: 0.5;
+        }
+
+        .section-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #8b6914;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.8rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, #c4a97d, transparent);
+        }
+
+        /* ---------- 中文段落（带拼音）· 字体放大一倍 ---------- */
+        .chinese-block {
+            background: rgba(255, 250, 240, 0.7);
+            border-radius: 16px;
+            padding: 2rem 1.8rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(180, 140, 100, 0.25);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+            font-size: 2.5rem;          /* 原1.25rem → 放大一倍 (2.5rem) */
+            line-height: 3.6;
+            letter-spacing: 0.03em;
+            text-align: justify;
+        }
+
+        /* ruby 悬停显示拼音：位置提高一倍 (bottom 从默认调高) */
+        .chinese-block ruby {
+            ruby-align: center;
+            cursor: default;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .chinese-block ruby rt {
+            font-size: 0.7rem;           /* 拼音字体适当放大 */
+            font-weight: 400;
+            color: var(--ruby-color);
+            letter-spacing: 0;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            transform: translateY(4px);
+            font-family: "Noto Serif SC", "STKaiti", "KaiTi", "楷体", serif;
+            user-select: none;
+            pointer-events: none;
+            /* 位置提高一倍：原默认在底部，现向上偏移 */
+            position: absolute;
+            bottom: 100%;               /* 从底部向上对齐 */
+            left: 50%;
+            transform: translateX(-50%) translateY(10px); /* 初始隐藏向下偏移 */
+            white-space: nowrap;
+            background: rgba(255, 248, 235, 0.85);
+            padding: 0.1rem 0.4rem;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            border: 1px solid #e0cfb8;
+            font-size: 0.75rem;
+        }
+        .chinese-block ruby:hover rt {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);  /* 悬停时上移显示 */
+        }
+        .chinese-block ruby:hover {
+            background: rgba(210, 160, 100, 0.12);
+            border-radius: 4px;
+            padding: 0 2px;
+        }
+
+        /* ---------- 英文段落 · 字体放大50% ---------- */
+        .english-block {
+            background: rgba(245, 248, 252, 0.55);
+            border-radius: 16px;
+            padding: 2rem 1.8rem;
+            border: 1px solid rgba(120, 150, 180, 0.2);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.02);
+        }
+
+        .sentence-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-bottom: 1.2rem;
+            padding: 0.8rem 1rem;
+            border-radius: 12px;
+            background: var(--sentence-bg);
+            border: 1px solid rgba(180, 160, 130, 0.15);
+            transition: background 0.3s, box-shadow 0.3s;
+            flex-wrap: wrap;
+        }
+        .sentence-wrapper:hover {
+            background: #fffdf7;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        .sentence-wrapper:last-child {
+            margin-bottom: 0;
+        }
+
+        .sentence-text {
+            flex: 1;
+            font-size: 1.575rem;        /* 原1.05rem → 放大50% (1.575rem) */
+            line-height: 2.4;
+            color: #3b3b3b;
+            min-width: 200px;
+        }
+
+        /* 英文单词可点击朗读 + 悬停显示释义 */
+        .en-word {
+            display: inline;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 3px;
+            padding: 1px 3px;
+            margin: 0 1px;
+            color: #2c3e50;
+            position: relative;
+            white-space: nowrap;
+        }
+        .en-word:hover {
+            background: #d4e6f9;
+            color: #1a3a5c;
+            outline: 1px solid #8bb8d6;
+            outline-offset: 1px;
+        }
+        .en-word:active {
+            background: #b8d4f0;
+            transform: scale(0.97);
+        }
+        .en-word::after {
+            content: '🔊';
+            font-size: 0.65rem;
+            opacity: 0;
+            margin-left: 2px;
+            transition: opacity 0.2s;
+            vertical-align: super;
+            pointer-events: none;
+        }
+        .en-word:hover::after {
+            opacity: 0.7;
+        }
+
+        /* 英文单词释义 tooltip */
+        .en-word .word-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--tooltip-bg);
+            color: var(--tooltip-text);
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            font-size: 0.9rem;          /* 稍大 */
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            transform: translateX(-50%) translateY(4px);
+            z-index: 10;
+            font-family: "Noto Serif SC", "STKaiti", "KaiTi", "楷体", serif;
+            font-weight: 400;
+            letter-spacing: 0.03em;
+        }
+        .en-word .word-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--tooltip-bg) transparent transparent transparent;
+        }
+        .en-word:hover .word-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* 句子朗读按钮 */
+        .btn-speak-sentence {
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--btn-bg);
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            align-self: center;
+            position: relative;
+        }
+        .btn-speak-sentence:hover {
+            background: var(--btn-hover);
+            transform: scale(1.08);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+        }
+        .btn-speak-sentence:active {
+            transform: scale(0.94);
+            transition: transform 0.1s;
+        }
+        .btn-speak-sentence.speaking {
+            animation: pulse 0.6s infinite alternate;
+            background: #c0392b;
+        }
+        @keyframes pulse {
+            from {
+                box-shadow: 0 0 0 0 rgba(180, 60, 40, 0.6);
+            }
+            to {
+                box-shadow: 0 0 0 14px rgba(180, 60, 40, 0);
+            }
+        }
+
+        .tooltip-hint {
+            font-size: 0.85rem;
+            color: #9b8b7a;
+            text-align: center;
+            margin-top: 0.8rem;
+            font-style: italic;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem 1rem;
+            }
+            .chinese-block {
+                font-size: 1.8rem;      /* 移动端适当缩小，但保持放大比例 */
+                padding: 1.5rem 1rem;
+                line-height: 3.0;
+            }
+            .chinese-block ruby rt {
+                font-size: 0.6rem;
+            }
+            .sentence-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-speak-sentence {
+                align-self: flex-end;
+                margin-top: 0.4rem;
+            }
+            .sentence-text {
+                font-size: 1.2rem;       /* 移动端放大50% */
+            }
+            .en-word .word-tooltip {
+                font-size: 0.7rem;
+                padding: 0.25rem 0.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .chinese-block {
+                font-size: 1.5rem;
+                line-height: 2.6;
+                padding: 1rem 0.8rem;
+            }
+            h1 {
+                font-size: 1.4rem;
+            }
+            .sentence-text {
+                font-size: 1.0rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📜 秦地 · 興亡之鑑</h1>
+        <p class="subtitle">—— 文言原文與英譯對照 ——</p>
+
+        <div class="legend">
+            <span><span class="dot chinese"></span> 懸停漢字顯示拼音</span>
+            <span><span class="dot english"></span> 懸停英文單詞顯示釋義</span>
+            <span><span class="icon">🔊</span> 點擊單詞朗讀</span>
+            <span><span class="icon">▶️</span> 點擊按鈕朗讀整句</span>
+        </div>
+
+        <hr class="divider">
+
+        <div class="section-label">📖 文言原文</div>
+        <div class="chinese-block" id="chineseBlock">
+            <!-- 将由JavaScript动态生成 -->
+        </div>
+
+        <hr class="divider">
+
+        <div class="section-label">🌐 英文翻譯 / English Translation</div>
+        <div class="english-block" id="englishBlock">
+            <!-- 将由JavaScript动态生成 -->
+        </div>
+
+        <p class="tooltip-hint">
+            💡 懸停漢字查看拼音 · 懸停英文單詞查看釋義 · 點擊單詞或 ▶️ 按鈕收聽發音
+        </p>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== 中文数据（新文本：秦王足己不问……） ====================
+            const chineseData = [
+                { char: '秦', py: 'qín' }, { char: '王', py: 'wáng' }, { char: '足', py: 'zú' },
+                { char: '己', py: 'jǐ' }, { char: '不', py: 'bù' }, { char: '問', py: 'wèn' },
+                { char: '，', py: '' }, { char: '遂', py: 'suì' }, { char: '過', py: 'guò' },
+                { char: '而', py: 'ér' }, { char: '不', py: 'bù' }, { char: '變', py: 'biàn' },
+                { char: '。', py: '' }, { char: '二', py: 'èr' }, { char: '世', py: 'shì' },
+                { char: '受', py: 'shòu' }, { char: '之', py: 'zhī' }, { char: '，', py: '' },
+                { char: '因', py: 'yīn' }, { char: '而', py: 'ér' }, { char: '不', py: 'bù' },
+                { char: '改', py: 'gǎi' }, { char: '，', py: '' }, { char: '暴', py: 'bào' },
+                { char: '虐', py: 'nüè' }, { char: '以', py: 'yǐ' }, { char: '重', py: 'zhòng' },
+                { char: '禍', py: 'huò' }, { char: '。', py: '' }, { char: '子', py: 'zǐ' },
+                { char: '嬰', py: 'yīng' }, { char: '孤', py: 'gū' }, { char: '立', py: 'lì' },
+                { char: '無', py: 'wú' }, { char: '親', py: 'qīn' }, { char: '，', py: '' },
+                { char: '危', py: 'wēi' }, { char: '弱', py: 'ruò' }, { char: '無', py: 'wú' },
+                { char: '輔', py: 'fǔ' }, { char: '。', py: '' }, { char: '三', py: 'sān' },
+                { char: '主', py: 'zhǔ' }, { char: '惑', py: 'huò' }, { char: '而', py: 'ér' },
+                { char: '終', py: 'zhōng' }, { char: '身', py: 'shēn' }, { char: '不', py: 'bù' },
+                { char: '悟', py: 'wù' }, { char: '，', py: '' }, { char: '亡', py: 'wáng' },
+                { char: '，', py: '' }, { char: '不', py: 'bù' }, { char: '亦', py: 'yì' },
+                { char: '宜', py: 'yí' }, { char: '乎', py: 'hū' }, { char: '？', py: '' },
+                { char: '當', py: 'dāng' }, { char: '此', py: 'cǐ' }, { char: '時', py: 'shí' },
+                { char: '也', py: 'yě' }, { char: '，', py: '' }, { char: '世', py: 'shì' },
+                { char: '非', py: 'fēi' }, { char: '無', py: 'wú' }, { char: '深', py: 'shēn' },
+                { char: '慮', py: 'lǜ' }, { char: '知', py: 'zhī' }, { char: '化', py: 'huà' },
+                { char: '之', py: 'zhī' }, { char: '士', py: 'shì' }, { char: '也', py: 'yě' },
+                { char: '，', py: '' }, { char: '然', py: 'rán' }, { char: '所', py: 'suǒ' },
+                { char: '以', py: 'yǐ' }, { char: '不', py: 'bù' }, { char: '敢', py: 'gǎn' },
+                { char: '盡', py: 'jìn' }, { char: '忠', py: 'zhōng' }, { char: '拂', py: 'fú' },
+                { char: '過', py: 'guò' }, { char: '者', py: 'zhě' }, { char: '，', py: '' },
+                { char: '秦', py: 'qín' }, { char: '俗', py: 'sú' }, { char: '多', py: 'duō' },
+                { char: '忌', py: 'jì' }, { char: '諱', py: 'huì' }, { char: '之', py: 'zhī' },
+                { char: '禁', py: 'jìn' }, { char: '，', py: '' }, { char: '忠', py: 'zhōng' },
+                { char: '言', py: 'yán' }, { char: '未', py: 'wèi' }, { char: '卒', py: 'zú' },
+                { char: '於', py: 'yú' }, { char: '口', py: 'kǒu' }, { char: '而', py: 'ér' },
+                { char: '身', py: 'shēn' }, { char: '為', py: 'wéi' }, { char: '戮', py: 'lù' },
+                { char: '沒', py: 'mò' }, { char: '矣', py: 'yǐ' }, { char: '。', py: '' },
+                { char: '故', py: 'gù' }, { char: '使', py: 'shǐ' }, { char: '天', py: 'tiān' },
+                { char: '下', py: 'xià' }, { char: '之', py: 'zhī' }, { char: '士', py: 'shì' },
+                { char: '，', py: '' }, { char: '傾', py: 'qīng' }, { char: '耳', py: 'ěr' },
+                { char: '而', py: 'ér' }, { char: '聽', py: 'tīng' }, { char: '，', py: '' },
+                { char: '重', py: 'chóng' }, { char: '足', py: 'zú' }, { char: '而', py: 'ér' },
+                { char: '立', py: 'lì' }, { char: '，', py: '' }, { char: '拑', py: 'qián' },
+                { char: '口', py: 'kǒu' }, { char: '而', py: 'ér' }, { char: '不', py: 'bù' },
+                { char: '言', py: 'yán' }, { char: '。', py: '' }, { char: '是', py: 'shì' },
+                { char: '以', py: 'yǐ' }, { char: '三', py: 'sān' }, { char: '主', py: 'zhǔ' },
+                { char: '失', py: 'shī' }, { char: '道', py: 'dào' }, { char: '，', py: '' },
+                { char: '忠', py: 'zhōng' }, { char: '臣', py: 'chén' }, { char: '不', py: 'bù' },
+                { char: '敢', py: 'gǎn' }, { char: '諫', py: 'jiàn' }, { char: '，', py: '' },
+                { char: '智', py: 'zhì' }, { char: '士', py: 'shì' }, { char: '不', py: 'bù' },
+                { char: '敢', py: 'gǎn' }, { char: '謀', py: 'móu' }, { char: '，', py: '' },
+                { char: '天', py: 'tiān' }, { char: '下', py: 'xià' }, { char: '已', py: 'yǐ' },
+                { char: '亂', py: 'luàn' }, { char: '，', py: '' }, { char: '姦', py: 'jiān' },
+                { char: '不', py: 'bù' }, { char: '上', py: 'shàng' }, { char: '聞', py: 'wén' },
+                { char: '，', py: '' }, { char: '豈', py: 'qǐ' }, { char: '不', py: 'bù' },
+                { char: '哀', py: 'āi' }, { char: '哉', py: 'zāi' }, { char: '！', py: '' },
+                { char: '先', py: 'xiān' }, { char: '王', py: 'wáng' }, { char: '知', py: 'zhī' },
+                { char: '雍', py: 'yōng' }, { char: '蔽', py: 'bì' }, { char: '之', py: 'zhī' },
+                { char: '傷', py: 'shāng' }, { char: '國', py: 'guó' }, { char: '也', py: 'yě' },
+                { char: '，', py: '' }, { char: '故', py: 'gù' }, { char: '置', py: 'zhì' },
+                { char: '公', py: 'gōng' }, { char: '卿', py: 'qīng' }, { char: '大', py: 'dà' },
+                { char: '夫', py: 'fū' }, { char: '士', py: 'shì' }, { char: '，', py: '' },
+                { char: '以', py: 'yǐ' }, { char: '飾', py: 'shì' }, { char: '法', py: 'fǎ' },
+                { char: '設', py: 'shè' }, { char: '刑', py: 'xíng' }, { char: '，', py: '' },
+                { char: '而', py: 'ér' }, { char: '天', py: 'tiān' }, { char: '下', py: 'xià' },
+                { char: '治', py: 'zhì' }, { char: '。', py: '' }, { char: '其', py: 'qí' },
+                { char: '彊', py: 'qiáng' }, { char: '也', py: 'yě' }, { char: '，', py: '' },
+                { char: '禁', py: 'jìn' }, { char: '暴', py: 'bào' }, { char: '誅', py: 'zhū' },
+                { char: '亂', py: 'luàn' }, { char: '而', py: 'ér' }, { char: '天', py: 'tiān' },
+                { char: '下', py: 'xià' }, { char: '服', py: 'fú' }, { char: '。', py: '' },
+                { char: '其', py: 'qí' }, { char: '弱', py: 'ruò' }, { char: '也', py: 'yě' },
+                { char: '，', py: '' }, { char: '五', py: 'wǔ' }, { char: '伯', py: 'bà' },
+                { char: '征', py: 'zhēng' }, { char: '而', py: 'ér' }, { char: '諸', py: 'zhū' },
+                { char: '侯', py: 'hóu' }, { char: '從', py: 'cóng' }, { char: '。', py: '' },
+                { char: '其', py: 'qí' }, { char: '削', py: 'xuē' }, { char: '也', py: 'yě' },
+                { char: '，', py: '' }, { char: '內', py: 'nèi' }, { char: '守', py: 'shǒu' },
+                { char: '外', py: 'wài' }, { char: '附', py: 'fù' }, { char: '而', py: 'ér' },
+                { char: '社', py: 'shè' }, { char: '稷', py: 'jì' }, { char: '存', py: 'cún' },
+                { char: '。', py: '' }, { char: '故', py: 'gù' }, { char: '秦', py: 'qín' },
+                { char: '之', py: 'zhī' }, { char: '盛', py: 'shèng' }, { char: '也', py: 'yě' },
+                { char: '，', py: '' }, { char: '繁', py: 'fán' }, { char: '法', py: 'fǎ' },
+                { char: '嚴', py: 'yán' }, { char: '刑', py: 'xíng' }, { char: '而', py: 'ér' },
+                { char: '天', py: 'tiān' }, { char: '下', py: 'xià' }, { char: '振', py: 'zhèn' },
+                { char: '；', py: '' }, { char: '及', py: 'jí' }, { char: '其', py: 'qí' },
+                { char: '衰', py: 'shuāi' }, { char: '也', py: 'yě' }, { char: '，', py: '' },
+                { char: '百', py: 'bǎi' }, { char: '姓', py: 'xìng' }, { char: '怨', py: 'yuàn' },
+                { char: '望', py: 'wàng' }, { char: '而', py: 'ér' }, { char: '海', py: 'hǎi' },
+                { char: '內', py: 'nèi' }, { char: '畔', py: 'pàn' }, { char: '矣', py: 'yǐ' },
+                { char: '。', py: '' }, { char: '故', py: 'gù' }, { char: '周', py: 'zhōu' },
+                { char: '五', py: 'wǔ' }, { char: '序', py: 'xù' }, { char: '得', py: 'dé' },
+                { char: '其', py: 'qí' }, { char: '道', py: 'dào' }, { char: '，', py: '' },
+                { char: '而', py: 'ér' }, { char: '千', py: 'qiān' }, { char: '餘', py: 'yú' },
+                { char: '歲', py: 'suì' }, { char: '不', py: 'bù' }, { char: '絕', py: 'jué' },
+                { char: '。', py: '' }, { char: '秦', py: 'qín' }, { char: '本', py: 'běn' },
+                { char: '末', py: 'mò' }, { char: '并', py: 'bìng' }, { char: '失', py: 'shī' },
+                { char: '，', py: '' }, { char: '故', py: 'gù' }, { char: '不', py: 'bù' },
+                { char: '長', py: 'cháng' }, { char: '久', py: 'jiǔ' }, { char: '。', py: '' },
+                { char: '由', py: 'yóu' }, { char: '此', py: 'cǐ' }, { char: '觀', py: 'guān' },
+                { char: '之', py: 'zhī' }, { char: '，', py: '' }, { char: '安', py: 'ān' },
+                { char: '危', py: 'wēi' }, { char: '之', py: 'zhī' }, { char: '統', py: 'tǒng' },
+                { char: '相', py: 'xiāng' }, { char: '去', py: 'qù' }, { char: '遠', py: 'yuǎn' },
+                { char: '矣', py: 'yǐ' }, { char: '。', py: '' }, { char: '野', py: 'yě' },
+                { char: '諺', py: 'yàn' }, { char: '曰', py: 'yuē' }, { char: '「', py: '' },
+                { char: '前', py: 'qián' }, { char: '事', py: 'shì' }, { char: '之', py: 'zhī' },
+                { char: '不', py: 'bù' }, { char: '忘', py: 'wàng' }, { char: '，', py: '' },
+                { char: '後', py: 'hòu' }, { char: '事', py: 'shì' }, { char: '之', py: 'zhī' },
+                { char: '師', py: 'shī' }, { char: '也', py: 'yě' }, { char: '」', py: '' },
+                { char: '。', py: '' }, { char: '是', py: 'shì' }, { char: '以', py: 'yǐ' },
+                { char: '君', py: 'jūn' }, { char: '子', py: 'zǐ' }, { char: '為', py: 'wéi' },
+                { char: '國', py: 'guó' }, { char: '，', py: '' }, { char: '觀', py: 'guān' },
+                { char: '之', py: 'zhī' }, { char: '上', py: 'shàng' }, { char: '古', py: 'gǔ' },
+                { char: '，', py: '' }, { char: '驗', py: 'yàn' }, { char: '之', py: 'zhī' },
+                { char: '當', py: 'dāng' }, { char: '世', py: 'shì' }, { char: '，', py: '' },
+                { char: '參', py: 'cān' }, { char: '以', py: 'yǐ' }, { char: '人', py: 'rén' },
+                { char: '事', py: 'shì' }, { char: '，', py: '' }, { char: '察', py: 'chá' },
+                { char: '盛', py: 'shèng' }, { char: '衰', py: 'shuāi' }, { char: '之', py: 'zhī' },
+                { char: '理', py: 'lǐ' }, { char: '，', py: '' }, { char: '審', py: 'shěn' },
+                { char: '權', py: 'quán' }, { char: '勢', py: 'shì' }, { char: '之', py: 'zhī' },
+                { char: '宜', py: 'yí' }, { char: '，', py: '' }, { char: '去', py: 'qù' },
+                { char: '就', py: 'jiù' }, { char: '有', py: 'yǒu' }, { char: '序', py: 'xù' },
+                { char: '，', py: '' }, { char: '變', py: 'biàn' }, { char: '化', py: 'huà' },
+                { char: '有', py: 'yǒu' }, { char: '時', py: 'shí' }, { char: '，', py: '' },
+                { char: '故', py: 'gù' }, { char: '曠', py: 'kuàng' }, { char: '日', py: 'rì' },
+                { char: '長', py: 'cháng' }, { char: '久', py: 'jiǔ' }, { char: '而', py: 'ér' },
+                { char: '社', py: 'shè' }, { char: '稷', py: 'jì' }, { char: '安', py: 'ān' },
+                { char: '矣', py: 'yǐ' }, { char: '。', py: '' }
+            ];
+
+            // ==================== 英文数据（新文本） ====================
+            const englishSentences = [{
+                text: "The kings of Qin trusted only themselves and did not seek counsel, so they persisted in their mistakes without change.",
+                words: [
+                    { word: "The", gloss: "定冠詞" },
+                    { word: "kings", gloss: "國王" },
+                    { word: "of", gloss: "……的" },
+                    { word: "Qin", gloss: "秦" },
+                    { word: "trusted", gloss: "信任" },
+                    { word: "only", gloss: "僅僅" },
+                    { word: "themselves", gloss: "他們自己" },
+                    { word: "and", gloss: "和" },
+                    { word: "did", gloss: "（助動詞）" },
+                    { word: "not", gloss: "不" },
+                    { word: "seek", gloss: "尋求" },
+                    { word: "counsel,", gloss: "建議" },
+                    { word: "so", gloss: "所以" },
+                    { word: "they", gloss: "他們" },
+                    { word: "persisted", gloss: "堅持" },
+                    { word: "in", gloss: "在" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "mistakes", gloss: "錯誤" },
+                    { word: "without", gloss: "沒有" },
+                    { word: "change.", gloss: "改變" }
+                ]
+            }, {
+                text: "Emperor Er Shi inherited this situation and made no changes; he grew increasingly tyrannical and deepened the calamity.",
+                words: [
+                    { word: "Emperor", gloss: "皇帝" },
+                    { word: "Er", gloss: "二" },
+                    { word: "Shi", gloss: "世" },
+                    { word: "inherited", gloss: "繼承" },
+                    { word: "this", gloss: "這個" },
+                    { word: "situation", gloss: "局面" },
+                    { word: "and", gloss: "並且" },
+                    { word: "made", gloss: "做出" },
+                    { word: "no", gloss: "沒有" },
+                    { word: "changes;", gloss: "改變" },
+                    { word: "he", gloss: "他" },
+                    { word: "grew", gloss: "變得" },
+                    { word: "increasingly", gloss: "日益" },
+                    { word: "tyrannical", gloss: "暴虐的" },
+                    { word: "and", gloss: "並且" },
+                    { word: "deepened", gloss: "加深" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "calamity.", gloss: "災難" }
+                ]
+            }, {
+                text: "Gongzi Ying was isolated without allies, weak and unsupported.",
+                words: [
+                    { word: "Gongzi", gloss: "公子" },
+                    { word: "Ying", gloss: "嬰" },
+                    { word: "was", gloss: "是" },
+                    { word: "isolated", gloss: "孤立" },
+                    { word: "without", gloss: "沒有" },
+                    { word: "allies,", gloss: "盟友" },
+                    { word: "weak", gloss: "軟弱" },
+                    { word: "and", gloss: "和" },
+                    { word: "unsupported.", gloss: "無援" }
+                ]
+            }, {
+                text: "Three rulers were deluded and never realized their mistakes until the end; thus, their downfall was entirely to be expected!",
+                words: [
+                    { word: "Three", gloss: "三個" },
+                    { word: "rulers", gloss: "統治者" },
+                    { word: "were", gloss: "是" },
+                    { word: "deluded", gloss: "迷惑" },
+                    { word: "and", gloss: "並且" },
+                    { word: "never", gloss: "從未" },
+                    { word: "realized", gloss: "意識到" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "mistakes", gloss: "錯誤" },
+                    { word: "until", gloss: "直到" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "end;", gloss: "終點" },
+                    { word: "thus,", gloss: "因此" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "downfall", gloss: "滅亡" },
+                    { word: "was", gloss: "是" },
+                    { word: "entirely", gloss: "完全" },
+                    { word: "to", gloss: "去" },
+                    { word: "be", gloss: "被" },
+                    { word: "expected!", gloss: "預期" }
+                ]
+            }, {
+                text: "At that time, the world was not lacking in wise and enlightened men who understood how to bring about change.",
+                words: [
+                    { word: "At", gloss: "在" },
+                    { word: "that", gloss: "那個" },
+                    { word: "time,", gloss: "時候" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "world", gloss: "天下" },
+                    { word: "was", gloss: "是" },
+                    { word: "not", gloss: "不" },
+                    { word: "lacking", gloss: "缺乏" },
+                    { word: "in", gloss: "在" },
+                    { word: "wise", gloss: "賢明的" },
+                    { word: "and", gloss: "和" },
+                    { word: "enlightened", gloss: "有見識的" },
+                    { word: "men", gloss: "人" },
+                    { word: "who", gloss: "（關係代詞）" },
+                    { word: "understood", gloss: "理解" },
+                    { word: "how", gloss: "如何" },
+                    { word: "to", gloss: "去" },
+                    { word: "bring", gloss: "帶來" },
+                    { word: "about", gloss: "關於" },
+                    { word: "change.", gloss: "變革" }
+                ]
+            }, {
+                text: "Yet they dared not offer complete loyalty or correct their rulers' mistakes because Qin's customs were filled with prohibitions against criticism; before a loyal word could leave one's mouth, he would already be executed and his name erased.",
+                words: [
+                    { word: "Yet", gloss: "然而" },
+                    { word: "they", gloss: "他們" },
+                    { word: "dared", gloss: "敢" },
+                    { word: "not", gloss: "不" },
+                    { word: "offer", gloss: "提供" },
+                    { word: "complete", gloss: "完全的" },
+                    { word: "loyalty", gloss: "忠誠" },
+                    { word: "or", gloss: "或" },
+                    { word: "correct", gloss: "糾正" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "rulers'", gloss: "統治者的" },
+                    { word: "mistakes", gloss: "錯誤" },
+                    { word: "because", gloss: "因為" },
+                    { word: "Qin's", gloss: "秦的" },
+                    { word: "customs", gloss: "習俗" },
+                    { word: "were", gloss: "是" },
+                    { word: "filled", gloss: "充滿" },
+                    { word: "with", gloss: "以" },
+                    { word: "prohibitions", gloss: "禁令" },
+                    { word: "against", gloss: "反對" },
+                    { word: "criticism;", gloss: "批評" },
+                    { word: "before", gloss: "在……之前" },
+                    { word: "a", gloss: "一個" },
+                    { word: "loyal", gloss: "忠誠的" },
+                    { word: "word", gloss: "話" },
+                    { word: "could", gloss: "能夠" },
+                    { word: "leave", gloss: "離開" },
+                    { word: "one's", gloss: "某人的" },
+                    { word: "mouth,", gloss: "嘴巴" },
+                    { word: "he", gloss: "他" },
+                    { word: "would", gloss: "將會" },
+                    { word: "already", gloss: "已經" },
+                    { word: "be", gloss: "被" },
+                    { word: "executed", gloss: "處決" },
+                    { word: "and", gloss: "並且" },
+                    { word: "his", gloss: "他的" },
+                    { word: "name", gloss: "名聲" },
+                    { word: "erased.", gloss: "抹去" }
+                ]
+            }, {
+                text: "Thus, the scholars of all under heaven listened with bated breath, stood on tiptoe in fear, and clamped their mouths shut, unwilling to speak.",
+                words: [
+                    { word: "Thus,", gloss: "因此" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "scholars", gloss: "學者" },
+                    { word: "of", gloss: "……的" },
+                    { word: "all", gloss: "所有" },
+                    { word: "under", gloss: "在……之下" },
+                    { word: "heaven", gloss: "天" },
+                    { word: "listened", gloss: "傾聽" },
+                    { word: "with", gloss: "以" },
+                    { word: "bated", gloss: "屏住" },
+                    { word: "breath,", gloss: "呼吸" },
+                    { word: "stood", gloss: "站立" },
+                    { word: "on", gloss: "在" },
+                    { word: "tiptoe", gloss: "踮腳" },
+                    { word: "in", gloss: "處於" },
+                    { word: "fear,", gloss: "恐懼" },
+                    { word: "and", gloss: "並且" },
+                    { word: "clamped", gloss: "夾緊" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "mouths", gloss: "嘴巴" },
+                    { word: "shut,", gloss: "閉合" },
+                    { word: "unwilling", gloss: "不願意" },
+                    { word: "to", gloss: "去" },
+                    { word: "speak.", gloss: "說話" }
+                ]
+            }, {
+                text: "This is why the three rulers lost their way: loyal ministers dared not advise, wise men dared not plan.",
+                words: [
+                    { word: "This", gloss: "這" },
+                    { word: "is", gloss: "是" },
+                    { word: "why", gloss: "為什麼" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "three", gloss: "三個" },
+                    { word: "rulers", gloss: "統治者" },
+                    { word: "lost", gloss: "失去" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "way:", gloss: "道路" },
+                    { word: "loyal", gloss: "忠誠的" },
+                    { word: "ministers", gloss: "大臣" },
+                    { word: "dared", gloss: "敢" },
+                    { word: "not", gloss: "不" },
+                    { word: "advise,", gloss: "勸諫" },
+                    { word: "wise", gloss: "賢明的" },
+                    { word: "men", gloss: "人" },
+                    { word: "dared", gloss: "敢" },
+                    { word: "not", gloss: "不" },
+                    { word: "plan.", gloss: "謀劃" }
+                ]
+            }, {
+                text: "When all under heaven was already in chaos, no one reported the treachery to the throne—how tragic!",
+                words: [
+                    { word: "When", gloss: "當" },
+                    { word: "all", gloss: "所有" },
+                    { word: "under", gloss: "在……之下" },
+                    { word: "heaven", gloss: "天" },
+                    { word: "was", gloss: "是" },
+                    { word: "already", gloss: "已經" },
+                    { word: "in", gloss: "處於" },
+                    { word: "chaos,", gloss: "混亂" },
+                    { word: "no", gloss: "沒有" },
+                    { word: "one", gloss: "一人" },
+                    { word: "reported", gloss: "報告" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "treachery", gloss: "奸邪" },
+                    { word: "to", gloss: "向" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "throne—how", gloss: "王座——多麼" },
+                    { word: "tragic!", gloss: "悲慘" }
+                ]
+            }, {
+                text: "The ancient kings knew that being isolated from truth and obstructed by flattery would harm the state, so they appointed chancellors, ministers, officials, and scholars to uphold laws and establish punishments, thereby bringing order to all under heaven.",
+                words: [
+                    { word: "The", gloss: "定冠詞" },
+                    { word: "ancient", gloss: "古代的" },
+                    { word: "kings", gloss: "國王" },
+                    { word: "knew", gloss: "知道" },
+                    { word: "that", gloss: "（引導詞）" },
+                    { word: "being", gloss: "被" },
+                    { word: "isolated", gloss: "隔離" },
+                    { word: "from", gloss: "從" },
+                    { word: "truth", gloss: "真相" },
+                    { word: "and", gloss: "和" },
+                    { word: "obstructed", gloss: "阻礙" },
+                    { word: "by", gloss: "被" },
+                    { word: "flattery", gloss: "諂媚" },
+                    { word: "would", gloss: "將會" },
+                    { word: "harm", gloss: "損害" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "state,", gloss: "國家" },
+                    { word: "so", gloss: "所以" },
+                    { word: "they", gloss: "他們" },
+                    { word: "appointed", gloss: "任命" },
+                    { word: "chancellors,", gloss: "相國" },
+                    { word: "ministers,", gloss: "大臣" },
+                    { word: "officials,", gloss: "官吏" },
+                    { word: "and", gloss: "和" },
+                    { word: "scholars", gloss: "士人" },
+                    { word: "to", gloss: "去" },
+                    { word: "uphold", gloss: "維護" },
+                    { word: "laws", gloss: "法律" },
+                    { word: "and", gloss: "和" },
+                    { word: "establish", gloss: "建立" },
+                    { word: "punishments,", gloss: "刑罰" },
+                    { word: "thereby", gloss: "從而" },
+                    { word: "bringing", gloss: "帶來" },
+                    { word: "order", gloss: "秩序" },
+                    { word: "to", gloss: "到" },
+                    { word: "all", gloss: "所有" },
+                    { word: "under", gloss: "在……之下" },
+                    { word: "heaven.", gloss: "天" }
+                ]
+            }, {
+                text: "When their power was strong, they suppressed violence and punished disorder, and the world submitted.",
+                words: [
+                    { word: "When", gloss: "當" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "power", gloss: "力量" },
+                    { word: "was", gloss: "是" },
+                    { word: "strong,", gloss: "強大" },
+                    { word: "they", gloss: "他們" },
+                    { word: "suppressed", gloss: "鎮壓" },
+                    { word: "violence", gloss: "暴亂" },
+                    { word: "and", gloss: "和" },
+                    { word: "punished", gloss: "懲罰" },
+                    { word: "disorder,", gloss: "混亂" },
+                    { word: "and", gloss: "並且" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "world", gloss: "天下" },
+                    { word: "submitted.", gloss: "順服" }
+                ]
+            }, {
+                text: "When their strength waned, the Five Hegemons rose to dominance and the feudal lords followed them.",
+                words: [
+                    { word: "When", gloss: "當" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "strength", gloss: "實力" },
+                    { word: "waned,", gloss: "衰退" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "Five", gloss: "五" },
+                    { word: "Hegemons", gloss: "霸主" },
+                    { word: "rose", gloss: "興起" },
+                    { word: "to", gloss: "到" },
+                    { word: "dominance", gloss: "主導地位" },
+                    { word: "and", gloss: "並且" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "feudal", gloss: "封建的" },
+                    { word: "lords", gloss: "諸侯" },
+                    { word: "followed", gloss: "跟隨" },
+                    { word: "them.", gloss: "他們" }
+                ]
+            }, {
+                text: "When they were weakened further, they maintained internal stability and secured external alliances, thus preserving their state.",
+                words: [
+                    { word: "When", gloss: "當" },
+                    { word: "they", gloss: "他們" },
+                    { word: "were", gloss: "被" },
+                    { word: "weakened", gloss: "削弱" },
+                    { word: "further,", gloss: "進一步" },
+                    { word: "they", gloss: "他們" },
+                    { word: "maintained", gloss: "維持" },
+                    { word: "internal", gloss: "內部的" },
+                    { word: "stability", gloss: "穩定" },
+                    { word: "and", gloss: "和" },
+                    { word: "secured", gloss: "確保" },
+                    { word: "external", gloss: "外部的" },
+                    { word: "alliances,", gloss: "聯盟" },
+                    { word: "thus", gloss: "因此" },
+                    { word: "preserving", gloss: "保存" },
+                    { word: "their", gloss: "他們的" },
+                    { word: "state.", gloss: "國家" }
+                ]
+            }, {
+                text: "Thus, when Qin was at its height, it imposed numerous laws and harsh punishments, and all under heaven trembled in awe;",
+                words: [
+                    { word: "Thus,", gloss: "因此" },
+                    { word: "when", gloss: "當" },
+                    { word: "Qin", gloss: "秦" },
+                    { word: "was", gloss: "是" },
+                    { word: "at", gloss: "在" },
+                    { word: "its", gloss: "它的" },
+                    { word: "height,", gloss: "頂峰" },
+                    { word: "it", gloss: "它" },
+                    { word: "imposed", gloss: "施加" },
+                    { word: "numerous", gloss: "眾多的" },
+                    { word: "laws", gloss: "法律" },
+                    { word: "and", gloss: "和" },
+                    { word: "harsh", gloss: "嚴厲的" },
+                    { word: "punishments,", gloss: "刑罰" },
+                    { word: "and", gloss: "並且" },
+                    { word: "all", gloss: "所有" },
+                    { word: "under", gloss: "在……之下" },
+                    { word: "heaven", gloss: "天" },
+                    { word: "trembled", gloss: "顫抖" },
+                    { word: "in", gloss: "以" },
+                    { word: "awe;", gloss: "敬畏" }
+                ]
+            }, {
+                text: "But by the time it declined, the common people resented and looked upon it with hopelessness, and rebellion spread throughout the empire.",
+                words: [
+                    { word: "But", gloss: "但是" },
+                    { word: "by", gloss: "到" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "time", gloss: "時候" },
+                    { word: "it", gloss: "它" },
+                    { word: "declined,", gloss: "衰落" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "common", gloss: "普通的" },
+                    { word: "people", gloss: "人民" },
+                    { word: "resented", gloss: "怨恨" },
+                    { word: "and", gloss: "並且" },
+                    { word: "looked", gloss: "看待" },
+                    { word: "upon", gloss: "對" },
+                    { word: "it", gloss: "它" },
+                    { word: "with", gloss: "以" },
+                    { word: "hopelessness,", gloss: "絕望" },
+                    { word: "and", gloss: "並且" },
+                    { word: "rebellion", gloss: "叛亂" },
+                    { word: "spread", gloss: "蔓延" },
+                    { word: "throughout", gloss: "遍及" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "empire.", gloss: "帝國" }
+                ]
+            }, {
+                text: "Therefore, Zhou followed five orderly systems in accordance with the Way, and its dynasty endured for over a thousand years without interruption.",
+                words: [
+                    { word: "Therefore,", gloss: "因此" },
+                    { word: "Zhou", gloss: "周" },
+                    { word: "followed", gloss: "遵循" },
+                    { word: "five", gloss: "五" },
+                    { word: "orderly", gloss: "有序的" },
+                    { word: "systems", gloss: "制度" },
+                    { word: "in", gloss: "在" },
+                    { word: "accordance", gloss: "依照" },
+                    { word: "with", gloss: "與" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "Way,", gloss: "道" },
+                    { word: "and", gloss: "並且" },
+                    { word: "its", gloss: "它的" },
+                    { word: "dynasty", gloss: "王朝" },
+                    { word: "endured", gloss: "持續" },
+                    { word: "for", gloss: "長達" },
+                    { word: "over", gloss: "超過" },
+                    { word: "a", gloss: "一個" },
+                    { word: "thousand", gloss: "千" },
+                    { word: "years", gloss: "年" },
+                    { word: "without", gloss: "沒有" },
+                    { word: "interruption.", gloss: "中斷" }
+                ]
+            }, {
+                text: "Qin lost both its fundamentals and its outward order, which is why it did not endure long.",
+                words: [
+                    { word: "Qin", gloss: "秦" },
+                    { word: "lost", gloss: "失去" },
+                    { word: "both", gloss: "兩者" },
+                    { word: "its", gloss: "它的" },
+                    { word: "fundamentals", gloss: "根本" },
+                    { word: "and", gloss: "和" },
+                    { word: "its", gloss: "它的" },
+                    { word: "outward", gloss: "外部的" },
+                    { word: "order,", gloss: "秩序" },
+                    { word: "which", gloss: "（關係代詞）" },
+                    { word: "is", gloss: "是" },
+                    { word: "why", gloss: "為什麼" },
+                    { word: "it", gloss: "它" },
+                    { word: "did", gloss: "（助動詞）" },
+                    { word: "not", gloss: "不" },
+                    { word: "endure", gloss: "持續" },
+                    { word: "long.", gloss: "長久" }
+                ]
+            }, {
+                text: "From this we can see that the difference between security and danger lies in how far one strays from the right path.",
+                words: [
+                    { word: "From", gloss: "從" },
+                    { word: "this", gloss: "這個" },
+                    { word: "we", gloss: "我們" },
+                    { word: "can", gloss: "能夠" },
+                    { word: "see", gloss: "看出" },
+                    { word: "that", gloss: "（引導詞）" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "difference", gloss: "差異" },
+                    { word: "between", gloss: "在……之間" },
+                    { word: "security", gloss: "安全" },
+                    { word: "and", gloss: "和" },
+                    { word: "danger", gloss: "危險" },
+                    { word: "lies", gloss: "在於" },
+                    { word: "in", gloss: "在" },
+                    { word: "how", gloss: "多麼" },
+                    { word: "far", gloss: "遠" },
+                    { word: "one", gloss: "一個人" },
+                    { word: "strays", gloss: "偏離" },
+                    { word: "from", gloss: "從" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "right", gloss: "正確的" },
+                    { word: "path.", gloss: "道路" }
+                ]
+            }, {
+                text: "A popular proverb says, 'He who does not forget past events will find a teacher for future affairs.'",
+                words: [
+                    { word: "A", gloss: "一個" },
+                    { word: "popular", gloss: "流行的" },
+                    { word: "proverb", gloss: "諺語" },
+                    { word: "says,", gloss: "說" },
+                    { word: "'He", gloss: "他" },
+                    { word: "who", gloss: "（關係代詞）" },
+                    { word: "does", gloss: "（助動詞）" },
+                    { word: "not", gloss: "不" },
+                    { word: "forget", gloss: "忘記" },
+                    { word: "past", gloss: "過去的" },
+                    { word: "events", gloss: "事件" },
+                    { word: "will", gloss: "將會" },
+                    { word: "find", gloss: "找到" },
+                    { word: "a", gloss: "一個" },
+                    { word: "teacher", gloss: "老師" },
+                    { word: "for", gloss: "為了" },
+                    { word: "future", gloss: "未來的" },
+                    { word: "affairs.'", gloss: "事務" }
+                ]
+            }, {
+                text: "Therefore, a wise ruler governing the state should look to ancient times for guidance, verify with contemporary circumstances, consider human affairs, examine the principles of rise and decline, assess what is appropriate in terms of authority and power, act decisively when necessary, and adapt at the right time.",
+                words: [
+                    { word: "Therefore,", gloss: "因此" },
+                    { word: "a", gloss: "一個" },
+                    { word: "wise", gloss: "賢明的" },
+                    { word: "ruler", gloss: "統治者" },
+                    { word: "governing", gloss: "治理" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "state", gloss: "國家" },
+                    { word: "should", gloss: "應該" },
+                    { word: "look", gloss: "觀察" },
+                    { word: "to", gloss: "到" },
+                    { word: "ancient", gloss: "古代的" },
+                    { word: "times", gloss: "時代" },
+                    { word: "for", gloss: "為了" },
+                    { word: "guidance,", gloss: "指導" },
+                    { word: "verify", gloss: "驗證" },
+                    { word: "with", gloss: "與" },
+                    { word: "contemporary", gloss: "當代的" },
+                    { word: "circumstances,", gloss: "情況" },
+                    { word: "consider", gloss: "考慮" },
+                    { word: "human", gloss: "人事" },
+                    { word: "affairs,", gloss: "事務" },
+                    { word: "examine", gloss: "考察" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "principles", gloss: "原理" },
+                    { word: "of", gloss: "……的" },
+                    { word: "rise", gloss: "興起" },
+                    { word: "and", gloss: "和" },
+                    { word: "decline,", gloss: "衰落" },
+                    { word: "assess", gloss: "評估" },
+                    { word: "what", gloss: "什麼" },
+                    { word: "is", gloss: "是" },
+                    { word: "appropriate", gloss: "合適的" },
+                    { word: "in", gloss: "在" },
+                    { word: "terms", gloss: "方面" },
+                    { word: "of", gloss: "……的" },
+                    { word: "authority", gloss: "權威" },
+                    { word: "and", gloss: "和" },
+                    { word: "power,", gloss: "權力" },
+                    { word: "act", gloss: "行動" },
+                    { word: "decisively", gloss: "果斷地" },
+                    { word: "when", gloss: "當" },
+                    { word: "necessary,", gloss: "必要時" },
+                    { word: "and", gloss: "並且" },
+                    { word: "adapt", gloss: "適應" },
+                    { word: "at", gloss: "在" },
+                    { word: "the", gloss: "定冠詞" },
+                    { word: "right", gloss: "正確的" },
+                    { word: "time.", gloss: "時間" }
+                ]
+            }, {
+                text: "In this way, he ensures long-term stability and peace for his state.",
+                words: [
+                    { word: "In", gloss: "以" },
+                    { word: "this", gloss: "這種" },
+                    { word: "way,", gloss: "方式" },
+                    { word: "he", gloss: "他" },
+                    { word: "ensures", gloss: "確保" },
+                    { word: "long-term", gloss: "長期的" },
+                    { word: "stability", gloss: "穩定" },
+                    { word: "and", gloss: "和" },
+                    { word: "peace", gloss: "和平" },
+                    { word: "for", gloss: "為了" },
+                    { word: "his", gloss: "他的" },
+                    { word: "state.", gloss: "國家" }
+                ]
+            }];
+
+            // ==================== 渲染中文 ====================
+            const chineseBlock = document.getElementById('chineseBlock');
+            chineseData.forEach(item => {
+                if (item.py === '') {
+                    const span = document.createElement('span');
+                    span.textContent = item.char;
+                    chineseBlock.appendChild(span);
+                } else {
+                    const ruby = document.createElement('ruby');
+                    ruby.textContent = item.char;
+                    const rt = document.createElement('rt');
+                    rt.textContent = item.py;
+                    ruby.appendChild(rt);
+                    chineseBlock.appendChild(ruby);
+                }
+            });
+
+            // ==================== 渲染英文 ====================
+            const englishBlock = document.getElementById('englishBlock');
+
+            englishSentences.forEach((sentenceObj, idx) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'sentence-wrapper';
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'sentence-text';
+
+                sentenceObj.words.forEach(wordObj => {
+                    const wordSpan = document.createElement('span');
+                    wordSpan.className = 'en-word';
+                    wordSpan.textContent = wordObj.word;
+
+                    const tooltip = document.createElement('span');
+                    tooltip.className = 'word-tooltip';
+                    tooltip.textContent = wordObj.gloss;
+                    wordSpan.appendChild(tooltip);
+
+                    wordSpan.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        speakWord(wordObj.word);
+                    });
+
+                    textSpan.appendChild(wordSpan);
+                    textSpan.appendChild(document.createTextNode(' '));
+                });
+
+                if (textSpan.lastChild && textSpan.lastChild.nodeType === Node.TEXT_NODE) {
+                    textSpan.lastChild.textContent = textSpan.lastChild.textContent.replace(/\s+$/, ' ');
+                }
+
+                wrapper.appendChild(textSpan);
+
+                const btn = document.createElement('button');
+                btn.className = 'btn-speak-sentence';
+                btn.innerHTML = '▶️';
+                btn.title = '朗讀整句';
+                btn.setAttribute('aria-label', '朗讀句子 ' + (idx + 1));
+
+                btn.addEventListener('click', () => {
+                    speakSentence(sentenceObj.text, btn);
+                });
+
+                wrapper.appendChild(btn);
+                englishBlock.appendChild(wrapper);
+            });
+
+            // ==================== 语音合成函数 ====================
+            function getVoice() {
+                return new Promise((resolve) => {
+                    const voices = speechSynthesis.getVoices();
+                    if (voices.length > 0) {
+                        const enVoice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) ||
+                            voices.find(v => v.lang.startsWith('en-US')) ||
+                            voices.find(v => v.lang.startsWith('en-GB')) ||
+                            voices.find(v => v.lang.startsWith('en'));
+                        resolve(enVoice || voices[0]);
+                    } else {
+                        speechSynthesis.onvoiceschanged = () => {
+                            const newVoices = speechSynthesis.getVoices();
+                            const enVoice = newVoices.find(v => v.lang.startsWith('en') && v.name.includes('Female')) ||
+                                newVoices.find(v => v.lang.startsWith('en-US')) ||
+                                newVoices.find(v => v.lang.startsWith('en-GB')) ||
+                                newVoices.find(v => v.lang.startsWith('en'));
+                            resolve(enVoice || newVoices[0]);
+                        };
+                    }
+                });
+            }
+
+            async function speakWord(word) {
+                speechSynthesis.cancel();
+                const voice = await getVoice();
+                const utterance = new SpeechSynthesisUtterance(word);
+                utterance.voice = voice;
+                utterance.lang = 'en-US';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+                speechSynthesis.speak(utterance);
+            }
+
+            async function speakSentence(text, btnElement) {
+                speechSynthesis.cancel();
+                const voice = await getVoice();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.voice = voice;
+                utterance.lang = 'en-US';
+                utterance.rate = 0.85;
+                utterance.pitch = 1;
+                utterance.volume = 1;
+
+                if (btnElement) {
+                    btnElement.classList.add('speaking');
+                    utterance.onend = () => {
+                        btnElement.classList.remove('speaking');
+                    };
+                    utterance.onerror = () => {
+                        btnElement.classList.remove('speaking');
+                    };
+                }
+
+                speechSynthesis.speak(utterance);
+            }
+
+            speechSynthesis.getVoices();
+            if (speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = () => {
+                    speechSynthesis.getVoices();
+                };
+            }
+
+            console.log('✅ 互动文本已更新：汉字字体放大一倍，英文字体放大50%，拼音悬停位置上移');
+        })();
+    </script>
+
+</body>
+</html>
